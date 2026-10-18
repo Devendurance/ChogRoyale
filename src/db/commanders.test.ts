@@ -2,7 +2,7 @@
 // storage, metadata-update revision chains, and missing-row states.
 
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { eq } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 import { routeDalToTestDb, getDb, resetDbCache } from "@/db/client";
 import { nftTokens } from "@/db/schema";
 import { upsertNftToken } from "@/db/nfts";
@@ -14,17 +14,20 @@ import {
   currentRulesetVersion,
 } from "@/db/commanders";
 
-const createdTokenIds: string[] = [];
+// Fixed fixtures owned by this file; cleaned before and after the suite.
+const createdTokenIds: string[] = ["91001", "91002"];
 
-beforeAll(() => {
+async function cleanup() {
+  await getDb().delete(nftTokens).where(inArray(nftTokens.tokenId, createdTokenIds));
+}
+
+beforeAll(async () => {
   routeDalToTestDb();
+  await cleanup();
 });
 
 afterAll(async () => {
-  const db = getDb();
-  for (const tokenId of createdTokenIds) {
-    await db.delete(nftTokens).where(eq(nftTokens.tokenId, tokenId));
-  }
+  await cleanup();
   resetDbCache();
 });
 

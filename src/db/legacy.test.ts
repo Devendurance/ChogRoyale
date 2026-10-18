@@ -8,22 +8,25 @@ import { nftTokens, nftLegacyEvents, nftAchievementAwards } from "@/db/schema";
 import { upsertNftToken, upsertNftMetadata } from "@/db/nfts";
 import { recordVerifiedNftLegacyEvent, getNftLegacy, ensureLegacyAchievements } from "@/db/legacy";
 
-const createdTokenIds: string[] = [];
+// Fixed fixture ids owned by this file. Cleanup also runs before the suite,
+// so rows left by an interrupted run cannot leak into idempotency checks.
+const createdTokenIds: string[] = ["90201", "90202", "90203", "90204", "90205", "90206"];
 
-beforeAll(() => {
+async function cleanup() {
+  const db = getDb();
+  const owned = db.select({ id: nftTokens.id }).from(nftTokens).where(inArray(nftTokens.tokenId, createdTokenIds));
+  await db.delete(nftAchievementAwards).where(inArray(nftAchievementAwards.nftId, owned));
+  await db.delete(nftLegacyEvents).where(inArray(nftLegacyEvents.nftId, owned));
+  await db.delete(nftTokens).where(inArray(nftTokens.tokenId, createdTokenIds));
+}
+
+beforeAll(async () => {
   routeDalToTestDb();
+  await cleanup();
 });
 
 afterAll(async () => {
-  const db = getDb();
-  if (createdTokenIds.length > 0) {
-    const ids = (await db.select({ id: nftTokens.id }).from(nftTokens).where(inArray(nftTokens.tokenId, createdTokenIds))).map((r) => r.id);
-    if (ids.length > 0) {
-      await db.delete(nftAchievementAwards).where(inArray(nftAchievementAwards.nftId, ids));
-      await db.delete(nftLegacyEvents).where(inArray(nftLegacyEvents.nftId, ids));
-      await db.delete(nftTokens).where(inArray(nftTokens.tokenId, createdTokenIds));
-    }
-  }
+  await cleanup();
   resetDbCache();
 });
 

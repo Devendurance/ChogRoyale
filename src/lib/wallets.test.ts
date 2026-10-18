@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { randomUUID } from "crypto";
-import { eq } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 import { routeDalToTestDb, getDb, resetDbCache } from "@/db/client";
 import { players } from "@/db/schema";
 import {
@@ -42,10 +42,7 @@ beforeAll(() => {
 });
 
 afterAll(async () => {
-  const db = getDb();
-  for (const id of createdPlayerIds) {
-    await db.delete(players).where(eq(players.id, id));
-  }
+  if (createdPlayerIds.length > 0) await getDb().delete(players).where(inArray(players.id, createdPlayerIds));
   resetDbCache();
 });
 

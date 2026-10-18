@@ -216,4 +216,17 @@ describe("test database isolation", () => {
     expect(() => requireTestDatabaseUrl()).toThrow(/resolves to the production database/);
     delete process.env.DATABASE_URL_TEST;
   });
+
+  it("refuses the pooled endpoint of the production branch", () => {
+    const original = process.env.DATABASE_URL_TEST;
+    const prod = new URL(process.env.DATABASE_URL!);
+    prod.hostname = prod.hostname.replace(/^([^.]+?)(-pooler)?\./, "$1-pooler.");
+    process.env.DATABASE_URL_TEST = prod.toString();
+    try {
+      expect(() => requireTestDatabaseUrl()).toThrow(/resolves to the production database/);
+    } finally {
+      if (original === undefined) delete process.env.DATABASE_URL_TEST;
+      else process.env.DATABASE_URL_TEST = original;
+    }
+  });
 });

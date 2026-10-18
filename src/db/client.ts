@@ -15,6 +15,9 @@ export function createDb(url: string): Db {
 
 export function getDb(): Db {
   if (testOverride) return testOverride;
+  // Fail closed under Vitest: a suite that forgets routeDalToTestDb() must
+  // never fall through to the production DATABASE_URL.
+  if (process.env.VITEST) throw new Error("DAL used in a test without routeDalToTestDb(); refusing DATABASE_URL");
   if (dbInstance) return dbInstance;
   dbInstance = createDb(getEnv().DATABASE_URL);
   return dbInstance;

@@ -11,5 +11,10 @@ export default defineConfig({
     setupFiles: ["./vitest.setup.ts"],
     include: ["src/**/*.test.ts"],
     testTimeout: 60000,
+    // DB suites clean owned fixtures in beforeAll/afterAll with real Neon
+    // round trips (1-10s each from this machine). A 10s hook timeout aborted
+    // cleanup and left rows that broke the next run, so hooks get the same
+    // bound as tests.
+    hookTimeout: 60000,
   },
 });

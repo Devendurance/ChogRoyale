@@ -86,6 +86,7 @@
 
 - Use any testing tools and libraries available to the project to test your changes.
 - Never assume your changes work; always test.
+- DB-writing tests must call `routeDalToTestDb()` in `beforeAll` (isolated Neon TEST branch). `getDb()` throws under Vitest without it. Clean owned fixtures in both `beforeAll` and `afterAll`.
 - If the project does not have any testing tools, scripts, MCP tools, or similar resources available for testing, ask the user whether testing should be skipped.
 
 

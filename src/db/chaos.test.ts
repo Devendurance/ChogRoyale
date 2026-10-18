@@ -2,7 +2,7 @@
 // idempotent saves, unknown-match rejection, token-scoped reads.
 
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { eq, inArray } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 import { routeDalToTestDb, getDb, resetDbCache } from "@/db/client";
 import { nftTokens, patronAssignments, pulseSchedules } from "@/db/schema";
 import { upsertNftToken, upsertNftMetadata } from "@/db/nfts";
@@ -14,22 +14,24 @@ import {
   ensureChaosRuleset,
 } from "@/db/chaos";
 
-const createdTokenIds: string[] = [];
-const createdMatchKeys: string[] = [];
+// Fixed fixtures owned by this file; cleaned before and after the suite.
+const createdTokenIds: string[] = ["90111", "90112"];
+const createdMatchKeys: string[] = ["chaos-a", "chaos-b"];
 
-beforeAll(() => {
+async function cleanup() {
+  const db = getDb();
+  await db.delete(pulseSchedules).where(inArray(pulseSchedules.matchKey, createdMatchKeys));
+  await db.delete(patronAssignments).where(inArray(patronAssignments.matchKey, createdMatchKeys));
+  await db.delete(nftTokens).where(inArray(nftTokens.tokenId, createdTokenIds));
+}
+
+beforeAll(async () => {
   routeDalToTestDb();
+  await cleanup();
 });
 
 afterAll(async () => {
-  const db = getDb();
-  if (createdMatchKeys.length > 0) {
-    await db.delete(pulseSchedules).where(inArray(pulseSchedules.matchKey, createdMatchKeys));
-    await db.delete(patronAssignments).where(inArray(patronAssignments.matchKey, createdMatchKeys));
-  }
-  for (const tokenId of createdTokenIds) {
-    await db.delete(nftTokens).where(eq(nftTokens.tokenId, tokenId));
-  }
+  await cleanup();
   resetDbCache();
 });
 

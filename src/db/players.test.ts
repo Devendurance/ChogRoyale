@@ -1,7 +1,7 @@
-import { describe, it, expect, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { randomUUID } from "crypto";
-import { eq } from "drizzle-orm";
-import { getDb, resetDbCache } from "@/db/client";
+import { inArray } from "drizzle-orm";
+import { routeDalToTestDb, getDb, resetDbCache } from "@/db/client";
 import {
   provisionPlayer,
   findPlayerByPrivyDid,
@@ -26,11 +26,14 @@ function testWalletAddr(seed: string): string {
   return `0x${(hex + hex + hex + hex + hex).slice(0, 40)}`;
 }
 
+// Write suite: must target the isolated TEST branch, never DATABASE_URL.
+beforeAll(() => {
+  routeDalToTestDb();
+});
+
 afterAll(async () => {
-  const db = getDb();
-  for (const id of createdPlayerIds) {
-    await db.delete(players).where(eq(players.id, id));
-  }
+  if (createdPlayerIds.length > 0) await getDb().delete(players).where(inArray(players.id, createdPlayerIds));
+  resetDbCache();
 });
 
 describe("player provisioning", () => {
