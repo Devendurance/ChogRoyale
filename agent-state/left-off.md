@@ -16,6 +16,7 @@ Last updated: 2026-10-18
 - B2.7c2 (ruleset v12): Ember Mauler (4e, 220hp, radius-4 ground shockwave around itself, 24/swing, no air). Counters clustered cheap ground pushes; loses to flyers, ranged, tank-led pushes and melee duels. Swarm deck still 64/64 with or without it. Lane-swap check shows the engine and bot are side-neutral; the raw Chaos schedule is not. Full suite 28/28 incl. Neon.
 - Ranked Chaos spatial fairness (ruleset v13): raw B1 zones were side-biased (Ember 128/169, Rift Shift 158/172 events across 6 trait sets x 50 seeds; Rift Shift skews to P1 home 139 vs 19). Combat now closes zones under the mirror with budget split. Also fixed Ember Rift damage, which never landed before v13. Raw side swaps 40/48 -> 48/48, lane-swap raw 31/40 -> 40/40. B1 schedules and hashes untouched.
 - Neon test stabilization: the 3 assertion failures were leftover legacy fixtures from a cleanup hook that timed out (reproduced exactly). players.test.ts had no TEST routing and wrote to PROD, leaving 7 did:privy:test_ players (5 wallets, 9 roles) on PROD. Fixed routing + VITEST fail-closed guard + endpoint guard + self-healing batched cleanup + 60s hooks. TEST leftovers (4 players) removed. DB files together 58/58, full suite 354/354.
+- B2.7c4 (ruleset v14): resource-aware smartMove bot + economy harness (npm run bots:economy). Smart beats simple 34/36. Swarm still dominates under both bots (simple 27/30, smart 30/30). Ablations point at cheap always-useful card density and the 4e scout commander, not energy waste or first-affordable play. Engine fix: footprint detour ties now mirror for P1.
 
 ## Currently working on
 
@@ -28,7 +29,7 @@ Last updated: 2026-10-18
 
 ## Next up
 
-- B2.7c3 cheap-deck economy investigation (swarm deck 64/64), then spawner building, then B3 transport (Colyseus). Ember Rift now really deals damage, so re-baseline bot matchups before reading balance. B3 transport covers: authenticated match creation, entitlement verification feeding the trusted engine inputs, settlement events feeding legacy intake. Neither started; no fabricated matches exist.
+- B2.7c3 cheap-deck economy investigation (swarm deck 64/64), then spawner building, then B3 transport (Colyseus). First review proposed balance numbers from B2.7c4 (scout 4e -> 5e, cheap-unit efficiency, control deck rework). B3 transport covers: authenticated match creation, entitlement verification feeding the trusted engine inputs, settlement events feeding legacy intake. Neither started; no fabricated matches exist.
 
 ## Known issues / open items
 

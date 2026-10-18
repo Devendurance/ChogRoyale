@@ -16,6 +16,8 @@ import {
   COMBAT_RULESET_VERSION,
   CARDS_V1,
   COMMANDER_COMBAT_PROFILE_V1,
+  ENERGY_V1,
+  energyPhaseMult,
   isCommanderCard,
   freeStarterSlot,
   ABILITY_ACTIVATION_COST_V1,
@@ -322,8 +324,21 @@ function seedOffset(seed: string): number {
  * botMove read from the real hand, energy and board. Commands are recorded
  * so they can be replayed through runMatch.
  */
-export function botMatch(config: CombatConfig, upto: number, every = 20, opts: { swapSides?: boolean } = {}) {
+export type MovePolicy = (state: CombatState, p: PlayerIndex, n: number) => { cardId: string; x: number; y: number } | null;
+
+/**
+ * Per-player economy observed by the bot loop (not hashed engine state).
+ * cappedTicks: ticks that started at the energy cap, so regen accrual was
+ * paused; wasted: energy those ticks would have produced (exact phase x
+ * Chaos step / 2800); idleAtCap: decisions that played nothing at the cap.
+ */
+export interface BotEconomy { cappedTicks: [number, number]; wasted: [number, number]; idleAtCap: [number, number]; decisions: [number, number]; plays: [number, number] }
+
+export function botMatch(config: CombatConfig, upto: number, every = 20, opts: { swapSides?: boolean; policies?: [MovePolicy, MovePolicy] } = {}) {
   const state = initMatch(config);
+  const policies = opts.policies ?? [botMove, botMove];
+  const econ: BotEconomy = { cappedTicks: [0, 0], wasted: [0, 0], idleAtCap: [0, 0], decisions: [0, 0], plays: [0, 0] };
+  const wastedProgress: [number, number] = [0, 0];
   const samples: TraceSample[] = [];
   const commands: CombatCommand[] = [];
   const offset = seedOffset(config.seed);
@@ -356,21 +371,33 @@ export function botMatch(config: CombatConfig, upto: number, every = 20, opts: {
     if ((state.tick + 1) % every === 0) {
       for (const p of order) {
         if (usedAbility.has(p)) continue;
-        const move = botMove(state, p, laneOffset[p] + moves[p]);
-        if (!move) continue;
+        econ.decisions[p] += 1;
+        const move = policies[p](state, p, laneOffset[p] + moves[p]);
+        if (!move) {
+          if (state.energy[p] >= ENERGY_V1.max) econ.idleAtCap[p] += 1;
+          continue;
+        }
+        econ.plays[p] += 1;
         moves[p] += 1;
         seq += 1;
         due.push(cmd(seq, p, state.tick + 1, move.cardId, move.x, move.y));
       }
     }
     commands.push(...due);
+    for (const p of [0, 1] as PlayerIndex[]) {
+      if (state.energy[p] < ENERGY_V1.max) continue;
+      econ.cappedTicks[p] += 1;
+      const next = state.tick + 1;
+      wastedProgress[p] += energyPhaseMult(next) * (next < state.energyModUntil ? state.energyModPct : 100);
+    }
     stepMatch(state, due);
     const open = state.tick < state.riftOpenUntil;
     for (const u of [...state.troops, ...state.commanders]) {
       samples.push({ tick: state.tick, id: u.id, owner: u.owner, cardId: u.kind === "troop" ? u.cardId : `commander:${u.class}`, x: u.x, y: u.y, targetId: u.targetId, moveType: u.moveType, riftOpen: open });
     }
   }
-  return { state, samples, commands };
+  econ.wasted = wastedProgress.map((w) => Math.round((w / (ENERGY_V1.regenTicksPerPoint * 100)) * 10) / 10) as [number, number];
+  return { state, samples, commands, econ };
 }
 
 export function samplesOf(samples: TraceSample[], pred: (s: TraceSample) => boolean): TraceSample[] {

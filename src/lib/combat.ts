@@ -34,7 +34,7 @@ import type { ChaosSchedule, ChaosEffect } from "@/lib/chaos";
 // v8 (B2.7a): deployable building cards (Rift Sentry, Decoy Totem) with
 // solid footprints, finite lifetimes, building-aware targeting and
 // placement rules that keep every river crossing mouth clear.
-export const COMBAT_RULESET_VERSION = "v13" as const;
+export const COMBAT_RULESET_VERSION = "v14" as const;
 export const TICKS_PER_SECOND = 10;
 // Standard ranked timeline (v2): 180s regulation, up to 120s sudden-death overtime.
 // Energy phases: 1x ticks 0-1199, 2x ticks 1200-2399, 3x ticks 2400-2999.
@@ -1017,12 +1017,15 @@ function polylineClear(a: Point, b: Point, s: Solid): boolean {
  * inside a live footprint, head for the ring corner (r + 1) that is
  * reachable without entering it and minimizes octile(pos, corner) +
  * octile(corner, waypoint); ties keep corner order (-,-), (+,-), (-,+), (+,+).
+ * v14: the y order is owner-relative (homeSign: P0 -1, P1 +1), so P1 ties
+ * resolve to the mirror of P0's corner (v13 sent both players toward -y).
  */
-function detourCorner(e: Point, wp: Point, blocker: Solid, solids: Solid[], open: boolean): Point | null {
+function detourCorner(e: Point, wp: Point, blocker: Solid, solids: Solid[], open: boolean, homeSign: 1 | -1): Point | null {
   const k = blocker.r + 1;
   let best: Point | null = null;
   let bestCost = Infinity;
-  for (const [sx, sy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]] as const) {
+  for (const [sx, sy0] of [[-1, -1], [1, -1], [-1, 1], [1, 1]] as const) {
+    const sy = sy0 * -homeSign;
     const c = { x: blocker.x + sx * k, y: blocker.y + sy * k };
     if ((c.x === e.x && c.y === e.y) || !isWalkable(c.x, c.y, open, solids) || !polylineClear(e, c, blocker)) continue;
     const cost = octile(e, c) + octile(c, wp);
@@ -1034,7 +1037,7 @@ function detourCorner(e: Point, wp: Point, blocker: Solid, solids: Solid[], open
   return best;
 }
 
-function nextCell(e: Point & { moveType: MoveType }, goal: Point, open: boolean, solids: Solid[]): Point | null {
+function nextCell(e: Point & { moveType: MoveType; owner?: PlayerIndex }, goal: Point, open: boolean, solids: Solid[]): Point | null {
   if (e.x === goal.x && e.y === goal.y) return null;
   if (e.moveType === "air") return signStep(e, goal);
   const route = planGroundRoute(e, goal, open);
@@ -1044,7 +1047,7 @@ function nextCell(e: Point & { moveType: MoveType }, goal: Point, open: boolean,
   const step = signStep(e, wp);
   const blocker = solids.find((s) => inSolid(step.x, step.y, s));
   if (!blocker) return step;
-  const corner = detourCorner(e, wp, blocker, solids, open);
+  const corner = detourCorner(e, wp, blocker, solids, open, e.owner === 1 ? 1 : -1);
   if (!corner) return null;
   const alt = signStep(e, corner);
   return solids.some((s) => inSolid(alt.x, alt.y, s)) ? null : alt;
@@ -1058,7 +1061,7 @@ function nextCell(e: Point & { moveType: MoveType }, goal: Point, open: boolean,
  * unit is in range. Returns the remainder to carry (0 when idle/arrived).
  */
 export function moveUnit(
-  e: Point & { moveType: MoveType },
+  e: Point & { moveType: MoveType; owner?: PlayerIndex },
   goal: Point,
   speed: number,
   riftOpen: boolean,
@@ -2460,6 +2463,6 @@ export function combatRulesetSummary() {
       buff: "override on recast, fully reverts on expiry, troops only",
     },
     deferred: [],
-    compatibility: "v13 changes only Chaos zone interpretation (ranked mirror closure): v12 and v13 replay identically for schedules whose Ember/Rift Shift zones are already mirror-invariant, otherwise v12 applied raw absolute zones. Chaos ruleset v1 schedules and their hashes are unchanged. v8 adds building cards, state.buildings (hashed) and building events; decks without buildings simulate as in v7 apart from the version in the hash domain; v7 configs are rejected by validation. v7 differs from v6 only in commander actives (command-driven, energy-costed) and ability events; v6 configs are rejected by validation. v6 configs differ from v5 (decks require a commander card; commanders spawn only by deploy; ids c<player>-<n>); v5 configs are rejected by validation. No persisted replays of earlier versions exist (pre-release, headless fixtures only)",
+    compatibility: "v14 changes only footprint-detour corner ties for P1 (owner-relative y order, mirror of P0); P0 movement and all untied detours are identical to v13. v13 changes only Chaos zone interpretation (ranked mirror closure): v12 and v13 replay identically for schedules whose Ember/Rift Shift zones are already mirror-invariant, otherwise v12 applied raw absolute zones. Chaos ruleset v1 schedules and their hashes are unchanged. v8 adds building cards, state.buildings (hashed) and building events; decks without buildings simulate as in v7 apart from the version in the hash domain; v7 configs are rejected by validation. v7 differs from v6 only in commander actives (command-driven, energy-costed) and ability events; v6 configs are rejected by validation. v6 configs differ from v5 (decks require a commander card; commanders spawn only by deploy; ids c<player>-<n>); v5 configs are rejected by validation. No persisted replays of earlier versions exist (pre-release, headless fixtures only)",
   };
 }

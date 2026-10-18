@@ -4,7 +4,7 @@
 // Pure: no DB, no network. Shared by tests and scripts/building-matchup.ts.
 
 import { runMatch, stateHash, ARENA_V2, CARDS_V1, SPELL_CARDS_V1, COMMANDER_COMBAT_PROFILE_V1, STRUCTURE_V1, type CombatCommand, type CombatState, type PlayerIndex } from "@/lib/combat";
-import { scenarioConfig, deckWith, botMatch, riftSchedule } from "@/lib/arena-scenarios";
+import { scenarioConfig, deckWith, botMatch, riftSchedule, type BotEconomy, type MovePolicy } from "@/lib/arena-scenarios";
 import type { ArenaZone, ChaosSchedule } from "@/lib/chaos";
 
 /** v8 baseline decks: only cards that existed at B2.7a. */
@@ -72,6 +72,8 @@ export interface MatchupRow {
   buildings: { spawned: number; destroyed: number; expired: number; lifetimeTicks: number };
   /** Damage each player's towers received (index = tower owner). */
   towerDamage: [number, number];
+  /** Lane towers (0-2) of each owner that took any damage. */
+  towersDamaged: [number, number];
   coreDamage: [number, number];
   commanderDeploys: number;
   abilityActivations: number;
@@ -87,6 +89,8 @@ export interface MatchupRow {
   energySpent: [number, number];
   /** Per-player counts (index = player). */
   bySide: { buildings: [number, number]; commanderDeploys: [number, number]; abilities: [number, number] };
+  /** Bot-loop economy (energy capped/wasted, idle decisions, plays), when recorded. */
+  econ?: BotEconomy;
   replayIdentical: boolean;
 }
 
@@ -146,6 +150,7 @@ export function measure(state: CombatState): Omit<MatchupRow, "p0" | "p1" | "see
     rejected: ev.filter((e) => e.type === "command_rejected").length,
     buildings,
     towerDamage: [dmg(0, "tower"), dmg(1, "tower")],
+    towersDamaged: [0, 1].map((o) => state.structures.filter((s) => s.owner === o && s.structure === "tower" && s.hp < STRUCTURE_V1.tower.hp).length) as [number, number],
     coreDamage: [dmg(0, "core"), dmg(1, "core")],
     commanderDeploys: ev.filter((e) => e.type === "commander_deployed").length,
     abilityActivations: ev.filter((e) => e.type === "ability_fired" && e.trigger === "active").length,
@@ -192,16 +197,22 @@ export function positionReport(rows: MatchupRow[]) {
  * name fixed board zones; since v13 the engine closes them under the board
  * mirror, so raw play is side-neutral. "none" plays without Chaos.
  */
-export function runMatchup(decks: Record<string, string[]>, seeds = MATCHUP_SEEDS, chaos: "rift" | "none" = "rift"): MatchupRow[] {
+export function runMatchup(
+  decks: Record<string, string[]>,
+  seeds = MATCHUP_SEEDS,
+  chaos: "rift" | "none" | ((seed: string) => ChaosSchedule) = "rift",
+  policies?: [MovePolicy, MovePolicy]
+): MatchupRow[] {
   const names = Object.keys(decks);
   const rows: MatchupRow[] = [];
+  const schedule = (seed: string) => (chaos === "none" ? null : chaos === "rift" ? riftSchedule(seed) : chaos(seed));
   for (const a of names) {
     for (const b of names) {
       for (const seed of seeds) {
-        const cfg = () => scenarioConfig(decks[a]!, decks[b]!, chaos === "rift" ? riftSchedule(seed) : null, seed);
-        const bot = botMatch(cfg(), 3100, 20);
+        const cfg = () => scenarioConfig(decks[a]!, decks[b]!, schedule(seed), seed);
+        const bot = botMatch(cfg(), 3100, 20, { policies });
         const replay = runMatch(cfg(), bot.commands);
-        rows.push({ p0: a, p1: b, seed, ...measure(replay.state), replayIdentical: replay.result.stateHash === stateHash(bot.state) });
+        rows.push({ p0: a, p1: b, seed, ...measure(replay.state), econ: bot.econ, replayIdentical: replay.result.stateHash === stateHash(bot.state) });
       }
     }
   }
@@ -263,14 +274,15 @@ export function engineMirrorCheck(decks: Record<string, string[]>, seeds = MATCH
  * schedule; "none" plays without Chaos. A side-neutral engine + bot must
  * swap winner, crowns and tower damage exactly.
  */
-export function laneSwapCheck(decks: Record<string, string[]>, seeds = MATCHUP_SEEDS, chaos: "rift" | "rift-mirrored" | "none" = "none") {
+export function laneSwapCheck(decks: Record<string, string[]>, seeds = MATCHUP_SEEDS, chaos: "rift" | "rift-mirrored" | "none" = "none", policy?: MovePolicy) {
+  const policies: [MovePolicy, MovePolicy] | undefined = policy ? [policy, policy] : undefined;
   const swapW = (w: PlayerIndex | "draw" | null) => (w === 0 ? 1 : w === 1 ? 0 : w);
   const rows: Array<{ deck: string; seed: string; winner: PlayerIndex | "draw" | null; swappedWinner: PlayerIndex | "draw" | null; exact: boolean }> = [];
   for (const [name, deck] of Object.entries(decks)) {
     for (const seed of seeds) {
       const sched = chaos === "none" ? null : riftSchedule(seed);
-      const a = measure(botMatch(scenarioConfig(deck, deck, sched, seed), 3100, 20).state);
-      const b = measure(botMatch(scenarioConfig(deck, deck, chaos === "rift-mirrored" ? sched && mirrorSchedule(sched) : sched, seed), 3100, 20, { swapSides: true }).state);
+      const a = measure(botMatch(scenarioConfig(deck, deck, sched, seed), 3100, 20, { policies }).state);
+      const b = measure(botMatch(scenarioConfig(deck, deck, chaos === "rift-mirrored" ? sched && mirrorSchedule(sched) : sched, seed), 3100, 20, { swapSides: true, policies }).state);
       const exact = swapW(a.winner) === b.winner && a.ticks === b.ticks && a.crowns.join() === [...b.crowns].reverse().join() && a.towerDamage.join() === [...b.towerDamage].reverse().join();
       rows.push({ deck: name, seed, winner: a.winner, swappedWinner: b.winner, exact });
     }
