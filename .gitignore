@@ -51,3 +51,6 @@ tmp-*.ts
 *.db
 *.key
 credentials*.json
+
+# B3.1 local battle replay records (contain server seeds)
+.battle-replays/

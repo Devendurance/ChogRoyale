@@ -30,6 +30,7 @@ Last updated: 2026-10-18
 
 ## Next up
 
+- B3.1 playable alpha built (Colyseus 0.18 room + Phaser 4 view at /dev/battle, real Privy auth, server-authoritative BattleSession). PARTIAL until a human plays a full match in two logged-in browsers. Details in .fast-build/STATE.md.
 - User review of the B2.7c5 hold. Swarm and breaker share a cheap core (choglings, sprites, snare, archer, guardian, scout) and both still beat revised control 0/16. Then spawner building, then B3 transport (Colyseus). B3 transport covers: authenticated match creation, entitlement verification feeding the trusted engine inputs, settlement events feeding legacy intake. Neither started; no fabricated matches exist.
 
 ## Known issues / open items

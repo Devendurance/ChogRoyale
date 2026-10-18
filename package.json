@@ -24,9 +24,14 @@
     "roster:scenarios": "tsx scripts/roster-scenarios.ts",
     "chaos:fairness": "tsx scripts/chaos-fairness.ts",
     "bots:economy": "tsx scripts/bot-economy.ts",
-    "balance:calibrate": "tsx scripts/balance-calibration.ts"
+    "balance:calibrate": "tsx scripts/balance-calibration.ts",
+    "battle:server": "tsx scripts/battle-server.ts"
   },
   "dependencies": {
+    "@colyseus/core": "0.18.18",
+    "@colyseus/schema": "5.0.34",
+    "@colyseus/sdk": "0.18.4",
+    "@colyseus/ws-transport": "0.18.4",
     "@gsap/react": "^2.1.2",
     "@neondatabase/serverless": "^1.2.0",
     "@privy-io/react-auth": "^3.50.0",
@@ -34,10 +39,12 @@
     "@stripe/stripe-js": "^10.1.0",
     "dotenv": "^18.0.8",
     "drizzle-orm": "^0.45.4",
+    "express": "5.2.1",
     "gsap": "^3.15.0",
     "lenis": "^1.3.27",
     "lucide-react": "^1.59.0",
     "next": "16.4.2",
+    "phaser": "4.2.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "viem": "^2.57.7",

@@ -48,3 +48,9 @@ Durable facts, conventions, and gotchas that should survive across sessions.
 - Anything added to the per-tick `damage` map must be added BEFORE the damage pass in stepMatch. Ember Rift hits were queued after the pass and silently dropped from B2.3 to v12 (found in v13). Test real HP effects, not only events.
 - Measure scenario encounters at the decisive tick (last swarm death, attacker death). After that, survivors walk into towers and fixed-horizon HP/loss numbers mislead.
 - Live browser E2E (Privy login) needs a human; no headless token path (dashboard test credentials disabled).
+
+## B3.1 battle transport (Colyseus 0.18)
+- Never set `client.auth.token` in @colyseus/sdk: it appends `_authToken=<token>` to the WebSocket URL. Pass the Privy token as `new Client(url, { headers: { authorization } })`; only the matchmaking POST carries it, read by the room's static `onAuth`.
+- @colyseus/ws-transport imports `express` statically despite listing it as optional; express 5.2.1 is a direct dep.
+- `npm run battle:server` takes about 20s to start (Privy server-auth import graph). Killing the npm shell can leave the tsx child listening on 2567.
+- npm installs need `--legacy-peer-deps` because of the pre-existing @types/node ^20 vs vitest peer conflict.
