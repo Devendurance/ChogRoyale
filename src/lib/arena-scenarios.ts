@@ -10,6 +10,8 @@ import {
   stateHash,
   inRiver,
   openCrossings,
+  troopDeployCheck,
+  reach2,
   COMBAT_RULESET_VERSION,
   CARDS_V1,
   type CombatConfig,
@@ -68,26 +70,64 @@ export function traceMatch(config: CombatConfig, commands: DeployCommand[], upto
 }
 
 /**
- * Deterministic bot match: every `every` ticks each side plays the first
- * affordable card in its real hand at a rotating lane position inside its
- * own territory. Commands are recorded so they can be replayed via runMatch.
+ * Legal bot move from the real current state: the first card in the real
+ * hand that is affordable and has a legal placement. Troops rotate through
+ * lane positions validated by troopDeployCheck; Chaos Bolt aims at the enemy
+ * troop/commander closest to the bot's Core; Rally Horn targets the bot's
+ * most advanced troop. Returns null when no legal play exists.
+ */
+export function botMove(state: CombatState, p: PlayerIndex, n: number): { cardId: string; x: number; y: number } | null {
+  const lanes = [30, 70, 50, 20, 80, 40, 60];
+  const homeY = p === 0 ? 0 : 160;
+  for (const card of state.hands[p]) {
+    const def = CARDS_V1[card];
+    if (!def || def.cost > state.energy[p]) continue;
+    if (card === "chaos_bolt") {
+      const foes = [...state.troops, ...state.commanders].filter((u) => u.owner !== p && u.hp > 0);
+      foes.sort((a, b) => Math.abs(a.y - homeY) - Math.abs(b.y - homeY) || (a.id < b.id ? -1 : 1));
+      if (foes[0]) return { cardId: card, x: foes[0].x, y: foes[0].y };
+      continue;
+    }
+    if (card === "rally_horn") {
+      const own = state.troops.filter((u) => u.owner === p && u.hp > 0);
+      own.sort((a, b) => Math.abs(b.y - homeY) - Math.abs(a.y - homeY) || (a.id < b.id ? -1 : 1));
+      if (own[0]) return { cardId: card, x: own[0].x, y: own[0].y };
+      continue;
+    }
+    for (let k = 0; k < lanes.length * 4; k++) {
+      const x = lanes[(n + k) % lanes.length]!;
+      const y = p === 0 ? 50 + ((n * 7 + k * 5) % 24) : 87 + ((n * 11 + k * 5) % 24);
+      if (troopDeployCheck(state.structures, p, x, y).ok) return { cardId: card, x, y };
+    }
+  }
+  return null;
+}
+
+function seedOffset(seed: string): number {
+  let h = 0;
+  for (const ch of seed) h = (h * 31 + ch.charCodeAt(0)) % 9973;
+  return h;
+}
+
+/**
+ * Deterministic bot match: every `every` ticks each side submits a legal
+ * botMove read from the real hand, energy and board. Commands are recorded
+ * so they can be replayed through runMatch.
  */
 export function botMatch(config: CombatConfig, upto: number, every = 20) {
   const state = initMatch(config);
   const samples: TraceSample[] = [];
   const commands: DeployCommand[] = [];
-  const lanes = [30, 70, 50, 20, 80, 40, 60];
+  const offset = seedOffset(config.seed);
   let seq = 0;
   while (state.phase !== "final" && state.tick < upto) {
     const due: DeployCommand[] = [];
     if ((state.tick + 1) % every === 0) {
       for (const p of [0, 1] as PlayerIndex[]) {
-        const card = state.hands[p].find((c) => (CARDS_V1[c]?.cost ?? 99) <= state.energy[p]);
-        if (!card) continue;
+        const move = botMove(state, p, offset + seq);
+        if (!move) continue;
         seq += 1;
-        const x = lanes[seq % lanes.length]!;
-        const y = p === 0 ? 40 + ((seq * 7) % 34) : 87 + ((seq * 11) % 34);
-        due.push(cmd(seq, p, state.tick + 1, card, x, y));
+        due.push(cmd(seq, p, state.tick + 1, move.cardId, move.x, move.y));
       }
     }
     commands.push(...due);
@@ -218,7 +258,8 @@ export function scenarioDistraction() {
   const g = (s: TraceSample[]) => samplesOf(s, (x) => x.cardId === "chog_guardian");
   const firstTowerDamage = (st: TraceSample[], state: CombatState) => {
     void state;
-    return g(st).find((s) => s.targetId === "s-p1-tower-30" && s.y >= 118)?.tick ?? null;
+    // In melee reach of the tower footprint (guardian range 2, measured to the ring).
+    return g(st).find((s) => s.targetId === "s-p1-tower-30" && reach2(s.x, s.y, { x: 30, y: 120, r: 3 }) <= 4)?.tick ?? null;
   };
   return {
     baseMaxX: Math.max(...g(base.samples).map((s) => s.x)),

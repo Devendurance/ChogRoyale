@@ -20,7 +20,10 @@ import type { ChaosSchedule, ChaosEffect } from "@/lib/chaos";
 // v4 (B2.5): two-lane arena with river, bridges, deterministic ground
 // navigation, lane objectives, in-range target lock, territory + pocket
 // deployment and RIFT_SHIFT ford crossings. Hashes differ from v3 by design.
-export const COMBAT_RULESET_VERSION = "v4" as const;
+// v5 (B2.5 hardening): troops target enemy commanders, live structures have
+// solid footprints (ground units detour; range measured to footprint edge),
+// octile movement accounting (straight 10, diagonal 14, carried remainder).
+export const COMBAT_RULESET_VERSION = "v5" as const;
 export const TICKS_PER_SECOND = 10;
 // Standard ranked timeline (v2): 180s regulation, up to 120s sudden-death overtime.
 // Energy phases: 1x ticks 0-1199, 2x ticks 1200-2399, 3x ticks 2400-2999.
@@ -187,6 +190,7 @@ export interface TroopEntity {
   guardUntil: number;
   guardPct: number;
   armor: number;
+  moveCarry: number;
 }
 
 // Commanders reuse troop combat mechanics plus armor, shields, reflect,
@@ -235,6 +239,7 @@ export interface CommanderEntity {
   abilities: CommanderAbility[];
   abilityReadyAt: Record<string, number>;
   derivationHash: string;
+  moveCarry: number;
 }
 
 export interface ProjectileEntity {
@@ -313,6 +318,8 @@ export interface CombatState {
   zoneMods: Array<{ zone: string; modifier: "slowed" | "hasted"; until: number }>;
   // Rift Ford is walkable for ground units while tick < riftOpenUntil.
   riftOpenUntil: number;
+  // Per-match entity/projectile id counter (deterministic, never global).
+  nextEntityId: number;
   seenSeqs: number[];
   events: CombatEvent[];
   winner: PlayerIndex | "draw" | null;
@@ -413,6 +420,7 @@ export function initMatch(config: CombatConfig): CombatState {
     energyModPct: 100,
     zoneMods: [],
     riftOpenUntil: 0,
+    nextEntityId: 0,
     seenSeqs: [],
     events: [],
     winner: null,
@@ -468,6 +476,7 @@ export function initMatch(config: CombatConfig): CombatState {
       abilities: def.abilities,
       abilityReadyAt: {},
       derivationHash: def.derivationHash,
+      moveCarry: 0,
     };
     state.commanders.push(commander);
     state.events.push({ type: "commander_deployed", tick: 0, player: owner, commanderId: slot.commanderId, class: def.class });
@@ -520,6 +529,48 @@ export function cheb(a: Point, b: Point): number {
   return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
 }
 
+// v5 movement accounting: straight cell 10, diagonal cell 14 (integer
+// octile approximation of Euclidean length). Route costs and per-tick
+// movement budgets (speed * 10, unspent remainder carried) share it.
+export const MOVE_STRAIGHT = 10;
+export const MOVE_DIAG = 14;
+export function octile(a: Point, b: Point): number {
+  const dx = Math.abs(a.x - b.x);
+  const dy = Math.abs(a.y - b.y);
+  return MOVE_DIAG * Math.min(dx, dy) + MOVE_STRAIGHT * (Math.abs(dx - dy));
+}
+
+// v5 solid footprints (Chebyshev half-size around the structure center).
+// Live structures block ground movement; air flies over; destroyed
+// structures become walkable rubble. Attack range against a structure is
+// measured to its footprint edge, so adjacent ring cells are melee contact.
+export const STRUCTURE_FOOTPRINT_V5 = { tower: 3, core: 4 } as const;
+export interface Solid {
+  x: number;
+  y: number;
+  r: number;
+}
+export function solidsOf(structures: Array<{ x: number; y: number; alive: boolean; structure: "tower" | "core" }>): Solid[] {
+  return structures.filter((s) => s.alive).map((s) => ({ x: s.x, y: s.y, r: STRUCTURE_FOOTPRINT_V5[s.structure] }));
+}
+function inSolid(x: number, y: number, s: Solid): boolean {
+  return Math.abs(x - s.x) <= s.r && Math.abs(y - s.y) <= s.r;
+}
+/** Squared reach from a unit to a target: center distance for units, gap to
+ * the footprint ring (r + 1) for structures. */
+export function reach2(ux: number, uy: number, t: { x: number; y: number; r: number }): number {
+  if (t.r <= 0) return dist2(ux, uy, t.x, t.y);
+  const dx = Math.max(0, Math.abs(ux - t.x) - (t.r + 1));
+  const dy = Math.max(0, Math.abs(uy - t.y) - (t.r + 1));
+  return dx * dx + dy * dy;
+}
+/** Nearest ring cell of a structure footprint, used as the movement goal. */
+export function approachPoint(u: Point, t: { x: number; y: number; r: number }): Point {
+  if (t.r <= 0) return { x: t.x, y: t.y };
+  const k = t.r + 1;
+  return { x: Math.max(t.x - k, Math.min(t.x + k, u.x)), y: Math.max(t.y - k, Math.min(t.y + k, u.y)) };
+}
+
 export function inRiver(y: number): boolean {
   return y >= RIVER.minY && y <= RIVER.maxY;
 }
@@ -550,9 +601,11 @@ export function inArena(x: number, y: number): boolean {
   return x >= ARENA_V2.minX && x <= ARENA_V2.maxX && y >= ARENA_V2.minY && y <= ARENA_V2.maxY;
 }
 
-/** Ground walkability: in arena and either on land or on an open crossing. */
-export function isWalkable(x: number, y: number, riftOpen: boolean): boolean {
+/** Ground walkability: in arena, outside live footprints, and either on
+ * land or on an open crossing. */
+export function isWalkable(x: number, y: number, riftOpen: boolean, solids: Solid[] = []): boolean {
   if (!inArena(x, y)) return false;
+  if (solids.some((s) => inSolid(x, y, s))) return false;
   return !inRiver(y) || crossingAt(x, openCrossings(riftOpen)) !== null;
 }
 
@@ -574,16 +627,16 @@ export function planGroundRoute(from: Point, to: Point, riftOpen: boolean): Grou
   if (fs === "river") {
     const here = crossingAt(from.x, cs);
     if (here && toCrossing && here.id === toCrossing.id) {
-      return { crossing: here.id, cost: cheb(from, to), waypoints: [to], stranded: false };
+      return { crossing: here.id, cost: octile(from, to), waypoints: [to], stranded: false };
     }
     const exitSide: PlayerIndex =
       ts !== "river" ? ts : to.y > ARENA_V2.midY ? 1 : to.y < ARENA_V2.midY ? 0 : from.y > ARENA_V2.midY ? 1 : 0;
     const exit = { x: from.x, y: bankY(exitSide) };
     const rest = planGroundRoute(exit, to, riftOpen);
     if (!rest) return null;
-    return { crossing: here ? here.id : rest.crossing, cost: cheb(from, exit) + rest.cost, waypoints: [exit, ...rest.waypoints], stranded: !here };
+    return { crossing: here ? here.id : rest.crossing, cost: octile(from, exit) + rest.cost, waypoints: [exit, ...rest.waypoints], stranded: !here };
   }
-  if (ts === fs) return { crossing: null, cost: cheb(from, to), waypoints: [to], stranded: false };
+  if (ts === fs) return { crossing: null, cost: octile(from, to), waypoints: [to], stranded: false };
   let best: GroundRoute | null = null;
   for (const c of cs) {
     if (toCrossing && c.id !== toCrossing.id) continue;
@@ -591,10 +644,10 @@ export function planGroundRoute(from: Point, to: Point, riftOpen: boolean): Grou
     const entry = { x: ex, y: bankY(fs) };
     let route: GroundRoute;
     if (toCrossing) {
-      route = { crossing: c.id, cost: cheb(from, entry) + cheb(entry, to), waypoints: [entry, to], stranded: false };
+      route = { crossing: c.id, cost: octile(from, entry) + octile(entry, to), waypoints: [entry, to], stranded: false };
     } else {
       const exit = { x: ex, y: bankY(ts as PlayerIndex) };
-      route = { crossing: c.id, cost: cheb(from, entry) + cheb(entry, exit) + cheb(exit, to), waypoints: [entry, exit, to], stranded: false };
+      route = { crossing: c.id, cost: octile(from, entry) + octile(entry, exit) + octile(exit, to), waypoints: [entry, exit, to], stranded: false };
     }
     if (!best || route.cost < best.cost || (route.cost === best.cost && Math.abs(ex - from.x) < Math.abs(best.waypoints[0]!.x - from.x))) {
       best = route;
@@ -603,34 +656,86 @@ export function planGroundRoute(from: Point, to: Point, riftOpen: boolean): Grou
   return best;
 }
 
-function stepToward(e: Point, goal: Point, budget: number): void {
-  e.x += Math.max(-budget, Math.min(budget, goal.x - e.x));
-  e.y += Math.max(-budget, Math.min(budget, goal.y - e.y));
+function signStep(e: Point, goal: Point): Point {
+  return { x: e.x + Math.sign(goal.x - e.x), y: e.y + Math.sign(goal.y - e.y) };
 }
 
-/** Move one tick toward goal. Air flies straight; ground follows the route,
- * spending leftover speed across waypoints within the same tick. */
-export function moveUnit(e: Point & { moveType: MoveType }, goal: Point, speed: number, riftOpen: boolean): void {
-  if (e.moveType === "air") {
-    stepToward(e, goal, speed);
-    return;
+/** True when the sign-step polyline a -> b never enters solid s. */
+function polylineClear(a: Point, b: Point, s: Solid): boolean {
+  let p = { ...a };
+  for (let i = 0; i < 400 && (p.x !== b.x || p.y !== b.y); i++) {
+    p = signStep(p, b);
+    if (inSolid(p.x, p.y, s)) return false;
   }
-  let budget = speed;
-  for (let hop = 0; hop < 4 && budget > 0; hop++) {
-    const route = planGroundRoute(e, goal, riftOpen);
-    if (!route) return;
-    const wp = route.waypoints.find((w) => w.x !== e.x || w.y !== e.y);
-    if (!wp) return;
-    const d = cheb(e, wp);
-    if (d <= budget) {
-      e.x = wp.x;
-      e.y = wp.y;
-      budget -= d;
-    } else {
-      stepToward(e, wp, budget);
-      budget = 0;
+  return true;
+}
+
+/**
+ * Deterministic footprint detour: when the next cell toward the waypoint is
+ * inside a live footprint, head for the ring corner (r + 1) that is
+ * reachable without entering it and minimizes octile(pos, corner) +
+ * octile(corner, waypoint); ties keep corner order (-,-), (+,-), (-,+), (+,+).
+ */
+function detourCorner(e: Point, wp: Point, blocker: Solid, solids: Solid[], open: boolean): Point | null {
+  const k = blocker.r + 1;
+  let best: Point | null = null;
+  let bestCost = Infinity;
+  for (const [sx, sy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]] as const) {
+    const c = { x: blocker.x + sx * k, y: blocker.y + sy * k };
+    if ((c.x === e.x && c.y === e.y) || !isWalkable(c.x, c.y, open, solids) || !polylineClear(e, c, blocker)) continue;
+    const cost = octile(e, c) + octile(c, wp);
+    if (cost < bestCost) {
+      bestCost = cost;
+      best = c;
     }
   }
+  return best;
+}
+
+function nextCell(e: Point & { moveType: MoveType }, goal: Point, open: boolean, solids: Solid[]): Point | null {
+  if (e.x === goal.x && e.y === goal.y) return null;
+  if (e.moveType === "air") return signStep(e, goal);
+  const route = planGroundRoute(e, goal, open);
+  if (!route) return null;
+  const wp = route.waypoints.find((w) => w.x !== e.x || w.y !== e.y);
+  if (!wp) return null;
+  const step = signStep(e, wp);
+  const blocker = solids.find((s) => inSolid(step.x, step.y, s));
+  if (!blocker) return step;
+  const corner = detourCorner(e, wp, blocker, solids, open);
+  if (!corner) return null;
+  const alt = signStep(e, corner);
+  return solids.some((s) => inSolid(alt.x, alt.y, s)) ? null : alt;
+}
+
+/**
+ * Move one tick toward goal, one cell at a time. Budget = speed * 10 plus
+ * the carried remainder; straight cells cost 10, diagonal 14. Air flies
+ * straight over water and footprints; ground follows the river-aware route
+ * and detours around live footprints. `done` stops movement as soon as the
+ * unit is in range. Returns the remainder to carry (0 when idle/arrived).
+ */
+export function moveUnit(
+  e: Point & { moveType: MoveType },
+  goal: Point,
+  speed: number,
+  riftOpen: boolean,
+  solids: Solid[] = [],
+  carry = 0,
+  done?: () => boolean
+): number {
+  let budget = speed * MOVE_STRAIGHT + carry;
+  for (let guard = 0; guard < 64; guard++) {
+    if (done?.()) return 0;
+    const next = nextCell(e, goal, riftOpen, e.moveType === "air" ? [] : solids);
+    if (!next) return 0;
+    const cost = next.x !== e.x && next.y !== e.y ? MOVE_DIAG : MOVE_STRAIGHT;
+    if (cost > budget) return Math.min(budget, MOVE_DIAG - 1);
+    e.x = next.x;
+    e.y = next.y;
+    budget -= cost;
+  }
+  return 0;
 }
 
 function riftOpen(state: CombatState): boolean {
@@ -661,6 +766,10 @@ export function troopDeployCheck(structures: StructureEntity[], player: PlayerIn
   const margin = ARENA_V2.deployMarginX;
   if (!inArena(x, y) || x < ARENA_V2.minX + margin || x > ARENA_V2.maxX - margin) return { ok: false, reason: "Deployment outside arena territory" };
   if (inRiver(y)) return { ok: false, reason: "Deployment on river or bridge" };
+  // v5: no deploys on or within swarm-offset reach (2 cells) of a live footprint.
+  if (solidsOf(structures).some((s) => Math.abs(x - s.x) <= s.r + 2 && Math.abs(y - s.y) <= s.r + 2)) {
+    return { ok: false, reason: "Deployment on structure" };
+  }
   if (sideOf(y) === player) return { ok: true, zone: "own" };
   const depth = ARENA_V2.pocketDepth;
   const inPocketRows = player === 0 ? y <= RIVER.maxY + depth : y >= RIVER.minY - depth;
@@ -675,59 +784,69 @@ export function troopDeployCheck(structures: StructureEntity[], player: PlayerIn
   return { ok: false, reason: "Deployment outside own territory" };
 }
 
+export interface CombatTarget {
+  id: string;
+  x: number;
+  y: number;
+  r: number;
+}
+function asTarget(e: { id: string; x: number; y: number; kind: string }): CombatTarget {
+  const r = e.kind === "structure" ? STRUCTURE_FOOTPRINT_V5[(e as StructureEntity).structure] : 0;
+  return { id: e.id, x: e.x, y: e.y, r };
+}
+
 /** Reachable (ground) or always (air), or already within attack range. */
-function engageable(t: Point & { moveType: MoveType; range: number }, target: Point, open: boolean): boolean {
-  if (dist2(t.x, t.y, target.x, target.y) <= t.range * t.range) return true;
-  return t.moveType === "air" || planGroundRoute(t, target, open) !== null;
+function engageable(t: Point & { moveType: MoveType; range: number }, target: CombatTarget, open: boolean): boolean {
+  if (reach2(t.x, t.y, target) <= t.range * t.range) return true;
+  return t.moveType === "air" || planGroundRoute(t, approachPoint(t, target), open) !== null;
 }
 
 /**
- * Troop target acquisition (v4). Candidates must be in sight and
- * engageable. In-range candidates rank first by squared distance; others
- * rank by real route cost for ground units (squared distance for air), so
- * an enemy across the river ranks by bridge path, not straight line.
- * Target lock: a troop already attacking an in-range target keeps it until
- * it dies or leaves range (structure-priority units only lock structures).
- * Ties break by entity id.
+ * Troop target acquisition (v5). Candidates (enemy troops, enemy commanders
+ * and enemy structures) must be in sight and engageable. In-range candidates
+ * rank first by squared reach; others rank by real route cost for ground
+ * units (squared distance for air), so an enemy across the river ranks by
+ * bridge path. Target lock: a troop already attacking an in-range target
+ * keeps it until it dies or leaves range (structure-priority units only
+ * lock structures). Ties break by entity id.
  */
-function acquireTarget(t: TroopEntity, state: CombatState): { id: string; x: number; y: number } | null {
+function acquireTarget(t: TroopEntity, state: CombatState): CombatTarget | null {
   const open = riftOpen(state);
   if (t.targetId) {
     const cur =
-      state.troops.find((e) => e.id === t.targetId && e.hp > 0) ?? state.structures.find((s) => s.id === t.targetId && s.alive) ?? null;
-    if (
-      cur &&
-      cur.owner !== t.owner &&
-      hittable(t, cur as { moveType?: MoveType }) &&
-      dist2(t.x, t.y, cur.x, cur.y) <= t.range * t.range &&
-      (!t.structPriority || cur.kind === "structure")
-    ) {
-      return { id: cur.id, x: cur.x, y: cur.y };
+      state.troops.find((e) => e.id === t.targetId && e.hp > 0) ??
+      state.commanders.find((c) => c.id === t.targetId && c.hp > 0) ??
+      state.structures.find((s) => s.id === t.targetId && s.alive) ??
+      null;
+    if (cur && cur.owner !== t.owner && hittable(t, cur as { moveType?: MoveType }) && (!t.structPriority || cur.kind === "structure")) {
+      const tg = asTarget(cur);
+      if (reach2(t.x, t.y, tg) <= t.range * t.range) return tg;
     }
   }
-  const rank = (ex: number, ey: number): [number, number] | null => {
-    const d = dist2(t.x, t.y, ex, ey);
+  const rank = (tg: CombatTarget): [number, number] | null => {
+    const d = reach2(t.x, t.y, tg);
     if (d > t.sight * t.sight) return null;
     if (d <= t.range * t.range) return [0, d];
     if (t.moveType === "air") return [1, d];
-    const r = planGroundRoute(t, { x: ex, y: ey }, open);
+    const r = planGroundRoute(t, approachPoint(t, tg), open);
     return r ? [1, r.cost] : null;
   };
   const better = (a: [number, number], aId: string, b: [number, number] | null, bId: string): boolean =>
     b === null || a[0] < b[0] || (a[0] === b[0] && (a[1] < b[1] || (a[1] === b[1] && aId < bId)));
-  const scan = (list: Array<{ id: string; x: number; y: number }>) => {
-    let best: { id: string; x: number; y: number } | null = null;
+  const scan = (list: Array<{ id: string; x: number; y: number; kind: string }>) => {
+    let best: CombatTarget | null = null;
     let bestK: [number, number] | null = null;
     for (const e of list) {
-      const k = rank(e.x, e.y);
+      const tg = asTarget(e);
+      const k = rank(tg);
       if (k && better(k, e.id, bestK, best?.id ?? "")) {
         bestK = k;
-        best = { id: e.id, x: e.x, y: e.y };
+        best = tg;
       }
     }
     return best;
   };
-  const foes = state.troops.filter((e) => e.owner !== t.owner && e.hp > 0 && hittable(t, e));
+  const foes = [...state.troops, ...state.commanders].filter((e) => e.owner !== t.owner && e.hp > 0 && hittable(t, e));
   const structs = state.structures.filter((s) => s.owner !== t.owner && s.alive);
   if (t.structPriority) return scan(structs) ?? scan(foes);
   return scan(foes) ?? scan(structs);
@@ -804,25 +923,25 @@ function pickCommanderTarget(
   structures: StructureEntity[],
   preference: string,
   open = false
-): { id: string; x: number; y: number } | null {
+): CombatTarget | null {
   const pool: Fighter[] = [...troops.filter((t) => t.hp > 0), ...commanders.filter((x) => x.hp > 0 && x.id !== c.id)];
-  const foes = pool.filter((e) => e.owner !== c.owner && hittable(c as unknown as TroopEntity, e) && engageable(c, e, open));
+  const foes = pool.filter((e) => e.owner !== c.owner && hittable(c as unknown as TroopEntity, e) && engageable(c, asTarget(e), open));
   const inSight = foes.filter((e) => dist2(c.x, c.y, e.x, e.y) <= c.sight * c.sight);
   if (inSight.length > 0) {
     const sorted = [...inSight].sort((a, b) => (a.id < b.id ? -1 : 1));
     if (preference === "strongest") {
       let m = sorted[0] as Fighter;
       for (const e of sorted) if (e.maxHp > m.maxHp) m = e;
-      return { id: m.id, x: m.x, y: m.y };
+      return { id: m.id, x: m.x, y: m.y, r: 0 };
     }
     if (preference === "weakest") {
       let m = sorted[0] as Fighter;
       for (const e of sorted) if (e.hp < m.hp) m = e;
-      return { id: m.id, x: m.x, y: m.y };
+      return { id: m.id, x: m.x, y: m.y, r: 0 };
     }
     if (preference === "commander") {
       const foe = sorted.find((e) => e.kind === "commander");
-      if (foe) return { id: foe.id, x: foe.x, y: foe.y };
+      if (foe) return { id: foe.id, x: foe.x, y: foe.y, r: 0 };
     }
     let best = sorted[0] as Fighter;
     let bestD = dist2(c.x, c.y, best.x, best.y);
@@ -833,19 +952,20 @@ function pickCommanderTarget(
         best = e;
       }
     }
-    return { id: best.id, x: best.x, y: best.y };
+    return { id: best.id, x: best.x, y: best.y, r: 0 };
   }
-  let bestS: StructureEntity | null = null;
+  let bestS: CombatTarget | null = null;
   let bestD = Infinity;
   for (const s of structures) {
     if (s.owner === c.owner || !s.alive) continue;
-    const d = dist2(c.x, c.y, s.x, s.y);
+    const tg = asTarget(s);
+    const d = reach2(c.x, c.y, tg);
     if (d <= c.sight * c.sight && d < bestD) {
       bestD = d;
-      bestS = s;
+      bestS = tg;
     }
   }
-  return bestS ? { id: bestS.id, x: bestS.x, y: bestS.y } : null;
+  return bestS;
 }
 
 
@@ -924,6 +1044,7 @@ function applyDeploy(state: CombatState, cmd: DeployCommand, counter: { n: numbe
       guardUntil: 0,
       guardPct: 0,
       armor: 0,
+      moveCarry: 0,
     });
   }
   state.events.push({ type: "deploy", tick: state.tick, player: cmd.player, cardId: cmd.cardId, entityIds: ids });
@@ -1148,12 +1269,13 @@ export function resolveOvertimeTiebreak(state: CombatState): PlayerIndex | "draw
 }
 
 // Single-tick stepper for harnesses and tests. Same deterministic path as
-// runMatch; entity ids continue from a module counter.
-let stepCounter = 1000000;
+// runMatch; entity ids continue from the per-match counter in state
+// (v5: no module-global state, so stepped and runMatch replays agree).
 export function stepMatch(state: CombatState, commands: DeployCommand[] = []): void {
   const due = commands.filter((c) => c.tick <= state.tick + 1);
-  advanceOneTick(state, due, { n: stepCounter });
-  stepCounter += 1000000;
+  const counter = { n: state.nextEntityId };
+  advanceOneTick(state, due, counter);
+  state.nextEntityId = counter.n;
 }
 
 function advanceOneTick(state: CombatState, due: DeployCommand[], counter: { n: number }): void {
@@ -1195,13 +1317,23 @@ function advanceOneTick(state: CombatState, due: DeployCommand[], counter: { n: 
   // march on their current lane toward the lane tower, then the Core.
   const fighters: Fighter[] = [...state.troops, ...state.commanders];
   const open = riftOpen(state);
-  const advance = (u: TroopEntity | CommanderEntity, target: { id: string; x: number; y: number } | null) => {
+  // v5: footprints of structures alive at movement time are solid.
+  const solids = solidsOf(state.structures);
+  const advance = (u: TroopEntity | CommanderEntity, target: CombatTarget | null) => {
     const speed = combatSpeed(u, state.tick, state);
-    const goal = target ?? laneObjective(u, state.structures);
+    const lane = target ? null : laneObjective(u, state.structures);
+    const goal = target ?? (lane ? asTarget(lane) : null);
     u.targetId = goal ? goal.id : null;
-    if (!goal) return;
-    if (target && dist2(u.x, u.y, goal.x, goal.y) <= u.range * u.range) return;
-    moveUnit(u, goal, speed, open);
+    if (!goal) {
+      u.moveCarry = 0;
+      return;
+    }
+    const inRange = () => reach2(u.x, u.y, goal) <= u.range * u.range;
+    if (inRange()) {
+      u.moveCarry = 0;
+      return;
+    }
+    u.moveCarry = moveUnit(u, approachPoint(u, goal), speed, open, solids, u.moveCarry, inRange);
   };
   for (const t of state.troops) {
     if (t.hp <= 0 || state.tick < t.stunUntil) continue;
@@ -1224,8 +1356,9 @@ function advanceOneTick(state: CombatState, due: DeployCommand[], counter: { n: 
   const splashHits: Array<{ x: number; y: number; owner: PlayerIndex; damage: number; radius: number; primaryId: string }> = [];
   for (const p of arrivals) {
     const tgt = byId.get(p.targetId);
-    const ix = tgt && tgt.kind === "troop" && (tgt as TroopEntity).hp > 0 ? (tgt as TroopEntity).x : p.snapX;
-    const iy = tgt && tgt.kind === "troop" && (tgt as TroopEntity).hp > 0 ? (tgt as TroopEntity).y : p.snapY;
+    const live = tgt && (tgt.kind === "troop" || tgt.kind === "commander") && (tgt as TroopEntity | CommanderEntity).hp > 0;
+    const ix = live ? (tgt as TroopEntity | CommanderEntity).x : p.snapX;
+    const iy = live ? (tgt as TroopEntity | CommanderEntity).y : p.snapY;
     splashHits.push({ x: ix, y: iy, owner: p.owner, damage: p.damage, radius: p.splashRadius, primaryId: p.targetId });
   }
   for (const t of fighters) {
@@ -1234,7 +1367,7 @@ function advanceOneTick(state: CombatState, due: DeployCommand[], counter: { n: 
     if (!tgt) continue;
     const alive = tgt.kind === "troop" || tgt.kind === "commander" ? (tgt as TroopEntity).hp > 0 : (tgt as StructureEntity).alive;
     if (!alive) continue;
-    if (dist2(t.x, t.y, tgt.x, tgt.y) <= t.range * t.range) {
+    if (t.owner !== tgt.owner && reach2(t.x, t.y, asTarget(tgt)) <= t.range * t.range) {
       const dmg = combatDamage(t, state.tick);
       if (t.projectileTicks > 0) {
         counter.n += 1;
@@ -1470,7 +1603,7 @@ export interface RunResult {
 // pre-sorted; same inputs always yield the same result.
 export function runMatch(config: CombatConfig, commands: DeployCommand[], maxTicks?: number): { state: CombatState; result: RunResult } {
   const state = initMatch(config);
-  const counter = { n: 0 };
+  const counter = { n: state.nextEntityId };
   const sorted = [...commands].sort((a, b) => (a.tick === b.tick ? a.seq - b.seq : a.tick - b.tick));
   const cap = maxTicks ?? COMBAT_TIMELINE_V1.durationTicks + COMBAT_TIMELINE_V1.overtimeTicks + 10;
   let ci = 0;
@@ -1491,6 +1624,7 @@ export function runMatch(config: CombatConfig, commands: DeployCommand[], maxTic
       break;
     }
   }
+  state.nextEntityId = counter.n;
   return {
     state,
     result: {
@@ -1524,8 +1658,9 @@ export function combatRulesetSummary() {
       riftFord: ARENA_V2.riftFord,
       riftRegion: ARENA_V2.riftRegion,
       deployment: "troops: own side x 5..95 (p0 y 0..73, p1 y 87..160), never river/bridge; pocket after enemy lane tower falls: lane half x 5..49 / 51..95, p0 y 87..106, p1 y 54..73; spells: anywhere in arena",
-      navigation: "ground: Chebyshev routes via left/right bridge (+ Rift Ford while RIFT_SHIFT active), recomputed each tick, ties -> smallest lateral detour then left>right>rift; air: straight line over river",
-      targeting: "in sight + engageable; in-range first by distance, else ground route cost (air distance); in-range lock until death/out of range; no target -> lane tower then Core",
+      navigation: "ground: octile routes (straight 10, diagonal 14) via left/right bridge (+ Rift Ford while RIFT_SHIFT active), recomputed each tick, ties -> smallest lateral detour then left>right>rift; cell-by-cell movement with budget speed*10 and carried remainder; deterministic ring-corner detours around live structure footprints; air: straight line over river and footprints",
+      targeting: "enemy troops, enemy commanders and structures; in sight + engageable; in-range first by reach, else ground route cost (air distance); in-range lock until death/out of range; no target -> lane tower then Core",
+      footprints: "live tower half-size 3, core half-size 4 (solid for ground, rubble when destroyed); structure reach measured to footprint ring; no deploys within 2 cells of a live footprint",
     },
     energy: { ...ENERGY_V1, phases: "1x/2x/3x yield exactly 1/2/3 energy per 28 ticks via remainder-preserving accumulator; chaos mods compose after the phase rate" },
     scoring: {
@@ -1554,6 +1689,6 @@ export function combatRulesetSummary() {
       buff: "override on recast, fully reverts on expiry, troops only",
     },
     deferred: [],
-    compatibility: "v4 hashes differ from v3 by construction (arena-v2 terrain, navigation, target lock, riftOpenUntil in state); no persisted replays of earlier versions exist (pre-release, headless fixtures only)",
+    compatibility: "v5 hashes differ from v4 by construction (commander targetability, footprints, octile movement, moveCarry + per-match entity ids in state); no persisted replays of earlier versions exist (pre-release, headless fixtures only)",
   };
 }

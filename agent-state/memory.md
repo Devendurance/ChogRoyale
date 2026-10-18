@@ -25,7 +25,10 @@ Durable facts, conventions, and gotchas that should survive across sessions.
 - Earlier 896-vs-895 commander drift was a concurrent-worker race (failure write overwrote a resolved row). Guarded in `recordMetadataFailure`; self-heals on re-ingest.
 - Dev server on :3000 only; :3100 is blocked by Privy frame-ancestors allowlist. Stale :3000 compile once served 500 on `commanders/[tokenId]`; restart fixes.
 - Windows/git-bash quirks: `$_` in inline powershell gets eaten, use temp `.ps1` files and delete after; `tasklist` needs `//FI`; `wmic`, `setsid` unavailable; background jobs survive tool timeouts, always re-check process list.
-- Combat movement is Chebyshev (per-axis clamp), so route costs use cheb distance. Equal-cost crossing ties are common (diagonal moves are free laterally), which is why ties break on smallest lateral detour first.
+- Combat movement (v5) is cell-by-cell octile: straight 10, diagonal 14, budget speed*10 plus carried remainder (moveCarry). Route costs use octile too. Equal-cost crossing ties still occur, so ties break on smallest lateral detour first.
+- Structure reach is measured to the footprint ring (half-size + 1), so melee units stop up to `range` cells outside the ring. Test "arrived" with reach2, not center distance.
+- Use stepMatch freely in tests: entity ids come from state.nextEntityId, so stepped runs and runMatch produce identical hashes.
+- Structures only fire on tick % 10 === 0. Use a no-troop control run to isolate troop damage, not tick parity.
 - Arena-v2 river is y 74..86: test deploys at y 74..86 are rejected. Use y<=73 (p0) or y>=87 (p1).
 - Scenario evidence lives in src/lib/arena-scenarios.ts (shared by tests and scripts). botMatch plays from real hands. Hand-blind fixed command lists get mostly rejected.
 - Live browser E2E (Privy login) needs a human; no headless token path (dashboard test credentials disabled).

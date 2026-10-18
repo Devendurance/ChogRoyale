@@ -1,21 +1,16 @@
 // Headless 1v1 match runner (development harness only).
-// Two synthetic players, authored v1 decks, deterministic seed-derived
-// deployment orders, optional commanders and a real B1.4b chaos schedule
+// Two bot players read the real hand/energy/board each decision (botMove),
+// authored v1 decks, optional commanders and a real B1.4b chaos schedule
 // derived from actual Genesis metadata (read-only). Prints the battle
 // summary and state hash. Never writes to any database.
-// Usage: npm run combat:run [-- --seed <s> --commanders <class|free-class,class|free-class> --chaosPatron <tokenId>]
+// Usage: npm run combat:run [-- --seed <s> --every <ticks> --commanders <class|free-class,class|free-class> --chaosPatron <tokenId>]
 import "dotenv/config";
-import { createHash } from "crypto";
-import { initMatch, runMatch, COMBAT_RULESET_VERSION, TROOP_CARDS_V1, SPELL_CARDS_V1, type CombatConfig, type DeployCommand } from "@/lib/combat";
+import { runMatch, COMBAT_RULESET_VERSION, TROOP_CARDS_V1, SPELL_CARDS_V1, type CombatConfig } from "@/lib/combat";
+import { botMatch } from "@/lib/arena-scenarios";
 import { freeCommanderTemplates, type CommanderClass } from "@/lib/commanders";
 import { derivePatronConfig } from "@/lib/patrons";
 import { deriveChaosSchedule } from "@/lib/chaos";
 import { getNftByTokenId } from "@/db/nfts";
-
-function hashInt(tag: string, seed: string, n: number, modulo: number): number {
-  const digest = createHash("sha256").update(`${tag}:${seed}:${n}`).digest("hex");
-  return Number(BigInt(`0x${digest}`) % BigInt(modulo));
-}
 
 const DECKS: [string[], string[]] = [
   ["choglings", "chaos_archer", "chaos_bolt", "rally_horn", "boulderback", "frostshell", "rift_runner", "sparkcaster"],
@@ -74,39 +69,45 @@ async function main() {
     });
     config.chaos = deriveChaosSchedule({ patron, serverSeed: `dev-${seed}`, matchKey: `dev-${seed}` });
   }
-  // Deterministic synthetic play: each side deploys a rotating affordable
-  // card every ~4 seconds at a seeded lane position. The harness (not the
-  // engine) may use seeded selection; the engine itself stays seed-free
-  // apart from the recorded match seed.
-  const probe = initMatch(config);
-  void probe;
-  const commands: DeployCommand[] = [];
-  let seq = 0;
-  const hands: [string[], string[]] = [DECKS[0].slice(0, 4), DECKS[1].slice(0, 4)];
-  const energy = [5, 5];
-  for (let t = 10; t < 1750; t += 40) {
-    for (const p of [0, 1] as const) {
-      energy[p] = Math.min(10, energy[p] + 1);
-      const affordable = hands[p].filter((c) => cardCost(c) <= energy[p]);
-      if (affordable.length === 0) continue;
-      const card = affordable[hashInt("card", seed, t + p, affordable.length)] as string;
-      energy[p] -= cardCost(card);
-      hands[p] = [...hands[p].filter((c) => c !== card), card];
-      seq += 1;
-      const isBolt = card === "chaos_bolt";
-      const isHorn = card === "rally_horn";
-      commands.push({
-        seq,
-        player: p,
-        tick: t + p * 3,
-        cardId: card,
-        x: isBolt ? 50 : 20 + hashInt("lane", seed, seq, 61),
-        y: isBolt ? 80 : isHorn ? (p === 0 ? 60 : 100) : p === 0 ? 30 + hashInt("depth", seed, seq, 40) : 90 + hashInt("depth", seed, seq, 40),
-      });
-    }
-  }
-  const { result } = runMatch(config, commands);
-  console.log(JSON.stringify({ seed, commands: commands.length, ...result }, null, 1));
+  // Deterministic bot play from the REAL engine state: every 2s each side
+  // submits the first card in its actual hand that is affordable and has a
+  // legal placement (botMove). The recorded commands are then replayed
+  // through runMatch (forward and shuffled) for the canonical result.
+  const every = Math.max(5, Number(args[args.indexOf("--every") + 1]) || 20);
+  const bot = botMatch(config, 3100, every);
+  const { state, result } = runMatch(config, bot.commands);
+  const shuffled = runMatch(config, [...bot.commands].reverse());
+  const ev = state.events;
+  const count = <T extends string>(list: T[]) => list.reduce<Record<string, number>>((m, k) => ((m[k] = (m[k] ?? 0) + 1), m), {});
+  const lane = (x: number) => (x < 50 ? "left" : x > 50 ? "right" : "center");
+  const troopCmds = bot.commands.filter((c) => TROOP_CARDS_V1[c.cardId]);
+  console.log(
+    JSON.stringify(
+      {
+        seed,
+        every,
+        commands: bot.commands.length,
+        deploys: ev.filter((e) => e.type === "deploy").length,
+        spells: ev.filter((e) => e.type === "spell_cast").length,
+        rejected: ev.filter((e) => e.type === "command_rejected"),
+        energySpent: [0, 1].map((p) => bot.commands.filter((c) => c.player === p).reduce((n, c) => n + cardCost(c.cardId), 0)),
+        cardsPlayed: count(bot.commands.map((c) => `p${c.player}:${c.cardId}`)),
+        lanes: count(troopCmds.map((c) => `p${c.player}:${lane(c.x)}`)),
+        commanders: {
+          deployed: ev.filter((e) => e.type === "commander_deployed").length,
+          abilitiesFired: ev.filter((e) => e.type === "ability_fired").length,
+          deaths: ev.filter((e) => e.type === "death" && e.entityId.startsWith("c")).map((e) => (e.type === "death" ? `${e.entityId}@${e.tick}` : "")),
+        },
+        chaos: count(ev.filter((e) => e.type === "pulse_active" || e.type === "rift_crossing").map((e) => (e.type === "pulse_active" ? e.family : `rift_${e.type === "rift_crossing" && e.open ? "open" : "close"}`))),
+        towersDestroyed: ev.filter((e) => e.type === "structure_destroyed").map((e) => (e.type === "structure_destroyed" ? `${e.entityId}@${e.tick}` : "")),
+        troopDeaths: ev.filter((e) => e.type === "death").length,
+        replayIdentical: shuffled.result.stateHash === result.stateHash,
+        ...result,
+      },
+      null,
+      1
+    )
+  );
 }
 
 main().catch((err) => {

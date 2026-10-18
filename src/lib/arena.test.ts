@@ -40,7 +40,7 @@ const structures = (): StructureEntity[] => initMatch(scenarioConfig(deckWith(),
 
 describe("arena-v2 geometry", () => {
   it("is versioned and bounded", () => {
-    expect(COMBAT_RULESET_VERSION).toBe("v4");
+    expect(COMBAT_RULESET_VERSION).toBe("v5");
     expect(ARENA_VERSION).toBe("arena-v2");
     expect(combatRulesetSummary().arena.version).toBe("arena-v2");
     expect([ARENA_V2.minX, ARENA_V2.maxX, ARENA_V2.minY, ARENA_V2.maxY]).toEqual([0, 100, 0, 160]);
@@ -82,11 +82,11 @@ describe("ground navigation", () => {
     const r = planGroundRoute({ x: 30, y: 60 }, { x: 30, y: 120 }, false)!;
     expect(r.crossing).toBe("left");
     expect(r.waypoints).toEqual([{ x: 30, y: 73 }, { x: 30, y: 87 }, { x: 30, y: 120 }]);
-    expect(r.cost).toBe(60);
+    expect(r.cost).toBe(600);
     expect(planGroundRoute({ x: 70, y: 60 }, { x: 70, y: 120 }, false)!.crossing).toBe("right");
   });
   it("same-side goals go straight", () => {
-    expect(planGroundRoute({ x: 10, y: 10 }, { x: 60, y: 50 }, false)).toEqual({ crossing: null, cost: 50, waypoints: [{ x: 60, y: 50 }], stranded: false });
+    expect(planGroundRoute({ x: 10, y: 10 }, { x: 60, y: 50 }, false)).toEqual({ crossing: null, cost: 660, waypoints: [{ x: 60, y: 50 }], stranded: false });
   });
   it("breaks ties deterministically and mirror-equivalently", () => {
     const a = planGroundRoute({ x: 50, y: 60 }, { x: 50, y: 100 }, false)!;

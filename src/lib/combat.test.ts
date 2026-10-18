@@ -137,11 +137,30 @@ describe("combat and victory", () => {
     expect(result.winner).toBe("draw");
   });
   it("state hash is stable and sensitive", () => {
-    const a = runMatch(config(), [cmd(1, 0, 5)], 50);
-    const b = runMatch(config(), [cmd(1, 0, 5)], 50);
-    expect(stateHash(a.state)).toBe(stateHash(b.state));
-    const c = runMatch(config(), [cmd(1, 0, 6)], 50);
-    expect(stateHash(c.state)).not.toBe(stateHash(a.state));
+    // Full per-tick hash trajectories over the original 100-tick horizon.
+    const trail = (cmds: DeployCommand[], ticks: number) => {
+      const s = initMatch(config());
+      const out: string[] = [];
+      for (let i = 0; i < ticks; i++) {
+        stepMatch(s, cmds.filter((c) => c.tick === s.tick + 1));
+        out.push(stateHash(s));
+      }
+      return { s, out };
+    };
+    const a = trail([cmd(1, 0, 5)], 100);
+    const b = trail([cmd(1, 0, 5)], 100);
+    // Same initial state + same commands = identical hash at every tick.
+    expect(b.out).toEqual(a.out);
+    // The stepped path and runMatch agree exactly (no global id state).
+    expect(stateHash(runMatch(config(), [cmd(1, 0, 5)], 100).state)).toBe(a.out[99]);
+    // A one-tick-later deploy diverges from the deploy tick onward.
+    const c = trail([cmd(1, 0, 6)], 100);
+    expect(c.out.slice(0, 4)).toEqual(a.out.slice(0, 4));
+    for (let t = 4; t < 60; t++) expect(c.out[t]).not.toBe(a.out[t]);
+    expect(c.s.events).not.toEqual(a.s.events);
+    // Convergence after the deployed troops die is legitimate (equal end
+    // boards), not a determinism failure: the trajectories above differ.
+    if (a.s.troops.length > 0 || c.s.troops.length > 0) expect(c.out[99]).not.toBe(a.out[99]);
   });
   it("both players run symmetric rules", () => {
     const { state } = runMatch(config(), [cmd(1, 0, 5, "choglings", 50, 40), cmd(2, 1, 5, "choglings", 50, 120)], 60);
@@ -626,7 +645,7 @@ describe("b2.4 match rules", () => {
   });
   it("ruleset reports v2 with phases, crowns, and the compatibility boundary", () => {
     const summary = combatRulesetSummary();
-    expect(summary.version).toBe("v4");
+    expect(summary.version).toBe("v5");
     expect(summary.timeline.overtimeTicks).toBe(1200);
   });
 });
