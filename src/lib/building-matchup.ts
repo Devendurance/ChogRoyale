@@ -33,6 +33,31 @@ export const MATCHUP_DECKS_V11: Record<string, string[]> = {
   breaker: deckWith("riftbreaker", "gale_netter", "choglings", "rift_snare", "chaos_archer", "chog_guardian", "rift_sprites", "cmdr:free-scout"),
 };
 
+/**
+ * v12 controlled comparison (B2.7c2). The cheap swarm deck is identical in
+ * both sets; each other deck differs between BASE and MAULER by exactly one
+ * card (the listed slot swapped for ember_mauler):
+ * building defense (turret) chog_guardian, siege decoy_totem, control
+ * chog_guardian, antiSwarm chog_guardian.
+ */
+const SWARM = deckWith("choglings", "rift_sprites", "rift_snare", "rift_runner", "chaos_archer", "chog_guardian", "sparkcaster", "cmdr:free-scout");
+const swap = (deck: string[], from: string) => deck.map((c) => (c === from ? "ember_mauler" : c));
+const ANTI_SWARM = deckWith("chog_guardian", "sparkcaster", "chaos_archer", "frostshell", "rift_snare", "decoy_totem", "hexwing", "cmdr:free-deadeye");
+export const MATCHUP_DECKS_V12_BASE: Record<string, string[]> = {
+  swarm: SWARM,
+  turret: MATCHUP_DECKS_V9.turret!,
+  siege: MATCHUP_DECKS_V11.siege!,
+  control: MATCHUP_DECKS_V11.control!,
+  antiSwarm: ANTI_SWARM,
+};
+export const MATCHUP_DECKS_V12_MAULER: Record<string, string[]> = {
+  swarm: SWARM,
+  turret: swap(MATCHUP_DECKS_V9.turret!, "chog_guardian"),
+  siege: swap(MATCHUP_DECKS_V11.siege!, "decoy_totem"),
+  control: swap(MATCHUP_DECKS_V11.control!, "chog_guardian"),
+  antiSwarm: swap(ANTI_SWARM, "chog_guardian"),
+};
+
 export const MATCHUP_SEEDS = ["m1", "m2", "m3", "m4", "m5", "m6", "m7", "m8"];
 
 export interface MatchupRow {
@@ -53,6 +78,10 @@ export interface MatchupRow {
   spells: Record<string, number>;
   /** Accepted troop/building deploys per card id (spells are in `spells`). */
   deploys: Record<string, number>;
+  /** Troop + commander deaths by owner. */
+  deaths: [number, number];
+  /** Ember Mauler shockwaves: swings and extra ground units hit beyond the primary. */
+  shockwave: { swings: number; extraHits: number };
   /** Tower/Core damage dealt by impact spells (Comet). */
   spellStructureDamage: number;
   energySpent: [number, number];
@@ -68,6 +97,8 @@ export function measure(state: CombatState): Omit<MatchupRow, "p0" | "p1" | "see
   const spells: Record<string, number> = {};
   const deploys: Record<string, number> = {};
   const energySpent: [number, number] = [0, 0];
+  const deaths: [number, number] = [0, 0];
+  const shockwave = { swings: 0, extraHits: 0 };
   let spellStructureDamage = 0;
   for (const e of ev) {
     if (e.type === "building_spawned") {
@@ -87,6 +118,11 @@ export function measure(state: CombatState): Omit<MatchupRow, "p0" | "p1" | "see
       energySpent[e.player] += COMMANDER_COMBAT_PROFILE_V1[e.class as keyof typeof COMMANDER_COMBAT_PROFILE_V1]?.cost ?? 0;
     } else if (e.type === "ability_fired") {
       energySpent[e.player] += e.energySpent;
+    } else if (e.type === "death") {
+      deaths[e.owner] += 1;
+    } else if (e.type === "shockwave") {
+      shockwave.swings += 1;
+      shockwave.extraHits += e.extraHits;
     } else if (e.type === "spell_impact") {
       spellStructureDamage += e.structures * (SPELL_CARDS_V1[e.cardId]?.impact?.structureDamage ?? 0);
     }
@@ -115,6 +151,8 @@ export function measure(state: CombatState): Omit<MatchupRow, "p0" | "p1" | "see
     abilityActivations: ev.filter((e) => e.type === "ability_fired" && e.trigger === "active").length,
     spells,
     deploys,
+    deaths,
+    shockwave,
     spellStructureDamage,
     energySpent,
     bySide: {
@@ -149,13 +187,18 @@ export function positionReport(rows: MatchupRow[]) {
   };
 }
 
-export function runMatchup(decks: Record<string, string[]>, seeds = MATCHUP_SEEDS): MatchupRow[] {
+/**
+ * `chaos: "rift"` (default) plays the raw seed schedule, whose zone effects
+ * name fixed board zones and so are not side-neutral; "none" plays without
+ * Chaos for positional checks.
+ */
+export function runMatchup(decks: Record<string, string[]>, seeds = MATCHUP_SEEDS, chaos: "rift" | "none" = "rift"): MatchupRow[] {
   const names = Object.keys(decks);
   const rows: MatchupRow[] = [];
   for (const a of names) {
     for (const b of names) {
       for (const seed of seeds) {
-        const cfg = () => scenarioConfig(decks[a]!, decks[b]!, riftSchedule(seed), seed);
+        const cfg = () => scenarioConfig(decks[a]!, decks[b]!, chaos === "rift" ? riftSchedule(seed) : null, seed);
         const bot = botMatch(cfg(), 3100, 20);
         const replay = runMatch(cfg(), bot.commands);
         rows.push({ p0: a, p1: b, seed, ...measure(replay.state), replayIdentical: replay.result.stateHash === stateHash(bot.state) });
@@ -212,6 +255,30 @@ export function engineMirrorCheck(decks: Record<string, string[]>, seeds = MATCH
   return rows;
 }
 
+/**
+ * Same-deck positional check. For deck X vs X and each seed, plays the
+ * normal bot game and a lane-swapped game (botMatch swapSides: P1 receives
+ * P0's lane sequence and first-mover turns). Chaos "rift" plays the raw
+ * schedule in both; "rift-mirrored" gives the swapped game the mirrored
+ * schedule; "none" plays without Chaos. A side-neutral engine + bot must
+ * swap winner, crowns and tower damage exactly.
+ */
+export function laneSwapCheck(decks: Record<string, string[]>, seeds = MATCHUP_SEEDS, chaos: "rift" | "rift-mirrored" | "none" = "none") {
+  const swapW = (w: PlayerIndex | "draw" | null) => (w === 0 ? 1 : w === 1 ? 0 : w);
+  const rows: Array<{ deck: string; seed: string; winner: PlayerIndex | "draw" | null; swappedWinner: PlayerIndex | "draw" | null; exact: boolean }> = [];
+  for (const [name, deck] of Object.entries(decks)) {
+    for (const seed of seeds) {
+      const sched = chaos === "none" ? null : riftSchedule(seed);
+      const a = measure(botMatch(scenarioConfig(deck, deck, sched, seed), 3100, 20).state);
+      const b = measure(botMatch(scenarioConfig(deck, deck, chaos === "rift-mirrored" ? sched && mirrorSchedule(sched) : sched, seed), 3100, 20, { swapSides: true }).state);
+      const exact = swapW(a.winner) === b.winner && a.ticks === b.ticks && a.crowns.join() === [...b.crowns].reverse().join() && a.towerDamage.join() === [...b.towerDamage].reverse().join();
+      rows.push({ deck: name, seed, winner: a.winner, swappedWinner: b.winner, exact });
+    }
+  }
+  const count = (k: "winner" | "swappedWinner", v: PlayerIndex) => rows.filter((r) => r[k] === v).length;
+  return { games: rows.length, exact: rows.filter((r) => r.exact).length, normal: { p0: count("winner", 0), p1: count("winner", 1) }, swapped: { p0: count("swappedWinner", 0), p1: count("swappedWinner", 1) }, mismatches: rows.filter((r) => !r.exact) };
+}
+
 export function summarizeMatchup(rows: MatchupRow[]) {
   const n = rows.length;
   const sum = (f: (r: MatchupRow) => number) => rows.reduce((s, r) => s + f(r), 0);
@@ -255,6 +322,8 @@ export function summarizeMatchup(rows: MatchupRow[]) {
     avgAbilityActivations: avg((r) => r.abilityActivations),
     spells,
     deploys,
+    unitDeathsTotal: sum((r) => r.deaths[0] + r.deaths[1]),
+    shockwave: { swings: sum((r) => r.shockwave.swings), extraHits: sum((r) => r.shockwave.extraHits) },
     spellStructureDamageTotal: sum((r) => r.spellStructureDamage),
     avgEnergySpentPerMatch: avg((r) => r.energySpent[0] + r.energySpent[1]),
     towerDamagePer10Energy: Math.round((towerDmg * 10 * 10) / Math.max(1, spent)) / 10,

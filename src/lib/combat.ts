@@ -34,7 +34,7 @@ import type { ChaosSchedule, ChaosEffect } from "@/lib/chaos";
 // v8 (B2.7a): deployable building cards (Rift Sentry, Decoy Totem) with
 // solid footprints, finite lifetimes, building-aware targeting and
 // placement rules that keep every river crossing mouth clear.
-export const COMBAT_RULESET_VERSION = "v11" as const;
+export const COMBAT_RULESET_VERSION = "v12" as const;
 export const TICKS_PER_SECOND = 10;
 // Standard ranked timeline (v2): 180s regulation, up to 120s sudden-death overtime.
 // Energy phases: 1x ticks 0-1199, 2x ticks 1200-2399, 3x ticks 2400-2999.
@@ -114,6 +114,13 @@ export interface TroopCardDef {
   vsGroundPct?: number;
   /** v11: percent of damage dealt to enemy deployable buildings (overrides vsGroundPct). */
   vsBuildingPct?: number;
+  /**
+   * v12 melee shockwave radius (absent = none). Each landed swing hits the
+   * primary target, then the same damage hits every other living enemy
+   * GROUND troop/commander within this radius of the attacker itself
+   * (never air, never buildings/towers/Core unless primary, never friends).
+   */
+  shockwaveRadius?: number;
 }
 
 export interface SpellCardDef {
@@ -172,6 +179,11 @@ export const TROOP_CARDS_V1: Record<string, TroopCardDef> = {
   // 300% (66) vs deployable buildings, 22 vs towers/Core/units. Ignores
   // troops while a structure is in sight, so cheap defenders swarm it.
   riftbreaker: { id: "riftbreaker", name: "Riftbreaker", cost: 4, count: 1, hp: 240, damage: 22, range: 2, speed: 2, sight: 30, attackIntervalTicks: 11, moveType: "ground", hitsAir: false, hitsGround: true, structPriority: true, splashRadius: 0, projectileTicks: 0, slowPct: 0, slowDurationTicks: 0, targetPriority: "building", vsBuildingPct: 300 },
+  // v12 slow melee anti-swarm: every swing sends a radius-4 ground
+  // shockwave around itself (24 to each enemy ground unit). Low single-
+  // target output (2/tick), cannot hit air, 220 HP so ranged units behind
+  // or beside a tower kill it before it connects; loses melee duels.
+  ember_mauler: { id: "ember_mauler", name: "Ember Mauler", cost: 4, count: 1, hp: 220, damage: 24, range: 2, speed: 1, sight: 22, attackIntervalTicks: 12, moveType: "ground", hitsAir: false, hitsGround: true, structPriority: false, splashRadius: 0, projectileTicks: 0, slowPct: 0, slowDurationTicks: 0, shockwaveRadius: 4 },
 };
 
 export const SPELL_CARDS_V1: Record<string, SpellCardDef> = {
@@ -526,6 +538,7 @@ export interface BuildingEntity {
 export type CombatEvent =
   | { type: "deploy"; tick: number; player: PlayerIndex; cardId: string; entityIds: string[] }
   | { type: "death"; tick: number; entityId: string; owner: PlayerIndex }
+  | { type: "shockwave"; tick: number; owner: PlayerIndex; entityId: string; primaryId: string; extraHits: number }
   | { type: "structure_destroyed"; tick: number; entityId: string; owner: PlayerIndex; structure: "tower" | "core" }
   | { type: "match_end"; tick: number; winner: PlayerIndex | "draw"; reason: "core" | "crowns" | "overtime" | "timeout"; crowns: [number, number] }
   | { type: "command_rejected"; tick: number; seq: number; reason: string; player?: PlayerIndex; abilityId?: string }
@@ -2034,6 +2047,18 @@ function advanceOneTick(state: CombatState, due: CombatCommand[], counter: { n: 
         if (t.splashRadius > 0) {
           splashHits.push({ x: tgt.x, y: tgt.y, owner: t.owner, damage: dmg, radius: t.splashRadius, primaryId: tgt.id });
         }
+        const wave = t.kind === "troop" ? TROOP_CARDS_V1[(t as unknown as TroopEntity).cardId]?.shockwaveRadius : undefined;
+        if (wave) {
+          let extraHits = 0;
+          for (const f of fighters) {
+            if (f.owner === t.owner || f.hp <= 0 || f.id === tgt.id || f.moveType !== "ground") continue;
+            if (dist2(f.x, f.y, t.x, t.y) <= wave * wave) {
+              hit(f.id, dmg);
+              extraHits += 1;
+            }
+          }
+          state.events.push({ type: "shockwave", tick: state.tick, owner: t.owner, entityId: t.id, primaryId: tgt.id, extraHits });
+        }
         if ((tgt.kind === "troop" || tgt.kind === "commander") && state.tick < (tgt as TroopEntity).reflectUntil) {
           const rt = tgt as TroopEntity;
           hit(t.id, Math.floor((dmg * rt.reflectFracNumer) / rt.reflectFracDenom));
@@ -2347,6 +2372,7 @@ export function combatRulesetSummary() {
     troopRoles: {
       gale_netter: "anti-air: eligible flying enemies in sight first (then other units, then structures), locks only air targets; 40 per projectile vs air, vsGroundPct 30 (12) vs ground units, buildings, towers and Core",
       riftbreaker: "demolition: enemy deployable buildings in sight first, then towers/Core, then units (structure priority, ignores troops while a structure is in sight); a tower lock yields to a building in sight; vsBuildingPct 300 (66) vs buildings, 22 otherwise; normal bridge routes and solid footprints",
+      ember_mauler: "melee shockwave: each landed swing hits the primary, then the same damage (24, after buffs) hits every other living enemy ground troop/commander within radius 4 of the Mauler; never air, never buildings/towers/Core unless primary, never friendly; emits a shockwave event with extraHits",
       modifiers: "role percent applies after Rally Horn and commander damage buffs, floored; projectiles carry the modified value",
     },
     spellRules: {

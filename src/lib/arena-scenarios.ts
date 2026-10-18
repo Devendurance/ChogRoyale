@@ -150,6 +150,10 @@ export function botMove(state: CombatState, p: PlayerIndex, n: number): { cardId
       if (spot) return { cardId: card, ...spot };
       continue;
     }
+    if (card === "ember_mauler") {
+      const spot = botAntiSwarmSpot(state, p);
+      if (spot) return { cardId: card, ...spot };
+    }
     // Side-neutral: the same (n, k) gives the same lane and the same depth
     // behind the bank for either player (p1 y is the y -> 160 - y mirror).
     for (let k = 0; k < lanes.length * 4; k++) {
@@ -218,6 +222,26 @@ export function botAntiAirSpot(state: CombatState, p: PlayerIndex): { x: number;
   const left = air.filter((u) => u.x <= 50).length;
   const laneX = left >= air.length - left ? 30 : 70;
   for (const depth of [50, 46, 54]) {
+    const y = p === 0 ? depth : ARENA_V2.maxY - depth;
+    for (const dx of [0, 4, -4, 8, -8]) {
+      if (troopDeployCheck(state.structures, p, laneX + dx, y, buildingSolids(state.buildings)).ok) return { x: laneX + dx, y };
+    }
+  }
+  return null;
+}
+
+/**
+ * B2.7c2 anti-swarm policy: with 2+ enemy ground troops on the bot's half,
+ * Ember Mauler goes in front of the own lane tower on the side holding most
+ * of them (ties: left), y-mirrored per side. Otherwise null and the Mauler
+ * uses the ordinary lane placement.
+ */
+export function botAntiSwarmSpot(state: CombatState, p: PlayerIndex): { x: number; y: number } | null {
+  const ground = state.troops.filter((u) => u.owner !== p && u.hp > 0 && u.moveType === "ground" && (p === 0 ? u.y < 80 : u.y > 80));
+  if (ground.length < 2) return null;
+  const left = ground.filter((u) => u.x <= 50).length;
+  const laneX = left >= ground.length - left ? 30 : 70;
+  for (const depth of [52, 48, 56]) {
     const y = p === 0 ? depth : ARENA_V2.maxY - depth;
     for (const dx of [0, 4, -4, 8, -8]) {
       if (troopDeployCheck(state.structures, p, laneX + dx, y, buildingSolids(state.buildings)).ok) return { x: laneX + dx, y };
@@ -298,7 +322,7 @@ function seedOffset(seed: string): number {
  * botMove read from the real hand, energy and board. Commands are recorded
  * so they can be replayed through runMatch.
  */
-export function botMatch(config: CombatConfig, upto: number, every = 20) {
+export function botMatch(config: CombatConfig, upto: number, every = 20, opts: { swapSides?: boolean } = {}) {
   const state = initMatch(config);
   const samples: TraceSample[] = [];
   const commands: CombatCommand[] = [];
@@ -311,12 +335,17 @@ export function botMatch(config: CombatConfig, upto: number, every = 20) {
   // side gets a structurally better sequence; the player whose same-tick
   // commands get the lower seq (processed first, so its entities get the
   // lower ids that win id tie-breaks) alternates by round.
-  const laneOffset: [number, number] = [seedOffset(`${config.seed}:p0`), seedOffset(`${config.seed}:p1`)];
+  // opts.swapSides (positional diagnostics only): P1 gets exactly P0's lane
+  // sequence and first-mover turns and vice versa, so a side-neutral engine
+  // and bot must produce the side-swapped outcome.
+  const lanes: [number, number] = [seedOffset(`${config.seed}:p0`), seedOffset(`${config.seed}:p1`)];
+  const laneOffset: [number, number] = opts.swapSides ? [lanes[1], lanes[0]] : lanes;
+  const firstShift = opts.swapSides ? 1 : 0;
   const moves: [number, number] = [0, 0];
   while (state.phase !== "final" && state.tick < upto) {
     const due: CombatCommand[] = [];
     const usedAbility = new Set<PlayerIndex>();
-    const first = ((Math.floor((state.tick + 1) / every) + offset) % 2) as PlayerIndex;
+    const first = ((Math.floor((state.tick + 1) / every) + offset + firstShift) % 2) as PlayerIndex;
     const order: PlayerIndex[] = [first, (1 - first) as PlayerIndex];
     for (const p of order) {
       const abilityId = botAbility(state, p);

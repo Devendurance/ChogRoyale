@@ -40,7 +40,7 @@ const structures = (): StructureEntity[] => initMatch(scenarioConfig(deckWith(),
 
 describe("arena-v2 geometry", () => {
   it("is versioned and bounded", () => {
-    expect(COMBAT_RULESET_VERSION).toBe("v11");
+    expect(COMBAT_RULESET_VERSION).toBe("v12");
     expect(ARENA_VERSION).toBe("arena-v2");
     expect(combatRulesetSummary().arena.version).toBe("arena-v2");
     expect([ARENA_V2.minX, ARENA_V2.maxX, ARENA_V2.minY, ARENA_V2.maxY]).toEqual([0, 100, 0, 160]);

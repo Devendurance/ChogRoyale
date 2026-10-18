@@ -5,25 +5,25 @@
 import { initMatch, stepMatch, runMatch, stateHash, type CombatConfig, type CombatState, type DeployCommand, type PlayerIndex } from "@/lib/combat";
 import { scenarioConfig, deckWith, botMatch, riftSchedule } from "@/lib/arena-scenarios";
 
-const d = (seq: number, player: PlayerIndex, tick: number, cardId: string, x: number, y: number): DeployCommand => ({ seq, player, tick, cardId, x, y });
+export const d = (seq: number, player: PlayerIndex, tick: number, cardId: string, x: number, y: number): DeployCommand => ({ seq, player, tick, cardId, x, y });
 const P0_LEFT = "s-p0-tower-30";
-const towerHp = (s: CombatState, id = P0_LEFT) => s.structures.find((x) => x.id === id)?.hp ?? 0;
+export const towerHp = (s: CombatState, id = P0_LEFT) => s.structures.find((x) => x.id === id)?.hp ?? 0;
 const ids = (s: CombatState, cardId: string, owner: PlayerIndex) =>
   s.events.flatMap((e) => (e.type === "deploy" && e.cardId === cardId && e.player === owner ? e.entityIds : []));
 /** Death ticks of every unit of `cardId` owned by `owner` (sorted). */
-const deathTicks = (s: CombatState, cardId: string, owner: PlayerIndex) => {
+export const deathTicks = (s: CombatState, cardId: string, owner: PlayerIndex) => {
   const mine = new Set(ids(s, cardId, owner));
   return s.events.flatMap((e) => (e.type === "death" && mine.has(e.entityId) ? [e.tick] : [])).sort((a, b) => a - b);
 };
-const hpLeft = (s: CombatState, cardId: string, owner: PlayerIndex) =>
+export const hpLeft = (s: CombatState, cardId: string, owner: PlayerIndex) =>
   s.troops.filter((t) => t.cardId === cardId && t.owner === owner && t.hp > 0).reduce((n, t) => n + t.hp, 0);
-const buildingEnd = (s: CombatState, cardId: string) => {
+export const buildingEnd = (s: CombatState, cardId: string) => {
   const e = s.events.find((x) => x.type === "building_removed" && x.cardId === cardId);
   return e && e.type === "building_removed" ? { tick: e.tick, reason: e.reason } : null;
 };
-const buildingHp = (s: CombatState, cardId: string) => s.buildings.find((b) => b.cardId === cardId && b.alive)?.hp ?? 0;
-const rejected = (s: CombatState) => s.events.filter((e) => e.type === "command_rejected").length;
-const run = (cfg: CombatConfig, cmds: DeployCommand[], upto: number) => runMatch(cfg, cmds, upto).state;
+export const buildingHp = (s: CombatState, cardId: string) => s.buildings.find((b) => b.cardId === cardId && b.alive)?.hp ?? 0;
+export const rejected = (s: CombatState) => s.events.filter((e) => e.type === "command_rejected").length;
+export const run = (cfg: CombatConfig, cmds: DeployCommand[], upto: number) => runMatch(cfg, cmds, upto).state;
 /** First tick P0's left tower loses HP (real stepper). */
 function firstTowerHit(cfg: CombatConfig, cmds: DeployCommand[], upto = 400): number | null {
   const s = initMatch(cfg);
@@ -185,8 +185,8 @@ export const ROSTER_DECKS: [string[], string[]] = [
   deckWith("riftbreaker", "gale_netter", "choglings", "rift_snare", "chaos_archer", "chog_guardian", "rift_sprites", "cmdr:free-warden"),
   deckWith("rift_sentry", "decoy_totem", "hexwing", "chaos_comet", "boulderback", "rift_runner", "rift_sprites", "cmdr:free-deadeye"),
 ];
-export function rosterBotMatch(seed = "b27c1") {
-  const cfg = () => scenarioConfig(ROSTER_DECKS[0], ROSTER_DECKS[1], riftSchedule(seed), seed);
+export function rosterBotMatch(seed = "b27c1", decks: [string[], string[]] = ROSTER_DECKS) {
+  const cfg = () => scenarioConfig(decks[0], decks[1], riftSchedule(seed), seed);
   const bot = botMatch(cfg(), 3000);
   const replay = runMatch(cfg(), bot.commands, 3000).state;
   const ev = bot.state.events;
@@ -200,6 +200,9 @@ export function rosterBotMatch(seed = "b27c1") {
     rejected: rejected(bot.state),
     netterDeploys: deploys("gale_netter"),
     breakerDeploys: deploys("riftbreaker"),
+    maulerDeploys: deploys("ember_mauler"),
+    shockwaves: ev.filter((e) => e.type === "shockwave").length,
+    shockwaveExtraHits: ev.reduce((n, e) => n + (e.type === "shockwave" ? e.extraHits : 0), 0),
     buildingsDestroyed: ev.filter((e) => e.type === "building_removed" && e.reason === "destroyed").length,
     commanderDeploys: ev.filter((e) => e.type === "commander_deployed").length,
     abilities: ev.filter((e) => e.type === "ability_fired" && e.trigger === "active").length,
