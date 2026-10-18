@@ -11,6 +11,7 @@ Last updated: 2026-10-18
 
 - B2.7a deployable buildings (ruleset v8): Rift Sentry (ground-only turret) and Decoy Totem (lure), solid footprints, crossing-mouth clearance, finite lifetimes, building-aware targeting. Full suite, typecheck, lint, build, scenarios, balance, runner green.
 - B2.7b tactical cards (ruleset v9): Chaos Comet (delayed blast, 42 structure damage), Rift Snare (slow + chip), Rift Sprites (1e air pair), stale status-percent bug fixed, building matchup harness (npm run buildings:matchup). 295 tests, typecheck, lint, build, all scripts green. Details in .fast-build/STATE.md.
+- Mirror fairness (ruleset v10): dev bot made side-neutral (per-player seeded lanes, mirrored depth, alternating first mover), zone band off-by-one fixed, engine mirror check 144/144, side wins now 36/36 and 35/37. Reaver is no longer weakest once the bot is fair.
 
 ## Currently working on
 
@@ -27,7 +28,7 @@ Last updated: 2026-10-18
 
 ## Known issues / open items
 
-- Balance is bot-measured only (32 games/class). Under manual abilities reaver is weakest (9/32), bulwark/deadeye strongest (22/21). Activation cost is the dominant lever. Commanders rarely outlive one cooldown in bot play.
+- Balance is bot-measured only (32 games/class). With the side-neutral bot: bulwark 16, reaver 18, deadeye 18, scout 15, warden 13. Earlier reaver 9/32 came mostly from the biased bot. Commanders rarely outlive one cooldown in bot play.
 - Units have no unit-unit body collision yet (overlap allowed).
 
 - Human E2E at `/dev/onboarding` still unverified (Privy login, wallet sync, claim flow).

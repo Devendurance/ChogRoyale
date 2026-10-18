@@ -156,8 +156,23 @@ export function cometSuddenDeath() {
   const s = run.state;
   const destroyed = s.events.find((e) => e.type === "structure_destroyed");
   const destroyTick = destroyed?.tick ?? null;
+  // Authoritative accounting from accepted engine events (not bot intents):
+  // every spell_cast / deploy charges its card's cost exactly once.
+  const energyByCard: Record<string, { plays: number; energy: number }> = {};
+  for (const e of s.events) {
+    if ((e.type !== "spell_cast" && e.type !== "deploy") || e.player !== 0) continue;
+    const row = (energyByCard[e.cardId] ??= { plays: 0, energy: 0 });
+    row.plays += 1;
+    row.energy += CARDS_V1[e.cardId]!.cost;
+  }
+  const engineSpent = Object.values(energyByCard).reduce((n, r) => n + r.energy, 0);
   return {
     ...stat,
+    energyByCard,
+    cometEnergy: energyByCard.chaos_comet?.energy ?? 0,
+    cycleEnergy: engineSpent - (energyByCard.chaos_comet?.energy ?? 0),
+    engineSpent,
+    energyLeft: s.energy[0],
     winner: s.winner,
     endReason: s.endReason,
     crowns: [...s.crowns],

@@ -3,8 +3,9 @@
 // several seeds, then replays each recorded command stream through runMatch.
 // Pure: no DB, no network. Shared by tests and scripts/building-matchup.ts.
 
-import { runMatch, stateHash, CARDS_V1, SPELL_CARDS_V1, COMMANDER_COMBAT_PROFILE_V1, STRUCTURE_V1, type CombatState, type PlayerIndex } from "@/lib/combat";
+import { runMatch, stateHash, ARENA_V2, CARDS_V1, SPELL_CARDS_V1, COMMANDER_COMBAT_PROFILE_V1, STRUCTURE_V1, type CombatCommand, type CombatState, type PlayerIndex } from "@/lib/combat";
 import { scenarioConfig, deckWith, botMatch, riftSchedule } from "@/lib/arena-scenarios";
+import type { ArenaZone, ChaosSchedule } from "@/lib/chaos";
 
 /** v8 baseline decks: only cards that existed at B2.7a. */
 export const MATCHUP_DECKS_V8: Record<string, string[]> = {
@@ -20,7 +21,7 @@ export const MATCHUP_DECKS_V9: Record<string, string[]> = {
   control: deckWith("rift_sentry", "chaos_archer", "sparkcaster", "rift_snare", "chaos_comet", "chog_guardian", "hexwing", "cmdr:free-warden"),
 };
 
-export const MATCHUP_SEEDS = ["m1", "m2", "m3", "m4"];
+export const MATCHUP_SEEDS = ["m1", "m2", "m3", "m4", "m5", "m6", "m7", "m8"];
 
 export interface MatchupRow {
   p0: string;
@@ -41,10 +42,12 @@ export interface MatchupRow {
   /** Tower/Core damage dealt by impact spells (Comet). */
   spellStructureDamage: number;
   energySpent: [number, number];
+  /** Per-player counts (index = player). */
+  bySide: { buildings: [number, number]; commanderDeploys: [number, number]; abilities: [number, number] };
   replayIdentical: boolean;
 }
 
-function measure(state: CombatState): Omit<MatchupRow, "p0" | "p1" | "seed" | "replayIdentical"> {
+export function measure(state: CombatState): Omit<MatchupRow, "p0" | "p1" | "seed" | "replayIdentical"> {
   const ev = state.events;
   const spawnAt = new Map<string, number>();
   const buildings = { spawned: 0, destroyed: 0, expired: 0, lifetimeTicks: 0 };
@@ -73,6 +76,14 @@ function measure(state: CombatState): Omit<MatchupRow, "p0" | "p1" | "seed" | "r
     }
   }
   for (const [, t] of spawnAt) buildings.lifetimeTicks += state.tick - t;
+  const perSide = (pred: (e: (typeof ev)[number]) => PlayerIndex | null): [number, number] => {
+    const out: [number, number] = [0, 0];
+    for (const e of ev) {
+      const p = pred(e);
+      if (p !== null) out[p] += 1;
+    }
+    return out;
+  };
   const dmg = (owner: PlayerIndex, kind: "tower" | "core") =>
     state.structures.filter((s) => s.owner === owner && s.structure === kind).reduce((n, s) => n + STRUCTURE_V1[kind].hp - s.hp, 0);
   return {
@@ -89,6 +100,35 @@ function measure(state: CombatState): Omit<MatchupRow, "p0" | "p1" | "seed" | "r
     spells,
     spellStructureDamage,
     energySpent,
+    bySide: {
+      buildings: perSide((e) => (e.type === "building_spawned" ? e.player : null)),
+      commanderDeploys: perSide((e) => (e.type === "commander_deployed" ? e.player : null)),
+      abilities: perSide((e) => (e.type === "ability_fired" && e.trigger === "active" ? e.player : null)),
+    },
+  };
+}
+
+/**
+ * Side-fairness view of matchup rows (runMatchup already plays every
+ * ordered pairing, so each deck plays both sides). Totals are by player
+ * position; damage "dealt" by P0 is damage to P1's towers.
+ */
+export function positionReport(rows: MatchupRow[]) {
+  const sum = (f: (r: MatchupRow) => number) => rows.reduce((s, r) => s + f(r), 0);
+  const side = (f: (r: MatchupRow, p: 0 | 1) => number) => [sum((r) => f(r, 0)), sum((r) => f(r, 1))];
+  const mirror = rows.filter((r) => r.p0 === r.p1);
+  return {
+    games: rows.length,
+    wins: { p0: rows.filter((r) => r.winner === 0).length, p1: rows.filter((r) => r.winner === 1).length, draw: rows.filter((r) => r.winner === "draw").length },
+    mirrorWins: { games: mirror.length, p0: mirror.filter((r) => r.winner === 0).length, p1: mirror.filter((r) => r.winner === 1).length },
+    crowns: side((r, p) => r.crowns[p]),
+    towerDamageDealt: side((r, p) => r.towerDamage[1 - p]!),
+    energySpent: side((r, p) => r.energySpent[p]),
+    buildings: side((r, p) => r.bySide.buildings[p]),
+    commanderDeploys: side((r, p) => r.bySide.commanderDeploys[p]),
+    abilities: side((r, p) => r.bySide.abilities[p]),
+    avgTicks: Math.round(sum((r) => r.ticks) / Math.max(1, rows.length)),
+    rejected: sum((r) => r.rejected),
   };
 }
 
@@ -102,6 +142,53 @@ export function runMatchup(decks: Record<string, string[]>, seeds = MATCHUP_SEED
         const bot = botMatch(cfg(), 3100, 20);
         const replay = runMatch(cfg(), bot.commands);
         rows.push({ p0: a, p1: b, seed, ...measure(replay.state), replayIdentical: replay.result.stateHash === stateHash(bot.state) });
+      }
+    }
+  }
+  return rows;
+}
+
+/** Mirror a command across the arena's y -> 160 - y symmetry and swap its player. */
+export function mirrorCommand(c: CombatCommand): CombatCommand {
+  return "abilityId" in c ? { ...c, player: (1 - c.player) as PlayerIndex } : { ...c, player: (1 - c.player) as PlayerIndex, y: ARENA_V2.maxY - c.y };
+}
+
+const MIRROR_ZONE: Record<string, ArenaZone> = { north: "south", south: "north", center: "center" };
+/** Chaos schedule seen from the other side: north and south zones swapped. */
+export function mirrorSchedule(s: ChaosSchedule): ChaosSchedule {
+  const z = (zs: ArenaZone[]) => zs.map((x) => MIRROR_ZONE[x]!);
+  return {
+    ...s,
+    events: s.events.map((ev) => ({
+      ...ev,
+      zones: z(ev.zones),
+      effect: ev.effect.kind === "zone" ? { ...ev.effect, crossing: MIRROR_ZONE[ev.effect.crossing]! } : { ...ev.effect, zones: z(ev.effect.zones) },
+    })),
+  };
+}
+
+/**
+ * Engine symmetry probe. Records a bot command stream, mirrors it (players
+ * swapped, y reflected, decks swapped, Chaos zones swapped) and checks the
+ * transformed outcome: winner/crowns/tower damage/energy swapped, same
+ * length. A raw schedule names fixed zones, so it is only side-neutral
+ * when mirrored with the board.
+ */
+export function engineMirrorCheck(decks: Record<string, string[]>, seeds = MATCHUP_SEEDS, withChaos = false) {
+  const rows: Array<{ p0: string; p1: string; seed: string; symmetric: boolean; a: string; b: string }> = [];
+  const swap = (w: PlayerIndex | "draw" | null) => (w === 0 ? 1 : w === 1 ? 0 : w);
+  for (const a of Object.keys(decks)) {
+    for (const b of Object.keys(decks)) {
+      for (const seed of seeds) {
+        const chaos = withChaos ? riftSchedule(seed) : null;
+        const bot = botMatch(scenarioConfig(decks[a]!, decks[b]!, chaos, seed), 3100, 20);
+        const x = measure(runMatch(scenarioConfig(decks[a]!, decks[b]!, chaos, seed), bot.commands).state);
+        const y = measure(runMatch(scenarioConfig(decks[b]!, decks[a]!, chaos && mirrorSchedule(chaos), seed), bot.commands.map(mirrorCommand)).state);
+        const symmetric =
+          swap(x.winner) === y.winner && x.ticks === y.ticks && x.crowns.join() === [...y.crowns].reverse().join() &&
+          x.towerDamage.join() === [...y.towerDamage].reverse().join() && x.energySpent.join() === [...y.energySpent].reverse().join();
+        const fmt = (m: typeof x) => `${m.winner} ${m.endReason} ${m.crowns.join("-")} @${m.ticks} td ${m.towerDamage.join("/")} e ${m.energySpent.join("/")}`;
+        rows.push({ p0: a, p1: b, seed, symmetric, a: fmt(x), b: fmt(y) });
       }
     }
   }

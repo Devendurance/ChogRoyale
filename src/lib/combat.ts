@@ -34,7 +34,7 @@ import type { ChaosSchedule, ChaosEffect } from "@/lib/chaos";
 // v8 (B2.7a): deployable building cards (Rift Sentry, Decoy Totem) with
 // solid footprints, finite lifetimes, building-aware targeting and
 // placement rules that keep every river crossing mouth clear.
-export const COMBAT_RULESET_VERSION = "v9" as const;
+export const COMBAT_RULESET_VERSION = "v10" as const;
 export const TICKS_PER_SECOND = 10;
 // Standard ranked timeline (v2): 180s regulation, up to 120s sudden-death overtime.
 // Energy phases: 1x ticks 0-1199, 2x ticks 1200-2399, 3x ticks 2400-2999.
@@ -1245,8 +1245,10 @@ interface Fighter {
 }
 
 function zoneOf(y: number): string {
+  // v10: mirror-exact bands under y -> 160 - y (v9 had south <= 52, so a
+  // unit at y 53 was "center" while its mirror at y 107 was "north").
   if (y >= 107) return "north";
-  if (y <= 52) return "south";
+  if (y <= 53) return "south";
   return "center";
 }
 
@@ -2344,7 +2346,7 @@ export function combatRulesetSummary() {
     },
     chaos: {
       ticks: "activationMs/100, warning 50 ticks prior",
-      zones: "north y>=107, center 53..106, south y<=52",
+      zones: "north y>=107, center 54..106, south y<=53 (mirror-exact)",
       dpsResolution: "per-tick max(1, round(dps/10))",
     },
     statuses: {

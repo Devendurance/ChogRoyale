@@ -12,6 +12,7 @@ import {
   openCrossings,
   troopDeployCheck,
   reach2,
+  ARENA_V2,
   COMBAT_RULESET_VERSION,
   CARDS_V1,
   COMMANDER_COMBAT_PROFILE_V1,
@@ -144,9 +145,12 @@ export function botMove(state: CombatState, p: PlayerIndex, n: number): { cardId
       if (spot) return { cardId: card, ...spot };
       continue;
     }
+    // Side-neutral: the same (n, k) gives the same lane and the same depth
+    // behind the bank for either player (p1 y is the y -> 160 - y mirror).
     for (let k = 0; k < lanes.length * 4; k++) {
       const x = lanes[(n + k) % lanes.length]!;
-      const y = p === 0 ? 50 + ((n * 7 + k * 5) % 24) : 87 + ((n * 11 + k * 5) % 24);
+      const depth = (n * 7 + k * 5) % 24;
+      const y = p === 0 ? 50 + depth : ARENA_V2.maxY - 50 - depth;
       if (troopDeployCheck(state.structures, p, x, y, buildingSolids(state.buildings)).ok) return { cardId: card, x, y };
     }
   }
@@ -278,20 +282,30 @@ export function botMatch(config: CombatConfig, upto: number, every = 20) {
   let seq = 0;
   // Ability seqs use a separate range so deploy choices stay seed-stable.
   let aseq = 100000;
+  // Side-neutral bot: each player walks its own lane cycle from an offset
+  // seeded by (match seed, player) with the same hash for both, so neither
+  // side gets a structurally better sequence; the player whose same-tick
+  // commands get the lower seq (processed first, so its entities get the
+  // lower ids that win id tie-breaks) alternates by round.
+  const laneOffset: [number, number] = [seedOffset(`${config.seed}:p0`), seedOffset(`${config.seed}:p1`)];
+  const moves: [number, number] = [0, 0];
   while (state.phase !== "final" && state.tick < upto) {
     const due: CombatCommand[] = [];
     const usedAbility = new Set<PlayerIndex>();
-    for (const p of [0, 1] as PlayerIndex[]) {
+    const first = ((Math.floor((state.tick + 1) / every) + offset) % 2) as PlayerIndex;
+    const order: PlayerIndex[] = [first, (1 - first) as PlayerIndex];
+    for (const p of order) {
       const abilityId = botAbility(state, p);
       if (!abilityId) continue;
       usedAbility.add(p);
       due.push({ kind: "ability", seq: ++aseq, player: p, tick: state.tick + 1, abilityId });
     }
     if ((state.tick + 1) % every === 0) {
-      for (const p of [0, 1] as PlayerIndex[]) {
+      for (const p of order) {
         if (usedAbility.has(p)) continue;
-        const move = botMove(state, p, offset + seq);
+        const move = botMove(state, p, laneOffset[p] + moves[p]);
         if (!move) continue;
+        moves[p] += 1;
         seq += 1;
         due.push(cmd(seq, p, state.tick + 1, move.cardId, move.x, move.y));
       }
