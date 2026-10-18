@@ -4,7 +4,7 @@
 
 import { runMatch, initMatch, stepMatch, stateHash, type CombatState, type DeployCommand, type PlayerIndex } from "@/lib/combat";
 import type { CommanderClass } from "@/lib/commanders";
-import { deckWith, scenarioConfig, botMatch, riftSchedule } from "@/lib/arena-scenarios";
+import { deckWith, scenarioConfig, botMatch, riftSchedule, runWithAbilities } from "@/lib/arena-scenarios";
 
 export const CLASSES: CommanderClass[] = ["bulwark", "reaver", "deadeye", "scout", "warden"];
 const card = (cls: CommanderClass) => `cmdr:free-${cls}`;
@@ -26,11 +26,19 @@ function commanderLife(state: CombatState, player: PlayerIndex) {
   return { deployed, died, lifetime: deployed !== null && died !== null ? died - deployed : null };
 }
 
+/** Player-commanded ability activations per ability id. */
+export function abilityUses(state: CombatState): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const e of state.events) if (e.type === "ability_fired" && e.trigger === "active") out[e.abilityId] = (out[e.abilityId] ?? 0) + 1;
+  return out;
+}
+
 /** A. Unanswered commander walks the left lane against an intact arena. */
 export function soloSiege(cls: CommanderClass, ticks = 1500) {
   const cfg = scenarioConfig(deckWith(card(cls)), deckWith());
-  const { state } = runMatch(cfg, [cmd(1, 0, 2, card(cls), 30, 60)], ticks);
-  return { cls, ...structureSummary(state), ...commanderLife(state, 0) };
+  // B2.6b: the commander side presses abilities via the deterministic bot policy.
+  const { state } = runWithAbilities(cfg, [cmd(1, 0, 2, card(cls), 30, 60)], ticks);
+  return { cls, ...structureSummary(state), ...commanderLife(state, 0), abilities: abilityUses(state) };
 }
 
 /** C/E. Commander pushes the left lane; the defender answers with ordinary cards. */
@@ -39,7 +47,7 @@ export function defended(cls: CommanderClass, defense: string[], ticks = 900) {
   const cmds: DeployCommand[] = [cmd(1, 0, 2, card(cls), 30, 60)];
   const spots: Array<[number, number]> = [[30, 104], [36, 98], [26, 98]];
   defense.forEach((c, i) => cmds.push(cmd(10 + i, 1, 30 + i * 30, c, spots[i % 3]![0], spots[i % 3]![1])));
-  const { state } = runMatch(cfg, cmds, ticks);
+  const { state } = runWithAbilities(cfg, cmds, ticks);
   const life = commanderLife(state, 0);
   const defenders = defense.length - state.events.filter((e) => e.type === "command_rejected").length;
   return {
@@ -60,8 +68,8 @@ export function defended(cls: CommanderClass, defense: string[], ticks = 900) {
 /** D. Tank-supported commander push versus the same commander alone. */
 export function supportedPush(cls: CommanderClass) {
   const deck = deckWith("boulderback", card(cls));
-  const alone = runMatch(scenarioConfig(deck, deckWith()), [cmd(2, 0, 142, card(cls), 30, 50)], 900);
-  const push = runMatch(scenarioConfig(deck, deckWith()), [cmd(1, 0, 2, "boulderback", 30, 64), cmd(2, 0, 142, card(cls), 30, 50)], 900);
+  const alone = runWithAbilities(scenarioConfig(deck, deckWith()), [cmd(2, 0, 142, card(cls), 30, 50)], 900);
+  const push = runWithAbilities(scenarioConfig(deck, deckWith()), [cmd(1, 0, 2, "boulderback", 30, 64), cmd(2, 0, 142, card(cls), 30, 50)], 900);
   return {
     cls,
     alone: { ...structureSummary(alone.state), ...commanderLife(alone.state, 0) },
@@ -82,6 +90,8 @@ export function cyclingMatch(c0: CommanderClass, c1: CommanderClass, seed = "cyc
     commanderDeploys: ev.filter((e) => e.type === "commander_deployed").map((e) => (e.type === "commander_deployed" ? `p${e.player}@${e.tick}` : "")),
     commanderDeaths: ev.filter((e) => e.type === "death" && /^c[01]-/.test(e.entityId)).map((e) => (e.type === "death" ? `${e.entityId}@${e.tick}` : "")),
     pulses: ev.filter((e) => e.type === "pulse_active").length,
+    activations: abilityUses(a.state),
+    abilityRejected: ev.filter((e) => e.type === "command_rejected" && e.abilityId !== undefined).length,
     result: a.result,
     replayIdentical: a.result.stateHash === b.result.stateHash && JSON.stringify(a.state.events) === JSON.stringify(b.state.events),
     steppedHash: stateHash(bot.state),
@@ -93,12 +103,16 @@ export function roundRobin(seeds = ["rr-1", "rr-2"]) {
   const wins: Record<CommanderClass, number> = { bulwark: 0, reaver: 0, deadeye: 0, scout: 0, warden: 0 };
   const games: Record<CommanderClass, number> = { bulwark: 0, reaver: 0, deadeye: 0, scout: 0, warden: 0 };
   const table: string[] = [];
+  const activations: Record<string, number> = {};
+  let ticks = 0;
   for (const a of CLASSES) {
     for (const b of CLASSES) {
       if (a === b) continue;
       for (const seed of seeds) {
         const cfg = scenarioConfig(deckWith("chaos_archer", card(a)), deckWith("chaos_archer", card(b)), null, `${seed}-${a}-${b}`);
         const { state } = botMatch(cfg, 3100, 20);
+        for (const [id, n] of Object.entries(abilityUses(state))) activations[id] = (activations[id] ?? 0) + n;
+        ticks += state.tick;
         games[a] += 1;
         games[b] += 1;
         if (state.winner === 0) wins[a] += 1;
@@ -107,7 +121,7 @@ export function roundRobin(seeds = ["rr-1", "rr-2"]) {
       }
     }
   }
-  return { wins, games, table };
+  return { wins, games, table, activations, avgTicks: Math.round(ticks / table.length) };
 }
 
 /** Energy/hand gate: the commander card must be in hand and affordable. */

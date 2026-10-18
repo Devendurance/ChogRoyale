@@ -6,9 +6,9 @@
 // simultaneous damage application, stable entity IDs and processing order.
 // Identical (config, seed, commands) always yields identical results.
 //
-// B2.3 scope: commanders fight with real B1.3 abilities (auto-fire for
-// headless; fireCommanderAbility is also callable for future B3 manual
-// triggers) and B1.4b Chaos schedules execute telegraphed battlefield events.
+// B2.3 scope: commanders fight with real B1.3 abilities (v7: actives fire
+// only from player AbilityCommands in the replayed command stream) and
+// B1.4b Chaos schedules execute telegraphed battlefield events.
 // Commander entitlement is a TRUSTED input: B3 must verify ownership/lease
 // before constructing the config; the engine never re-checks wallets.
 
@@ -28,7 +28,10 @@ import type { ChaosSchedule, ChaosEffect } from "@/lib/chaos";
 // commander), deployed from hand for energy; no tick-0 spawn; runtime stats
 // come from the class-keyed competitive profile COMMANDER_COMBAT_PROFILE_V1
 // (free and NFT commanders of a class are identical in combat).
-export const COMBAT_RULESET_VERSION = "v6" as const;
+// v7 (B2.6b): the five active abilities fire only from validated player
+// ability commands (energy cost ABILITY_ACTIVATION_COST_V1, tick cooldowns);
+// deploy and onDeath triggers stay automatic. No active auto-fire remains.
+export const COMBAT_RULESET_VERSION = "v7" as const;
 export const TICKS_PER_SECOND = 10;
 // Standard ranked timeline (v2): 180s regulation, up to 120s sudden-death overtime.
 // Energy phases: 1x ticks 0-1199, 2x ticks 1200-2399, 3x ticks 2400-2999.
@@ -184,6 +187,18 @@ export const ABILITY_RUNTIME_V1: Record<string, Array<{ magnitude?: number; radi
   "warden-mend": [{ magnitude: 60 }],
 };
 
+// B2.6b activation economy. B1.3 authors no activation cost (energyCost is
+// the deploy cost), so this versioned table is the only source of ability
+// costs. Separate from the commander deploy cost; troop costs unchanged.
+export const ABILITY_ECONOMY_VERSION = "ae-v1" as const;
+export const ABILITY_ACTIVATION_COST_V1: Record<string, number> = {
+  "bulwark-aegis-wall": 1,
+  "reaver-frenzy-rush": 1,
+  "deadeye-piercing-volley": 2,
+  "scout-shadow-step": 1,
+  "warden-null-field": 2,
+};
+
 export function commanderCardId(commanderId: string): string {
   return `${COMMANDER_CARD_PREFIX}${commanderId}`;
 }
@@ -246,6 +261,29 @@ export interface DeployCommand {
   cardId: string;
   x: number;
   y: number;
+}
+
+/**
+ * B2.6b player ability activation. Identifies only the actor, ordering and
+ * ability id. All five current actives are self-centered (center = the
+ * authoritative commander position), so x/y must be omitted; any supplied
+ * target is rejected. Damage, shield, cooldown, cost and duration are
+ * always server-derived.
+ */
+export interface AbilityCommand {
+  kind: "ability";
+  seq: number;
+  player: PlayerIndex;
+  tick: number;
+  abilityId: string;
+  x?: number;
+  y?: number;
+}
+
+export type CombatCommand = DeployCommand | AbilityCommand;
+
+export function isAbilityCommand(cmd: CombatCommand): cmd is AbilityCommand {
+  return (cmd as AbilityCommand).kind === "ability";
 }
 
 export interface TroopEntity {
@@ -335,6 +373,8 @@ export interface CommanderEntity {
   preference: "closest" | "strongest" | "weakest" | "commander";
   abilities: CommanderAbility[];
   abilityReadyAt: Record<string, number>;
+  /** Tick at which a fired ability's duration window ends (expiry event). */
+  abilityActiveUntil: Record<string, number>;
   derivationHash: string;
   moveCarry: number;
 }
@@ -367,10 +407,27 @@ export type CombatEvent =
   | { type: "death"; tick: number; entityId: string; owner: PlayerIndex }
   | { type: "structure_destroyed"; tick: number; entityId: string; owner: PlayerIndex; structure: "tower" | "core" }
   | { type: "match_end"; tick: number; winner: PlayerIndex | "draw"; reason: "core" | "crowns" | "overtime" | "timeout"; crowns: [number, number] }
-  | { type: "command_rejected"; tick: number; seq: number; reason: string }
+  | { type: "command_rejected"; tick: number; seq: number; reason: string; player?: PlayerIndex; abilityId?: string }
   | { type: "spell_cast"; tick: number; player: PlayerIndex; cardId: string; x: number; y: number; affected: number }
   | { type: "commander_deployed"; tick: number; player: PlayerIndex; commanderId: string; class: string }
-  | { type: "ability_fired"; tick: number; player: PlayerIndex; commanderId: string; abilityId: string }
+  | {
+      type: "ability_fired";
+      tick: number;
+      player: PlayerIndex;
+      commanderId: string;
+      abilityId: string;
+      trigger: "active" | "deploy" | "onDeath";
+      seq: number | null;
+      energySpent: number;
+      x: number;
+      y: number;
+      radius: number | null;
+      affected: number;
+      readyAt: number | null;
+      activeUntil: number | null;
+    }
+  | { type: "ability_ready"; tick: number; player: PlayerIndex; commanderId: string; abilityId: string; cost: number }
+  | { type: "ability_expired"; tick: number; player: PlayerIndex; commanderId: string; abilityId: string; reason: "duration" | "death" }
   | { type: "pulse_warning"; tick: number; eventId: string; family: string; activationTick: number }
   | { type: "pulse_active"; tick: number; eventId: string; family: string }
   | { type: "pulse_expired"; tick: number; eventId: string; family: string }
@@ -608,6 +665,7 @@ function spawnCommander(state: CombatState, owner: PlayerIndex, x: number, y: nu
       guardPct: 0,
       abilities: runtimeAbilities(snap.class),
       abilityReadyAt: {},
+      abilityActiveUntil: {},
       derivationHash: snap.derivationHash,
       moveCarry: 0,
   };
@@ -1141,6 +1199,13 @@ function deployCommander(state: CombatState, cmd: DeployCommand): void {
   for (const ability of c.abilities) {
     if (ability.trigger === "deploy") fireAbilityOn(state, c, ability.id);
   }
+  // Actives are ready on deploy (fresh entity, fresh cooldowns) but fire
+  // only when commanded.
+  for (const ability of c.abilities) {
+    if (ability.trigger === "active") {
+      state.events.push({ type: "ability_ready", tick: state.tick, player: c.owner, commanderId: c.commanderId, abilityId: ability.id, cost: ABILITY_ACTIVATION_COST_V1[ability.id] ?? 0 });
+    }
+  }
 }
 
 function applyDeploy(state: CombatState, cmd: DeployCommand, counter: { n: number }): void {
@@ -1333,39 +1398,116 @@ function applyAbilityEffect(
   return affected;
 }
 
-export function fireCommanderAbility(state: CombatState, owner: PlayerIndex, abilityId: string): void {
-  if (state.phase === "final") throw new AppError("CONFLICT", "Match already finalized");
-  const commander = state.commanders.find((c) => c.owner === owner && c.hp > 0);
-  if (!commander) throw new AppError("UNPROCESSABLE", "No living commander for player");
-  fireAbilityOn(state, commander, abilityId);
+const msToTicks = (ms: number | null, fallback: number) => (ms === null ? fallback : Math.max(1, Math.round(ms / 100)));
+
+function abilityRadius(ability: CommanderAbility): number | null {
+  const r = ability.effects.map((e) => e.radiusOrRange ?? 0).filter((x) => x > 0);
+  return r.length ? Math.max(...r) : null;
 }
 
-function fireAbilityOn(state: CombatState, commander: CommanderEntity, abilityId: string): void {
+/** Existing B2.3 targeting conditions for actives (pure, no mutation). */
+function activeConditionError(state: CombatState, commander: CommanderEntity, ability: CommanderAbility): string | null {
+  if (ability.cooldownMs !== null && state.tick < (commander.abilityReadyAt[ability.id] ?? 0)) return `Ability on cooldown: ${ability.id}`;
+  const needsEnemy = ability.effects.some((e) => e.target === "enemies" || e.target === "enemiesInRadius");
+  if (needsEnemy) {
+    const radius = abilityRadius(ability) ?? 0;
+    const seen = [...state.troops, ...state.commanders].some(
+      (e) => e.owner !== commander.owner && e.hp > 0 && dist2(commander.x, commander.y, e.x, e.y) <= radius * radius
+    );
+    if (!seen) return `No enemies in range for ${ability.id}`;
+  }
+  if (ability.effects.every((e) => e.target === "self" && (e.kind === "shield" || e.kind === "heal")) && commander.hp >= commander.maxHp) {
+    return `No effect to apply for ${ability.id}`;
+  }
+  return null;
+}
+
+/** Execute an ability (conditions already checked by the caller). */
+function fireAbilityOn(state: CombatState, commander: CommanderEntity, abilityId: string, seq: number | null = null, energySpent = 0): void {
   const ability = commander.abilities.find((a) => a.id === abilityId);
   if (!ability) throw new AppError("BAD_REQUEST", `Unknown ability: ${abilityId}`);
-  const readyAt = commander.abilityReadyAt[abilityId] ?? 0;
-  if (ability.cooldownMs !== null && state.tick < readyAt) {
-    throw new AppError("UNPROCESSABLE", `Ability on cooldown: ${abilityId}`);
-  }
-  const msToTicks = (ms: number | null, fallback: number) => (ms === null ? fallback : Math.max(1, Math.round(ms / 100)));
-  if (ability.trigger === "active") {
-    const needsEnemy = ability.effects.some((e) => e.target === "enemies" || e.target === "enemiesInRadius");
-    if (needsEnemy) {
-      const radius = Math.max(...ability.effects.map((e) => e.radiusOrRange ?? 0), 0);
-      const seen = [...state.troops, ...state.commanders].some(
-        (e) => e.owner !== commander.owner && e.hp > 0 && dist2(commander.x, commander.y, e.x, e.y) <= radius * radius
-      );
-      if (!seen) throw new AppError("UNPROCESSABLE", `No enemies in range for ${abilityId}`);
-    }
-    if (ability.effects.every((e) => e.target === "self" && (e.kind === "shield" || e.kind === "heal")) && commander.hp >= commander.maxHp) {
-      throw new AppError("UNPROCESSABLE", `No effect to apply for ${abilityId}`);
-    }
-  }
-  for (const effect of ability.effects) applyAbilityEffect(state, commander, effect, msToTicks);
-  if (ability.cooldownMs !== null) {
-    commander.abilityReadyAt[abilityId] = state.tick + Math.max(1, Math.round(ability.cooldownMs / 100));
-  }
-  state.events.push({ type: "ability_fired", tick: state.tick, player: commander.owner, commanderId: commander.commanderId, abilityId });
+  let affected = 0;
+  for (const effect of ability.effects) affected += applyAbilityEffect(state, commander, effect, msToTicks);
+  const readyAt = ability.cooldownMs !== null ? state.tick + msToTicks(ability.cooldownMs, 1) : null;
+  if (readyAt !== null) commander.abilityReadyAt[abilityId] = readyAt;
+  const activeUntil = ability.durationMs !== null ? state.tick + msToTicks(ability.durationMs, 1) : null;
+  if (activeUntil !== null && commander.hp > 0) commander.abilityActiveUntil[abilityId] = activeUntil;
+  state.events.push({
+    type: "ability_fired",
+    tick: state.tick,
+    player: commander.owner,
+    commanderId: commander.commanderId,
+    abilityId,
+    trigger: ability.trigger,
+    seq,
+    energySpent,
+    x: commander.x,
+    y: commander.y,
+    radius: abilityRadius(ability),
+    affected,
+    readyAt,
+    activeUntil,
+  });
+}
+
+/**
+ * Validated player ability command (B2.6b). Rejections throw before any
+ * mutation, so an invalid command never spends energy, starts a cooldown,
+ * applies effects or records its seq.
+ */
+function applyAbility(state: CombatState, cmd: AbilityCommand): void {
+  if (state.phase === "final") throw new AppError("CONFLICT", "Match already finalized");
+  if (state.seenSeqs.includes(cmd.seq)) throw new AppError("CONFLICT", `Duplicate command seq: ${cmd.seq}`);
+  if (cmd.tick < state.tick) throw new AppError("UNPROCESSABLE", `Stale command tick ${cmd.tick} < ${state.tick}`);
+  if (cmd.player !== 0 && cmd.player !== 1) throw new AppError("BAD_REQUEST", "Invalid player");
+  if (cmd.x !== undefined || cmd.y !== undefined) throw new AppError("BAD_REQUEST", "Ability takes no target");
+  const commander = state.commanders.find((c) => c.owner === cmd.player && c.hp > 0);
+  if (!commander) throw new AppError("UNPROCESSABLE", "No living commander for player");
+  const ability = commander.abilities.find((a) => a.id === cmd.abilityId);
+  if (!ability) throw new AppError("BAD_REQUEST", `Ability not on commander: ${cmd.abilityId}`);
+  if (ability.trigger !== "active") throw new AppError("BAD_REQUEST", `Ability not player-activated: ${cmd.abilityId}`);
+  if (state.tick < commander.stunUntil) throw new AppError("UNPROCESSABLE", "Commander stunned");
+  const condition = activeConditionError(state, commander, ability);
+  if (condition) throw new AppError("UNPROCESSABLE", condition);
+  const cost = ABILITY_ACTIVATION_COST_V1[ability.id] ?? 0;
+  if (state.energy[cmd.player] < cost) throw new AppError("UNPROCESSABLE", "Insufficient energy");
+  state.energy[cmd.player] -= cost;
+  state.seenSeqs.push(cmd.seq);
+  fireAbilityOn(state, commander, ability.id, cmd.seq, cost);
+}
+
+function applyCommand(state: CombatState, cmd: CombatCommand, counter: { n: number }): void {
+  if (isAbilityCommand(cmd)) applyAbility(state, cmd);
+  else applyDeploy(state, cmd, counter);
+}
+
+export interface AbilityStatus {
+  abilityId: string;
+  cost: number;
+  readyAt: number;
+  cooldownTicks: number;
+  activeUntil: number | null;
+  ready: boolean;
+  affordable: boolean;
+  /** Why activation would be rejected now, or null when it would succeed. */
+  blockedBy: string | null;
+}
+
+/** Authoritative ability-button state for a player's living commander. */
+export function commanderAbilityStatus(state: CombatState, player: PlayerIndex): AbilityStatus[] {
+  const c = state.commanders.find((x) => x.owner === player && x.hp > 0);
+  if (!c) return [];
+  return c.abilities
+    .filter((a) => a.trigger === "active")
+    .map((a) => {
+      const cost = ABILITY_ACTIVATION_COST_V1[a.id] ?? 0;
+      const readyAt = c.abilityReadyAt[a.id] ?? 0;
+      const ready = state.tick >= readyAt;
+      const affordable = state.energy[player] >= cost;
+      const blockedBy =
+        state.phase === "final" ? "Match already finalized" : state.tick < c.stunUntil ? "Commander stunned" : activeConditionError(state, c, a) ?? (affordable ? null : "Insufficient energy");
+      return { abilityId: a.id, cost, readyAt, cooldownTicks: msToTicks(a.cooldownMs, 0), activeUntil: c.abilityActiveUntil[a.id] ?? null, ready, affordable, blockedBy };
+    });
 }
 
 function chaosEffectDurationMs(effect: ChaosEffect): number {
@@ -1442,14 +1584,15 @@ export function resolveOvertimeTiebreak(state: CombatState): PlayerIndex | "draw
 // Single-tick stepper for harnesses and tests. Same deterministic path as
 // runMatch; entity ids continue from the per-match counter in state
 // (v5: no module-global state, so stepped and runMatch replays agree).
-export function stepMatch(state: CombatState, commands: DeployCommand[] = []): void {
-  const due = commands.filter((c) => c.tick <= state.tick + 1);
+export function stepMatch(state: CombatState, commands: CombatCommand[] = []): void {
+  // Canonical (tick, seq) order, identical to runMatch.
+  const due = commands.filter((c) => c.tick <= state.tick + 1).sort((a, b) => (a.tick === b.tick ? a.seq - b.seq : a.tick - b.tick));
   const counter = { n: state.nextEntityId };
   advanceOneTick(state, due, counter);
   state.nextEntityId = counter.n;
 }
 
-function advanceOneTick(state: CombatState, due: DeployCommand[], counter: { n: number }): void {
+function advanceOneTick(state: CombatState, due: CombatCommand[], counter: { n: number }): void {
   if (state.phase === "final") return;
   state.tick += 1;
   // Energy economy: phase multiplier (1x/2x/3x by tick) composed with the
@@ -1471,16 +1614,30 @@ function advanceOneTick(state: CombatState, due: DeployCommand[], counter: { n: 
       }
     }
   }
+  // Ability windows and cooldowns resolve at the start of the tick they end,
+  // before commands, so a command on the ready tick follows its ready event.
+  for (const c of state.commanders) {
+    for (const ability of c.abilities) {
+      const until = c.abilityActiveUntil[ability.id];
+      if (until !== undefined && state.tick >= until) {
+        delete c.abilityActiveUntil[ability.id];
+        state.events.push({ type: "ability_expired", tick: state.tick, player: c.owner, commanderId: c.commanderId, abilityId: ability.id, reason: "duration" });
+      }
+      if (ability.trigger === "active" && c.abilityReadyAt[ability.id] === state.tick) {
+        state.events.push({ type: "ability_ready", tick: state.tick, player: c.owner, commanderId: c.commanderId, abilityId: ability.id, cost: ABILITY_ACTIVATION_COST_V1[ability.id] ?? 0 });
+      }
+    }
+  }
   for (const cmd of due) {
     try {
-      applyDeploy(state, cmd, counter);
+      applyCommand(state, cmd, counter);
     } catch (err) {
-      state.events.push({
-        type: "command_rejected",
-        tick: state.tick,
-        seq: cmd.seq,
-        reason: err instanceof Error ? err.message.slice(0, 120) : "rejected",
-      });
+      const reason = err instanceof Error ? err.message.slice(0, 120) : "rejected";
+      state.events.push(
+        isAbilityCommand(cmd)
+          ? { type: "command_rejected", tick: state.tick, seq: cmd.seq, reason, player: cmd.player, abilityId: String(cmd.abilityId).slice(0, 60) }
+          : { type: "command_rejected", tick: state.tick, seq: cmd.seq, reason }
+      );
     }
   }
   // Movement + targeting (troops and commanders; stunned units hold still).
@@ -1634,31 +1791,17 @@ function advanceOneTick(state: CombatState, due: DeployCommand[], counter: { n: 
   state.commanders = state.commanders.filter((c) => c.hp > 0);
   for (const d of deadCommanders) {
     state.events.push({ type: "death", tick: state.tick, entityId: d.id, owner: d.owner });
+    // Open ability windows end with the commander (statuses die with it).
+    for (const id of Object.keys(d.abilityActiveUntil).sort()) {
+      state.events.push({ type: "ability_expired", tick: state.tick, player: d.owner, commanderId: d.commanderId, abilityId: id, reason: "death" });
+    }
+    d.abilityActiveUntil = {};
     for (const ability of d.abilities) {
-      if (ability.trigger === "onDeath") {
-        try {
-          fireAbilityOn(state, d, ability.id);
-        } catch {
-          // Stale targets after simultaneous death are dropped deterministically.
-        }
-      }
+      if (ability.trigger === "onDeath") fireAbilityOn(state, d, ability.id);
     }
   }
-  // Commander active abilities auto-fire (headless policy): when off
-  // cooldown and their targeting condition holds. B3 may call
-  // fireCommanderAbility for manual triggers instead.
-  for (const c of state.commanders) {
-    if (c.hp <= 0) continue;
-    for (const ability of c.abilities) {
-      if (ability.trigger !== "active") continue;
-      if (ability.cooldownMs !== null && state.tick < (c.abilityReadyAt[ability.id] ?? 0)) continue;
-      try {
-        fireAbilityOn(state, c, ability.id);
-      } catch (err) {
-        if (!(err instanceof AppError) || (err.code !== "UNPROCESSABLE" && err.code !== "BAD_REQUEST")) throw err;
-      }
-    }
-  }
+  // v7: no active auto-fire. Actives run only from player ability commands
+  // (applyAbility, earlier in the tick).
   // Chaos Pulse execution from the immutable B1.4b schedule.
   if (state.chaos) {
     const { schedule } = state.chaos;
@@ -1772,14 +1915,14 @@ export interface RunResult {
 
 // Advance a match to termination (or tick cap). Commands must be
 // pre-sorted; same inputs always yield the same result.
-export function runMatch(config: CombatConfig, commands: DeployCommand[], maxTicks?: number): { state: CombatState; result: RunResult } {
+export function runMatch(config: CombatConfig, commands: CombatCommand[], maxTicks?: number): { state: CombatState; result: RunResult } {
   const state = initMatch(config);
   const counter = { n: state.nextEntityId };
   const sorted = [...commands].sort((a, b) => (a.tick === b.tick ? a.seq - b.seq : a.tick - b.tick));
   const cap = maxTicks ?? COMBAT_TIMELINE_V1.durationTicks + COMBAT_TIMELINE_V1.overtimeTicks + 10;
   let ci = 0;
   while (state.phase !== "final" && state.tick < cap) {
-    const due: DeployCommand[] = [];
+    const due: CombatCommand[] = [];
     while (ci < sorted.length && sorted[ci]!.tick <= state.tick + 1) {
       due.push(sorted[ci]!);
       ci += 1;
@@ -1790,7 +1933,7 @@ export function runMatch(config: CombatConfig, commands: DeployCommand[], maxTic
     const cmd = sorted[ci]!;
     ci += 1;
     try {
-      applyDeploy(state, cmd, counter);
+      applyCommand(state, cmd, counter);
     } catch {
       break;
     }
@@ -1851,7 +1994,16 @@ export function combatRulesetSummary() {
       cycle: "played card -> queue tail after drawing the head; while the commander lives its card is skipped at the queue head (moved to tail), so the hand never holds it; drawable again after death",
       profile: { version: COMMANDER_PROFILE_VERSION, stats: COMMANDER_COMBAT_PROFILE_V1, abilityOverrides: ABILITY_RUNTIME_V1 },
       statMapping: "class-keyed runtime profile; B1 stats, sidegrade variant and Tier never affect combat (free == NFT per class)",
-      triggers: "deploy on deploy, onDeath on death, active auto-fire when off cooldown and targeting condition holds (B2.6b moves actives to player activation)",
+      triggers: "deploy on deploy, onDeath on death (automatic); the five actives fire only from validated player ability commands, never automatically",
+    },
+    abilities: {
+      version: ABILITY_ECONOMY_VERSION,
+      command: "{ kind: 'ability', seq, player, tick, abilityId } (no x/y: all five actives are self-centered on the authoritative commander position; a supplied target is rejected)",
+      activationCost: ABILITY_ACTIVATION_COST_V1,
+      validation: "match active, unique seq, not stale, living deployed commander owned by player, ability on that commander and trigger=active, not stunned, cooldown elapsed, B2.3 targeting condition (enemy within ability radius for volley/null field; aegis needs missing HP), energy >= cost; rejection mutates nothing except a command_rejected event",
+      cooldowns: "ticks = round(cooldownMs/100); ready on deploy; cooldown starts on the activation tick; redeploy spawns a fresh entity with fresh cooldowns; death cancels open windows",
+      ordering: "commands apply in (tick, seq) order before movement/combat; activation then death in the same tick keeps the applied effects; a dead commander cannot activate",
+      events: "ability_fired (trigger, seq, energySpent, center, radius, affected, readyAt, activeUntil), ability_ready, ability_expired (duration|death), command_rejected with abilityId",
     },
     chaos: {
       ticks: "activationMs/100, warning 50 ticks prior",
@@ -1863,6 +2015,6 @@ export function combatRulesetSummary() {
       buff: "override on recast, fully reverts on expiry, troops only",
     },
     deferred: [],
-    compatibility: "v6 configs differ from v5 (decks require a commander card; commanders spawn only by deploy; ids c<player>-<n>); v5 configs are rejected by validation. No persisted replays of earlier versions exist (pre-release, headless fixtures only)",
+    compatibility: "v7 differs from v6 only in commander actives (command-driven, energy-costed) and ability events; v6 configs are rejected by validation. v6 configs differ from v5 (decks require a commander card; commanders spawn only by deploy; ids c<player>-<n>); v5 configs are rejected by validation. No persisted replays of earlier versions exist (pre-release, headless fixtures only)",
   };
 }

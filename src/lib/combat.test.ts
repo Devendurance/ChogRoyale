@@ -8,7 +8,6 @@ import {
   stateHash,
   validateDeck,
   freeStarterSlot,
-  fireCommanderAbility,
   resolveOvertimeTiebreak,
   energyPhaseMult,
   combatRulesetSummary,
@@ -342,20 +341,21 @@ describe("b2.3 commanders", () => {
     expect(state.events.some((e) => e.type === "ability_fired" && e.abilityId === "warden-mend")).toBe(true);
     expect(state.energy).toEqual([0, 0]);
   });
-  it("auto-fires shield when the commander is hurt", () => {
+  it("v7: a hurt commander never auto-fires its active ability", () => {
     const { state } = runMatch(cmdCfg("bulwark", "warden"), [deployC(1, 0, 3, "bulwark"), cmd(2, 1, 5, "chaos_archer", 50, 100)], 400);
-    const fired = state.events.filter((e) => e.type === "ability_fired" && e.abilityId === "bulwark-aegis-wall");
-    expect(fired.length).toBeGreaterThan(0);
+    expect(state.events.some((e) => e.type === "ability_fired" && e.trigger === "active")).toBe(false);
+    expect(state.events.some((e) => e.type === "ability_fired" && e.abilityId === "bulwark-bedrock")).toBe(true);
   });
   it("bloodlust detonates on death", () => {
     const { state } = runMatch(cmdCfg("reaver", "warden"), [deployC(1, 0, 3, "reaver"), cmd(2, 1, 60, "boulderback", 50, 100)], 900);
     const reaverDeaths = state.events.filter((e) => e.type === "death" && e.entityId === "c0-1");
     expect(reaverDeaths).toHaveLength(1);
   });
-  it("manual fire enforces cooldowns and validates", () => {
-    const { state } = runMatch(cmdCfg("deadeye", "warden"), [deployC(1, 0, 3, "deadeye")], 5);
-    expect(() => fireCommanderAbility(state, 0, "nope")).toThrow();
-    expect(() => fireCommanderAbility(state, 1, "deadeye-piercing-volley")).toThrow();
+  it("ability commands validate the ability and the acting player", () => {
+    const ab = (seq: number, player: 0 | 1, abilityId: string) => ({ kind: "ability" as const, seq, player, tick: 4, abilityId });
+    const { state } = runMatch(cmdCfg("deadeye", "warden"), [deployC(1, 0, 3, "deadeye"), ab(2, 0, "nope"), ab(3, 1, "deadeye-piercing-volley")], 5);
+    const rej = state.events.flatMap((e) => (e.type === "command_rejected" ? [e.reason] : []));
+    expect(rej).toEqual(["Ability not on commander: nope", "No living commander for player"]);
   });
   it("tier labels carry no combat numbers", () => {
     const a = mkDef("reaver", "t1");
@@ -637,7 +637,7 @@ describe("b2.4 match rules", () => {
   });
   it("ruleset reports v2 with phases, crowns, and the compatibility boundary", () => {
     const summary = combatRulesetSummary();
-    expect(summary.version).toBe("v6");
+    expect(summary.version).toBe("v7");
     expect(summary.timeline.overtimeTicks).toBe(1200);
   });
 });

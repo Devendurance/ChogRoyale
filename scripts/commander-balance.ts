@@ -1,4 +1,4 @@
-// B2.6a commander balance evidence (development harness only). Real engine
+// B2.6a/B2.6b commander balance evidence (development harness only). Real engine
 // encounters driven by legal commands; DB-free. Usage: npm run commanders:balance
 import { CLASSES, soloSiege, defended, supportedPush, cyclingMatch, roundRobin } from "@/lib/commander-balance";
 import { COMMANDER_COMBAT_PROFILE_V1, combatRulesetSummary } from "@/lib/combat";
@@ -23,7 +23,7 @@ console.log(
         const r = supportedPush(c);
         return { cls: c, alone: { towerL: r.alone.towerL, core: r.alone.core, destroyed: r.alone.destroyed }, supported: { towerL: r.supported.towerL, core: r.supported.core, destroyed: r.supported.destroyed } };
       }),
-      E_roundRobin: { wins: rr.wins, games: rr.games },
+      E_roundRobin: { wins: rr.wins, games: rr.games, avgTicks: rr.avgTicks, activations: rr.activations },
       G_cycling: [cyclingMatch("warden", "reaver", "cycle-a"), cyclingMatch("deadeye", "scout", "cycle-b"), cyclingMatch("bulwark", "warden", "cycle-c")].map(({ steppedHash, ...r }) => ({ ...r, steppedEqualsReplay: steppedHash === r.result.stateHash })),
     },
     null,

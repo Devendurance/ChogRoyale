@@ -17,6 +17,8 @@ import {
   COMMANDER_COMBAT_PROFILE_V1,
   isCommanderCard,
   freeStarterSlot,
+  ABILITY_ACTIVATION_COST_V1,
+  type CombatCommand,
   type CommanderSlotInput,
   type CombatConfig,
   type CombatState,
@@ -141,6 +143,67 @@ export function botMove(state: CombatState, p: PlayerIndex, n: number): { cardId
   return null;
 }
 
+/**
+ * B2.6b deterministic ability policy (testing bot, not AI). Reads only the
+ * real state at tick T and returns an ability for tick T+1 when the
+ * commander lives, the ability is off cooldown, energy covers the cost, the
+ * engine's targeting condition holds, and a tactical trigger applies:
+ * - Aegis Wall: HP <= 70% with an enemy unit or structure close.
+ * - Frenzy Rush: an enemy unit within range+4 or an enemy structure within range+2 of reach.
+ * - Piercing Volley: 2+ enemies (or the enemy commander) within its radius.
+ * - Shadow Step: slowed, or HP <= 60% with an enemy within 8.
+ * - Null Field: 2+ enemies (or the enemy commander) within its radius, or
+ *   HP <= 60% with any enemy inside it.
+ */
+export function botAbility(state: CombatState, p: PlayerIndex): string | null {
+  const c = state.commanders.find((x) => x.owner === p && x.hp > 0);
+  if (!c || state.tick + 1 < c.stunUntil) return null;
+  const next = state.tick + 1;
+  const d2 = (u: { x: number; y: number }) => (u.x - c.x) ** 2 + (u.y - c.y) ** 2;
+  const foes = [...state.troops, ...state.commanders].filter((u) => u.owner !== p && u.hp > 0);
+  const within = (r: number) => foes.filter((u) => d2(u) <= r * r);
+  const structNear = (r: number) =>
+    state.structures.some((s) => s.owner !== p && s.alive && reach2(c.x, c.y, { x: s.x, y: s.y, r: s.structure === "core" ? 4 : 3 }) <= r * r);
+  const hurt = (pct: number) => c.hp * 100 <= c.maxHp * pct;
+  for (const a of c.abilities) {
+    if (a.trigger !== "active") continue;
+    if (next < (c.abilityReadyAt[a.id] ?? 0)) continue;
+    if (state.energy[p] < (ABILITY_ACTIVATION_COST_V1[a.id] ?? 0)) continue;
+    const radius = Math.max(0, ...a.effects.map((e) => e.radiusOrRange ?? 0));
+    const area = within(radius);
+    const crowd = area.length >= 2 || area.some((u) => u.kind === "commander");
+    let use = false;
+    if (a.id === "bulwark-aegis-wall") use = c.hp < c.maxHp && hurt(70) && (within(c.sight).length > 0 || structNear(c.range + 6));
+    else if (a.id === "reaver-frenzy-rush") use = within(c.range + 4).length > 0 || structNear(c.range + 2);
+    else if (a.id === "deadeye-piercing-volley") use = crowd;
+    else if (a.id === "scout-shadow-step") use = (next < c.slowUntil && c.activeSlowPct > 0) || (hurt(60) && within(8).length > 0);
+    else if (a.id === "warden-null-field") use = crowd || (hurt(60) && area.length > 0);
+    if (use) return a.id;
+  }
+  return null;
+}
+
+/** Step a fixed command list while the ability bot plays for `players`. */
+export function runWithAbilities(config: CombatConfig, commands: DeployCommand[], upto: number, players: PlayerIndex[] = [0, 1]) {
+  const state = initMatch(config);
+  const sorted = [...commands].sort((a, b) => (a.tick === b.tick ? a.seq - b.seq : a.tick - b.tick));
+  const all: CombatCommand[] = [];
+  let ci = 0;
+  let aseq = 100000;
+  while (state.phase !== "final" && state.tick < upto) {
+    const due: CombatCommand[] = [];
+    while (ci < sorted.length && sorted[ci]!.tick <= state.tick + 1) due.push(sorted[ci++]!);
+    for (const p of players) {
+      if (due.some((d) => d.player === p)) continue;
+      const abilityId = botAbility(state, p);
+      if (abilityId) due.push({ kind: "ability", seq: ++aseq, player: p, tick: state.tick + 1, abilityId });
+    }
+    all.push(...due);
+    stepMatch(state, due);
+  }
+  return { state, commands: all };
+}
+
 function seedOffset(seed: string): number {
   let h = 0;
   for (const ch of seed) h = (h * 31 + ch.charCodeAt(0)) % 9973;
@@ -155,13 +218,23 @@ function seedOffset(seed: string): number {
 export function botMatch(config: CombatConfig, upto: number, every = 20) {
   const state = initMatch(config);
   const samples: TraceSample[] = [];
-  const commands: DeployCommand[] = [];
+  const commands: CombatCommand[] = [];
   const offset = seedOffset(config.seed);
   let seq = 0;
+  // Ability seqs use a separate range so deploy choices stay seed-stable.
+  let aseq = 100000;
   while (state.phase !== "final" && state.tick < upto) {
-    const due: DeployCommand[] = [];
+    const due: CombatCommand[] = [];
+    const usedAbility = new Set<PlayerIndex>();
+    for (const p of [0, 1] as PlayerIndex[]) {
+      const abilityId = botAbility(state, p);
+      if (!abilityId) continue;
+      usedAbility.add(p);
+      due.push({ kind: "ability", seq: ++aseq, player: p, tick: state.tick + 1, abilityId });
+    }
     if ((state.tick + 1) % every === 0) {
       for (const p of [0, 1] as PlayerIndex[]) {
+        if (usedAbility.has(p)) continue;
         const move = botMove(state, p, offset + seq);
         if (!move) continue;
         seq += 1;

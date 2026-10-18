@@ -11,13 +11,14 @@ import {
   runtimeAbilities,
   COMMANDER_COMBAT_PROFILE_V1,
   CARDS_V1,
+  type CombatCommand,
   type CombatConfig,
   type CombatState,
   type DeployCommand,
   type PlayerIndex,
 } from "@/lib/combat";
 import { deriveCommander, CLASS_ROSTER, type CommanderClass } from "@/lib/commanders";
-import { deckWith, scenarioConfig, riftSchedule, traceMatch } from "@/lib/arena-scenarios";
+import { deckWith, scenarioConfig, riftSchedule, traceMatch, botAbility, runWithAbilities } from "@/lib/arena-scenarios";
 import { CLASSES, soloSiege, defended, supportedPush, cyclingMatch, deployGate, roundRobin } from "@/lib/commander-balance";
 
 const cmd = (seq: number, player: PlayerIndex, tick: number, cardId: string, x: number, y: number): DeployCommand => ({ seq, player, tick, cardId, x, y });
@@ -228,7 +229,7 @@ describe("class ability regressions", () => {
     const fired = (cls: CommanderClass, defense: string[]) => {
       const cfg = scenarioConfig(deckWith(`cmdr:free-${cls}`), deckWith(...defense), riftSchedule(`ab-${cls}`), `ab-${cls}`);
       const cmds = [cmd(1, 0, 2, `cmdr:free-${cls}`, 30, 60), ...defense.map((c, i) => cmd(10 + i, 1, 20 + i * 20, c, 30, 100))];
-      const { state } = runMatch(cfg, cmds, 600);
+      const { state } = runWithAbilities(cfg, cmds, 600);
       return { ids: new Set(state.events.flatMap((e) => (e.type === "ability_fired" ? [e.abilityId] : []))), state };
     };
     const bul = fired("bulwark", ["chaos_archer"]);
@@ -243,7 +244,10 @@ describe("class ability regressions", () => {
     let maxShield = 0;
     const cmds = [cmd(1, 0, 1, "cmdr:free-bulwark", 30, 60), cmd(2, 1, 10, "chaos_archer", 30, 100)];
     for (let i = 0; i < 400 && s.phase !== "final"; i++) {
-      stepMatch(s, cmds.filter((c) => c.tick === s.tick + 1));
+      const due: CombatCommand[] = cmds.filter((c) => c.tick === s.tick + 1);
+      const a = botAbility(s, 0);
+      if (a) due.push({ kind: "ability", seq: 500 + i, player: 0, tick: s.tick + 1, abilityId: a });
+      stepMatch(s, due);
       for (const c of s.commanders) maxShield = Math.max(maxShield, c.shieldHp);
     }
     expect(maxShield).toBe(100);

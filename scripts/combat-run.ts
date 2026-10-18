@@ -7,7 +7,7 @@
 // Commanders default to free-warden,free-reaver. `nft:<tokenId>` derives the
 // commander from real Genesis metadata via B1 deriveCommander (read-only).
 import "dotenv/config";
-import { runMatch, COMBAT_RULESET_VERSION, TROOP_CARDS_V1, SPELL_CARDS_V1, COMMANDER_COMBAT_PROFILE_V1, freeStarterSlot, commanderCardId, isCommanderCard, type CombatConfig, type CommanderSlotInput } from "@/lib/combat";
+import { runMatch, COMBAT_RULESET_VERSION, TROOP_CARDS_V1, SPELL_CARDS_V1, COMMANDER_COMBAT_PROFILE_V1, freeStarterSlot, commanderCardId, isCommanderCard, isAbilityCommand, type CombatConfig, type CommanderSlotInput, type DeployCommand } from "@/lib/combat";
 import { botMatch } from "@/lib/arena-scenarios";
 import { deriveCommander, COMMANDER_CLASSES, type CommanderClass } from "@/lib/commanders";
 import { derivePatronConfig } from "@/lib/patrons";
@@ -69,7 +69,10 @@ async function main() {
   const ev = state.events;
   const count = <T extends string>(list: T[]) => list.reduce<Record<string, number>>((m, k) => ((m[k] = (m[k] ?? 0) + 1), m), {});
   const lane = (x: number) => (x < 50 ? "left" : x > 50 ? "right" : "center");
-  const troopCmds = bot.commands.filter((c) => TROOP_CARDS_V1[c.cardId]);
+  const cardCmds = bot.commands.filter((c): c is DeployCommand => !isAbilityCommand(c));
+  const abilityCmds = bot.commands.filter(isAbilityCommand);
+  const troopCmds = cardCmds.filter((c) => TROOP_CARDS_V1[c.cardId]);
+  const fired = ev.flatMap((e) => (e.type === "ability_fired" ? [e] : []));
   console.log(
     JSON.stringify(
       {
@@ -80,12 +83,18 @@ async function main() {
         spells: ev.filter((e) => e.type === "spell_cast").length,
         rejected: ev.filter((e) => e.type === "command_rejected"),
         commanderSnapshots: slots.map((s) => ({ id: s.commanderId, class: s.definition.class, variant: s.definition.variant, prestige: s.definition.prestige })),
-        energySpent: ([0, 1] as const).map((p) => bot.commands.filter((c) => c.player === p).reduce((n, c) => n + cardCost(c.cardId, p), 0)),
-        cardsPlayed: count(bot.commands.map((c) => `p${c.player}:${c.cardId}`)),
+        energySpent: ([0, 1] as const).map((p) => ({
+          cards: cardCmds.filter((c) => c.player === p).reduce((n, c) => n + cardCost(c.cardId, p), 0),
+          abilities: fired.filter((e) => e.player === p).reduce((n, e) => n + e.energySpent, 0),
+        })),
+        cardsPlayed: count(cardCmds.map((c) => `p${c.player}:${c.cardId}`)),
         lanes: count(troopCmds.map((c) => `p${c.player}:${lane(c.x)}`)),
         commanders: {
           deployed: ev.filter((e) => e.type === "commander_deployed").map((e) => (e.type === "commander_deployed" ? `p${e.player}:${e.class}@${e.tick}` : "")),
-          abilitiesFired: ev.filter((e) => e.type === "ability_fired").length,
+          abilityCommands: abilityCmds.length,
+          activated: count(fired.filter((e) => e.trigger === "active").map((e) => `p${e.player}:${e.abilityId}`)),
+          automatic: count(fired.filter((e) => e.trigger !== "active").map((e) => `p${e.player}:${e.abilityId}`)),
+          expired: ev.filter((e) => e.type === "ability_expired").length,
           deaths: ev.filter((e) => e.type === "death" && e.entityId.startsWith("c")).map((e) => (e.type === "death" ? `${e.entityId}@${e.tick}` : "")),
         },
         chaos: count(ev.filter((e) => e.type === "pulse_active" || e.type === "rift_crossing").map((e) => (e.type === "pulse_active" ? e.family : `rift_${e.type === "rift_crossing" && e.open ? "open" : "close"}`))),

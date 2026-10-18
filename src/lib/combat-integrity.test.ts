@@ -18,11 +18,12 @@ import {
   STRUCTURE_FOOTPRINT_V5,
   ENERGY_V1,
   type CombatConfig,
+  type CombatCommand,
   type DeployCommand,
   type CombatState,
 } from "@/lib/combat";
 import type { CommanderClass } from "@/lib/commanders";
-import { deckWith, traceMatch, botMatch, scenarioConfig, riftSchedule } from "@/lib/arena-scenarios";
+import { deckWith, traceMatch, botMatch, scenarioConfig, riftSchedule, botAbility } from "@/lib/arena-scenarios";
 
 // v6: commanders are deck cards; the p1 commander is deployed by command.
 const cmdCfg = (p1: CommanderClass, p0Deck: string[] = deckWith("chog_guardian", "chaos_archer")): CombatConfig =>
@@ -36,10 +37,13 @@ const pressure: DeployCommand[] = [
 ];
 
 
-function play(cfg: CombatConfig, cmds: DeployCommand[], ticks: number, each: (s: CombatState) => void) {
+function play(cfg: CombatConfig, cmds: DeployCommand[], ticks: number, each: (s: CombatState) => void, abilityBot: 0 | 1 | null = null) {
   const s = initMatch(cfg);
   for (let i = 0; i < ticks && s.phase !== "final"; i++) {
-    stepMatch(s, cmds.filter((c) => c.tick === s.tick + 1));
+    const due: CombatCommand[] = cmds.filter((c) => c.tick === s.tick + 1);
+    const a = abilityBot === null ? null : botAbility(s, abilityBot);
+    if (a && abilityBot !== null) due.push({ kind: "ability", seq: 5000 + i, player: abilityBot, tick: s.tick + 1, abilityId: a });
+    stepMatch(s, due);
     each(s);
   }
   return s;
@@ -93,7 +97,7 @@ describe("commander targetability", () => {
       if (targeted && prev > 0 && c.shieldHp < prev && st.tick < c.shieldUntil) absorbed = true;
       if (c.hp < c.maxHp) hurt = true;
       prev = c.shieldHp;
-    });
+    }, 1);
     expect(absorbed).toBe(true);
     expect(hurt).toBe(true);
   });
