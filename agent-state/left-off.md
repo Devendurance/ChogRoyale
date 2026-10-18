@@ -21,6 +21,10 @@ Last updated: 2026-10-18
 
 ## Currently working on
 
+- Original troop art direction c002 (2026-10-19): Choglings (A Bonk, B Ladle, C Prong) and Boulderback redesigned from the five r001 portraits. Outputs in `C:/Users/USER/Documents/ChogRoyale-Assets/original-troop-concept-review/c002/troop-concepts/`: art bible (A/B/C split), DNA evidence board, two troop sheets, side-by-side validation board, views, approvals (all pending), provenance, preservation check (175/175 baseline files unchanged). Hand-authored SVG, no AI image tool, no Tripo, no gameplay change.
+- Next: user reviews c002. Open risks are the Boulderback front crest reading as a halo, the violet head ring reading as a hood, generic Chogling bodies, and no back views. c001 stays rejected.
+- A separate session wrote a c002 source study in the parent `c002/` folder (README, character-art-bible, approvals, final-audit). It was left untouched.
+
 - Completed `docs/character-reference-workflow.md`, a proposal for five NFT commanders and two original troops. All five metadata-derived classes and saved derivation hashes match. Original 1000x1000 portraits visually reviewed and preserved outside repo with genuine metadata evidence. Source/API review found no issues. Lint, typecheck, 261 tests, and production build passed.
 - Next for asset production: review the workflow, implement the narrow read-only exporter, then approve full-body interpretations and troop concepts before Tripo generation. No exporter, full reference packs, or models generated in this research task.
 

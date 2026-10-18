@@ -21,6 +21,8 @@ Durable facts, conventions, and gotchas that should survive across sessions.
 
 - On-chain token IDs differ from artwork/display numbers. Always follow `token_uri_original` and `image_original`, never build filenames from token ID.
 - `nft_metadata.content_hash` hashes fetched JSON bytes. JSONB exports preserve semantics and need a separate exported-file hash. Commander hashes are separate derivation hashes.
+- Chog visual DNA (measured on r001 pixels): cream face #eee8d8, or brown #552d1f to #613222 on Skin Black. Backswept 4 to 5 two-tone rear spikes in the Skin color (Red #ee0e0e, Origin violet #5c36b1, Black charcoal #212327 with grey #919191). Blush #d6407c on all five samples. No nose, no ears. Skull form has no spikes. Collection: Form Chog 1899 / Skull 60, Side Right 1309 / Left 650. Skin Pink 557 and Yellow 246 are not in the local samples.
+- Image read tool keeps only the last two images, so view at most two per call and record observations right away.
 - NFT portrait Skin trait colors can describe outer spikes rather than the face. Sample region colors from real artwork. `DESIGN.md` is referenced but missing.
 
 - Public IPFS gateways throttle sustained streams: filebase serves 200 in ~1s when idle but 429s under load; pinata and dweb 429 even single requests. Fix is idle cooldown + single-stream, not retries. Dedicated gateway would need signup + key in `IPFS_GATEWAYS`.
