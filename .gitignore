@@ -39,3 +39,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# logs, temp files, local databases, credentials
+*.log
+logs/
+tmp/
+*.tmp
+tmp-*.ts
+*.sqlite
+*.sqlite3
+*.db
+*.key
+credentials*.json

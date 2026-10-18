@@ -1,0 +1,1559 @@
+// Deterministic 1v1 combat simulation (B2.1 foundation + B2.2 roster +
+// B2.3 commander & Chaos execution, ruleset v1).
+//
+// Server-authoritative, headless, pure: no DB, no network, no wall clock,
+// no Math.random. Fixed 10 ticks/second, integer time and positions,
+// simultaneous damage application, stable entity IDs and processing order.
+// Identical (config, seed, commands) always yields identical results.
+//
+// B2.3 scope: commanders fight with real B1.3 abilities (auto-fire for
+// headless; fireCommanderAbility is also callable for future B3 manual
+// triggers) and B1.4b Chaos schedules execute telegraphed battlefield events.
+// Commander entitlement is a TRUSTED input: B3 must verify ownership/lease
+// before constructing the config; the engine never re-checks wallets.
+
+import { createHash } from "crypto";
+import { AppError } from "@/lib/errors";
+import type { CommanderDefinition, CommanderAbility, CommanderClass } from "@/lib/commanders";
+import type { ChaosSchedule, ChaosEffect } from "@/lib/chaos";
+
+// v4 (B2.5): two-lane arena with river, bridges, deterministic ground
+// navigation, lane objectives, in-range target lock, territory + pocket
+// deployment and RIFT_SHIFT ford crossings. Hashes differ from v3 by design.
+export const COMBAT_RULESET_VERSION = "v4" as const;
+export const TICKS_PER_SECOND = 10;
+// Standard ranked timeline (v2): 180s regulation, up to 120s sudden-death overtime.
+// Energy phases: 1x ticks 0-1199, 2x ticks 1200-2399, 3x ticks 2400-2999.
+export const COMBAT_TIMELINE_V1 = {
+  durationTicks: 180 * TICKS_PER_SECOND,
+  overtimeTicks: 120 * TICKS_PER_SECOND,
+  doubleEnergyTick: 1200,
+  tripleEnergyTick: 2400,
+} as const;
+
+// Canonical arena v2: x 0..100, y 0..160. Player 0 holds y=0 (south),
+// player 1 y=160 (north). Mirror-symmetric under y -> 160 - y (and x -> 100 - x
+// for terrain). A river band y 74..86 splits the territories; ground units
+// cross only on the two bridges (left x 24..36, right x 64..76) or on the
+// central Rift Ford (x 44..56) while a RIFT_SHIFT pulse is active. Lanes split
+// at x = 50 (x <= 50 is the left lane). Banks are y 73 (south) and y 87 (north).
+// Destroying an enemy side tower unlocks a forward pocket on that lane half:
+// 20 rows past the river (p0: y 87..106, p1: y 54..73), x 5..49 or 51..95.
+export const ARENA_VERSION = "arena-v2" as const;
+export const ARENA_V2 = {
+  minX: 0,
+  maxX: 100,
+  minY: 0,
+  maxY: 160,
+  deployMarginX: 5,
+  midY: 80,
+  laneSplitX: 50,
+  river: { minY: 74, maxY: 86 },
+  bridges: [
+    { id: "left", minX: 24, maxX: 36 },
+    { id: "right", minX: 64, maxX: 76 },
+  ],
+  riftFord: { id: "rift", minX: 44, maxX: 56 },
+  riftRegion: { minX: 40, maxX: 60, minY: 70, maxY: 90 },
+  pocketDepth: 20,
+  towers: [
+    { kind: "tower", x: 30, y: 40, owner: 0 },
+    { kind: "tower", x: 70, y: 40, owner: 0 },
+    { kind: "tower", x: 30, y: 120, owner: 1 },
+    { kind: "tower", x: 70, y: 120, owner: 1 },
+  ],
+  cores: [
+    { kind: "core", x: 50, y: 8, owner: 0 },
+    { kind: "core", x: 50, y: 152, owner: 1 },
+  ],
+} as const;
+
+export type MoveType = "ground" | "air";
+
+export interface TroopCardDef {
+  id: string;
+  name: string;
+  cost: number;
+  count: number;
+  hp: number;
+  damage: number;
+  range: number;
+  speed: number;
+  sight: number;
+  attackIntervalTicks: number;
+  moveType: MoveType;
+  hitsAir: boolean;
+  hitsGround: boolean;
+  structPriority: boolean;
+  splashRadius: number;
+  projectileTicks: number;
+  slowPct: number;
+  slowDurationTicks: number;
+}
+
+export interface SpellCardDef {
+  id: string;
+  name: string;
+  cost: number;
+  kind: "bolt" | "horn";
+  radius: number;
+  damage: number;
+  buffPct: number;
+  buffDurationTicks: number;
+}
+
+// Authored v1 roster. Stats are versioned here, never derived from NFTs.
+// Costs follow the agreed B2.2 roster (boulderback 5, frostshell 4).
+export const TROOP_CARDS_V1: Record<string, TroopCardDef> = {
+  choglings: { id: "choglings", name: "Choglings", cost: 2, count: 3, hp: 60, damage: 12, range: 2, speed: 2, sight: 25, attackIntervalTicks: 8, moveType: "ground", hitsAir: false, hitsGround: true, structPriority: false, splashRadius: 0, projectileTicks: 0, slowPct: 0, slowDurationTicks: 0 },
+  chaos_archer: { id: "chaos_archer", name: "Chaos Archer", cost: 3, count: 2, hp: 50, damage: 15, range: 18, speed: 2, sight: 30, attackIntervalTicks: 10, moveType: "ground", hitsAir: true, hitsGround: true, structPriority: false, splashRadius: 0, projectileTicks: 0, slowPct: 0, slowDurationTicks: 0 },
+  boulderback: { id: "boulderback", name: "Boulderback", cost: 5, count: 1, hp: 400, damage: 40, range: 2, speed: 1, sight: 22, attackIntervalTicks: 12, moveType: "ground", hitsAir: false, hitsGround: true, structPriority: true, splashRadius: 0, projectileTicks: 0, slowPct: 0, slowDurationTicks: 0 },
+  frostshell: { id: "frostshell", name: "Frostshell", cost: 4, count: 1, hp: 250, damage: 20, range: 2, speed: 1, sight: 22, attackIntervalTicks: 12, moveType: "ground", hitsAir: false, hitsGround: true, structPriority: false, splashRadius: 0, projectileTicks: 0, slowPct: 50, slowDurationTicks: 60 },
+  rift_runner: { id: "rift_runner", name: "Rift Runner", cost: 3, count: 1, hp: 70, damage: 14, range: 2, speed: 4, sight: 40, attackIntervalTicks: 9, moveType: "ground", hitsAir: false, hitsGround: true, structPriority: true, splashRadius: 0, projectileTicks: 0, slowPct: 0, slowDurationTicks: 0 },
+  sparkcaster: { id: "sparkcaster", name: "Sparkcaster", cost: 4, count: 1, hp: 90, damage: 22, range: 20, speed: 2, sight: 26, attackIntervalTicks: 14, moveType: "ground", hitsAir: true, hitsGround: true, structPriority: false, splashRadius: 6, projectileTicks: 6, slowPct: 0, slowDurationTicks: 0 },
+  chog_guardian: { id: "chog_guardian", name: "Chog Guardian", cost: 4, count: 1, hp: 260, damage: 26, range: 2, speed: 2, sight: 24, attackIntervalTicks: 10, moveType: "ground", hitsAir: false, hitsGround: true, structPriority: false, splashRadius: 0, projectileTicks: 0, slowPct: 0, slowDurationTicks: 0 },
+  hexwing: { id: "hexwing", name: "Hexwing", cost: 4, count: 1, hp: 120, damage: 18, range: 14, speed: 3, sight: 30, attackIntervalTicks: 10, moveType: "air", hitsAir: true, hitsGround: true, structPriority: false, splashRadius: 0, projectileTicks: 4, slowPct: 0, slowDurationTicks: 0 },
+};
+
+export const SPELL_CARDS_V1: Record<string, SpellCardDef> = {
+  // Enemy troops only: no structures, no friendly fire, no self-damage exploits.
+  chaos_bolt: { id: "chaos_bolt", name: "Chaos Bolt", cost: 3, kind: "bolt", radius: 8, damage: 120, buffPct: 0, buffDurationTicks: 0 },
+  // Friendly troops only, never structures: temporary attack buff, override stacking.
+  rally_horn: { id: "rally_horn", name: "Rally Horn", cost: 2, kind: "horn", radius: 12, damage: 0, buffPct: 40, buffDurationTicks: 120 },
+};
+
+export const CARDS_V1: Record<string, TroopCardDef | SpellCardDef> = { ...TROOP_CARDS_V1, ...SPELL_CARDS_V1 };
+
+export const ENERGY_V1 = { max: 10, start: 5, regenTicksPerPoint: 28 } as const;
+
+// Energy phase multiplier from the tick clock (integer, deterministic).
+export function energyPhaseMult(tick: number): number {
+  if (tick >= COMBAT_TIMELINE_V1.tripleEnergyTick) return 3;
+  if (tick >= COMBAT_TIMELINE_V1.doubleEnergyTick) return 2;
+  return 1;
+}
+export const STRUCTURE_V1 = {
+  tower: { hp: 600, damage: 25, range: 25, intervalTicks: 10 },
+  core: { hp: 1000, damage: 30, range: 28, intervalTicks: 10 },
+} as const;
+
+export type PlayerIndex = 0 | 1;
+
+export interface DeployCommand {
+  seq: number;
+  player: PlayerIndex;
+  tick: number;
+  cardId: string;
+  x: number;
+  y: number;
+}
+
+export interface TroopEntity {
+  id: string;
+  kind: "troop";
+  owner: PlayerIndex;
+  cardId: string;
+  x: number;
+  y: number;
+  hp: number;
+  maxHp: number;
+  damage: number;
+  range: number;
+  speed: number;
+  sight: number;
+  interval: number;
+  cooldownUntil: number;
+  targetId: string | null;
+  moveType: MoveType;
+  hitsAir: boolean;
+  hitsGround: boolean;
+  structPriority: boolean;
+  splashRadius: number;
+  projectileTicks: number;
+  slowPct: number;
+  slowDurationTicks: number;
+  slowUntil: number;
+  activeSlowPct: number;
+  buffUntil: number;
+  buffPct: number;
+  hasteUntil: number;
+  hastePct: number;
+  stunUntil: number;
+  shieldHp: number;
+  shieldUntil: number;
+  reflectUntil: number;
+  reflectFracNumer: number;
+  reflectFracDenom: number;
+  guardUntil: number;
+  guardPct: number;
+  armor: number;
+}
+
+// Commanders reuse troop combat mechanics plus armor, shields, reflect,
+// and B1.3 abilities. Spawned from trusted B3-verified entitlements.
+export interface CommanderEntity {
+  id: string;
+  kind: "commander";
+  owner: PlayerIndex;
+  commanderId: string;
+  class: CommanderClass;
+  x: number;
+  y: number;
+  hp: number;
+  maxHp: number;
+  damage: number;
+  range: number;
+  speed: number;
+  sight: number;
+  interval: number;
+  cooldownUntil: number;
+  targetId: string | null;
+  armor: number;
+  moveType: MoveType;
+  hitsAir: boolean;
+  hitsGround: boolean;
+  structPriority: boolean;
+  splashRadius: number;
+  projectileTicks: number;
+  slowDurationTicks: number;
+  slowPct: number;
+  slowUntil: number;
+  activeSlowPct: number;
+  buffUntil: number;
+  buffPct: number;
+  hasteUntil: number;
+  hastePct: number;
+  stunUntil: number;
+  shieldHp: number;
+  shieldUntil: number;
+  reflectUntil: number;
+  reflectFracNumer: number;
+  reflectFracDenom: number;
+  guardUntil: number;
+  guardPct: number;
+  preference: "closest" | "strongest" | "weakest" | "commander";
+  abilities: CommanderAbility[];
+  abilityReadyAt: Record<string, number>;
+  derivationHash: string;
+}
+
+export interface ProjectileEntity {
+  id: string;
+  owner: PlayerIndex;
+  targetId: string;
+  snapX: number;
+  snapY: number;
+  damage: number;
+  splashRadius: number;
+  arrivalTick: number;
+}
+
+export interface StructureEntity {
+  id: string;
+  kind: "structure";
+  owner: PlayerIndex;
+  structure: "tower" | "core";
+  x: number;
+  y: number;
+  hp: number;
+  maxHp: number;
+  alive: boolean;
+}
+
+export type CombatEvent =
+  | { type: "deploy"; tick: number; player: PlayerIndex; cardId: string; entityIds: string[] }
+  | { type: "death"; tick: number; entityId: string; owner: PlayerIndex }
+  | { type: "structure_destroyed"; tick: number; entityId: string; owner: PlayerIndex; structure: "tower" | "core" }
+  | { type: "match_end"; tick: number; winner: PlayerIndex | "draw"; reason: "core" | "crowns" | "overtime" | "timeout"; crowns: [number, number] }
+  | { type: "command_rejected"; tick: number; seq: number; reason: string }
+  | { type: "spell_cast"; tick: number; player: PlayerIndex; cardId: string; x: number; y: number; affected: number }
+  | { type: "commander_deployed"; tick: number; player: PlayerIndex; commanderId: string; class: string }
+  | { type: "ability_fired"; tick: number; player: PlayerIndex; commanderId: string; abilityId: string }
+  | { type: "pulse_warning"; tick: number; eventId: string; family: string; activationTick: number }
+  | { type: "pulse_active"; tick: number; eventId: string; family: string }
+  | { type: "pulse_expired"; tick: number; eventId: string; family: string }
+  | { type: "rift_crossing"; tick: number; open: boolean; until: number };
+
+export interface CommanderSlotInput {
+  commanderId: string;
+  definition: CommanderDefinition;
+}
+
+export interface CombatConfig {
+  rulesetVersion: typeof COMBAT_RULESET_VERSION;
+  seed: string;
+  decks: [string[], string[]];
+  commanderIds?: [string | null, string | null];
+  commanders?: [CommanderSlotInput | null, CommanderSlotInput | null];
+  chaosScheduleHash?: string | null;
+  chaos?: ChaosSchedule | null;
+}
+
+export interface CombatState {
+  tick: number;
+  phase: "active" | "overtime" | "final";
+  energy: [number, number];
+  energyProgress: [number, number];
+  hands: [string[], string[]];
+  queues: [string[], string[]];
+  troops: TroopEntity[];
+  projectiles: ProjectileEntity[];
+  commanders: CommanderEntity[];
+  structures: StructureEntity[];
+  chaos: null | {
+    schedule: ChaosSchedule;
+    warned: boolean[];
+    active: boolean[];
+    expired: boolean[];
+  };
+  moveModUntil: number;
+  moveModPct: number;
+  energyModUntil: number;
+  energyModPct: number;
+  zoneMods: Array<{ zone: string; modifier: "slowed" | "hasted"; until: number }>;
+  // Rift Ford is walkable for ground units while tick < riftOpenUntil.
+  riftOpenUntil: number;
+  seenSeqs: number[];
+  events: CombatEvent[];
+  winner: PlayerIndex | "draw" | null;
+  endReason: "core" | "crowns" | "overtime" | "timeout" | null;
+  crowns: [number, number];
+}
+
+function stableStringify(value: unknown): string {
+  if (value === null || typeof value !== "object") return JSON.stringify(value) ?? "null";
+  if (Array.isArray(value)) return `[${value.map(stableStringify).join(",")}]`;
+  const entries = Object.entries(value as Record<string, unknown>).filter(([, v]) => v !== undefined);
+  entries.sort((x, y) => (x[0] < y[0] ? -1 : x[0] > y[0] ? 1 : 0));
+  return `{${entries.map(([k, v]) => `${JSON.stringify(k)}:${stableStringify(v)}`).join(",")}}`;
+}
+
+const COMMANDER_CLASSES = ["bulwark", "reaver", "deadeye", "scout", "warden"] as const;
+
+export function validateCommanders(slots: [CommanderSlotInput | null, CommanderSlotInput | null] | undefined): void {
+  if (slots === undefined) return;
+  for (const slot of slots) {
+    if (slot === null) continue;
+    if (!slot.commanderId || typeof slot.commanderId !== "string" || slot.commanderId.length > 120) {
+      throw new AppError("BAD_REQUEST", "Commander slot requires a commander id");
+    }
+    const def = slot.definition;
+    if (!def || def.rulesetVersion !== "v1") throw new AppError("BAD_REQUEST", "Commander definition must be ruleset v1");
+    if (!(COMMANDER_CLASSES as readonly string[]).includes(def.class)) {
+      throw new AppError("BAD_REQUEST", `Unknown commander class: ${String((def as { class?: unknown }).class)}`);
+    }
+    for (const n of [def.stats.health, def.stats.damage, def.stats.attackIntervalMs, def.stats.range, def.stats.moveSpeed]) {
+      if (typeof n !== "number" || !Number.isFinite(n) || n < 0) throw new AppError("BAD_REQUEST", "Commander stats must be non-negative numbers");
+    }
+    if (!Array.isArray(def.abilities)) throw new AppError("BAD_REQUEST", "Commander abilities must be an array");
+  }
+}
+
+export function validateChaos(schedule: ChaosSchedule | null | undefined): void {
+  if (schedule === null || schedule === undefined) return;
+  if (schedule.rulesetVersion !== "v1") throw new AppError("BAD_REQUEST", "Chaos schedule must be ruleset v1");
+  if (!Array.isArray(schedule.events) || schedule.events.length === 0) {
+    throw new AppError("BAD_REQUEST", "Chaos schedule requires events");
+  }
+}
+export function validateDeck(deck: string[]): void {
+  if (!Array.isArray(deck) || deck.length !== 8) {
+    throw new AppError("BAD_REQUEST", "Deck must contain exactly 8 cards");
+  }
+  const seen = new Set<string>();
+  for (const id of deck) {
+    if (!CARDS_V1[id]) throw new AppError("BAD_REQUEST", `Card not playable: ${id}`);
+    if (seen.has(id)) throw new AppError("BAD_REQUEST", `Duplicate card in deck: ${id}`);
+    seen.add(id);
+  }
+}
+
+export function initMatch(config: CombatConfig): CombatState {
+  if (config.rulesetVersion !== COMBAT_RULESET_VERSION) {
+    throw new AppError("BAD_REQUEST", `Unsupported combat ruleset: ${config.rulesetVersion}`);
+  }
+  if (!config.seed || config.seed.trim().length === 0) throw new AppError("BAD_REQUEST", "Match requires a seed");
+  validateDeck(config.decks[0]);
+  validateDeck(config.decks[1]);
+  if (config.commanderIds) {
+    for (const c of config.commanderIds) {
+      if (c !== null && (typeof c !== "string" || c.length === 0 || c.length > 120)) {
+        throw new AppError("BAD_REQUEST", "Commander slot must be null or a commander id");
+      }
+    }
+  }
+  validateCommanders(config.commanders);
+  validateChaos(config.chaos);
+  const structures: StructureEntity[] = [];
+  for (const t of ARENA_V2.towers) {
+    const def = STRUCTURE_V1.tower;
+    structures.push({ id: `s-p${t.owner}-${t.kind}-${t.x}`, kind: "structure", owner: t.owner as PlayerIndex, structure: "tower", x: t.x, y: t.y, hp: def.hp, maxHp: def.hp, alive: true });
+  }
+  for (const c of ARENA_V2.cores) {
+    const def = STRUCTURE_V1.core;
+    structures.push({ id: `s-p${c.owner}-${c.kind}`, kind: "structure", owner: c.owner as PlayerIndex, structure: "core", x: c.x, y: c.y, hp: def.hp, maxHp: def.hp, alive: true });
+  }
+  const state: CombatState = {
+    tick: 0,
+    phase: "active",
+    energy: [ENERGY_V1.start, ENERGY_V1.start],
+    energyProgress: [0, 0],
+    hands: [config.decks[0].slice(0, 4), config.decks[1].slice(0, 4)],
+    queues: [config.decks[0].slice(4), config.decks[1].slice(4)],
+    troops: [],
+    projectiles: [],
+    commanders: [],
+    structures,
+    chaos: config.chaos
+      ? { schedule: config.chaos, warned: config.chaos.events.map(() => false), active: config.chaos.events.map(() => false), expired: config.chaos.events.map(() => false) }
+      : null,
+    moveModUntil: 0,
+    moveModPct: 100,
+    energyModUntil: 0,
+    energyModPct: 100,
+    zoneMods: [],
+    riftOpenUntil: 0,
+    seenSeqs: [],
+    events: [],
+    winner: null,
+    endReason: null,
+    crowns: [0, 0],
+  };
+  const slots = config.commanders ?? [null, null];
+  (slots as Array<CommanderSlotInput | null>).forEach((slot, i) => {
+    if (!slot) return;
+    const owner = i as PlayerIndex;
+    const def = slot.definition;
+    const commander: CommanderEntity = {
+      id: `c${i}`,
+      kind: "commander",
+      owner,
+      commanderId: slot.commanderId,
+      class: def.class,
+      x: 50,
+      y: owner === 0 ? 30 : 130,
+      hp: Math.round(def.stats.health),
+      maxHp: Math.round(def.stats.health),
+      damage: Math.round(def.stats.damage),
+      range: Math.max(1, Math.round(def.stats.range)),
+      speed: Math.max(1, Math.round(def.stats.moveSpeed)),
+      sight: 30,
+      interval: Math.max(1, Math.round(def.stats.attackIntervalMs / 100)),
+      cooldownUntil: 0,
+      targetId: null,
+      armor: Math.max(0, Math.floor(def.stats.armor)),
+      preference: def.stats.targetPreference,
+      moveType: "ground",
+      hitsAir: def.class === "deadeye",
+      hitsGround: true,
+      structPriority: false,
+      splashRadius: 0,
+      projectileTicks: 0,
+      slowDurationTicks: 0,
+      slowPct: 0,
+      slowUntil: 0,
+      activeSlowPct: 0,
+      buffUntil: 0,
+      buffPct: 0,
+      hasteUntil: 0,
+      hastePct: 0,
+      stunUntil: 0,
+      shieldHp: 0,
+      shieldUntil: 0,
+      reflectUntil: 0,
+      reflectFracNumer: 0,
+      reflectFracDenom: 1,
+      guardUntil: 0,
+      guardPct: 0,
+      abilities: def.abilities,
+      abilityReadyAt: {},
+      derivationHash: def.derivationHash,
+    };
+    state.commanders.push(commander);
+    state.events.push({ type: "commander_deployed", tick: 0, player: owner, commanderId: slot.commanderId, class: def.class });
+    for (const ability of def.abilities) {
+      if (ability.trigger === "deploy") fireCommanderAbility(state, owner, ability.id);
+    }
+  });
+  return state;
+}
+
+function dist2(ax: number, ay: number, bx: number, by: number): number {
+  return (ax - bx) * (ax - bx) + (ay - by) * (ay - by);
+}
+
+function hittable(t: { hitsAir: boolean; hitsGround: boolean }, e: { moveType?: MoveType }): boolean {
+  if (e.moveType === "air") return t.hitsAir;
+  return t.hitsGround;
+}
+
+// ---------------------------------------------------------------------------
+// Arena navigation (B2.5). Integer Chebyshev metric, which matches the
+// per-axis clamped movement model exactly (travel ticks = ceil(cheb/speed)).
+// The river is the only terrain obstacle, so a bounded crossing graph
+// (left bridge, right bridge, Rift Ford when open) is exact and cheap:
+// land -> bank entry -> straight across -> far bank -> goal. Routes are
+// recomputed every tick from current position + current goal, so target
+// changes reroute immediately with no stored path state.
+// ---------------------------------------------------------------------------
+
+export interface Point {
+  x: number;
+  y: number;
+}
+export type CrossingId = "left" | "right" | "rift";
+export interface Crossing {
+  id: CrossingId;
+  minX: number;
+  maxX: number;
+}
+export interface GroundRoute {
+  crossing: CrossingId | null;
+  cost: number;
+  waypoints: Point[];
+  stranded: boolean;
+}
+
+const RIVER = ARENA_V2.river;
+
+export function cheb(a: Point, b: Point): number {
+  return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
+}
+
+export function inRiver(y: number): boolean {
+  return y >= RIVER.minY && y <= RIVER.maxY;
+}
+
+/** Territory side of a y coordinate: 0 = south (player 0), 1 = north (player 1). */
+export function sideOf(y: number): PlayerIndex | "river" {
+  if (y < RIVER.minY) return 0;
+  if (y > RIVER.maxY) return 1;
+  return "river";
+}
+
+function bankY(side: PlayerIndex): number {
+  return side === 0 ? RIVER.minY - 1 : RIVER.maxY + 1;
+}
+
+/** Open crossings in fixed tie-break order: left, right, rift. */
+export function openCrossings(riftOpen: boolean): Crossing[] {
+  const list: Crossing[] = ARENA_V2.bridges.map((b) => ({ id: b.id as CrossingId, minX: b.minX, maxX: b.maxX }));
+  if (riftOpen) list.push({ id: "rift", minX: ARENA_V2.riftFord.minX, maxX: ARENA_V2.riftFord.maxX });
+  return list;
+}
+
+function crossingAt(x: number, crossings: Crossing[]): Crossing | null {
+  return crossings.find((c) => x >= c.minX && x <= c.maxX) ?? null;
+}
+
+export function inArena(x: number, y: number): boolean {
+  return x >= ARENA_V2.minX && x <= ARENA_V2.maxX && y >= ARENA_V2.minY && y <= ARENA_V2.maxY;
+}
+
+/** Ground walkability: in arena and either on land or on an open crossing. */
+export function isWalkable(x: number, y: number, riftOpen: boolean): boolean {
+  if (!inArena(x, y)) return false;
+  return !inRiver(y) || crossingAt(x, openCrossings(riftOpen)) !== null;
+}
+
+/**
+ * Deterministic ground route. Returns null when the goal is unreachable
+ * for ground units (goal stands in open water). A unit standing in water
+ * that is not on an open crossing (Rift Ford closed under it) is
+ * "stranded" and walks straight out to the goal-side bank: no teleport,
+ * no trap. Equal-cost crossings resolve to the smallest lateral detour
+ * (|entry x - unit x|), then the fixed order left, right, rift
+ * (identical for both players).
+ */
+export function planGroundRoute(from: Point, to: Point, riftOpen: boolean): GroundRoute | null {
+  const cs = openCrossings(riftOpen);
+  const fs = sideOf(from.y);
+  const ts = sideOf(to.y);
+  const toCrossing = ts === "river" ? crossingAt(to.x, cs) : null;
+  if (ts === "river" && !toCrossing) return null;
+  if (fs === "river") {
+    const here = crossingAt(from.x, cs);
+    if (here && toCrossing && here.id === toCrossing.id) {
+      return { crossing: here.id, cost: cheb(from, to), waypoints: [to], stranded: false };
+    }
+    const exitSide: PlayerIndex =
+      ts !== "river" ? ts : to.y > ARENA_V2.midY ? 1 : to.y < ARENA_V2.midY ? 0 : from.y > ARENA_V2.midY ? 1 : 0;
+    const exit = { x: from.x, y: bankY(exitSide) };
+    const rest = planGroundRoute(exit, to, riftOpen);
+    if (!rest) return null;
+    return { crossing: here ? here.id : rest.crossing, cost: cheb(from, exit) + rest.cost, waypoints: [exit, ...rest.waypoints], stranded: !here };
+  }
+  if (ts === fs) return { crossing: null, cost: cheb(from, to), waypoints: [to], stranded: false };
+  let best: GroundRoute | null = null;
+  for (const c of cs) {
+    if (toCrossing && c.id !== toCrossing.id) continue;
+    const ex = Math.max(c.minX, Math.min(c.maxX, from.x));
+    const entry = { x: ex, y: bankY(fs) };
+    let route: GroundRoute;
+    if (toCrossing) {
+      route = { crossing: c.id, cost: cheb(from, entry) + cheb(entry, to), waypoints: [entry, to], stranded: false };
+    } else {
+      const exit = { x: ex, y: bankY(ts as PlayerIndex) };
+      route = { crossing: c.id, cost: cheb(from, entry) + cheb(entry, exit) + cheb(exit, to), waypoints: [entry, exit, to], stranded: false };
+    }
+    if (!best || route.cost < best.cost || (route.cost === best.cost && Math.abs(ex - from.x) < Math.abs(best.waypoints[0]!.x - from.x))) {
+      best = route;
+    }
+  }
+  return best;
+}
+
+function stepToward(e: Point, goal: Point, budget: number): void {
+  e.x += Math.max(-budget, Math.min(budget, goal.x - e.x));
+  e.y += Math.max(-budget, Math.min(budget, goal.y - e.y));
+}
+
+/** Move one tick toward goal. Air flies straight; ground follows the route,
+ * spending leftover speed across waypoints within the same tick. */
+export function moveUnit(e: Point & { moveType: MoveType }, goal: Point, speed: number, riftOpen: boolean): void {
+  if (e.moveType === "air") {
+    stepToward(e, goal, speed);
+    return;
+  }
+  let budget = speed;
+  for (let hop = 0; hop < 4 && budget > 0; hop++) {
+    const route = planGroundRoute(e, goal, riftOpen);
+    if (!route) return;
+    const wp = route.waypoints.find((w) => w.x !== e.x || w.y !== e.y);
+    if (!wp) return;
+    const d = cheb(e, wp);
+    if (d <= budget) {
+      e.x = wp.x;
+      e.y = wp.y;
+      budget -= d;
+    } else {
+      stepToward(e, wp, budget);
+      budget = 0;
+    }
+  }
+}
+
+function riftOpen(state: CombatState): boolean {
+  return state.tick < state.riftOpenUntil;
+}
+
+/** Lane objective when nothing is in sight: the enemy side tower on the
+ * unit's current lane (x <= 50 is left), else the enemy Core. */
+export function laneObjective(e: { owner: PlayerIndex; x: number }, structures: StructureEntity[]): StructureEntity | null {
+  const left = e.x <= ARENA_V2.laneSplitX;
+  const tower = structures.find(
+    (s) => s.structure === "tower" && s.owner !== e.owner && s.alive && (left ? s.x <= ARENA_V2.laneSplitX : s.x > ARENA_V2.laneSplitX)
+  );
+  if (tower) return tower;
+  const core = structures.find((s) => s.structure === "core" && s.owner !== e.owner && s.alive);
+  return core ?? null;
+}
+
+/**
+ * Troop deployment territory (spells keep their own arena-wide rule).
+ * Own territory: x 5..95 and the owner's side of the river (p0 y 0..73,
+ * p1 y 87..160). River and bridges are never deployable. Forward pocket:
+ * once the enemy side tower on a lane is destroyed, that lane half
+ * (x 5..49 left, 51..95 right) opens for the first 20 rows past the river
+ * (p0 y 87..106, p1 y 54..73).
+ */
+export function troopDeployCheck(structures: StructureEntity[], player: PlayerIndex, x: number, y: number): { ok: true; zone: "own" | "pocket-left" | "pocket-right" } | { ok: false; reason: string } {
+  const margin = ARENA_V2.deployMarginX;
+  if (!inArena(x, y) || x < ARENA_V2.minX + margin || x > ARENA_V2.maxX - margin) return { ok: false, reason: "Deployment outside arena territory" };
+  if (inRiver(y)) return { ok: false, reason: "Deployment on river or bridge" };
+  if (sideOf(y) === player) return { ok: true, zone: "own" };
+  const depth = ARENA_V2.pocketDepth;
+  const inPocketRows = player === 0 ? y <= RIVER.maxY + depth : y >= RIVER.minY - depth;
+  const split = ARENA_V2.laneSplitX;
+  const lane: "left" | "right" | null = x < split ? "left" : x > split ? "right" : null;
+  if (inPocketRows && lane) {
+    const towerDown = structures.some(
+      (s) => s.structure === "tower" && s.owner !== player && !s.alive && (lane === "left" ? s.x < split : s.x > split)
+    );
+    if (towerDown) return { ok: true, zone: lane === "left" ? "pocket-left" : "pocket-right" };
+  }
+  return { ok: false, reason: "Deployment outside own territory" };
+}
+
+/** Reachable (ground) or always (air), or already within attack range. */
+function engageable(t: Point & { moveType: MoveType; range: number }, target: Point, open: boolean): boolean {
+  if (dist2(t.x, t.y, target.x, target.y) <= t.range * t.range) return true;
+  return t.moveType === "air" || planGroundRoute(t, target, open) !== null;
+}
+
+/**
+ * Troop target acquisition (v4). Candidates must be in sight and
+ * engageable. In-range candidates rank first by squared distance; others
+ * rank by real route cost for ground units (squared distance for air), so
+ * an enemy across the river ranks by bridge path, not straight line.
+ * Target lock: a troop already attacking an in-range target keeps it until
+ * it dies or leaves range (structure-priority units only lock structures).
+ * Ties break by entity id.
+ */
+function acquireTarget(t: TroopEntity, state: CombatState): { id: string; x: number; y: number } | null {
+  const open = riftOpen(state);
+  if (t.targetId) {
+    const cur =
+      state.troops.find((e) => e.id === t.targetId && e.hp > 0) ?? state.structures.find((s) => s.id === t.targetId && s.alive) ?? null;
+    if (
+      cur &&
+      cur.owner !== t.owner &&
+      hittable(t, cur as { moveType?: MoveType }) &&
+      dist2(t.x, t.y, cur.x, cur.y) <= t.range * t.range &&
+      (!t.structPriority || cur.kind === "structure")
+    ) {
+      return { id: cur.id, x: cur.x, y: cur.y };
+    }
+  }
+  const rank = (ex: number, ey: number): [number, number] | null => {
+    const d = dist2(t.x, t.y, ex, ey);
+    if (d > t.sight * t.sight) return null;
+    if (d <= t.range * t.range) return [0, d];
+    if (t.moveType === "air") return [1, d];
+    const r = planGroundRoute(t, { x: ex, y: ey }, open);
+    return r ? [1, r.cost] : null;
+  };
+  const better = (a: [number, number], aId: string, b: [number, number] | null, bId: string): boolean =>
+    b === null || a[0] < b[0] || (a[0] === b[0] && (a[1] < b[1] || (a[1] === b[1] && aId < bId)));
+  const scan = (list: Array<{ id: string; x: number; y: number }>) => {
+    let best: { id: string; x: number; y: number } | null = null;
+    let bestK: [number, number] | null = null;
+    for (const e of list) {
+      const k = rank(e.x, e.y);
+      if (k && better(k, e.id, bestK, best?.id ?? "")) {
+        bestK = k;
+        best = { id: e.id, x: e.x, y: e.y };
+      }
+    }
+    return best;
+  };
+  const foes = state.troops.filter((e) => e.owner !== t.owner && e.hp > 0 && hittable(t, e));
+  const structs = state.structures.filter((s) => s.owner !== t.owner && s.alive);
+  if (t.structPriority) return scan(structs) ?? scan(foes);
+  return scan(foes) ?? scan(structs);
+}
+
+interface Fighter {
+  id: string;
+  kind: string;
+  owner: PlayerIndex;
+  x: number;
+  y: number;
+  hp: number;
+  maxHp: number;
+  damage: number;
+  range: number;
+  speed: number;
+  sight: number;
+  interval: number;
+  cooldownUntil: number;
+  targetId: string | null;
+  moveType: MoveType;
+  hitsAir: boolean;
+  hitsGround: boolean;
+  structPriority: boolean;
+  splashRadius: number;
+  projectileTicks: number;
+  slowDurationTicks: number;
+  slowPct: number;
+  slowUntil: number;
+  activeSlowPct: number;
+  buffUntil: number;
+  buffPct: number;
+  hasteUntil: number;
+  hastePct: number;
+  stunUntil: number;
+  shieldHp: number;
+  shieldUntil: number;
+  reflectUntil: number;
+  reflectFracNumer: number;
+  reflectFracDenom: number;
+  guardUntil: number;
+  guardPct: number;
+  armor: number;
+}
+
+function zoneOf(y: number): string {
+  if (y >= 107) return "north";
+  if (y <= 52) return "south";
+  return "center";
+}
+
+function combatSpeed(e: Fighter, tick: number, state: CombatState): number {
+  let v = e.speed;
+  if (tick < e.hasteUntil) v = Math.floor((v * (100 + e.hastePct)) / 100);
+  if (tick < e.slowUntil) v = Math.floor((v * (100 - e.activeSlowPct)) / 100);
+  if (tick < state.moveModUntil) v = Math.floor((v * state.moveModPct) / 100);
+  for (const zm of state.zoneMods) {
+    if (tick < zm.until && zm.zone === zoneOf(e.y)) {
+      v = zm.modifier === "slowed" ? Math.floor(v / 2) : v * 2;
+    }
+  }
+  return Math.max(1, v);
+}
+
+function combatDamage(e: Fighter, tick: number): number {
+  if (tick < e.buffUntil) return Math.floor((e.damage * (100 + e.buffPct)) / 100);
+  return e.damage;
+}
+
+function pickCommanderTarget(
+  c: CommanderEntity,
+  troops: TroopEntity[],
+  commanders: CommanderEntity[],
+  structures: StructureEntity[],
+  preference: string,
+  open = false
+): { id: string; x: number; y: number } | null {
+  const pool: Fighter[] = [...troops.filter((t) => t.hp > 0), ...commanders.filter((x) => x.hp > 0 && x.id !== c.id)];
+  const foes = pool.filter((e) => e.owner !== c.owner && hittable(c as unknown as TroopEntity, e) && engageable(c, e, open));
+  const inSight = foes.filter((e) => dist2(c.x, c.y, e.x, e.y) <= c.sight * c.sight);
+  if (inSight.length > 0) {
+    const sorted = [...inSight].sort((a, b) => (a.id < b.id ? -1 : 1));
+    if (preference === "strongest") {
+      let m = sorted[0] as Fighter;
+      for (const e of sorted) if (e.maxHp > m.maxHp) m = e;
+      return { id: m.id, x: m.x, y: m.y };
+    }
+    if (preference === "weakest") {
+      let m = sorted[0] as Fighter;
+      for (const e of sorted) if (e.hp < m.hp) m = e;
+      return { id: m.id, x: m.x, y: m.y };
+    }
+    if (preference === "commander") {
+      const foe = sorted.find((e) => e.kind === "commander");
+      if (foe) return { id: foe.id, x: foe.x, y: foe.y };
+    }
+    let best = sorted[0] as Fighter;
+    let bestD = dist2(c.x, c.y, best.x, best.y);
+    for (const e of sorted) {
+      const d = dist2(c.x, c.y, e.x, e.y);
+      if (d < bestD) {
+        bestD = d;
+        best = e;
+      }
+    }
+    return { id: best.id, x: best.x, y: best.y };
+  }
+  let bestS: StructureEntity | null = null;
+  let bestD = Infinity;
+  for (const s of structures) {
+    if (s.owner === c.owner || !s.alive) continue;
+    const d = dist2(c.x, c.y, s.x, s.y);
+    if (d <= c.sight * c.sight && d < bestD) {
+      bestD = d;
+      bestS = s;
+    }
+  }
+  return bestS ? { id: bestS.id, x: bestS.x, y: bestS.y } : null;
+}
+
+
+function applyDeploy(state: CombatState, cmd: DeployCommand, counter: { n: number }): void {
+  if (state.phase === "final") throw new AppError("CONFLICT", "Match already finalized");
+  if (state.seenSeqs.includes(cmd.seq)) throw new AppError("CONFLICT", `Duplicate command seq: ${cmd.seq}`);
+  if (cmd.tick < state.tick) throw new AppError("UNPROCESSABLE", `Stale command tick ${cmd.tick} < ${state.tick}`);
+  if (cmd.player !== 0 && cmd.player !== 1) throw new AppError("BAD_REQUEST", "Invalid player");
+  const def = CARDS_V1[cmd.cardId];
+  if (!def) throw new AppError("BAD_REQUEST", `Card not playable: ${cmd.cardId}`);
+  const hand = state.hands[cmd.player];
+  if (!hand.includes(cmd.cardId)) throw new AppError("UNPROCESSABLE", `Card ${cmd.cardId} not in hand`);
+  if (state.energy[cmd.player] < def.cost) throw new AppError("UNPROCESSABLE", "Insufficient energy");
+  const isSpell = (def as SpellCardDef).kind === "bolt" || (def as SpellCardDef).kind === "horn";
+  if (!isSpell) {
+    const zone = troopDeployCheck(state.structures, cmd.player, cmd.x, cmd.y);
+    if (!zone.ok) throw new AppError("UNPROCESSABLE", zone.reason);
+  }
+  if (isSpell && !inArena(cmd.x, cmd.y)) throw new AppError("UNPROCESSABLE", "Spell target outside arena");
+  state.energy[cmd.player] -= def.cost;
+  hand.splice(hand.indexOf(cmd.cardId), 1);
+  const queue = state.queues[cmd.player];
+  const next = queue.shift();
+  if (next !== undefined) hand.push(next);
+  queue.push(cmd.cardId);
+  state.seenSeqs.push(cmd.seq);
+  if (isSpell) {
+    castSpell(state, cmd, def as SpellCardDef);
+    return;
+  }
+  const tdef = def as TroopCardDef;
+  const ids: string[] = [];
+  // Swarm offset: third+ unit sits one row back (+1), or -1 when +1 would
+  // land in the river or off the arena. Spawns never enter water.
+  const backDy = inRiver(cmd.y + 1) || cmd.y + 1 > ARENA_V2.maxY ? -1 : 1;
+  for (let i = 0; i < tdef.count; i++) {
+    counter.n += 1;
+    const id = `t${counter.n}`;
+    ids.push(id);
+    state.troops.push({
+      id,
+      kind: "troop",
+      owner: cmd.player,
+      cardId: tdef.id,
+      x: cmd.x + (i % 2 === 0 ? i : -i),
+      y: cmd.y + (i > 1 ? backDy : 0),
+      hp: tdef.hp,
+      maxHp: tdef.hp,
+      damage: tdef.damage,
+      range: tdef.range,
+      speed: tdef.speed,
+      sight: tdef.sight,
+      interval: tdef.attackIntervalTicks,
+      cooldownUntil: state.tick,
+      targetId: null,
+      moveType: tdef.moveType,
+      hitsAir: tdef.hitsAir,
+      hitsGround: tdef.hitsGround,
+      structPriority: tdef.structPriority,
+      splashRadius: tdef.splashRadius,
+      projectileTicks: tdef.projectileTicks,
+      slowPct: tdef.slowPct,
+      slowDurationTicks: tdef.slowDurationTicks,
+      slowUntil: 0,
+      activeSlowPct: 0,
+      buffUntil: 0,
+      buffPct: 0,
+      hasteUntil: 0,
+      hastePct: 0,
+      stunUntil: 0,
+      shieldHp: 0,
+      shieldUntil: 0,
+      reflectUntil: 0,
+      reflectFracNumer: 0,
+      reflectFracDenom: 1,
+      guardUntil: 0,
+      guardPct: 0,
+      armor: 0,
+    });
+  }
+  state.events.push({ type: "deploy", tick: state.tick, player: cmd.player, cardId: cmd.cardId, entityIds: ids });
+}
+
+function castSpell(state: CombatState, cmd: DeployCommand, def: SpellCardDef): void {
+  if (def.kind === "bolt") {
+    let affected = 0;
+    for (const t of state.troops) {
+      if (t.owner === cmd.player || t.hp <= 0) continue;
+      if (dist2(t.x, t.y, cmd.x, cmd.y) <= def.radius * def.radius) {
+        t.hp -= def.damage;
+        affected += 1;
+      }
+    }
+    const dead = state.troops.filter((t) => t.hp <= 0);
+    state.troops = state.troops.filter((t) => t.hp > 0);
+    for (const d of dead) state.events.push({ type: "death", tick: state.tick, entityId: d.id, owner: d.owner });
+    state.events.push({ type: "spell_cast", tick: state.tick, player: cmd.player, cardId: def.id, x: cmd.x, y: cmd.y, affected });
+    return;
+  }
+  let affected = 0;
+  for (const t of state.troops) {
+    if (t.owner !== cmd.player || t.hp <= 0) continue;
+    if (dist2(t.x, t.y, cmd.x, cmd.y) <= def.radius * def.radius) {
+      t.buffUntil = state.tick + def.buffDurationTicks;
+      t.buffPct = def.buffPct;
+      affected += 1;
+    }
+  }
+  state.events.push({ type: "spell_cast", tick: state.tick, player: cmd.player, cardId: def.id, x: cmd.x, y: cmd.y, affected });
+}
+
+// Ability magnitude semantics (explicit resolution of B1 fractions):
+// buff/haste/slow fractions (0.25 = +25%) convert to integer percent ticks.
+function fracToPct(f: number): number {
+  return Math.max(0, Math.round(f * 100));
+}
+
+function applyAbilityEffect(
+  state: CombatState,
+  source: CommanderEntity,
+  effect: { kind: string; target: string; magnitude: number; radiusOrRange: number | null; durationMs: number | null },
+  ticksForMs: (ms: number | null, fallback: number) => number
+): number {
+  let affected = 0;
+  const dur = ticksForMs(effect.durationMs, 0);
+  const collectTargets = (): Array<TroopEntity | CommanderEntity> => {
+    const out: Array<TroopEntity | CommanderEntity> = [];
+    const radius = effect.radiusOrRange ?? 0;
+    if (effect.target === "self") return [source];
+    const pool: Array<TroopEntity | CommanderEntity> = [...state.troops, ...state.commanders];
+    for (const e of pool) {
+      if (e.hp <= 0) continue;
+      if (effect.target === "allies" && e.owner !== source.owner) continue;
+      if ((effect.target === "enemies" || effect.target === "enemiesInRadius") && e.owner === source.owner) continue;
+      if (effect.target === "enemies" && dist2(source.x, source.y, e.x, e.y) > source.sight * source.sight) continue;
+      if ((effect.target === "allies" || effect.target === "enemiesInRadius") && dist2(source.x, source.y, e.x, e.y) > radius * radius) continue;
+      out.push(e);
+    }
+    return out;
+  };
+  for (const t of collectTargets()) {
+    switch (effect.kind) {
+      case "damage":
+        t.hp -= Math.max(1, Math.round(effect.magnitude));
+        affected += 1;
+        break;
+      case "heal":
+        t.hp = Math.min(t.maxHp, t.hp + Math.round(effect.magnitude));
+        affected += 1;
+        break;
+      case "shield":
+        t.shieldHp = Math.round(effect.magnitude);
+        t.shieldUntil = state.tick + dur;
+        affected += 1;
+        break;
+      case "slow":
+        t.slowUntil = state.tick + dur;
+        t.activeSlowPct = Math.max(t.activeSlowPct, fracToPct(effect.magnitude));
+        affected += 1;
+        break;
+      case "stun":
+        t.stunUntil = state.tick + dur;
+        affected += 1;
+        break;
+      case "haste":
+        t.hasteUntil = state.tick + dur;
+        t.hastePct = Math.max(t.hastePct, fracToPct(effect.magnitude));
+        affected += 1;
+        break;
+      case "cleanse":
+        t.slowUntil = 0;
+        t.activeSlowPct = 0;
+        t.stunUntil = 0;
+        affected += 1;
+        break;
+      case "damageBuff":
+        t.buffUntil = state.tick + dur;
+        t.buffPct = Math.max(t.buffPct, fracToPct(effect.magnitude));
+        affected += 1;
+        break;
+      case "damageReflect": {
+        const num = Math.round(effect.magnitude * 100);
+        t.reflectUntil = state.tick + dur;
+        t.reflectFracNumer = num;
+        t.reflectFracDenom = 100;
+        affected += 1;
+        break;
+      }
+      default:
+        throw new AppError("INTERNAL_ERROR", `Unsupported ability effect: ${effect.kind}`);
+    }
+  }
+  return affected;
+}
+
+export function fireCommanderAbility(state: CombatState, owner: PlayerIndex, abilityId: string): void {
+  if (state.phase === "final") throw new AppError("CONFLICT", "Match already finalized");
+  const commander = state.commanders.find((c) => c.owner === owner && c.hp > 0);
+  if (!commander) throw new AppError("UNPROCESSABLE", "No living commander for player");
+  fireAbilityOn(state, commander, abilityId);
+}
+
+function fireAbilityOn(state: CombatState, commander: CommanderEntity, abilityId: string): void {
+  const ability = commander.abilities.find((a) => a.id === abilityId);
+  if (!ability) throw new AppError("BAD_REQUEST", `Unknown ability: ${abilityId}`);
+  const readyAt = commander.abilityReadyAt[abilityId] ?? 0;
+  if (ability.cooldownMs !== null && state.tick < readyAt) {
+    throw new AppError("UNPROCESSABLE", `Ability on cooldown: ${abilityId}`);
+  }
+  const msToTicks = (ms: number | null, fallback: number) => (ms === null ? fallback : Math.max(1, Math.round(ms / 100)));
+  if (ability.trigger === "active") {
+    const needsEnemy = ability.effects.some((e) => e.target === "enemies" || e.target === "enemiesInRadius");
+    if (needsEnemy) {
+      const radius = Math.max(...ability.effects.map((e) => e.radiusOrRange ?? 0), 0);
+      const seen = [...state.troops, ...state.commanders].some(
+        (e) => e.owner !== commander.owner && e.hp > 0 && dist2(commander.x, commander.y, e.x, e.y) <= radius * radius
+      );
+      if (!seen) throw new AppError("UNPROCESSABLE", `No enemies in range for ${abilityId}`);
+    }
+    if (ability.effects.every((e) => e.target === "self" && (e.kind === "shield" || e.kind === "heal")) && commander.hp >= commander.maxHp) {
+      throw new AppError("UNPROCESSABLE", `No effect to apply for ${abilityId}`);
+    }
+  }
+  for (const effect of ability.effects) applyAbilityEffect(state, commander, effect, msToTicks);
+  if (ability.cooldownMs !== null) {
+    commander.abilityReadyAt[abilityId] = state.tick + Math.max(1, Math.round(ability.cooldownMs / 100));
+  }
+  state.events.push({ type: "ability_fired", tick: state.tick, player: commander.owner, commanderId: commander.commanderId, abilityId });
+}
+
+function chaosEffectDurationMs(effect: ChaosEffect): number {
+  return effect.durationMs;
+}
+
+function applyChaosActivation(state: CombatState, ev: { family: string; effect: ChaosEffect }, activationTick: number): void {
+  const effect = ev.effect;
+  const durTicks = Math.max(1, Math.round(effect.durationMs / 100));
+  const until = activationTick + durTicks;
+  if (effect.kind === "modifier" && effect.stat === "move_speed") {
+    state.moveModUntil = until;
+    state.moveModPct = effect.multiplierPct;
+  } else if (effect.kind === "modifier" && effect.stat === "energy_regen") {
+    state.energyModUntil = until;
+    state.energyModPct = effect.deltaPct;
+  } else if (effect.kind === "zone") {
+    // RIFT_SHIFT: the named zone keeps its slowed/hasted speed modifier and
+    // the central Rift Ford opens as a real ground crossing for both players.
+    state.zoneMods.push({ zone: effect.crossing, modifier: effect.modifier, until });
+    state.riftOpenUntil = Math.max(state.riftOpenUntil, until);
+    state.events.push({ type: "rift_crossing", tick: state.tick, open: true, until: state.riftOpenUntil });
+  } else if (effect.kind === "buff" && effect.stat === "attack") {
+    const pct = Math.max(0, effect.multiplierPct - 100);
+    for (const t of [...state.troops, ...state.commanders]) {
+      if (t.hp <= 0) continue;
+      t.buffUntil = until;
+      t.buffPct = Math.max(t.buffPct, pct);
+    }
+  } else if (effect.kind === "buff" && effect.stat === "defense") {
+    const pct = Math.max(0, effect.multiplierPct - 100);
+    for (const t of [...state.troops, ...state.commanders]) {
+      if (t.hp <= 0) continue;
+      t.guardUntil = until;
+      t.guardPct = Math.max(t.guardPct, pct);
+    }
+  }
+}
+
+function expireChaos(state: CombatState, ev: { family: string; effect: ChaosEffect }): void {
+  const effect = ev.effect;
+  if (effect.kind === "modifier" && effect.stat === "move_speed") {
+    state.moveModUntil = 0;
+    state.moveModPct = 100;
+  } else if (effect.kind === "modifier" && effect.stat === "energy_regen") {
+    state.energyModUntil = 0;
+    state.energyModPct = 100;
+  } else if (effect.kind === "zone") {
+    state.zoneMods = state.zoneMods.filter((z) => z.until > state.tick);
+    // Ford closes; units still on it walk out to their goal-side bank.
+    if (state.riftOpenUntil <= state.tick) {
+      state.riftOpenUntil = 0;
+      state.events.push({ type: "rift_crossing", tick: state.tick, open: false, until: 0 });
+    }
+  }
+}
+
+// Overtime-expiry tiebreak (pure, deterministic). Order: towers alive,
+// then surviving tower HP, then Core HP, then draw. Exported so the exact
+// production path is directly testable.
+export function resolveOvertimeTiebreak(state: CombatState): PlayerIndex | "draw" {
+  const alive = (o: PlayerIndex) => state.structures.filter((s) => s.structure === "tower" && s.owner === o && s.alive);
+  const t0 = alive(0);
+  const t1 = alive(1);
+  if (t0.length !== t1.length) return t0.length > t1.length ? 0 : 1;
+  const hp = (list: typeof t0) => list.reduce((n, s) => n + s.hp, 0);
+  if (hp(t0) !== hp(t1)) return hp(t0) > hp(t1) ? 0 : 1;
+  const c0 = state.structures.find((s) => s.structure === "core" && s.owner === 0);
+  const c1 = state.structures.find((s) => s.structure === "core" && s.owner === 1);
+  if (c0 && c1 && c0.hp !== c1.hp) return c0.hp > c1.hp ? 0 : 1;
+  return "draw";
+}
+
+// Single-tick stepper for harnesses and tests. Same deterministic path as
+// runMatch; entity ids continue from a module counter.
+let stepCounter = 1000000;
+export function stepMatch(state: CombatState, commands: DeployCommand[] = []): void {
+  const due = commands.filter((c) => c.tick <= state.tick + 1);
+  advanceOneTick(state, due, { n: stepCounter });
+  stepCounter += 1000000;
+}
+
+function advanceOneTick(state: CombatState, due: DeployCommand[], counter: { n: number }): void {
+  if (state.phase === "final") return;
+  state.tick += 1;
+  // Energy economy: phase multiplier (1x/2x/3x by tick) composed with the
+  // active Chaos modifier (order: phase first, then chaos percent).
+  // Exact integer schedule: each tick accrues phaseMult * chaosPct progress
+  // against a 2800-per-energy threshold, so 1x/2x/3x yield exactly 1/2/3
+  // energy per 28 ticks (3x lands on a 10,9,9 repeating cadence averaging
+  // exactly 28/3 ticks). Remainders carry across ticks and phase
+  // transitions; capping only pauses accrual, never destroys progress.
+  const phaseMult = energyPhaseMult(state.tick);
+  const chaosPct = state.tick < state.energyModUntil ? state.energyModPct : 100;
+  const step = phaseMult * chaosPct;
+  for (const p of [0, 1] as PlayerIndex[]) {
+    if (state.energy[p] < ENERGY_V1.max) {
+      state.energyProgress[p] += step;
+      while (state.energyProgress[p] >= ENERGY_V1.regenTicksPerPoint * 100 && state.energy[p] < ENERGY_V1.max) {
+        state.energyProgress[p] -= ENERGY_V1.regenTicksPerPoint * 100;
+        state.energy[p] += 1;
+      }
+    }
+  }
+  for (const cmd of due) {
+    try {
+      applyDeploy(state, cmd, counter);
+    } catch (err) {
+      state.events.push({
+        type: "command_rejected",
+        tick: state.tick,
+        seq: cmd.seq,
+        reason: err instanceof Error ? err.message.slice(0, 120) : "rejected",
+      });
+    }
+  }
+  // Movement + targeting (troops and commanders; stunned units hold still).
+  // v4: ground units follow river-aware routes; with nothing in sight they
+  // march on their current lane toward the lane tower, then the Core.
+  const fighters: Fighter[] = [...state.troops, ...state.commanders];
+  const open = riftOpen(state);
+  const advance = (u: TroopEntity | CommanderEntity, target: { id: string; x: number; y: number } | null) => {
+    const speed = combatSpeed(u, state.tick, state);
+    const goal = target ?? laneObjective(u, state.structures);
+    u.targetId = goal ? goal.id : null;
+    if (!goal) return;
+    if (target && dist2(u.x, u.y, goal.x, goal.y) <= u.range * u.range) return;
+    moveUnit(u, goal, speed, open);
+  };
+  for (const t of state.troops) {
+    if (t.hp <= 0 || state.tick < t.stunUntil) continue;
+    advance(t, acquireTarget(t, state));
+  }
+  for (const c of state.commanders) {
+    if (c.hp <= 0 || state.tick < c.stunUntil) continue;
+    advance(c, pickCommanderTarget(c, state.troops, state.commanders, state.structures, c.preference, open));
+  }
+  // Simultaneous attacks.
+  const byId = new Map<string, TroopEntity | CommanderEntity | StructureEntity>();
+  for (const t of state.troops) byId.set(t.id, t);
+  for (const c of state.commanders) byId.set(c.id, c);
+  for (const s of state.structures) byId.set(s.id, s);
+  const damage = new Map<string, number>();
+  const hit = (id: string, amount: number) => damage.set(id, (damage.get(id) ?? 0) + amount);
+  // Projectile arrivals resolve before new attacks (deterministic order).
+  const arrivals = state.projectiles.filter((p) => p.arrivalTick <= state.tick);
+  state.projectiles = state.projectiles.filter((p) => p.arrivalTick > state.tick);
+  const splashHits: Array<{ x: number; y: number; owner: PlayerIndex; damage: number; radius: number; primaryId: string }> = [];
+  for (const p of arrivals) {
+    const tgt = byId.get(p.targetId);
+    const ix = tgt && tgt.kind === "troop" && (tgt as TroopEntity).hp > 0 ? (tgt as TroopEntity).x : p.snapX;
+    const iy = tgt && tgt.kind === "troop" && (tgt as TroopEntity).hp > 0 ? (tgt as TroopEntity).y : p.snapY;
+    splashHits.push({ x: ix, y: iy, owner: p.owner, damage: p.damage, radius: p.splashRadius, primaryId: p.targetId });
+  }
+  for (const t of fighters) {
+    if (t.hp <= 0 || state.tick < t.cooldownUntil || state.tick < t.stunUntil) continue;
+    const tgt = t.targetId ? byId.get(t.targetId) : null;
+    if (!tgt) continue;
+    const alive = tgt.kind === "troop" || tgt.kind === "commander" ? (tgt as TroopEntity).hp > 0 : (tgt as StructureEntity).alive;
+    if (!alive) continue;
+    if (dist2(t.x, t.y, tgt.x, tgt.y) <= t.range * t.range) {
+      const dmg = combatDamage(t, state.tick);
+      if (t.projectileTicks > 0) {
+        counter.n += 1;
+        state.projectiles.push({
+          id: `p${counter.n}`,
+          owner: t.owner,
+          targetId: tgt.id,
+          snapX: tgt.x,
+          snapY: tgt.y,
+          damage: dmg,
+          splashRadius: t.splashRadius,
+          arrivalTick: state.tick + t.projectileTicks,
+        });
+      } else {
+        hit(tgt.id, dmg);
+        if (t.slowDurationTicks > 0 && (tgt.kind === "troop" || tgt.kind === "commander")) {
+          const st = tgt as TroopEntity;
+          st.slowUntil = state.tick + t.slowDurationTicks;
+          st.activeSlowPct = Math.max(st.activeSlowPct, t.slowPct);
+        }
+        if (t.splashRadius > 0) {
+          splashHits.push({ x: tgt.x, y: tgt.y, owner: t.owner, damage: dmg, radius: t.splashRadius, primaryId: tgt.id });
+        }
+        if ((tgt.kind === "troop" || tgt.kind === "commander") && state.tick < (tgt as TroopEntity).reflectUntil) {
+          const rt = tgt as TroopEntity;
+          hit(t.id, Math.floor((dmg * rt.reflectFracNumer) / rt.reflectFracDenom));
+        }
+      }
+      t.cooldownUntil = state.tick + t.interval;
+    }
+  }
+  for (const s of splashHits) {
+    for (const t of fighters) {
+      if (t.owner === s.owner || t.hp <= 0 || t.id === s.primaryId) continue;
+      if (dist2(t.x, t.y, s.x, s.y) <= s.radius * s.radius) hit(t.id, s.damage);
+    }
+    const primary = byId.get(s.primaryId);
+    if (primary) hit(primary.id, s.damage);
+  }
+  for (const s of state.structures) {
+    if (!s.alive) continue;
+    const def = STRUCTURE_V1[s.structure];
+    if (state.tick % def.intervalTicks !== 0) continue;
+    let best: Fighter | null = null;
+    let bestD = Infinity;
+    for (const t of fighters) {
+      if (t.owner === s.owner || t.hp <= 0) continue;
+      const d = dist2(s.x, s.y, t.x, t.y);
+      if (d <= def.range * def.range && (d < bestD || (d === bestD && best !== null && t.id < best.id))) {
+        bestD = d;
+        best = t;
+      }
+    }
+    if (best) hit(best.id, def.damage);
+  }
+  const eventsBeforeDamage = state.events.length;
+  const absorbDamage = (ent: TroopEntity | CommanderEntity, amount: number): number => {
+    let rem = amount;
+    if (state.tick < ent.shieldUntil && ent.shieldHp > 0) {
+      const absorbed = Math.min(ent.shieldHp, rem);
+      ent.shieldHp -= absorbed;
+      rem -= absorbed;
+    }
+    if (rem > 0 && state.tick < ent.guardUntil) rem = Math.floor((rem * (100 - ent.guardPct)) / 100);
+    if (rem > 0 && ent.armor > 0) rem = Math.max(1, rem - ent.armor);
+    ent.hp -= rem;
+    return rem;
+  };
+  for (const [id, amount] of damage) {
+    const ent = byId.get(id);
+    if (!ent) continue;
+    if (ent.kind === "troop" || ent.kind === "commander") {
+      absorbDamage(ent as TroopEntity | CommanderEntity, amount);
+    } else {
+      const st = ent as StructureEntity;
+      if (st.alive) {
+        st.hp -= amount;
+        if (st.hp <= 0) {
+          st.hp = 0;
+          st.alive = false;
+          // Authoritative crown: +1 to the destroyer per enemy tower.
+          // Fires once (alive flag), so double-counting is impossible.
+          if (st.structure === "tower") state.crowns[st.owner === 0 ? 1 : 0] += 1;
+          state.events.push({ type: "structure_destroyed", tick: state.tick, entityId: st.id, owner: st.owner, structure: st.structure });
+        }
+      }
+    }
+  }
+  const deadTroops = state.troops.filter((t) => t.hp <= 0);
+  state.troops = state.troops.filter((t) => t.hp > 0);
+  for (const d of deadTroops) state.events.push({ type: "death", tick: state.tick, entityId: d.id, owner: d.owner });
+  const deadCommanders = state.commanders.filter((c) => c.hp <= 0);
+  state.commanders = state.commanders.filter((c) => c.hp > 0);
+  for (const d of deadCommanders) {
+    state.events.push({ type: "death", tick: state.tick, entityId: d.id, owner: d.owner });
+    for (const ability of d.abilities) {
+      if (ability.trigger === "onDeath") {
+        try {
+          fireAbilityOn(state, d, ability.id);
+        } catch {
+          // Stale targets after simultaneous death are dropped deterministically.
+        }
+      }
+    }
+  }
+  // Commander active abilities auto-fire (headless policy): when off
+  // cooldown and their targeting condition holds. B3 may call
+  // fireCommanderAbility for manual triggers instead.
+  for (const c of state.commanders) {
+    if (c.hp <= 0) continue;
+    for (const ability of c.abilities) {
+      if (ability.trigger !== "active") continue;
+      if (ability.cooldownMs !== null && state.tick < (c.abilityReadyAt[ability.id] ?? 0)) continue;
+      try {
+        fireAbilityOn(state, c, ability.id);
+      } catch (err) {
+        if (!(err instanceof AppError) || (err.code !== "UNPROCESSABLE" && err.code !== "BAD_REQUEST")) throw err;
+      }
+    }
+  }
+  // Chaos Pulse execution from the immutable B1.4b schedule.
+  if (state.chaos) {
+    const { schedule } = state.chaos;
+    schedule.events.forEach((ev, i) => {
+      const activationTick = Math.round(ev.activationMs / 100);
+      if (!state.chaos!.warned[i] && state.tick >= activationTick - 50) {
+        state.chaos!.warned[i] = true;
+        state.events.push({ type: "pulse_warning", tick: state.tick, eventId: ev.id, family: ev.family, activationTick });
+      }
+      if (!state.chaos!.active[i] && state.tick >= activationTick) {
+        state.chaos!.active[i] = true;
+        applyChaosActivation(state, ev, activationTick);
+        state.events.push({ type: "pulse_active", tick: state.tick, eventId: ev.id, family: ev.family });
+      }
+      const durTicks = Math.max(1, Math.round(chaosEffectDurationMs(ev.effect) / 100));
+      if (state.chaos!.active[i] && !state.chaos!.expired[i] && state.tick >= activationTick + durTicks) {
+        state.chaos!.expired[i] = true;
+        expireChaos(state, ev);
+        state.events.push({ type: "pulse_expired", tick: state.tick, eventId: ev.id, family: ev.family });
+      }
+    });
+    for (let i = 0; i < schedule.events.length; i++) {
+      const ev = schedule.events[i] as (typeof schedule.events)[number];
+      if (!state.chaos!.active[i] || state.chaos!.expired[i] || ev.family !== "ember_rift") continue;
+      const fx = ev.effect as { kind: string; dps?: number };
+      if (fx.kind !== "hazard") continue;
+      const perTick = Math.max(1, Math.round(((fx.dps ?? 0) as number) / 10));
+      for (const t of [...state.troops, ...state.commanders]) {
+        if (t.owner !== 0 && t.owner !== 1) continue;
+        if (t.hp <= 0) continue;
+        if (!(ev.zones as string[]).includes(zoneOf(t.y))) continue;
+        hit(t.id, perTick);
+      }
+    }
+  }
+  // Victory / lifecycle (ranked rules v2).
+  // Crowns: +1 per enemy tower destroyed, Core kill = instant 3-crown win.
+  // Regulation end: crown lead wins now; tie goes to sudden-death overtime.
+  // Overtime: first tower destruction wins; expiry falls back to the tower
+  // health tiebreak (towers alive, then tower HP, then Core HP, then draw).
+  const core0 = state.structures.find((s) => s.structure === "core" && s.owner === 0);
+  const core1 = state.structures.find((s) => s.structure === "core" && s.owner === 1);
+  const c0Dead = !core0?.alive;
+  const c1Dead = !core1?.alive;
+  const finish = (winner: PlayerIndex | "draw", reason: "core" | "crowns" | "overtime" | "timeout") => {
+    // Only a Core kill crowns the winner at 3; all other wins keep earned crowns.
+    if (reason === "core" && winner !== "draw") state.crowns[winner] = 3;
+    if (reason === "core" && winner === "draw") state.crowns = [3, 3];
+    state.phase = "final";
+    state.winner = winner;
+    state.endReason = reason;
+    state.events.push({ type: "match_end", tick: state.tick, winner, reason, crowns: [...state.crowns] as [number, number] });
+  };
+  const towerKillThisTick = (owner: PlayerIndex): boolean =>
+    state.events
+      .slice(eventsBeforeDamage)
+      .some((e) => e.type === "structure_destroyed" && e.structure === "tower" && e.owner !== owner);
+  if (c0Dead && c1Dead) {
+    return finish("draw", "core");
+  }
+  if (c0Dead) return finish(1, "core");
+  if (c1Dead) return finish(0, "core");
+  if (state.phase === "overtime") {
+    if (towerKillThisTick(0)) return finish(0, "overtime");
+    if (towerKillThisTick(1)) return finish(1, "overtime");
+  }
+  if (state.phase === "active" && state.tick >= COMBAT_TIMELINE_V1.durationTicks) {
+    if (state.crowns[0] !== state.crowns[1]) {
+      return finish(state.crowns[0] > state.crowns[1] ? 0 : 1, "crowns");
+    }
+    state.phase = "overtime";
+  } else if (state.phase === "overtime") {
+    if (state.tick >= COMBAT_TIMELINE_V1.durationTicks + COMBAT_TIMELINE_V1.overtimeTicks) {
+      const winner = resolveOvertimeTiebreak(state);
+      return finish(winner, "timeout");
+    }
+  }
+}
+
+export function stateHash(state: CombatState): string {
+  return createHash("sha256")
+    .update(
+      `combat:${COMBAT_RULESET_VERSION}:${stableStringify({
+        tick: state.tick,
+        phase: state.phase,
+        energy: state.energy,
+        hands: state.hands,
+        queues: state.queues,
+        troops: [...state.troops].sort((a, b) => (a.id < b.id ? -1 : 1)),
+        projectiles: [...state.projectiles].sort((a, b) => (a.id < b.id ? -1 : 1)),
+        commanders: [...state.commanders].sort((a, b) => (a.id < b.id ? -1 : 1)),
+        chaos: state.chaos ? { warned: state.chaos.warned, active: state.chaos.active, expired: state.chaos.expired, mods: [state.moveModUntil, state.moveModPct, state.energyModUntil, state.energyModPct, state.zoneMods, state.riftOpenUntil] } : null,
+        structures: [...state.structures].sort((a, b) => (a.id < b.id ? -1 : 1)),
+        winner: state.winner,
+        crowns: state.crowns,
+      })}`
+    )
+    .digest("hex");
+}
+
+export interface RunResult {
+  winner: PlayerIndex | "draw" | null;
+  endReason: "core" | "crowns" | "overtime" | "timeout" | null;
+  crowns: [number, number];
+  ticks: number;
+  events: number;
+  stateHash: string;
+  structuresAlive: number;
+  troopsAlive: number;
+}
+
+// Advance a match to termination (or tick cap). Commands must be
+// pre-sorted; same inputs always yield the same result.
+export function runMatch(config: CombatConfig, commands: DeployCommand[], maxTicks?: number): { state: CombatState; result: RunResult } {
+  const state = initMatch(config);
+  const counter = { n: 0 };
+  const sorted = [...commands].sort((a, b) => (a.tick === b.tick ? a.seq - b.seq : a.tick - b.tick));
+  const cap = maxTicks ?? COMBAT_TIMELINE_V1.durationTicks + COMBAT_TIMELINE_V1.overtimeTicks + 10;
+  let ci = 0;
+  while (state.phase !== "final" && state.tick < cap) {
+    const due: DeployCommand[] = [];
+    while (ci < sorted.length && sorted[ci]!.tick <= state.tick + 1) {
+      due.push(sorted[ci]!);
+      ci += 1;
+    }
+    advanceOneTick(state, due, counter);
+  }
+  while (ci < sorted.length && state.phase !== "final") {
+    const cmd = sorted[ci]!;
+    ci += 1;
+    try {
+      applyDeploy(state, cmd, counter);
+    } catch {
+      break;
+    }
+  }
+  return {
+    state,
+    result: {
+      winner: state.winner,
+      endReason: state.endReason,
+      crowns: [...state.crowns] as [number, number],
+      ticks: state.tick,
+      events: state.events.length,
+      stateHash: stateHash(state),
+      structuresAlive: state.structures.filter((s) => s.alive).length,
+      troopsAlive: state.troops.length,
+    },
+  };
+}
+
+export function combatRulesetSummary() {
+  return {
+    version: COMBAT_RULESET_VERSION,
+    ticksPerSecond: TICKS_PER_SECOND,
+    timeline: { ...COMBAT_TIMELINE_V1 },
+    arena: {
+      version: ARENA_VERSION,
+      minX: ARENA_V2.minX,
+      maxX: ARENA_V2.maxX,
+      minY: ARENA_V2.minY,
+      maxY: ARENA_V2.maxY,
+      midY: ARENA_V2.midY,
+      laneSplitX: ARENA_V2.laneSplitX,
+      river: ARENA_V2.river,
+      bridges: ARENA_V2.bridges,
+      riftFord: ARENA_V2.riftFord,
+      riftRegion: ARENA_V2.riftRegion,
+      deployment: "troops: own side x 5..95 (p0 y 0..73, p1 y 87..160), never river/bridge; pocket after enemy lane tower falls: lane half x 5..49 / 51..95, p0 y 87..106, p1 y 54..73; spells: anywhere in arena",
+      navigation: "ground: Chebyshev routes via left/right bridge (+ Rift Ford while RIFT_SHIFT active), recomputed each tick, ties -> smallest lateral detour then left>right>rift; air: straight line over river",
+      targeting: "in sight + engageable; in-range first by distance, else ground route cost (air distance); in-range lock until death/out of range; no target -> lane tower then Core",
+    },
+    energy: { ...ENERGY_V1, phases: "1x/2x/3x yield exactly 1/2/3 energy per 28 ticks via remainder-preserving accumulator; chaos mods compose after the phase rate" },
+    scoring: {
+      crowns: "tower +1, core = instant 3-crown win; regulation crown lead wins at tick 1800; tie enters sudden-death overtime",
+      overtime: "first tower destruction wins; expiry tiebreak: towers alive, then tower HP, then Core HP, then draw",
+    },
+    cards: Object.values(CARDS_V1),
+    troops: Object.values(TROOP_CARDS_V1),
+    spells: Object.values(SPELL_CARDS_V1),
+    structures: STRUCTURE_V1,
+    playableCards: Object.keys(CARDS_V1),
+    commanders: {
+      slots: 1,
+      entitlement: "trusted-server-input (B3 verifies ownership/lease; engine never re-checks wallets)",
+      spawn: "own-territory fixed positions (50,30)/(50,130) at tick 0, river-aware navigation like ground troops",
+      statMapping: "hp/damage 1:1, range cells 1:1 min 1, speed round min 1, interval ms/100, sight 30 default, armor flat min-1",
+      triggers: "deploy on spawn, onDeath on death, active auto-fire when off cooldown and targeting condition holds",
+    },
+    chaos: {
+      ticks: "activationMs/100, warning 50 ticks prior",
+      zones: "north y>=107, center 53..106, south y<=52",
+      dpsResolution: "per-tick max(1, round(dps/10))",
+    },
+    statuses: {
+      slow: "refresh duration, strongest pct wins, fully reverts on expiry",
+      buff: "override on recast, fully reverts on expiry, troops only",
+    },
+    deferred: [],
+    compatibility: "v4 hashes differ from v3 by construction (arena-v2 terrain, navigation, target lock, riftOpenUntil in state); no persisted replays of earlier versions exist (pre-release, headless fixtures only)",
+  };
+}

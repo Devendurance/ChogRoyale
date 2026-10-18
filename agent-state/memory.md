@@ -21,7 +21,11 @@ Durable facts, conventions, and gotchas that should survive across sessions.
 
 - Public IPFS gateways throttle sustained streams: filebase serves 200 in ~1s when idle but 429s under load; pinata and dweb 429 even single requests. Fix is idle cooldown + single-stream, not retries. Dedicated gateway would need signup + key in `IPFS_GATEWAYS`.
 - Monad public RPC is slow and variable (multi-second reads); tokenURI is immutable on-chain so re-reads are skippable when DB already has URI + owner.
+- drizzle-kit migrate CLI fails silently (exit 1, no error) against the TEST branch; PROD works. Workaround: scripts/migrate-test-run.ts applies ./drizzle via the app Neon client. Keep the script for future migrations.
 - Earlier 896-vs-895 commander drift was a concurrent-worker race (failure write overwrote a resolved row). Guarded in `recordMetadataFailure`; self-heals on re-ingest.
 - Dev server on :3000 only; :3100 is blocked by Privy frame-ancestors allowlist. Stale :3000 compile once served 500 on `commanders/[tokenId]`; restart fixes.
 - Windows/git-bash quirks: `$_` in inline powershell gets eaten, use temp `.ps1` files and delete after; `tasklist` needs `//FI`; `wmic`, `setsid` unavailable; background jobs survive tool timeouts, always re-check process list.
+- Combat movement is Chebyshev (per-axis clamp), so route costs use cheb distance. Equal-cost crossing ties are common (diagonal moves are free laterally), which is why ties break on smallest lateral detour first.
+- Arena-v2 river is y 74..86: test deploys at y 74..86 are rejected. Use y<=73 (p0) or y>=87 (p1).
+- Scenario evidence lives in src/lib/arena-scenarios.ts (shared by tests and scripts). botMatch plays from real hands. Hand-blind fixed command lists get mostly rejected.
 - Live browser E2E (Privy login) needs a human; no headless token path (dashboard test credentials disabled).

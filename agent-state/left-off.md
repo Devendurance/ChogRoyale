@@ -1,20 +1,18 @@
 # Left Off
 
-Last updated: 2026-10-17
+Last updated: 2026-10-18
 
 ## Just finished
 
-- B1.2 ingestion recovery + B1.3 commander backfill: 1969/1969 authentic metadata, 0 failures; trait catalog rebuilt (13 types, 327 values); 1969 v1 commanders, 0 errors/orphans/duplicates.
-- Verification at completion: 106/106 tests, typecheck, lint, build all clean. No worker running, temp files removed.
+- B2.5 two-lane arena (ruleset v4, arena-v2): river, two bridges, RIFT_SHIFT ford, deterministic ground routing, lane objectives, target lock, territory + pocket deploys. Scenarios A-K via `npm run arena:scenarios`; 219/219 tests + typecheck/lint/build green. No migration, no PROD writes. Details in .fast-build/STATE.md.
 
 ## Currently working on
 
-- Nothing in progress. Agent-state setup (this file set) is the current task.
+- Nothing in progress.
 
 ## Next up
 
-- B1.4 commander deck slots + selection contract (do not start without user go-ahead).
-- Restart :3000 dev server before any route testing (stale compile risk).
+- B2.6 commander deck changes, B2.7 expanded cards/buildings, then B3 transport (Colyseus): authenticated match creation, entitlement verification feeding the trusted engine inputs, settlement events feeding legacy intake. Neither started; no fabricated matches exist.
 
 ## Known issues / open items
 

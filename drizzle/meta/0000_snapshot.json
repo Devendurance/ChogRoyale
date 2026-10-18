@@ -1,0 +1,426 @@
+{
+  "id": "27a63822-5bcb-404c-bde4-10a3dc44b02d",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.player_roles": {
+      "name": "player_roles",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "player_id": {
+          "name": "player_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "granted_by": {
+          "name": "granted_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "granted_at": {
+          "name": "granted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "player_roles_player_role_unique": {
+          "name": "player_roles_player_role_unique",
+          "columns": [
+            {
+              "expression": "player_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "role",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "player_roles_player_id_idx": {
+          "name": "player_roles_player_id_idx",
+          "columns": [
+            {
+              "expression": "player_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "player_roles_player_id_players_id_fk": {
+          "name": "player_roles_player_id_players_id_fk",
+          "tableFrom": "player_roles",
+          "tableTo": "players",
+          "columnsFrom": [
+            "player_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "player_roles_role_check": {
+          "name": "player_roles_role_check",
+          "value": "\"player_roles\".\"role\" in ('PLAYER','MODERATOR','ADMIN')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.player_wallets": {
+      "name": "player_wallets",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "player_id": {
+          "name": "player_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "address": {
+          "name": "address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "address_normalized": {
+          "name": "address_normalized",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "chain_id": {
+          "name": "chain_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 143
+        },
+        "wallet_type": {
+          "name": "wallet_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'external'"
+        },
+        "is_primary": {
+          "name": "is_primary",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "link_source": {
+          "name": "link_source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
+        "verified_at": {
+          "name": "verified_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "player_wallets_address_normalized_unique": {
+          "name": "player_wallets_address_normalized_unique",
+          "columns": [
+            {
+              "expression": "address_normalized",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "player_wallets_one_primary_per_player": {
+          "name": "player_wallets_one_primary_per_player",
+          "columns": [
+            {
+              "expression": "player_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"player_wallets\".\"is_primary\" = true",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "player_wallets_player_id_idx": {
+          "name": "player_wallets_player_id_idx",
+          "columns": [
+            {
+              "expression": "player_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "player_wallets_player_id_players_id_fk": {
+          "name": "player_wallets_player_id_players_id_fk",
+          "tableFrom": "player_wallets",
+          "tableTo": "players",
+          "columnsFrom": [
+            "player_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "player_wallets_type_check": {
+          "name": "player_wallets_type_check",
+          "value": "\"player_wallets\".\"wallet_type\" in ('embedded','external')"
+        },
+        "player_wallets_address_format_check": {
+          "name": "player_wallets_address_format_check",
+          "value": "\"player_wallets\".\"address_normalized\" ~ '^0x[0-9a-f]{40}$'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.players": {
+      "name": "players",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "privy_did": {
+          "name": "privy_did",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "username": {
+          "name": "username",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "username_key": {
+          "name": "username_key",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "avatar_id": {
+          "name": "avatar_id",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "account_status": {
+          "name": "account_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'active'"
+        },
+        "onboarding_status": {
+          "name": "onboarding_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "players_privy_did_unique": {
+          "name": "players_privy_did_unique",
+          "columns": [
+            {
+              "expression": "privy_did",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "players_username_key_unique": {
+          "name": "players_username_key_unique",
+          "columns": [
+            {
+              "expression": "username_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "players_account_status_idx": {
+          "name": "players_account_status_idx",
+          "columns": [
+            {
+              "expression": "account_status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "players_account_status_check": {
+          "name": "players_account_status_check",
+          "value": "\"players\".\"account_status\" in ('active','suspended','banned')"
+        },
+        "players_onboarding_status_check": {
+          "name": "players_onboarding_status_check",
+          "value": "\"players\".\"onboarding_status\" in ('pending','complete')"
+        },
+        "players_username_key_format_check": {
+          "name": "players_username_key_format_check",
+          "value": "\"players\".\"username_key\" is null or \"players\".\"username_key\" ~ '^[a-z0-9_]{3,20}$'"
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

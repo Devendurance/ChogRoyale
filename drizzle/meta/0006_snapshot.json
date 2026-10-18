@@ -1,0 +1,1857 @@
+{
+  "id": "89e0ca72-3c2c-4e31-9b4f-09ff59515c2c",
+  "prevId": "bba8f1a7-8bcf-442c-a426-a19a6ddff801",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.arena_patron_rulesets": {
+      "name": "arena_patron_rulesets",
+      "schema": "",
+      "columns": {
+        "version": {
+          "name": "version",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "definition": {
+          "name": "definition",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.chaos_rulesets": {
+      "name": "chaos_rulesets",
+      "schema": "",
+      "columns": {
+        "version": {
+          "name": "version",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "definition": {
+          "name": "definition",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.commander_rulesets": {
+      "name": "commander_rulesets",
+      "schema": "",
+      "columns": {
+        "version": {
+          "name": "version",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "definition": {
+          "name": "definition",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.commanders": {
+      "name": "commanders",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "nft_id": {
+          "name": "nft_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ruleset_version": {
+          "name": "ruleset_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "token_id": {
+          "name": "token_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "class": {
+          "name": "class",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "affinity": {
+          "name": "affinity",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stats": {
+          "name": "stats",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "abilities": {
+          "name": "abilities",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "variant": {
+          "name": "variant",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "prestige": {
+          "name": "prestige",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source_traits": {
+          "name": "source_traits",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "unmatched_traits": {
+          "name": "unmatched_traits",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "scores": {
+          "name": "scores",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "power_score": {
+          "name": "power_score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "content_hash": {
+          "name": "content_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "previous_content_hash": {
+          "name": "previous_content_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "derivation_count": {
+          "name": "derivation_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "derived_at": {
+          "name": "derived_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "commanders_nft_ruleset_unique": {
+          "name": "commanders_nft_ruleset_unique",
+          "columns": [
+            {
+              "expression": "nft_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "ruleset_version",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "commanders_token_idx": {
+          "name": "commanders_token_idx",
+          "columns": [
+            {
+              "expression": "token_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "commanders_class_idx": {
+          "name": "commanders_class_idx",
+          "columns": [
+            {
+              "expression": "class",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "commanders_nft_id_nft_tokens_id_fk": {
+          "name": "commanders_nft_id_nft_tokens_id_fk",
+          "tableFrom": "commanders",
+          "tableTo": "nft_tokens",
+          "columnsFrom": [
+            "nft_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "commanders_ruleset_version_commander_rulesets_version_fk": {
+          "name": "commanders_ruleset_version_commander_rulesets_version_fk",
+          "tableFrom": "commanders",
+          "tableTo": "commander_rulesets",
+          "columnsFrom": [
+            "ruleset_version"
+          ],
+          "columnsTo": [
+            "version"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "commanders_class_check": {
+          "name": "commanders_class_check",
+          "value": "\"commanders\".\"class\" in ('bulwark','reaver','deadeye','scout','warden')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.index_checkpoints": {
+      "name": "index_checkpoints",
+      "schema": "",
+      "columns": {
+        "key": {
+          "name": "key",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "last_block": {
+          "name": "last_block",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.legacy_achievements": {
+      "name": "legacy_achievements",
+      "schema": "",
+      "columns": {
+        "code": {
+          "name": "code",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "version": {
+          "name": "version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "eligibility": {
+          "name": "eligibility",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.nft_achievement_awards": {
+      "name": "nft_achievement_awards",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "nft_id": {
+          "name": "nft_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "token_id": {
+          "name": "token_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "achievement_code": {
+          "name": "achievement_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "evidence": {
+          "name": "evidence",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "awarded_at": {
+          "name": "awarded_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "nft_achievement_awards_nft_code_unique": {
+          "name": "nft_achievement_awards_nft_code_unique",
+          "columns": [
+            {
+              "expression": "nft_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "achievement_code",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "nft_achievement_awards_nft_idx": {
+          "name": "nft_achievement_awards_nft_idx",
+          "columns": [
+            {
+              "expression": "nft_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "nft_achievement_awards_nft_id_nft_tokens_id_fk": {
+          "name": "nft_achievement_awards_nft_id_nft_tokens_id_fk",
+          "tableFrom": "nft_achievement_awards",
+          "tableTo": "nft_tokens",
+          "columnsFrom": [
+            "nft_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "nft_achievement_awards_achievement_code_legacy_achievements_code_fk": {
+          "name": "nft_achievement_awards_achievement_code_legacy_achievements_code_fk",
+          "tableFrom": "nft_achievement_awards",
+          "tableTo": "legacy_achievements",
+          "columnsFrom": [
+            "achievement_code"
+          ],
+          "columnsTo": [
+            "code"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.nft_legacy_events": {
+      "name": "nft_legacy_events",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "authority_key": {
+          "name": "authority_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nft_id": {
+          "name": "nft_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "token_id": {
+          "name": "token_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "category": {
+          "name": "category",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "match_id": {
+          "name": "match_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "match_status": {
+          "name": "match_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "payload": {
+          "name": "payload",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ruleset_refs": {
+          "name": "ruleset_refs",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source": {
+          "name": "source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "actor": {
+          "name": "actor",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "supersedes_event_id": {
+          "name": "supersedes_event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'recorded'"
+        },
+        "occurred_at": {
+          "name": "occurred_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "nft_legacy_events_authority_key_unique": {
+          "name": "nft_legacy_events_authority_key_unique",
+          "columns": [
+            {
+              "expression": "authority_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "nft_legacy_events_nft_created_idx": {
+          "name": "nft_legacy_events_nft_created_idx",
+          "columns": [
+            {
+              "expression": "nft_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "nft_legacy_events_match_idx": {
+          "name": "nft_legacy_events_match_idx",
+          "columns": [
+            {
+              "expression": "match_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "nft_legacy_events_nft_id_nft_tokens_id_fk": {
+          "name": "nft_legacy_events_nft_id_nft_tokens_id_fk",
+          "tableFrom": "nft_legacy_events",
+          "tableTo": "nft_tokens",
+          "columnsFrom": [
+            "nft_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "nft_legacy_events_category_check": {
+          "name": "nft_legacy_events_category_check",
+          "value": "\"nft_legacy_events\".\"category\" in ('patron_appearance','commander_appearance','commander_outcome','achievement')"
+        },
+        "nft_legacy_events_status_check": {
+          "name": "nft_legacy_events_status_check",
+          "value": "\"nft_legacy_events\".\"status\" in ('recorded','corrected')"
+        },
+        "nft_legacy_events_token_id_check": {
+          "name": "nft_legacy_events_token_id_check",
+          "value": "\"nft_legacy_events\".\"token_id\" ~ '^[0-9]{1,78}$'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.nft_metadata": {
+      "name": "nft_metadata",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "nft_id": {
+          "name": "nft_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "document_original": {
+          "name": "document_original",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "image_original": {
+          "name": "image_original",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "attributes_original": {
+          "name": "attributes_original",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "content_hash": {
+          "name": "content_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'resolved'"
+        },
+        "error": {
+          "name": "error",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source_url": {
+          "name": "source_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fetched_at": {
+          "name": "fetched_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "nft_metadata_nft_unique": {
+          "name": "nft_metadata_nft_unique",
+          "columns": [
+            {
+              "expression": "nft_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "nft_metadata_hash_idx": {
+          "name": "nft_metadata_hash_idx",
+          "columns": [
+            {
+              "expression": "content_hash",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "nft_metadata_nft_id_nft_tokens_id_fk": {
+          "name": "nft_metadata_nft_id_nft_tokens_id_fk",
+          "tableFrom": "nft_metadata",
+          "tableTo": "nft_tokens",
+          "columnsFrom": [
+            "nft_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "nft_metadata_status_check": {
+          "name": "nft_metadata_status_check",
+          "value": "\"nft_metadata\".\"status\" in ('resolved','failed')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.nft_ownership_observations": {
+      "name": "nft_ownership_observations",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "nft_id": {
+          "name": "nft_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "owner_address": {
+          "name": "owner_address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "owner_normalized": {
+          "name": "owner_normalized",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "block_number": {
+          "name": "block_number",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "block_hash": {
+          "name": "block_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source": {
+          "name": "source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'live'"
+        },
+        "observed_at": {
+          "name": "observed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "nft_ownership_nft_observed_idx": {
+          "name": "nft_ownership_nft_observed_idx",
+          "columns": [
+            {
+              "expression": "nft_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "observed_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "nft_ownership_owner_idx": {
+          "name": "nft_ownership_owner_idx",
+          "columns": [
+            {
+              "expression": "owner_normalized",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "nft_ownership_observations_nft_id_nft_tokens_id_fk": {
+          "name": "nft_ownership_observations_nft_id_nft_tokens_id_fk",
+          "tableFrom": "nft_ownership_observations",
+          "tableTo": "nft_tokens",
+          "columnsFrom": [
+            "nft_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "nft_ownership_source_check": {
+          "name": "nft_ownership_source_check",
+          "value": "\"nft_ownership_observations\".\"source\" in ('live')"
+        },
+        "nft_ownership_address_check": {
+          "name": "nft_ownership_address_check",
+          "value": "\"nft_ownership_observations\".\"owner_normalized\" ~ '^0x[0-9a-f]{40}$'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.nft_tokens": {
+      "name": "nft_tokens",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "chain_id": {
+          "name": "chain_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 143
+        },
+        "contract_address": {
+          "name": "contract_address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "token_id": {
+          "name": "token_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "token_uri_original": {
+          "name": "token_uri_original",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "nft_tokens_chain_contract_token_unique": {
+          "name": "nft_tokens_chain_contract_token_unique",
+          "columns": [
+            {
+              "expression": "chain_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "contract_address",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "token_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "nft_tokens_contract_token_idx": {
+          "name": "nft_tokens_contract_token_idx",
+          "columns": [
+            {
+              "expression": "contract_address",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "token_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "nft_tokens_chain_check": {
+          "name": "nft_tokens_chain_check",
+          "value": "\"nft_tokens\".\"chain_id\" = 143"
+        },
+        "nft_tokens_contract_check": {
+          "name": "nft_tokens_contract_check",
+          "value": "\"nft_tokens\".\"contract_address\" ~ '^0x[0-9a-f]{40}$'"
+        },
+        "nft_tokens_token_id_check": {
+          "name": "nft_tokens_token_id_check",
+          "value": "\"nft_tokens\".\"token_id\" ~ '^[0-9]{1,78}$'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.nft_trait_stats": {
+      "name": "nft_trait_stats",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "trait_type": {
+          "name": "trait_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trait_value": {
+          "name": "trait_value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nft_count": {
+          "name": "nft_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "nft_trait_stats_type_value_unique": {
+          "name": "nft_trait_stats_type_value_unique",
+          "columns": [
+            {
+              "expression": "trait_type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "trait_value",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.patron_assignments": {
+      "name": "patron_assignments",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "match_key": {
+          "name": "match_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nft_id": {
+          "name": "nft_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "token_id": {
+          "name": "token_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ruleset_version": {
+          "name": "ruleset_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "commander_ruleset_version": {
+          "name": "commander_ruleset_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "server_seed": {
+          "name": "server_seed",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "patron_config": {
+          "name": "patron_config",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "config_hash": {
+          "name": "config_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trait_snapshot": {
+          "name": "trait_snapshot",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "metadata_content_hash": {
+          "name": "metadata_content_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "patron_assignments_match_key_unique": {
+          "name": "patron_assignments_match_key_unique",
+          "columns": [
+            {
+              "expression": "match_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "patron_assignments_token_idx": {
+          "name": "patron_assignments_token_idx",
+          "columns": [
+            {
+              "expression": "token_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "patron_assignments_nft_idx": {
+          "name": "patron_assignments_nft_idx",
+          "columns": [
+            {
+              "expression": "nft_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "patron_assignments_nft_id_nft_tokens_id_fk": {
+          "name": "patron_assignments_nft_id_nft_tokens_id_fk",
+          "tableFrom": "patron_assignments",
+          "tableTo": "nft_tokens",
+          "columnsFrom": [
+            "nft_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "patron_assignments_token_id_check": {
+          "name": "patron_assignments_token_id_check",
+          "value": "\"patron_assignments\".\"token_id\" ~ '^[0-9]{1,78}$'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.player_roles": {
+      "name": "player_roles",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "player_id": {
+          "name": "player_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "granted_by": {
+          "name": "granted_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "granted_at": {
+          "name": "granted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "player_roles_player_role_unique": {
+          "name": "player_roles_player_role_unique",
+          "columns": [
+            {
+              "expression": "player_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "role",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "player_roles_player_id_idx": {
+          "name": "player_roles_player_id_idx",
+          "columns": [
+            {
+              "expression": "player_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "player_roles_player_id_players_id_fk": {
+          "name": "player_roles_player_id_players_id_fk",
+          "tableFrom": "player_roles",
+          "tableTo": "players",
+          "columnsFrom": [
+            "player_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "player_roles_role_check": {
+          "name": "player_roles_role_check",
+          "value": "\"player_roles\".\"role\" in ('PLAYER','MODERATOR','ADMIN')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.player_wallets": {
+      "name": "player_wallets",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "player_id": {
+          "name": "player_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "address": {
+          "name": "address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "address_normalized": {
+          "name": "address_normalized",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "chain_id": {
+          "name": "chain_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 143
+        },
+        "wallet_type": {
+          "name": "wallet_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'external'"
+        },
+        "is_primary": {
+          "name": "is_primary",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "link_source": {
+          "name": "link_source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
+        "verified_at": {
+          "name": "verified_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "player_wallets_address_normalized_unique": {
+          "name": "player_wallets_address_normalized_unique",
+          "columns": [
+            {
+              "expression": "address_normalized",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "player_wallets_one_primary_per_player": {
+          "name": "player_wallets_one_primary_per_player",
+          "columns": [
+            {
+              "expression": "player_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"player_wallets\".\"is_primary\" = true",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "player_wallets_player_id_idx": {
+          "name": "player_wallets_player_id_idx",
+          "columns": [
+            {
+              "expression": "player_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "player_wallets_player_id_players_id_fk": {
+          "name": "player_wallets_player_id_players_id_fk",
+          "tableFrom": "player_wallets",
+          "tableTo": "players",
+          "columnsFrom": [
+            "player_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "player_wallets_type_check": {
+          "name": "player_wallets_type_check",
+          "value": "\"player_wallets\".\"wallet_type\" in ('embedded','external')"
+        },
+        "player_wallets_address_format_check": {
+          "name": "player_wallets_address_format_check",
+          "value": "\"player_wallets\".\"address_normalized\" ~ '^0x[0-9a-f]{40}$'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.players": {
+      "name": "players",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "privy_did": {
+          "name": "privy_did",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "username": {
+          "name": "username",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "username_key": {
+          "name": "username_key",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "avatar_id": {
+          "name": "avatar_id",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "account_status": {
+          "name": "account_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'active'"
+        },
+        "onboarding_status": {
+          "name": "onboarding_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "players_privy_did_unique": {
+          "name": "players_privy_did_unique",
+          "columns": [
+            {
+              "expression": "privy_did",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "players_username_key_unique": {
+          "name": "players_username_key_unique",
+          "columns": [
+            {
+              "expression": "username_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "players_account_status_idx": {
+          "name": "players_account_status_idx",
+          "columns": [
+            {
+              "expression": "account_status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "players_account_status_check": {
+          "name": "players_account_status_check",
+          "value": "\"players\".\"account_status\" in ('active','suspended','banned')"
+        },
+        "players_onboarding_status_check": {
+          "name": "players_onboarding_status_check",
+          "value": "\"players\".\"onboarding_status\" in ('pending','complete')"
+        },
+        "players_username_key_format_check": {
+          "name": "players_username_key_format_check",
+          "value": "\"players\".\"username_key\" is null or \"players\".\"username_key\" ~ '^[a-z0-9_]{3,20}$'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.pulse_schedules": {
+      "name": "pulse_schedules",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "match_key": {
+          "name": "match_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "chaos_ruleset_version": {
+          "name": "chaos_ruleset_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "patron_ruleset_version": {
+          "name": "patron_ruleset_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "patron_config_hash": {
+          "name": "patron_config_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "server_seed_hash": {
+          "name": "server_seed_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "schedule": {
+          "name": "schedule",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "schedule_hash": {
+          "name": "schedule_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "pulse_schedules_match_key_unique": {
+          "name": "pulse_schedules_match_key_unique",
+          "columns": [
+            {
+              "expression": "match_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "pulse_schedules_hash_idx": {
+          "name": "pulse_schedules_hash_idx",
+          "columns": [
+            {
+              "expression": "schedule_hash",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "pulse_schedules_match_key_patron_assignments_match_key_fk": {
+          "name": "pulse_schedules_match_key_patron_assignments_match_key_fk",
+          "tableFrom": "pulse_schedules",
+          "tableTo": "patron_assignments",
+          "columnsFrom": [
+            "match_key"
+          ],
+          "columnsTo": [
+            "match_key"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

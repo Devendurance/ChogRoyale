@@ -1,0 +1,352 @@
+// B2.5 headless arena scenarios. Each scenario runs the real combat engine
+// with ordinary deploy commands (no state surgery, no scripted outcomes)
+// and returns measured evidence. Shared by the Vitest suite and
+// scripts/arena-scenarios.ts. Pure: no DB, no network.
+
+import {
+  initMatch,
+  stepMatch,
+  runMatch,
+  stateHash,
+  inRiver,
+  openCrossings,
+  COMBAT_RULESET_VERSION,
+  CARDS_V1,
+  type CombatConfig,
+  type CombatState,
+  type DeployCommand,
+  type PlayerIndex,
+  type MoveType,
+} from "@/lib/combat";
+import { derivePatronConfig } from "@/lib/patrons";
+import { deriveChaosSchedule, type ChaosSchedule } from "@/lib/chaos";
+
+export interface TraceSample {
+  tick: number;
+  id: string;
+  owner: PlayerIndex;
+  cardId: string;
+  x: number;
+  y: number;
+  targetId: string | null;
+  moveType: MoveType;
+  riftOpen: boolean;
+}
+
+export type CrossingUse = "left" | "right" | "rift" | "water";
+
+const ALL = ["chog_guardian", "boulderback", "chaos_archer", "rift_runner", "choglings", "frostshell", "sparkcaster", "hexwing"];
+
+/** Deck with the requested cards first (they start in hand), rest in fixed order. */
+export function deckWith(...front: string[]): string[] {
+  return [...front, ...ALL.filter((c) => !front.includes(c))];
+}
+
+export function scenarioConfig(p0: string[], p1: string[], chaos: ChaosSchedule | null = null, seed = "arena"): CombatConfig {
+  return { rulesetVersion: COMBAT_RULESET_VERSION, seed, decks: [p0, p1], chaos };
+}
+
+/** Run tick by tick through the real stepper, sampling every ground/air unit. */
+export function traceMatch(config: CombatConfig, commands: DeployCommand[], upto: number): { state: CombatState; samples: TraceSample[] } {
+  const state = initMatch(config);
+  const sorted = [...commands].sort((a, b) => (a.tick === b.tick ? a.seq - b.seq : a.tick - b.tick));
+  const samples: TraceSample[] = [];
+  let ci = 0;
+  while (state.phase !== "final" && state.tick < upto) {
+    const due: DeployCommand[] = [];
+    while (ci < sorted.length && sorted[ci]!.tick <= state.tick + 1) due.push(sorted[ci++]!);
+    stepMatch(state, due);
+    const open = state.tick < state.riftOpenUntil;
+    for (const t of state.troops) {
+      samples.push({ tick: state.tick, id: t.id, owner: t.owner, cardId: t.cardId, x: t.x, y: t.y, targetId: t.targetId, moveType: t.moveType, riftOpen: open });
+    }
+    for (const c of state.commanders) {
+      samples.push({ tick: state.tick, id: c.id, owner: c.owner, cardId: `commander:${c.class}`, x: c.x, y: c.y, targetId: c.targetId, moveType: c.moveType, riftOpen: open });
+    }
+  }
+  return { state, samples };
+}
+
+/**
+ * Deterministic bot match: every `every` ticks each side plays the first
+ * affordable card in its real hand at a rotating lane position inside its
+ * own territory. Commands are recorded so they can be replayed via runMatch.
+ */
+export function botMatch(config: CombatConfig, upto: number, every = 20) {
+  const state = initMatch(config);
+  const samples: TraceSample[] = [];
+  const commands: DeployCommand[] = [];
+  const lanes = [30, 70, 50, 20, 80, 40, 60];
+  let seq = 0;
+  while (state.phase !== "final" && state.tick < upto) {
+    const due: DeployCommand[] = [];
+    if ((state.tick + 1) % every === 0) {
+      for (const p of [0, 1] as PlayerIndex[]) {
+        const card = state.hands[p].find((c) => (CARDS_V1[c]?.cost ?? 99) <= state.energy[p]);
+        if (!card) continue;
+        seq += 1;
+        const x = lanes[seq % lanes.length]!;
+        const y = p === 0 ? 40 + ((seq * 7) % 34) : 87 + ((seq * 11) % 34);
+        due.push(cmd(seq, p, state.tick + 1, card, x, y));
+      }
+    }
+    commands.push(...due);
+    stepMatch(state, due);
+    const open = state.tick < state.riftOpenUntil;
+    for (const u of [...state.troops, ...state.commanders]) {
+      samples.push({ tick: state.tick, id: u.id, owner: u.owner, cardId: u.kind === "troop" ? u.cardId : `commander:${u.class}`, x: u.x, y: u.y, targetId: u.targetId, moveType: u.moveType, riftOpen: open });
+    }
+  }
+  return { state, samples, commands };
+}
+
+export function samplesOf(samples: TraceSample[], pred: (s: TraceSample) => boolean): TraceSample[] {
+  return samples.filter(pred);
+}
+
+/** Which crossing (or open water) each in-river sample stood on. */
+export function crossingUse(s: TraceSample): CrossingUse | null {
+  if (!inRiver(s.y)) return null;
+  const c = openCrossings(s.riftOpen).find((k) => s.x >= k.minX && s.x <= k.maxX);
+  return c ? c.id : "water";
+}
+
+export function crossingsUsed(trace: TraceSample[]): CrossingUse[] {
+  const set = new Set<CrossingUse>();
+  for (const s of trace) {
+    const u = crossingUse(s);
+    if (u) set.add(u);
+  }
+  return [...set].sort();
+}
+
+export function towerHp(state: CombatState, id: string): number {
+  return state.structures.find((s) => s.id === id)?.hp ?? -1;
+}
+
+export function riftSchedule(seed = "rift-b25"): ChaosSchedule {
+  const patron = derivePatronConfig({ tokenId: "1", attributes: [{ trait_type: "Background", value: "Purple Void" }], metadataContentHash: "b".repeat(64), name: "CHOG #1462" });
+  return deriveChaosSchedule({ patron, serverSeed: seed, matchKey: `m-${seed}` });
+}
+
+const cmd = (seq: number, player: PlayerIndex, tick: number, cardId: string, x: number, y: number): DeployCommand => ({ seq, player, tick, cardId, x, y });
+
+// A/B: a lone ground troop on each lane crosses on that lane's bridge.
+export function scenarioBridge(lane: "left" | "right", player: PlayerIndex = 0) {
+  const x = lane === "left" ? 30 : 70;
+  const y = player === 0 ? 60 : 100;
+  const cfg = scenarioConfig(deckWith("chog_guardian"), deckWith("chog_guardian"));
+  const { state, samples } = traceMatch(cfg, [cmd(1, player, 2, "chog_guardian", x, y)], 220);
+  const trace = samplesOf(samples, (s) => s.cardId === "chog_guardian");
+  const enemyTower = `s-p${player === 0 ? 1 : 0}-tower-${x}`;
+  return { trace, crossings: crossingsUsed(trace), enemyTower, enemyTowerHp: towerHp(state, enemyTower), finalTarget: trace.at(-1)?.targetId ?? null };
+}
+
+// C: ground troops deployed at the river's center line never walk on water
+// (no Rift Ford without RIFT_SHIFT); both straddling units take bridges.
+export function scenarioBlockedRiver() {
+  const cfg = scenarioConfig(deckWith("choglings"), deckWith("choglings"));
+  const { samples } = traceMatch(cfg, [cmd(1, 0, 2, "choglings", 50, 70), cmd(2, 1, 2, "choglings", 50, 90)], 120);
+  const ground = samplesOf(samples, (s) => s.moveType === "ground");
+  return { samples: ground.length, waterSteps: ground.filter((s) => crossingUse(s) === "water").length, crossings: crossingsUsed(ground) };
+}
+
+// D: same deploy point, same objective (p0 left tower). Air flies over open
+// water; ground walks to the left bridge.
+export function scenarioAirVsGround() {
+  const air = traceMatch(scenarioConfig(deckWith("choglings"), deckWith("hexwing")), [cmd(1, 1, 2, "hexwing", 50, 90)], 60).samples;
+  const ground = traceMatch(scenarioConfig(deckWith("choglings"), deckWith("chog_guardian")), [cmd(1, 1, 2, "chog_guardian", 50, 90)], 60).samples;
+  const airTrace = samplesOf(air, (s) => s.cardId === "hexwing");
+  const groundTrace = samplesOf(ground, (s) => s.cardId === "chog_guardian");
+  return {
+    airCrossings: crossingsUsed(airTrace),
+    groundCrossings: crossingsUsed(groundTrace),
+    airObjective: airTrace.at(-1)?.targetId ?? null,
+    groundObjective: groundTrace.at(-1)?.targetId ?? null,
+    airFirstSouthTick: airTrace.find((s) => s.y < 74)?.tick ?? null,
+    groundFirstSouthTick: groundTrace.find((s) => s.y < 74)?.tick ?? null,
+  };
+}
+
+// E: structure-priority rush unit ignores defenders once a structure is in sight.
+export function scenarioRush() {
+  const cfg = scenarioConfig(deckWith("rift_runner"), deckWith("choglings"));
+  const { state, samples } = traceMatch(cfg, [cmd(1, 0, 2, "rift_runner", 70, 70), cmd(2, 1, 20, "choglings", 76, 112)], 160);
+  const runner = samplesOf(samples, (s) => s.cardId === "rift_runner");
+  const towerTargetWhileDefended = runner.filter((s) => s.targetId === "s-p1-tower-70").some((s) =>
+    samples.some((o) => o.tick === s.tick && o.owner === 1 && o.cardId === "choglings" && (o.x - s.x) ** 2 + (o.y - s.y) ** 2 <= 40 * 40)
+  );
+  return { crossings: crossingsUsed(runner), towerHp: towerHp(state, "s-p1-tower-70"), towerTargetWhileDefended };
+}
+
+// F: tank in front, ranged support placed behind; compared with tank alone.
+export function scenarioPush() {
+  const tankOnly = [cmd(1, 0, 84, "boulderback", 30, 60)];
+  const withSupport = [...tankOnly, cmd(2, 0, 85, "chaos_archer", 30, 20)];
+  const deck = deckWith("boulderback", "chaos_archer");
+  const solo = traceMatch(scenarioConfig(deck, deckWith("choglings")), tankOnly, 420);
+  const push = traceMatch(scenarioConfig(deck, deckWith("choglings")), withSupport, 420);
+  const tank = samplesOf(push.samples, (s) => s.cardId === "boulderback");
+  const archers = samplesOf(push.samples, (s) => s.cardId === "chaos_archer");
+  const archersBehindTank = archers.every((a) => {
+    const t = tank.find((k) => k.tick === a.tick);
+    return !t || a.y <= t.y;
+  });
+  const destroyedAt = (st: CombatState) =>
+    st.events.find((e) => e.type === "structure_destroyed" && e.entityId === "s-p1-tower-30")?.tick ?? null;
+  return {
+    tankCrossings: crossingsUsed(tank),
+    archerCrossings: crossingsUsed(archers),
+    archersBehindTank,
+    soloTowerHp: towerHp(solo.state, "s-p1-tower-30"),
+    soloDestroyedAt: destroyedAt(solo.state),
+    pushTowerHp: towerHp(push.state, "s-p1-tower-30"),
+    pushDestroyedAt: destroyedAt(push.state),
+    pushCrowns: push.state.crowns,
+  };
+}
+
+// G: a ranged defender placed off-lane, inside the attacker's sight as it
+// leaves the bridge, pulls the melee attacker away from its tower toward
+// the center (kiting via placement, no retreat AI).
+export function scenarioDistraction() {
+  const attacker = [cmd(1, 0, 2, "chog_guardian", 30, 60)];
+  const kite = [...attacker, cmd(2, 1, 12, "chaos_archer", 50, 100)];
+  const cfg = () => scenarioConfig(deckWith("chog_guardian"), deckWith("chaos_archer"));
+  const base = traceMatch(cfg(), attacker, 160);
+  const kited = traceMatch(cfg(), kite, 160);
+  const g = (s: TraceSample[]) => samplesOf(s, (x) => x.cardId === "chog_guardian");
+  const firstTowerDamage = (st: TraceSample[], state: CombatState) => {
+    void state;
+    return g(st).find((s) => s.targetId === "s-p1-tower-30" && s.y >= 118)?.tick ?? null;
+  };
+  return {
+    baseMaxX: Math.max(...g(base.samples).map((s) => s.x)),
+    kitedMaxX: Math.max(...g(kited.samples).map((s) => s.x)),
+    kitedTargets: [...new Set(g(kited.samples).map((s) => s.targetId))],
+    baseTowerHp: towerHp(base.state, "s-p1-tower-30"),
+    kitedTowerHp: towerHp(kited.state, "s-p1-tower-30"),
+    baseReachTick: firstTowerDamage(base.samples, base.state),
+    kitedReachTick: firstTowerDamage(kited.samples, kited.state),
+  };
+}
+
+// H: simultaneous pressure on both lanes, each unit on its own bridge.
+export function scenarioTwoLanes() {
+  const cfg = scenarioConfig(deckWith("chog_guardian", "rift_runner"), deckWith("choglings"));
+  const { state, samples } = traceMatch(cfg, [cmd(1, 0, 2, "chog_guardian", 30, 60), cmd(2, 0, 60, "rift_runner", 70, 60)], 260);
+  return {
+    leftCrossings: crossingsUsed(samplesOf(samples, (s) => s.cardId === "chog_guardian")),
+    rightCrossings: crossingsUsed(samplesOf(samples, (s) => s.cardId === "rift_runner")),
+    leftTowerHp: towerHp(state, "s-p1-tower-30"),
+    rightTowerHp: towerHp(state, "s-p1-tower-70"),
+  };
+}
+
+// I: RIFT_SHIFT opens the Rift Ford for real routing, then restores it.
+export function scenarioRiftShift() {
+  const schedule = riftSchedule();
+  const ev = schedule.events[0]!;
+  const T = Math.round(ev.activationMs / 100);
+  const D = Math.max(1, Math.round(ev.effect.durationMs / 100));
+  const deck = deckWith("chog_guardian");
+  const g = (s: TraceSample[]) => samplesOf(s, (x) => x.cardId === "chog_guardian");
+  const run = (chaos: ChaosSchedule | null, tick: number, y = 50) =>
+    traceMatch(scenarioConfig(deck, deckWith("choglings"), chaos), [cmd(1, 0, tick, "chog_guardian", 50, y)], tick + 70);
+  const duringWarning = run(schedule, T - 40);
+  const active = run(schedule, T + 1);
+  const control = run(null, T + 1);
+  const stranded = run(schedule, T + D - 2, 72);
+  const afterExpiry = run(schedule, T + D + 1);
+  const strandedTrace = g(stranded.samples);
+  const afterClose = strandedTrace.filter((s) => s.tick >= T + D);
+  const inWaterAfterClose = afterClose.filter((s) => inRiver(s.y));
+  let maxStep = 0;
+  for (let i = 1; i < strandedTrace.length; i++) {
+    const a = strandedTrace[i - 1]!;
+    const b = strandedTrace[i]!;
+    maxStep = Math.max(maxStep, Math.abs(a.x - b.x), Math.abs(a.y - b.y));
+  }
+  const riftEvents = stranded.state.events.filter((e) => e.type === "rift_crossing").map((e) => (e.type === "rift_crossing" ? { tick: e.tick, open: e.open } : null));
+  return {
+    family: ev.family,
+    crossingZone: ev.effect.kind === "zone" ? ev.effect.crossing : null,
+    modifier: ev.effect.kind === "zone" ? ev.effect.modifier : null,
+    activationTick: T,
+    durationTicks: D,
+    warningCrossings: crossingsUsed(g(duringWarning.samples)),
+    activeCrossings: crossingsUsed(g(active.samples)),
+    controlCrossings: crossingsUsed(g(control.samples)),
+    afterExpiryCrossings: crossingsUsed(g(afterExpiry.samples)),
+    strandedAtClose: inWaterAfterClose.length > 0,
+    strandedExitTicks: inWaterAfterClose.length,
+    strandedExitStraight: inWaterAfterClose.every((s) => s.x === 50),
+    strandedReachedNorth: afterClose.some((s) => s.y > 86),
+    strandedMaxStep: maxStep,
+    riftEvents,
+  };
+}
+
+// J: full headless battles still end by Core and by crowns.
+export function scenarioVictories() {
+  const rotation = ["choglings", "chaos_archer", "boulderback", "frostshell", "rift_runner", "sparkcaster", "chog_guardian", "hexwing"];
+  const siege: DeployCommand[] = [];
+  for (let t = 10, seq = 0; t < 1750; t += 30) {
+    seq += 1;
+    siege.push(cmd(seq, 0, t, rotation[seq % 8] as string, seq % 2 === 0 ? 30 : 70, 60));
+  }
+  const core = runMatch(scenarioConfig([...rotation], [...rotation]), siege);
+  const one: DeployCommand[] = [cmd(1, 0, 84, "boulderback", 30, 60), cmd(2, 0, 85, "chaos_archer", 30, 20)];
+  const crowns = runMatch(scenarioConfig(deckWith("boulderback", "chaos_archer"), deckWith("choglings")), one);
+  return {
+    core: { winner: core.result.winner, reason: core.result.endReason, crowns: core.result.crowns, ticks: core.result.ticks },
+    crowns: { winner: crowns.result.winner, reason: crowns.result.endReason, crowns: crowns.result.crowns, ticks: crowns.result.ticks },
+  };
+}
+
+// Forward pocket: deploys on the enemy side unlock only on the lane whose
+// side tower has fallen. Pocket probes are ordinary deploy commands.
+export function scenarioPocket() {
+  const deck = deckWith("boulderback", "chaos_archer", "choglings", "rift_runner");
+  const base: DeployCommand[] = [cmd(1, 0, 84, "boulderback", 30, 60), cmd(2, 0, 85, "chaos_archer", 30, 20)];
+  const probe = runMatch(scenarioConfig(deck, deckWith("choglings")), base, 420);
+  const fell = probe.state.events.find((e) => e.type === "structure_destroyed" && e.entityId === "s-p1-tower-30")?.tick ?? null;
+  if (fell === null) return { fell, before: null, left: null, right: null, tooDeep: null };
+  const after = fell + 40;
+  const probes = [
+    cmd(10, 0, fell - 5, "choglings", 30, 95),
+    cmd(11, 0, after, "choglings", 30, 95),
+    cmd(12, 0, after + 1, "rift_runner", 70, 95),
+    cmd(13, 0, after + 2, "rift_runner", 30, 107),
+  ];
+  const run = runMatch(scenarioConfig(deck, deckWith("choglings")), [...base, ...probes], after + 10);
+  const outcome = (seq: number) =>
+    run.state.events.some((e) => e.type === "command_rejected" && e.seq === seq)
+      ? (run.state.events.find((e) => e.type === "command_rejected" && e.seq === seq) as { reason: string }).reason
+      : "accepted";
+  return { fell, before: outcome(10), left: outcome(11), right: outcome(12), tooDeep: outcome(13) };
+}
+
+// K: identical commands -> identical hashes (including a chaos match).
+export function scenarioReplay() {
+  const schedule = riftSchedule("replay");
+  const p0 = ["chog_guardian", "boulderback", "chaos_archer", "rift_runner", "choglings", "frostshell", "sparkcaster", "hexwing"];
+  const p1 = ["choglings", "sparkcaster", "chog_guardian", "hexwing", "frostshell", "rift_runner", "chaos_archer", "boulderback"];
+  const cfg = () => scenarioConfig([...p0], [...p1], schedule, "replay");
+  const { commands } = botMatch(cfg(), 3100, 25);
+  const a = runMatch(cfg(), commands);
+  const b = runMatch(cfg(), [...commands].reverse());
+  const ev = a.state.events;
+  return {
+    a: a.result,
+    b: b.result,
+    hashA: stateHash(a.state),
+    hashB: stateHash(b.state),
+    commands: commands.length,
+    deploys: ev.filter((e) => e.type === "deploy").length,
+    rejected: ev.filter((e) => e.type === "command_rejected").length,
+    deaths: ev.filter((e) => e.type === "death").length,
+    towersDestroyed: ev.filter((e) => e.type === "structure_destroyed").length,
+    riftEvents: ev.filter((e) => e.type === "rift_crossing").length,
+  };
+}
