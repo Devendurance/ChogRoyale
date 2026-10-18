@@ -99,6 +99,8 @@
 
 - Keep Blender experiments and test outputs outside this repository in `C:/Users/USER/Documents/ChogRoyale-Assets`.
 - Reuse the existing local Blender MCP connection, keep its bridge bound to loopback, and preserve live Blender work when verifying or producing assets.
+- Reference packs must follow stored token and image URIs. On-chain token IDs can differ from NFT display numbers and artwork filenames.
+- Preserve original NFT metadata and artwork separately from authored reference views. Use existing trait-derived commander classes, and keep original troop designs separate from NFT identities.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

@@ -19,6 +19,10 @@ Durable facts, conventions, and gotchas that should survive across sessions.
 
 ## Gotchas
 
+- On-chain token IDs differ from artwork/display numbers. Always follow `token_uri_original` and `image_original`, never build filenames from token ID.
+- `nft_metadata.content_hash` hashes fetched JSON bytes. JSONB exports preserve semantics and need a separate exported-file hash. Commander hashes are separate derivation hashes.
+- NFT portrait Skin trait colors can describe outer spikes rather than the face. Sample region colors from real artwork. `DESIGN.md` is referenced but missing.
+
 - Public IPFS gateways throttle sustained streams: filebase serves 200 in ~1s when idle but 429s under load; pinata and dweb 429 even single requests. Fix is idle cooldown + single-stream, not retries. Dedicated gateway would need signup + key in `IPFS_GATEWAYS`.
 - Monad public RPC is slow and variable (multi-second reads); tokenURI is immutable on-chain so re-reads are skippable when DB already has URI + owner.
 - drizzle-kit migrate CLI fails silently (exit 1, no error) against the TEST branch; PROD works. Workaround: scripts/migrate-test-run.ts applies ./drizzle via the app Neon client. Keep the script for future migrations.
