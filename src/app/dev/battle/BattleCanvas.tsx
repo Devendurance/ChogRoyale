@@ -6,6 +6,7 @@
 
 import { useEffect, useRef } from "react";
 import type { BattleFrame, CardInfo, FrameEvent, StartMessage } from "@/lib/battle-protocol";
+import { deployZones, screenToArena, type ArenaPoint } from "@/lib/battle-input";
 
 const S = 5; // pixels per arena unit
 const OWN = 0x3b82f6;
@@ -18,7 +19,12 @@ export interface CanvasFeed {
   prev: BattleFrame | null;
   receivedAt: number;
   selected: CardInfo | null;
+  /** Placement preview (drag or hover). Advisory only, never sent as truth. */
+  ghost: { cardId: string; x: number; y: number; ok: boolean } | null;
 }
+
+/** Maps a viewport point to arena cells for this client's seat, or null off the board. */
+export type BoardMapper = (clientX: number, clientY: number) => ArenaPoint | null;
 
 interface Fx {
   kind: "ring" | "flash" | "death" | "boom";
@@ -29,12 +35,29 @@ interface Fx {
   until: number;
 }
 
-export default function BattleCanvas({ feed, onBoardClick }: { feed: React.RefObject<CanvasFeed | null>; onBoardClick: (x: number, y: number) => void }) {
+interface Props {
+  feed: React.RefObject<CanvasFeed | null>;
+  mapRef: React.RefObject<BoardMapper | null>;
+  onBoardTap: (at: ArenaPoint) => void;
+  onBoardHover: (at: ArenaPoint | null) => void;
+}
+
+export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover }: Props) {
   const host = useRef<HTMLDivElement>(null);
-  const clickRef = useRef(onBoardClick);
+  const press = useRef<{ id: number; x: number; y: number } | null>(null);
+
+  // One mapper for taps and drags: the rendered canvas rect absorbs FIT
+  // scaling, zoom and DPR, and the seat decides the vertical flip.
   useEffect(() => {
-    clickRef.current = onBoardClick;
-  }, [onBoardClick]);
+    mapRef.current = (cx, cy) => {
+      const canvas = host.current?.querySelector("canvas");
+      const f = feed.current;
+      return canvas && f ? screenToArena(cx, cy, canvas.getBoundingClientRect(), f.start.seat) : null;
+    };
+    return () => {
+      mapRef.current = null;
+    };
+  }, [feed, mapRef]);
 
   useEffect(() => {
     let game: import("phaser").Game | null = null;
@@ -51,14 +74,6 @@ export default function BattleCanvas({ feed, onBoardClick }: { feed: React.RefOb
         g!: import("phaser").GameObjects.Graphics;
         create() {
           this.g = this.add.graphics();
-          this.input.on("pointerdown", (p: { x: number; y: number }) => {
-            const f = feed.current;
-            if (!f) return;
-            const ax = Math.round(p.x / S);
-            const sy = p.y / S;
-            const ay = Math.round(f.start.seat === 0 ? 160 - sy : sy);
-            clickRef.current(Math.max(0, Math.min(100, ax)), Math.max(0, Math.min(160, ay)));
-          });
         }
         update() {
           const f = feed.current;
@@ -85,9 +100,13 @@ export default function BattleCanvas({ feed, onBoardClick }: { feed: React.RefOb
           };
           // Ground, own territory, river, bridges, ford.
           g.fillStyle(0x1f3b2a, 1).fillRect(0, 0, W, H);
-          if (f.selected && f.selected.kind !== "spell") {
-            const b = bandY(geo.ownTerritory.minY, geo.ownTerritory.maxY);
-            g.fillStyle(0x3b82f6, 0.08).fillRect(0, b.y, W, b.h);
+          const placing = f.ghost ? start.catalog[f.ghost.cardId] : f.selected;
+          if (placing && placing.kind !== "spell") {
+            for (const z of deployZones(start, frame)) {
+              const b = bandY(z.minY, z.maxY);
+              g.fillStyle(0x22c55e, 0.12).fillRect(sx(z.minX), b.y, (z.maxX - z.minX + 1) * S, b.h);
+              g.lineStyle(1, 0x22c55e, 0.5).strokeRect(sx(z.minX), b.y, (z.maxX - z.minX + 1) * S, b.h);
+            }
           }
           const river = bandY(geo.river.minY, geo.river.maxY);
           g.fillStyle(0x1e40af, 1).fillRect(0, river.y, W, river.h);
@@ -166,6 +185,13 @@ export default function BattleCanvas({ feed, onBoardClick }: { feed: React.RefOb
             hpBar(x, y - 19, 24, c.hp, c.maxHp, c.shield);
             label(c.id, c.cls.slice(0, 2).toUpperCase(), x, y);
           }
+          // Structure no-go margins while placing a ground card.
+          if (placing && placing.kind !== "spell") {
+            for (const s of [...frame.structures.filter((s) => s.alive).map((s) => ({ x: s.x, y: s.y, r: s.kind === "core" ? 4 : 3 })), ...frame.buildings.map((b) => ({ x: b.x, y: b.y, r: b.footprint }))]) {
+              const r = (s.r + 2.5) * S;
+              g.lineStyle(1, 0xef4444, 0.6).strokeRect(sx(s.x) - r, sy(s.y) - r, r * 2, r * 2);
+            }
+          }
           const all = new Map<string, { x: number; y: number }>();
           for (const u of [...frame.troops, ...frame.commanders, ...frame.buildings, ...frame.structures]) all.set(u.id, u);
           for (const pr of frame.projectiles) {
@@ -181,7 +207,10 @@ export default function BattleCanvas({ feed, onBoardClick }: { feed: React.RefOb
             for (const e of frame.events as FrameEvent[]) {
               const at = (id: unknown) => all.get(String(id)) ?? prevAll.get(String(id));
               const until = frame.tick + 6;
-              if (e.type === "spell_cast" || e.type === "spell_impact") fx.push({ kind: "flash", x: Number(e.x), y: Number(e.y), r: start.catalog[String(e.cardId)]?.radius ?? 6, color: 0xfde047, until });
+              if (e.type === "deploy") {
+                const p = at((e.entityIds as unknown[] | undefined)?.[0]);
+                if (p) fx.push({ kind: "ring", x: p.x, y: p.y, r: 5, color: Number(e.player) === seat ? 0x22c55e : 0xf87171, until: frame.tick + 6 });
+              } else if (e.type === "spell_cast" || e.type === "spell_impact") fx.push({ kind: "flash", x: Number(e.x), y: Number(e.y), r: start.catalog[String(e.cardId)]?.radius ?? 6, color: 0xfde047, until });
               else if (e.type === "ability_fired") fx.push({ kind: "ring", x: Number(e.x), y: Number(e.y), r: Number(e.radius ?? 4), color: 0xfbbf24, until: frame.tick + 8 });
               else if (e.type === "shockwave") {
                 const p = at(e.entityId);
@@ -208,6 +237,16 @@ export default function BattleCanvas({ feed, onBoardClick }: { feed: React.RefOb
             else if (e.kind === "boom") g.fillStyle(e.color, 0.5).fillCircle(x, y, e.r * S);
             else g.lineStyle(2, e.color, 0.9).lineBetween(x - 5, y - 5, x + 5, y + 5).lineBetween(x - 5, y + 5, x + 5, y - 5);
           }
+          // Placement ghost: green when the advisory check passes, red otherwise.
+          if (f.ghost) {
+            const card = start.catalog[f.ghost.cardId];
+            const r = Math.max(card?.radius ?? 0, card?.kind === "building" ? 3 : 2) * S;
+            const color = f.ghost.ok ? 0x22c55e : 0xef4444;
+            const x = sx(f.ghost.x);
+            const y = sy(f.ghost.y);
+            g.fillStyle(color, 0.3).fillCircle(x, y, r);
+            g.lineStyle(2, color, 1).strokeCircle(x, y, r).lineBetween(x - 6, y, x + 6, y).lineBetween(x, y - 6, x, y + 6);
+          }
           // Drop labels for entities that no longer exist (no stuck corpses).
           for (const [id, l] of labels) {
             if (seen.has(id)) continue;
@@ -224,6 +263,9 @@ export default function BattleCanvas({ feed, onBoardClick }: { feed: React.RefOb
         height: H,
         backgroundColor: "#0b1210",
         scene: Arena,
+        // Input is handled by DOM pointer events on the host. Phaser's touch
+        // capture would otherwise preventDefault and fight those handlers.
+        input: { keyboard: false, mouse: false, touch: false, gamepad: false },
         scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_HORIZONTALLY },
       });
     });
@@ -233,5 +275,28 @@ export default function BattleCanvas({ feed, onBoardClick }: { feed: React.RefOb
     };
   }, [feed]);
 
-  return <div ref={host} style={{ width: "100%", maxWidth: 500, aspectRatio: "100 / 160", touchAction: "none" }} />;
+  // A press that starts and ends on the board without travelling is a tap.
+  return (
+    <div
+      ref={host}
+      data-testid="battle-board"
+      style={{ width: "100%", maxWidth: 500, aspectRatio: "100 / 160", touchAction: "none" }}
+      onPointerDown={(e) => {
+        if (e.button === 0) press.current = { id: e.pointerId, x: e.clientX, y: e.clientY };
+      }}
+      onPointerUp={(e) => {
+        const p = press.current;
+        press.current = null;
+        if (!p || p.id !== e.pointerId || Math.hypot(e.clientX - p.x, e.clientY - p.y) > 10) return;
+        const at = mapRef.current?.(e.clientX, e.clientY);
+        if (at) onBoardTap(at);
+      }}
+      onPointerCancel={() => {
+        press.current = null;
+        onBoardHover(null);
+      }}
+      onPointerMove={(e) => onBoardHover(mapRef.current?.(e.clientX, e.clientY) ?? null)}
+      onPointerLeave={() => onBoardHover(null)}
+    />
+  );
 }

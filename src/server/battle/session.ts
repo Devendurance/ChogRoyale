@@ -198,6 +198,7 @@ export class BattleSession {
         ford: { minX: ARENA_V2.riftFord.minX, maxX: ARENA_V2.riftFord.maxX },
         zones: { south: { minY: 0, maxY: 53 }, center: { minY: 54, maxY: 106 }, north: { minY: 107, maxY: 160 } },
         ownTerritory: seat === 0 ? { minY: 0, maxY: ARENA_V2.river.minY - 1 } : { minY: ARENA_V2.river.maxY + 1, maxY: ARENA_V2.maxY },
+        deploy: { minX: ARENA_V2.minX + ARENA_V2.deployMarginX, maxX: ARENA_V2.maxX - ARENA_V2.deployMarginX, laneSplitX: ARENA_V2.laneSplitX, pocketDepth: ARENA_V2.pocketDepth },
       },
       durationTicks: COMBAT_TIMELINE_V1.durationTicks,
       overtimeTicks: COMBAT_TIMELINE_V1.overtimeTicks,

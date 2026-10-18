@@ -8,7 +8,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { PrivyProvider, usePrivy, useLogin } from "@privy-io/react-auth";
 import { Client, type Room } from "@colyseus/sdk";
 import { BATTLE_ROOM, type AckMessage, type BattleFrame, type CardInfo, type EndMessage, type LobbyMessage, type StartMessage } from "@/lib/battle-protocol";
-import type { CanvasFeed } from "./BattleCanvas";
+import { aimPoint, endGesture, moveGesture, placementHint, startGesture, type ArenaPoint, type Gesture } from "@/lib/battle-input";
+import type { BoardMapper, CanvasFeed } from "./BattleCanvas";
 
 const BattleCanvas = dynamic(() => import("./BattleCanvas"), { ssr: false });
 const APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID ?? "";
@@ -28,12 +29,19 @@ function BattlePanel() {
   const [deck, setDeck] = useState("swarm");
   const [start, setStart] = useState<StartMessage | null>(null);
   const [frame, setFrame] = useState<BattleFrame | null>(null);
-  const [acks, setAcks] = useState<AckMessage[]>([]);
+  const [acks, setAcks] = useState<Array<AckMessage & { label: string }>>([]);
   const [end, setEnd] = useState<EndMessage | null>(null);
   const [abort, setAbort] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
+  const [dragging, setDragging] = useState<string | null>(null);
+  const [hint, setHint] = useState<string | null>(null);
   const feed = useRef<CanvasFeed | null>(null);
   const cidN = useRef(0);
+  const mapRef = useRef<BoardMapper | null>(null);
+  const gesture = useRef<Gesture | null>(null);
+  const suppressClickUntil = useRef(0);
+  const preview = useRef<HTMLDivElement>(null);
+  const sentLabels = useRef(new Map<string, string>());
 
   const connect = useCallback(
     async (mode: "create" | "join") => {
@@ -47,7 +55,7 @@ function BattlePanel() {
         const r = mode === "create" ? await client.create(BATTLE_ROOM) : await client.joinById(code.trim());
         r.onMessage("lobby", (m: LobbyMessage) => (setLobby(m), setStage((s) => (s === "connecting" ? "lobby" : s))));
         r.onMessage("start", (m: StartMessage) => {
-          feed.current = { start: m, frame: null, prev: null, receivedAt: performance.now(), selected: null };
+          feed.current = { start: m, frame: null, prev: null, receivedAt: performance.now(), selected: null, ghost: null };
           setStart(m);
           setStage("active");
         });
@@ -57,7 +65,11 @@ function BattlePanel() {
           feed.current = { ...cur, prev: cur.frame, frame: f, receivedAt: performance.now() };
           setFrame(f);
         });
-        r.onMessage("ack", (a: AckMessage) => setAcks((xs) => [a, ...xs].slice(0, 5)));
+        r.onMessage("ack", (a: AckMessage) => {
+          const label = sentLabels.current.get(a.cid) ?? a.cid;
+          sentLabels.current.delete(a.cid);
+          setAcks((xs) => [{ ...a, label }, ...xs].slice(0, 5));
+        });
         r.onMessage("end", (e: EndMessage) => (setEnd(e), setStage("ended")));
         r.onMessage("aborted", (a: { reason: string }) => (setAbort(a.reason), setStage("aborted")));
         r.onMessage("error", (e: { reason: string }) => setError(e.reason));
@@ -77,15 +89,90 @@ function BattlePanel() {
     if (feed.current && start) feed.current = { ...feed.current, selected: selected ? start.catalog[selected] ?? null : null };
   }, [selected, start]);
 
-  const send = useCallback((cmd: Record<string, unknown>) => room?.send("cmd", { ...cmd, cid: `c${Date.now().toString(36)}${cidN.current++}` }), [room]);
-  const onBoardClick = useCallback(
-    (x: number, y: number) => {
-      if (!selected || stage !== "active") return;
-      send({ type: "deploy", cardId: selected, x, y });
+  const send = useCallback(
+    (cmd: Record<string, unknown>, label: string) => {
+      if (!room) return;
+      const cid = `c${Date.now().toString(36)}${cidN.current++}`;
+      sentLabels.current.set(cid, label);
+      room.send("cmd", { ...cmd, cid });
+    },
+    [room]
+  );
+  // Every deploy, tap or drag, goes through this one call. The server decides.
+  const deploy = useCallback(
+    (cardId: string, at: ArenaPoint) => {
+      if (stage !== "active") return;
+      send({ type: "deploy", cardId, x: at.x, y: at.y }, `${start?.catalog[cardId]?.name ?? cardId} @${at.x},${at.y}`);
       setSelected(null);
     },
-    [selected, send, stage]
+    [send, stage, start]
   );
+  // Advisory ghost + hint text. Returns nothing authoritative.
+  const showGhost = useCallback((cardId: string | null, at: ArenaPoint | null) => {
+    const f = feed.current;
+    if (!f) return;
+    if (!cardId || !at || !f.frame) {
+      f.ghost = null;
+      setHint(cardId ? "Release off the board to cancel" : null);
+      return;
+    }
+    const h = placementHint(f.start.catalog[cardId], at, f.start, f.frame);
+    f.ghost = { cardId, x: at.x, y: at.y, ok: h.ok };
+    setHint(h.ok ? `Release to play at ${at.x},${at.y}` : h.reason);
+  }, []);
+  const onBoardTap = useCallback(
+    (at: ArenaPoint) => {
+      if (!selected) return;
+      deploy(selected, at);
+      showGhost(null, null);
+    },
+    [selected, deploy, showGhost]
+  );
+  const onBoardHover = useCallback(
+    (at: ArenaPoint | null) => {
+      if (!gesture.current?.dragging) showGhost(selected, selected ? at : null);
+    },
+    [selected, showGhost]
+  );
+  const placePreview = (el: HTMLDivElement | null, clientX: number, clientY: number) => {
+    if (el) el.style.transform = `translate(${clientX}px, ${clientY}px) translate(-50%, -50%)`;
+  };
+  const lastAim = useRef({ x: 0, y: 0 });
+
+  const onCardPointerDown = (id: string) => (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (e.button !== 0 || stage !== "active") return;
+    // A new press always replaces a stale gesture (e.g. one whose button unmounted).
+    if (gesture.current?.dragging) {
+      setDragging(null);
+      showGhost(null, null);
+    }
+    gesture.current = startGesture(id, e);
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+  const onCardPointerMove = (e: React.PointerEvent<HTMLButtonElement>) => {
+    const g = moveGesture(gesture.current, e);
+    if (!g) return;
+    if (g.dragging && !gesture.current?.dragging) setDragging(g.cardId);
+    gesture.current = g;
+    if (!g.dragging) return;
+    const aim = aimPoint({ clientX: e.clientX, clientY: e.clientY, pointerType: g.pointerType });
+    lastAim.current = { x: aim.clientX, y: aim.clientY };
+    placePreview(preview.current, aim.clientX, aim.clientY);
+    showGhost(g.cardId, mapRef.current?.(aim.clientX, aim.clientY) ?? null);
+  };
+  const onCardPointerEnd = (cancelled: boolean) => (e: React.PointerEvent<HTMLButtonElement>) => {
+    const g = gesture.current;
+    const r = endGesture(g, e, cancelled, (cx, cy) => mapRef.current?.(cx, cy) ?? null);
+    if (r.kind === "ignore") return;
+    gesture.current = null; // cleared before sending so pointerup + lostpointercapture can't double-deploy
+    if (g?.dragging) {
+      suppressClickUntil.current = performance.now() + 500; // the click that follows a drag must not toggle selection
+      setDragging(null);
+      showGhost(null, null);
+    }
+    if (r.kind === "deploy") deploy(r.cardId, { x: r.x, y: r.y });
+    else if (r.kind === "cancel" && g?.dragging) setHint("Cancelled, nothing sent");
+  };
 
   if (!ENABLED) return <p>Dev battle is disabled in this build.</p>;
   if (!APP_ID) return <p>Missing NEXT_PUBLIC_PRIVY_APP_ID.</p>;
@@ -146,7 +233,7 @@ function BattlePanel() {
           </div>
           <div style={{ fontSize: 11 }}>them: {towers(1 - me)}</div>
           <div style={{ position: "relative" }}>
-            <BattleCanvas feed={feed} onBoardClick={onBoardClick} />
+            <BattleCanvas feed={feed} mapRef={mapRef} onBoardTap={onBoardTap} onBoardHover={onBoardHover} />
             {frame?.chaos.map((c) => (
               <div key={c.id} style={{ position: "absolute", top: 4, left: 4, fontSize: 12, background: "#000a", padding: "2px 6px" }}>
                 {c.state === "warning" ? `Chaos incoming: ${c.name} in ${Math.max(0, Math.ceil((c.activationTick - frame.tick) / 10))}s` : `${c.name} active`}
@@ -187,21 +274,55 @@ function BattlePanel() {
                   const c = card(id);
                   const afford = (c?.cost ?? 99) <= frame.energy;
                   return (
-                    <button key={id} onClick={() => setSelected(selected === id ? null : id)} style={{ padding: 6, border: selected === id ? "2px solid #fbbf24" : "1px solid #4b5563", opacity: afford ? 1 : 0.5, fontSize: 12 }}>
+                    <button
+                      key={id}
+                      data-card={id}
+                      aria-pressed={selected === id}
+                      onPointerDown={onCardPointerDown(id)}
+                      onPointerMove={onCardPointerMove}
+                      onPointerUp={onCardPointerEnd(false)}
+                      onPointerCancel={onCardPointerEnd(true)}
+                      onLostPointerCapture={onCardPointerEnd(true)}
+                      onContextMenu={(e) => e.preventDefault()}
+                      onClick={() => performance.now() >= suppressClickUntil.current && setSelected(selected === id ? null : id)}
+                      style={{
+                        padding: 6,
+                        border: selected === id ? "2px solid #fbbf24" : "1px solid #4b5563",
+                        opacity: dragging === id ? 0.3 : afford ? 1 : 0.5,
+                        fontSize: 12,
+                        touchAction: "none",
+                        userSelect: "none",
+                        WebkitUserSelect: "none",
+                        WebkitTouchCallout: "none",
+                      }}
+                    >
                       <div>{c?.name ?? id}</div>
                       <div>
                         {c?.cost}e {c?.kind}
                         {c?.air ? " (air)" : ""}
                       </div>
+                      {!afford && <div style={{ fontSize: 10, color: "#fca5a5" }}>need {(c?.cost ?? 0) - frame.energy}</div>}
                     </button>
                   );
                 })}
               </div>
-              <div style={{ fontSize: 12 }}>{selected ? `Tap the board to play ${card(selected)?.name}.` : "Select a card, then tap the board."}</div>
+              {dragging && (
+                <div
+                  ref={(el) => {
+                    preview.current = el;
+                    placePreview(el, lastAim.current.x, lastAim.current.y);
+                  }}
+                  style={{ position: "fixed", left: 0, top: 0, pointerEvents: "none", zIndex: 50, padding: "4px 8px", fontSize: 12, background: "#111827e6", border: "2px solid #fbbf24", borderRadius: 4 }}>
+                  {card(dragging)?.name} {card(dragging)?.cost}e
+                </div>
+              )}
+              <div style={{ fontSize: 12 }} data-testid="placement-hint">
+                {hint ?? (selected ? `Tap the board to play ${card(selected)?.name}, or drag a card onto it.` : "Drag a card onto the board, or select it then tap the board.")}
+              </div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {frame.abilities.length === 0 && <span style={{ fontSize: 12 }}>Commander ability: deploy your commander first.</span>}
                 {frame.abilities.map((a) => (
-                  <button key={a.abilityId} disabled={!a.ready} title={a.blockedBy ?? "ready"} onClick={() => send({ type: "ability", abilityId: a.abilityId })} style={{ padding: 6, fontSize: 12 }}>
+                  <button key={a.abilityId} disabled={!a.ready} title={a.blockedBy ?? "ready"} onClick={() => send({ type: "ability", abilityId: a.abilityId }, `ability ${a.abilityId}`)} style={{ padding: 6, fontSize: 12 }}>
                     {a.abilityId} ({a.cost}e) {a.ready ? (a.blockedBy ? `· ${a.blockedBy}` : "· READY") : `· ${Math.ceil((a.readyAt - frame.tick) / 10)}s`}
                   </button>
                 ))}
@@ -209,7 +330,7 @@ function BattlePanel() {
               <ul style={{ fontSize: 11, margin: 0 }}>
                 {acks.map((a) => (
                   <li key={a.cid + a.tick} style={{ color: a.ok ? "#86efac" : "#fca5a5" }}>
-                    t{a.tick} {a.ok ? "accepted" : `rejected: ${a.reason}`}
+                    t{a.tick} {a.label} {a.ok ? "accepted" : `rejected: ${a.reason}`}
                   </li>
                 ))}
               </ul>

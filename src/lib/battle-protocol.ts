@@ -50,6 +50,8 @@ export interface StartMessage {
     ford: { minX: number; maxX: number };
     zones: Record<string, { minY: number; maxY: number }>;
     ownTerritory: { minY: number; maxY: number };
+    /** Deploy bounds for client-side placement hints only. The server still validates every deploy. */
+    deploy: { minX: number; maxX: number; laneSplitX: number; pocketDepth: number };
   };
   durationTicks: number;
   overtimeTicks: number;
