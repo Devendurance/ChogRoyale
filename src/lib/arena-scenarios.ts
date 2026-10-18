@@ -19,6 +19,7 @@ import {
   freeStarterSlot,
   ABILITY_ACTIVATION_COST_V1,
   BUILDING_CARDS_V1,
+  SPELL_CARDS_V1,
   buildingDeployCheck,
   buildingSolids,
   type BuildingCardDef,
@@ -108,8 +109,8 @@ export function traceMatch(config: CombatConfig, commands: DeployCommand[], upto
 /**
  * Legal bot move from the real current state: the first card in the real
  * hand that is affordable and has a legal placement. Troops rotate through
- * lane positions validated by troopDeployCheck; Chaos Bolt aims at the enemy
- * troop/commander closest to the bot's Core; Rally Horn targets the bot's
+ * lane positions validated by troopDeployCheck; damage/control spells use
+ * botSpellSpot (legal targets only); Rally Horn targets the bot's
  * most advanced troop. Returns null when no legal play exists.
  */
 export function botMove(state: CombatState, p: PlayerIndex, n: number): { cardId: string; x: number; y: number } | null {
@@ -126,10 +127,9 @@ export function botMove(state: CombatState, p: PlayerIndex, n: number): { cardId
     const cost = isCommanderCard(card) ? (snap ? COMMANDER_COMBAT_PROFILE_V1[snap.class].cost : 99) : (CARDS_V1[card]?.cost ?? 99);
     if (cost > state.energy[p]) continue;
     if (isCommanderCard(card) && state.commanders.some((c) => c.owner === p && c.hp > 0)) continue;
-    if (card === "chaos_bolt") {
-      const foes = [...state.troops, ...state.commanders].filter((u) => u.owner !== p && u.hp > 0);
-      foes.sort((a, b) => Math.abs(a.y - homeY) - Math.abs(b.y - homeY) || (a.id < b.id ? -1 : 1));
-      if (foes[0]) return { cardId: card, x: foes[0].x, y: foes[0].y };
+    if (card === "chaos_bolt" || card === "chaos_comet" || card === "rift_snare") {
+      const spot = botSpellSpot(state, p, card);
+      if (spot) return { cardId: card, ...spot };
       continue;
     }
     if (card === "rally_horn") {
@@ -151,6 +151,32 @@ export function botMove(state: CombatState, p: PlayerIndex, n: number): { cardId
     }
   }
   return null;
+}
+
+/**
+ * B2.7b spell targeting (testing bot, not AI). Only aims at targets the
+ * spell can legally affect; returns null (card skipped, hand cycles on) when
+ * none exist. Ties: closest to the bot's own Core, then id.
+ * - Chaos Bolt: enemy troops only (it never hits commanders).
+ * - Rift Snare: an enemy troop/commander on the bot's half.
+ * - Chaos Comet: an enemy building, else an enemy unit with 2+ enemies
+ *   within the radius, else an enemy tower it can finish.
+ */
+export function botSpellSpot(state: CombatState, p: PlayerIndex, card: string): { x: number; y: number } | null {
+  const homeY = p === 0 ? 0 : 160;
+  const byHome = <T extends { x: number; y: number; id: string }>(xs: T[]) =>
+    [...xs].sort((a, b) => Math.abs(a.y - homeY) - Math.abs(b.y - homeY) || (a.id < b.id ? -1 : 1));
+  const units = [...state.troops, ...state.commanders].filter((u) => u.owner !== p && u.hp > 0);
+  const pick = (xs: Array<{ x: number; y: number; id: string }>) => (xs[0] ? { x: xs[0].x, y: xs[0].y } : null);
+  if (card === "chaos_bolt") return pick(byHome(state.troops.filter((u) => u.owner !== p && u.hp > 0)));
+  if (card === "rift_snare") return pick(byHome(units.filter((u) => (p === 0 ? u.y < 80 : u.y > 80))));
+  const spec = SPELL_CARDS_V1.chaos_comet!;
+  const building = pick(byHome(state.buildings.filter((b) => b.owner !== p && b.alive)));
+  if (building) return building;
+  const r2 = spec.radius * spec.radius;
+  const cluster = byHome(units.filter((u) => units.filter((v) => (v.x - u.x) ** 2 + (v.y - u.y) ** 2 <= r2).length >= 2));
+  if (cluster[0]) return pick(cluster);
+  return pick(byHome(state.structures.filter((s) => s.owner !== p && s.alive && s.structure === "tower" && s.hp <= spec.impact!.structureDamage)));
 }
 
 /**

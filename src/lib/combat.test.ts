@@ -56,7 +56,7 @@ describe("initMatch", () => {
     expect(s.phase).toBe("active");
   });
   it("rejects bad ruleset, seed, and commander slots", () => {
-    expect(() => initMatch(config({ rulesetVersion: "v9" as never }))).toThrow();
+    expect(() => initMatch(config({ rulesetVersion: "v8" as never }))).toThrow();
     expect(() => initMatch(config({ seed: "" }))).toThrow();
     expect(() => initMatch(config({ commanderIds: ["", null] }))).toThrow();
     expect(() => initMatch(config({ commanderIds: ["cmd-1", null], chaosScheduleHash: "abc" }))).not.toThrow();
@@ -637,7 +637,7 @@ describe("b2.4 match rules", () => {
   });
   it("ruleset reports v2 with phases, crowns, and the compatibility boundary", () => {
     const summary = combatRulesetSummary();
-    expect(summary.version).toBe("v8");
+    expect(summary.version).toBe("v9");
     expect(summary.timeline.overtimeTicks).toBe(1200);
   });
 });

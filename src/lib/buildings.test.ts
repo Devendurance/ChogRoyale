@@ -31,7 +31,7 @@ function stepTo(s: CombatState, cmds: DeployCommand[], tick: number) {
 
 describe("building card domain", () => {
   it("registers two authored buildings and bumps the ruleset", () => {
-    expect(COMBAT_RULESET_VERSION).toBe("v8");
+    expect(COMBAT_RULESET_VERSION).toBe("v9");
     expect(Object.keys(BUILDING_CARDS_V1)).toEqual(["rift_sentry", "decoy_totem"]);
     expect(CARDS_V1.rift_sentry).toBe(SENTRY);
     expect([SENTRY.cost, SENTRY.hp, SENTRY.damage, SENTRY.attackIntervalTicks, SENTRY.range, SENTRY.lifetimeTicks, SENTRY.hitsAir]).toEqual([4, 320, 16, 8, 16, 300, false]);

@@ -34,7 +34,7 @@ import type { ChaosSchedule, ChaosEffect } from "@/lib/chaos";
 // v8 (B2.7a): deployable building cards (Rift Sentry, Decoy Totem) with
 // solid footprints, finite lifetimes, building-aware targeting and
 // placement rules that keep every river crossing mouth clear.
-export const COMBAT_RULESET_VERSION = "v8" as const;
+export const COMBAT_RULESET_VERSION = "v9" as const;
 export const TICKS_PER_SECOND = 10;
 // Standard ranked timeline (v2): 180s regulation, up to 120s sudden-death overtime.
 // Energy phases: 1x ticks 0-1199, 2x ticks 1200-2399, 3x ticks 2400-2999.
@@ -109,11 +109,33 @@ export interface SpellCardDef {
   id: string;
   name: string;
   cost: number;
-  kind: "bolt" | "horn";
+  kind: "bolt" | "horn" | "impact";
   radius: number;
   damage: number;
   buffPct: number;
   buffDurationTicks: number;
+  /** v9 impact spells only: explicit per-target-class rules. */
+  impact?: ImpactSpec;
+}
+
+/**
+ * B2.7b impact spell rules. Enemy-only (never friendly fire). Lands
+ * `delayTicks` after the cast in the damage pass of that tick, so it shares
+ * simultaneous damage, shields/armor, building death, crowns and victory
+ * with every other damage source. Each entity is hit at most once.
+ */
+export interface ImpactSpec {
+  delayTicks: number;
+  /** Troops and (when hitsCommanders) commanders, before shields/armor. */
+  unitDamage: number;
+  buildingDamage: number;
+  /** Towers and Core: deliberately reduced. */
+  structureDamage: number;
+  slowPct: number;
+  slowDurationTicks: number;
+  hitsAir: boolean;
+  hitsGround: boolean;
+  hitsCommanders: boolean;
 }
 
 // Authored v1 roster. Stats are versioned here, never derived from NFTs.
@@ -127,6 +149,10 @@ export const TROOP_CARDS_V1: Record<string, TroopCardDef> = {
   sparkcaster: { id: "sparkcaster", name: "Sparkcaster", cost: 4, count: 1, hp: 90, damage: 22, range: 20, speed: 2, sight: 26, attackIntervalTicks: 14, moveType: "ground", hitsAir: true, hitsGround: true, structPriority: false, splashRadius: 6, projectileTicks: 6, slowPct: 0, slowDurationTicks: 0 },
   chog_guardian: { id: "chog_guardian", name: "Chog Guardian", cost: 4, count: 1, hp: 260, damage: 26, range: 2, speed: 2, sight: 24, attackIntervalTicks: 10, moveType: "ground", hitsAir: false, hitsGround: true, structPriority: false, splashRadius: 0, projectileTicks: 0, slowPct: 0, slowDurationTicks: 0 },
   hexwing: { id: "hexwing", name: "Hexwing", cost: 4, count: 1, hp: 120, damage: 18, range: 14, speed: 3, sight: 30, attackIntervalTicks: 10, moveType: "air", hitsAir: true, hitsGround: true, structPriority: false, splashRadius: 0, projectileTicks: 4, slowPct: 0, slowDurationTicks: 0 },
+  // v9 cheap-cycle air pair: 1 energy, dies to one tower shot. Ground-only
+  // defenders (melee, Sentry) cannot touch it; towers, archers, Sparkcaster,
+  // Hexwing, Deadeye and every spell can. Soaks tower shots and harasses.
+  rift_sprites: { id: "rift_sprites", name: "Rift Sprites", cost: 1, count: 2, hp: 24, damage: 8, range: 2, speed: 4, sight: 25, attackIntervalTicks: 8, moveType: "air", hitsAir: false, hitsGround: true, structPriority: false, splashRadius: 0, projectileTicks: 0, slowPct: 0, slowDurationTicks: 0 },
 };
 
 export const SPELL_CARDS_V1: Record<string, SpellCardDef> = {
@@ -134,6 +160,19 @@ export const SPELL_CARDS_V1: Record<string, SpellCardDef> = {
   chaos_bolt: { id: "chaos_bolt", name: "Chaos Bolt", cost: 3, kind: "bolt", radius: 8, damage: 120, buffPct: 0, buffDurationTicks: 0 },
   // Friendly troops only, never structures: temporary attack buff, override stacking.
   rally_horn: { id: "rally_horn", name: "Rally Horn", cost: 2, kind: "horn", radius: 12, damage: 0, buffPct: 40, buffDurationTicks: 120 },
+  // v9: delayed area blast. Hits enemy troops (ground + air), commanders,
+  // buildings, towers and Core. Structure damage is 30% of unit damage, so a
+  // tower takes 15 comets (60 energy) to fall to comets alone.
+  chaos_comet: {
+    id: "chaos_comet", name: "Chaos Comet", cost: 4, kind: "impact", radius: 6, damage: 140, buffPct: 0, buffDurationTicks: 0,
+    impact: { delayTicks: 6, unitDamage: 140, buildingDamage: 140, structureDamage: 42, slowPct: 0, slowDurationTicks: 0, hitsAir: true, hitsGround: true, hitsCommanders: true },
+  },
+  // v9: instant control. Small damage plus a 40% slow for 5s on enemy troops
+  // and commanders (ground + air). Never touches buildings or structures.
+  rift_snare: {
+    id: "rift_snare", name: "Rift Snare", cost: 2, kind: "impact", radius: 7, damage: 25, buffPct: 0, buffDurationTicks: 0,
+    impact: { delayTicks: 0, unitDamage: 25, buildingDamage: 0, structureDamage: 0, slowPct: 40, slowDurationTicks: 50, hitsAir: true, hitsGround: true, hitsCommanders: true },
+  },
 };
 
 /** B2.7a building card: a stationary, solid, finite-lifetime structure. */
@@ -161,7 +200,8 @@ export interface BuildingCardDef {
 // Sentry: ground-only turret, so Hexwing is its natural counter. Totem: no
 // attack, a cheap solid structure target that pulls structure-priority and
 // idle units that can see it. Neither is affected by Chaos Pulses, Chaos
-// Bolt, Rally Horn or commander abilities (all keep their unit-only rules).
+// Bolt, Rift Snare, Rally Horn or commander abilities (all keep their
+// unit-only rules). v9 Chaos Comet is the one spell that damages them.
 export const BUILDING_CARDS_V1: Record<string, BuildingCardDef> = {
   rift_sentry: { id: "rift_sentry", name: "Rift Sentry", cost: 4, kind: "building", hp: 320, damage: 16, attackIntervalTicks: 8, range: 16, hitsAir: false, hitsGround: true, footprint: 2, deployTicks: 10, lifetimeTicks: 300 },
   decoy_totem: { id: "decoy_totem", name: "Decoy Totem", cost: 2, kind: "building", hp: 260, damage: 0, attackIntervalTicks: 0, range: 0, hitsAir: false, hitsGround: false, footprint: 1, deployTicks: 0, lifetimeTicks: 200 },
@@ -495,7 +535,19 @@ export type CombatEvent =
   | { type: "pulse_expired"; tick: number; eventId: string; family: string }
   | { type: "rift_crossing"; tick: number; open: boolean; until: number }
   | { type: "building_spawned"; tick: number; player: PlayerIndex; buildingId: string; cardId: string; x: number; y: number; activeAt: number; expiresAt: number }
-  | { type: "building_removed"; tick: number; buildingId: string; owner: PlayerIndex; cardId: string; reason: "destroyed" | "expired" };
+  | { type: "building_removed"; tick: number; buildingId: string; owner: PlayerIndex; cardId: string; reason: "destroyed" | "expired" }
+  | { type: "spell_impact"; tick: number; player: PlayerIndex; cardId: string; impactId: string; x: number; y: number; units: number; buildings: number; structures: number };
+
+/** v9 queued impact spell, resolved in the damage pass of `impactTick`. */
+export interface PendingImpact {
+  id: string;
+  owner: PlayerIndex;
+  cardId: string;
+  x: number;
+  y: number;
+  castTick: number;
+  impactTick: number;
+}
 
 export interface CommanderSlotInput {
   commanderId: string;
@@ -524,6 +576,7 @@ export interface CombatState {
   commanders: CommanderEntity[];
   structures: StructureEntity[];
   buildings: BuildingEntity[];
+  pendingImpacts: PendingImpact[];
   chaos: null | {
     schedule: ChaosSchedule;
     warned: boolean[];
@@ -657,6 +710,7 @@ export function initMatch(config: CombatConfig): CombatState {
     commanders: [],
     structures,
     buildings: [],
+    pendingImpacts: [],
     chaos: config.chaos
       ? { schedule: config.chaos, warned: config.chaos.events.map(() => false), active: config.chaos.events.map(() => false), expired: config.chaos.events.map(() => false) }
       : null,
@@ -1331,7 +1385,7 @@ function applyDeploy(state: CombatState, cmd: DeployCommand, counter: { n: numbe
   const hand = state.hands[cmd.player];
   if (!hand.includes(cmd.cardId)) throw new AppError("UNPROCESSABLE", `Card ${cmd.cardId} not in hand`);
   if (state.energy[cmd.player] < def.cost) throw new AppError("UNPROCESSABLE", "Insufficient energy");
-  const isSpell = (def as SpellCardDef).kind === "bolt" || (def as SpellCardDef).kind === "horn";
+  const isSpell = ["bolt", "horn", "impact"].includes((def as SpellCardDef).kind);
   const bdef = (def as BuildingCardDef).kind === "building" ? (def as BuildingCardDef) : null;
   if (bdef) {
     const zone = buildingDeployCheck(state, cmd.player, cmd.x, cmd.y, bdef);
@@ -1345,7 +1399,8 @@ function applyDeploy(state: CombatState, cmd: DeployCommand, counter: { n: numbe
   playFromHand(state, cmd.player, cmd.cardId);
   state.seenSeqs.push(cmd.seq);
   if (isSpell) {
-    castSpell(state, cmd, def as SpellCardDef);
+    if ((def as SpellCardDef).kind === "impact") counter.n += 1;
+    castSpell(state, cmd, def as SpellCardDef, `s${counter.n}`);
     return;
   }
   if (bdef) {
@@ -1430,7 +1485,72 @@ function applyDeploy(state: CombatState, cmd: DeployCommand, counter: { n: numbe
   state.events.push({ type: "deploy", tick: state.tick, player: cmd.player, cardId: cmd.cardId, entityIds: ids });
 }
 
-function castSpell(state: CombatState, cmd: DeployCommand, def: SpellCardDef): void {
+/**
+ * v9 shared timed-status stacking (slow, haste, damage buff): while active,
+ * the strongest percent wins; every application refreshes the end tick to
+ * the latest application's duration; an expired status no longer lends its
+ * old percent to a new, weaker one (the v8 stale-percent bug).
+ */
+function stackPct(cur: number, until: number, tick: number, pct: number): number {
+  return tick < until ? Math.max(cur, pct) : pct;
+}
+function applySlow(e: { slowUntil: number; activeSlowPct: number }, tick: number, pct: number, dur: number): void {
+  e.activeSlowPct = stackPct(e.activeSlowPct, e.slowUntil, tick, pct);
+  e.slowUntil = tick + dur;
+}
+
+/** Squared gap from a point to a solid footprint square (0 inside it). */
+function footprintGap2(x: number, y: number, s: Solid): number {
+  const dx = Math.max(0, Math.abs(x - s.x) - s.r);
+  const dy = Math.max(0, Math.abs(y - s.y) - s.r);
+  return dx * dx + dy * dy;
+}
+
+/**
+ * Land one impact spell: enemy units by center distance, buildings and
+ * towers/Core when the radius overlaps their footprint. Damage is added to
+ * the tick's simultaneous damage map; slows apply immediately.
+ */
+function resolveImpact(state: CombatState, p: PendingImpact, fighters: Fighter[], hit: (id: string, amount: number) => void): void {
+  const def = SPELL_CARDS_V1[p.cardId]!;
+  const spec = def.impact!;
+  const r2 = def.radius * def.radius;
+  let units = 0;
+  let buildings = 0;
+  let structures = 0;
+  for (const u of fighters) {
+    if (u.owner === p.owner || u.hp <= 0) continue;
+    if (u.kind === "commander" && !spec.hitsCommanders) continue;
+    if (u.moveType === "air" ? !spec.hitsAir : !spec.hitsGround) continue;
+    if (dist2(u.x, u.y, p.x, p.y) > r2) continue;
+    if (spec.unitDamage > 0) hit(u.id, spec.unitDamage);
+    if (spec.slowPct > 0) applySlow(u, state.tick, spec.slowPct, spec.slowDurationTicks);
+    units += 1;
+  }
+  if (spec.buildingDamage > 0) {
+    for (const b of state.buildings) {
+      if (!b.alive || b.owner === p.owner || footprintGap2(p.x, p.y, { x: b.x, y: b.y, r: b.footprint }) > r2) continue;
+      hit(b.id, spec.buildingDamage);
+      buildings += 1;
+    }
+  }
+  if (spec.structureDamage > 0) {
+    for (const s of state.structures) {
+      if (!s.alive || s.owner === p.owner || footprintGap2(p.x, p.y, { x: s.x, y: s.y, r: STRUCTURE_FOOTPRINT_V5[s.structure] }) > r2) continue;
+      hit(s.id, spec.structureDamage);
+      structures += 1;
+    }
+  }
+  state.events.push({ type: "spell_impact", tick: state.tick, player: p.owner, cardId: p.cardId, impactId: p.id, x: p.x, y: p.y, units, buildings, structures });
+}
+
+function castSpell(state: CombatState, cmd: DeployCommand, def: SpellCardDef, impactId: string): void {
+  if (def.kind === "impact") {
+    const impactTick = state.tick + def.impact!.delayTicks;
+    state.pendingImpacts.push({ id: impactId, owner: cmd.player, cardId: def.id, x: cmd.x, y: cmd.y, castTick: state.tick, impactTick });
+    state.events.push({ type: "spell_cast", tick: state.tick, player: cmd.player, cardId: def.id, x: cmd.x, y: cmd.y, affected: 0 });
+    return;
+  }
   if (def.kind === "bolt") {
     let affected = 0;
     for (const t of state.troops) {
@@ -1503,8 +1623,7 @@ function applyAbilityEffect(
         affected += 1;
         break;
       case "slow":
-        t.slowUntil = state.tick + dur;
-        t.activeSlowPct = Math.max(t.activeSlowPct, fracToPct(effect.magnitude));
+        applySlow(t, state.tick, fracToPct(effect.magnitude), dur);
         affected += 1;
         break;
       case "stun":
@@ -1512,8 +1631,8 @@ function applyAbilityEffect(
         affected += 1;
         break;
       case "haste":
+        t.hastePct = stackPct(t.hastePct, t.hasteUntil, state.tick, fracToPct(effect.magnitude));
         t.hasteUntil = state.tick + dur;
-        t.hastePct = Math.max(t.hastePct, fracToPct(effect.magnitude));
         affected += 1;
         break;
       case "cleanse":
@@ -1523,8 +1642,8 @@ function applyAbilityEffect(
         affected += 1;
         break;
       case "damageBuff":
+        t.buffPct = stackPct(t.buffPct, t.buffUntil, state.tick, fracToPct(effect.magnitude));
         t.buffUntil = state.tick + dur;
-        t.buffPct = Math.max(t.buffPct, fracToPct(effect.magnitude));
         affected += 1;
         break;
       case "damageReflect": {
@@ -1868,8 +1987,7 @@ function advanceOneTick(state: CombatState, due: CombatCommand[], counter: { n: 
         hit(tgt.id, dmg);
         if (t.slowDurationTicks > 0 && (tgt.kind === "troop" || tgt.kind === "commander")) {
           const st = tgt as TroopEntity;
-          st.slowUntil = state.tick + t.slowDurationTicks;
-          st.activeSlowPct = Math.max(st.activeSlowPct, t.slowPct);
+          applySlow(st, state.tick, t.slowPct, t.slowDurationTicks);
         }
         if (t.splashRadius > 0) {
           splashHits.push({ x: tgt.x, y: tgt.y, owner: t.owner, damage: dmg, radius: t.splashRadius, primaryId: tgt.id });
@@ -1930,6 +2048,13 @@ function advanceOneTick(state: CombatState, due: CombatCommand[], counter: { n: 
       b.cooldownUntil = state.tick + b.interval;
     }
   }
+  // v9 impact spells land after attacks are collected and before damage
+  // resolves, sharing the one simultaneous damage pass (shields/armor,
+  // building death, crowns, Core victory, sudden death). Cast order breaks
+  // ties only for event order; damage is summed, so order never matters.
+  const landing = state.pendingImpacts.filter((p) => p.impactTick <= state.tick);
+  state.pendingImpacts = state.pendingImpacts.filter((p) => p.impactTick > state.tick);
+  for (const p of landing) resolveImpact(state, p, fighters, hit);
   const eventsBeforeDamage = state.events.length;
   const absorbDamage = (ent: TroopEntity | CommanderEntity, amount: number): number => {
     let rem = amount;
@@ -2087,6 +2212,7 @@ export function stateHash(state: CombatState): string {
         chaos: state.chaos ? { warned: state.chaos.warned, active: state.chaos.active, expired: state.chaos.expired, mods: [state.moveModUntil, state.moveModPct, state.energyModUntil, state.energyModPct, state.zoneMods, state.riftOpenUntil] } : null,
         structures: [...state.structures].sort((a, b) => (a.id < b.id ? -1 : 1)),
         buildings: [...state.buildings].sort((a, b) => (a.id < b.id ? -1 : 1)),
+        pendingImpacts: state.pendingImpacts,
         winner: state.winner,
         crowns: state.crowns,
       })}`
@@ -2176,6 +2302,14 @@ export function combatRulesetSummary() {
     cards: Object.values(CARDS_V1),
     troops: Object.values(TROOP_CARDS_V1),
     spells: Object.values(SPELL_CARDS_V1),
+    spellRules: {
+      targeting: "any point inside the arena; enemy-only, never friendly fire; each entity hit at most once per cast",
+      chaos_bolt: "instant, enemy troops only (ground + air), never commanders, buildings or structures",
+      rally_horn: "instant, friendly troops only, override stacking",
+      chaos_comet: "lands 6 ticks after cast in that tick's damage pass: 140 to enemy troops (ground + air) and commanders (shields/armor apply), 140 to enemy buildings, 42 to enemy towers/Core when the radius overlaps their footprint; crowns, Core win and sudden death follow the normal damage path",
+      rift_snare: "lands the cast tick: 25 to enemy troops and commanders (ground + air) plus 40% slow for 50 ticks; no building/structure effect",
+      statusStacking: "slow/haste/damage buff: strongest active percent wins, each application refreshes the end tick, expired statuses reset; slow composes after haste and before Chaos move/zone modifiers",
+    },
     structures: STRUCTURE_V1,
     buildings: {
       cards: Object.values(BUILDING_CARDS_V1),

@@ -15,6 +15,7 @@ import {
   scenarioReplay,
 } from "@/lib/arena-scenarios";
 import * as B from "@/lib/building-scenarios";
+import * as S from "@/lib/spell-scenarios";
 import { combatRulesetSummary } from "@/lib/combat";
 
 const strip = <T extends { trace?: unknown }>(o: T) => {
@@ -54,6 +55,20 @@ const out = {
     H_expiry: B.expiry(),
     bridgeClearance: B.bridgeClearance(),
     IJK_fullMatch: B.buildingMatch(),
+  },
+  // B2.7b tactical-card evidence.
+  tactical: {
+    A_cometTroops: S.cometTroops(),
+    B_cometBuilding: S.cometBuilding(),
+    C_cometStructures: S.cometStructures(),
+    D_cometSuddenDeath: (({ commands, cfg, ...r }) => (void commands, void cfg, r))(S.cometSuddenDeath()),
+    E_snareSlow: S.snareSlow(),
+    F_airGround: S.airGroundRules(),
+    GH_cheapDefense: S.cheapDefense(),
+    G_spritesSoak: S.spritesSoak(),
+    I_buildingSpellCounter: S.buildingSpellCounter(),
+    J_oppositeLane: S.oppositeLane(),
+    KL_fullMatch: S.tacticalMatch(),
   },
 };
 console.log(JSON.stringify(out, null, 1));

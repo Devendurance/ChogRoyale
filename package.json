@@ -19,7 +19,8 @@
     "chaos:validate": "tsx scripts/chaos-validate.ts",
     "combat:run": "tsx scripts/combat-run.ts",
     "arena:scenarios": "tsx scripts/arena-scenarios.ts",
-    "commanders:balance": "tsx scripts/commander-balance.ts"
+    "commanders:balance": "tsx scripts/commander-balance.ts",
+    "buildings:matchup": "tsx scripts/building-matchup.ts"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

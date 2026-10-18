@@ -51,7 +51,7 @@ const canFire = (id: string) => (s: CombatState) => status(s, id)?.blockedBy ===
 
 describe("B2.6b ability command contract", () => {
   it("bumps the ruleset and exposes ready state on deploy without firing", () => {
-    expect(COMBAT_RULESET_VERSION).toBe("v8");
+    expect(COMBAT_RULESET_VERSION).toBe("v9");
     const { s, cmds } = setup("reaver");
     stepUntil(s, cmds, (x) => x.tick >= 2);
     const ready = s.events.filter((e) => e.type === "ability_ready");
