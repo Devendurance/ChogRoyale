@@ -20,7 +20,8 @@
     "combat:run": "tsx scripts/combat-run.ts",
     "arena:scenarios": "tsx scripts/arena-scenarios.ts",
     "commanders:balance": "tsx scripts/commander-balance.ts",
-    "buildings:matchup": "tsx scripts/building-matchup.ts"
+    "buildings:matchup": "tsx scripts/building-matchup.ts",
+    "roster:scenarios": "tsx scripts/roster-scenarios.ts"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

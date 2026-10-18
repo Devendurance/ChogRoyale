@@ -145,6 +145,11 @@ export function botMove(state: CombatState, p: PlayerIndex, n: number): { cardId
       if (spot) return { cardId: card, ...spot };
       continue;
     }
+    if (card === "gale_netter") {
+      const spot = botAntiAirSpot(state, p);
+      if (spot) return { cardId: card, ...spot };
+      continue;
+    }
     // Side-neutral: the same (n, k) gives the same lane and the same depth
     // behind the bank for either player (p1 y is the y -> 160 - y mirror).
     for (let k = 0; k < lanes.length * 4; k++) {
@@ -197,6 +202,25 @@ export function botBuildingSpot(state: CombatState, p: PlayerIndex, def: Buildin
   for (const y of ys) {
     for (const dx of [0, 6, -6, 10, -10]) {
       if (buildingDeployCheck(state, p, laneX + dx, y, def).ok) return { x: laneX + dx, y };
+    }
+  }
+  return null;
+}
+
+/**
+ * B2.7c1 anti-air policy: Gale Netter is held until the enemy has a living
+ * flying unit anywhere, then placed behind the own lane tower on the side
+ * holding the most flyers (ties: left). Candidates are y-mirrored per side.
+ */
+export function botAntiAirSpot(state: CombatState, p: PlayerIndex): { x: number; y: number } | null {
+  const air = [...state.troops, ...state.commanders].filter((u) => u.owner !== p && u.hp > 0 && u.moveType === "air");
+  if (air.length === 0) return null;
+  const left = air.filter((u) => u.x <= 50).length;
+  const laneX = left >= air.length - left ? 30 : 70;
+  for (const depth of [50, 46, 54]) {
+    const y = p === 0 ? depth : ARENA_V2.maxY - depth;
+    for (const dx of [0, 4, -4, 8, -8]) {
+      if (troopDeployCheck(state.structures, p, laneX + dx, y, buildingSolids(state.buildings)).ok) return { x: laneX + dx, y };
     }
   }
   return null;

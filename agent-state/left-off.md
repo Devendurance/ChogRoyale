@@ -12,6 +12,7 @@ Last updated: 2026-10-18
 - B2.7a deployable buildings (ruleset v8): Rift Sentry (ground-only turret) and Decoy Totem (lure), solid footprints, crossing-mouth clearance, finite lifetimes, building-aware targeting. Full suite, typecheck, lint, build, scenarios, balance, runner green.
 - B2.7b tactical cards (ruleset v9): Chaos Comet (delayed blast, 42 structure damage), Rift Snare (slow + chip), Rift Sprites (1e air pair), stale status-percent bug fixed, building matchup harness (npm run buildings:matchup). 295 tests, typecheck, lint, build, all scripts green. Details in .fast-build/STATE.md.
 - Mirror fairness (ruleset v10): dev bot made side-neutral (per-player seeded lanes, mirrored depth, alternating first mover), zone band off-by-one fixed, engine mirror check 144/144, side wins now 36/36 and 35/37. Reaver is no longer weakest once the bot is fair.
+- B2.7c1 (ruleset v11): Gale Netter (3e anti-air, 40 vs air, 12 vs ground) and Riftbreaker (4e demolition, 66 vs buildings, building-first targeting). Swarm spawn offset mirror bug fixed. v11 matchup (128 games) + engine mirror 128/128 x2. Neon DB test unverified (connect timeouts). Details in .fast-build/STATE.md.
 
 ## Currently working on
 
@@ -24,11 +25,11 @@ Last updated: 2026-10-18
 
 ## Next up
 
-- B2.7c roster expansion, then B3 transport (Colyseus): authenticated match creation, entitlement verification feeding the trusted engine inputs, settlement events feeding legacy intake. Neither started; no fabricated matches exist.
+- Rerun src/db/nfts-index.test.ts when Neon is reachable. B2.7c2 roster (cheap swarm decks dominate the bot harness, Netter can sit dead in hand), then B3 transport (Colyseus): authenticated match creation, entitlement verification feeding the trusted engine inputs, settlement events feeding legacy intake. Neither started; no fabricated matches exist.
 
 ## Known issues / open items
 
-- Balance is bot-measured only (32 games/class). With the side-neutral bot: bulwark 16, reaver 18, deadeye 18, scout 15, warden 13. Earlier reaver 9/32 came mostly from the biased bot. Commanders rarely outlive one cooldown in bot play.
+- Balance is bot-measured only (32 games/class). v11 round robin: bulwark 15, reaver 19, deadeye 23, scout 13, warden 10 (v10: 16/18/18/15/13). Earlier reaver 9/32 came mostly from the biased bot. Commanders rarely outlive one cooldown in bot play.
 - Units have no unit-unit body collision yet (overlap allowed).
 
 - Human E2E at `/dev/onboarding` still unverified (Privy login, wallet sync, claim flow).

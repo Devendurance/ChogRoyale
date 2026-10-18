@@ -21,6 +21,18 @@ export const MATCHUP_DECKS_V9: Record<string, string[]> = {
   control: deckWith("rift_sentry", "chaos_archer", "sparkcaster", "rift_snare", "chaos_comet", "chog_guardian", "hexwing", "cmdr:free-warden"),
 };
 
+/**
+ * v11 decks (B2.7c1): turret is the unchanged v9 reference; siege swaps
+ * Rift Sprites for Riftbreaker, control swaps Chaos Archer for Gale Netter,
+ * and "breaker" is a new counterplay deck built around both new cards.
+ */
+export const MATCHUP_DECKS_V11: Record<string, string[]> = {
+  turret: MATCHUP_DECKS_V9.turret!,
+  siege: deckWith("rift_runner", "boulderback", "hexwing", "decoy_totem", "sparkcaster", "chaos_comet", "riftbreaker", "cmdr:free-reaver"),
+  control: deckWith("rift_sentry", "gale_netter", "sparkcaster", "rift_snare", "chaos_comet", "chog_guardian", "hexwing", "cmdr:free-warden"),
+  breaker: deckWith("riftbreaker", "gale_netter", "choglings", "rift_snare", "chaos_archer", "chog_guardian", "rift_sprites", "cmdr:free-scout"),
+};
+
 export const MATCHUP_SEEDS = ["m1", "m2", "m3", "m4", "m5", "m6", "m7", "m8"];
 
 export interface MatchupRow {
@@ -39,6 +51,8 @@ export interface MatchupRow {
   commanderDeploys: number;
   abilityActivations: number;
   spells: Record<string, number>;
+  /** Accepted troop/building deploys per card id (spells are in `spells`). */
+  deploys: Record<string, number>;
   /** Tower/Core damage dealt by impact spells (Comet). */
   spellStructureDamage: number;
   energySpent: [number, number];
@@ -52,6 +66,7 @@ export function measure(state: CombatState): Omit<MatchupRow, "p0" | "p1" | "see
   const spawnAt = new Map<string, number>();
   const buildings = { spawned: 0, destroyed: 0, expired: 0, lifetimeTicks: 0 };
   const spells: Record<string, number> = {};
+  const deploys: Record<string, number> = {};
   const energySpent: [number, number] = [0, 0];
   let spellStructureDamage = 0;
   for (const e of ev) {
@@ -67,6 +82,7 @@ export function measure(state: CombatState): Omit<MatchupRow, "p0" | "p1" | "see
       energySpent[e.player] += CARDS_V1[e.cardId]?.cost ?? 0;
     } else if (e.type === "deploy") {
       energySpent[e.player] += CARDS_V1[e.cardId]?.cost ?? 0;
+      deploys[e.cardId] = (deploys[e.cardId] ?? 0) + 1;
     } else if (e.type === "commander_deployed") {
       energySpent[e.player] += COMMANDER_COMBAT_PROFILE_V1[e.class as keyof typeof COMMANDER_COMBAT_PROFILE_V1]?.cost ?? 0;
     } else if (e.type === "ability_fired") {
@@ -98,6 +114,7 @@ export function measure(state: CombatState): Omit<MatchupRow, "p0" | "p1" | "see
     commanderDeploys: ev.filter((e) => e.type === "commander_deployed").length,
     abilityActivations: ev.filter((e) => e.type === "ability_fired" && e.trigger === "active").length,
     spells,
+    deploys,
     spellStructureDamage,
     energySpent,
     bySide: {
@@ -203,13 +220,20 @@ export function summarizeMatchup(rows: MatchupRow[]) {
   const spells: Record<string, number> = {};
   const deckWins: Record<string, number> = {};
   const deckGames: Record<string, number> = {};
+  const deploys: Record<string, number> = {};
+  /** `${deck} vs ${opponent}` -> wins/games over both sides (mirror decks excluded). */
+  const headToHead: Record<string, { wins: number; games: number }> = {};
   for (const r of rows) {
     endReasons[r.endReason ?? "unfinished"] = (endReasons[r.endReason ?? "unfinished"] ?? 0) + 1;
     for (const [k, v] of Object.entries(r.spells)) spells[k] = (spells[k] ?? 0) + v;
+    for (const [k, v] of Object.entries(r.deploys)) deploys[k] = (deploys[k] ?? 0) + v;
     if (r.p0 !== r.p1) {
-      for (const [side, deck] of [[0, r.p0], [1, r.p1]] as const) {
+      for (const [side, deck, opp] of [[0, r.p0, r.p1], [1, r.p1, r.p0]] as const) {
         deckGames[deck] = (deckGames[deck] ?? 0) + 1;
         if (r.winner === side) deckWins[deck] = (deckWins[deck] ?? 0) + 1;
+        const h = (headToHead[`${deck} vs ${opp}`] ??= { wins: 0, games: 0 });
+        h.games += 1;
+        if (r.winner === side) h.wins += 1;
       }
     }
   }
@@ -230,11 +254,13 @@ export function summarizeMatchup(rows: MatchupRow[]) {
     avgCommanderDeploys: avg((r) => r.commanderDeploys),
     avgAbilityActivations: avg((r) => r.abilityActivations),
     spells,
+    deploys,
     spellStructureDamageTotal: sum((r) => r.spellStructureDamage),
     avgEnergySpentPerMatch: avg((r) => r.energySpent[0] + r.energySpent[1]),
     towerDamagePer10Energy: Math.round((towerDmg * 10 * 10) / Math.max(1, spent)) / 10,
     deckWins,
     deckGames,
+    headToHead,
     replayIdentical: rows.every((r) => r.replayIdentical),
   };
 }

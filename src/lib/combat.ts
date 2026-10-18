@@ -34,7 +34,7 @@ import type { ChaosSchedule, ChaosEffect } from "@/lib/chaos";
 // v8 (B2.7a): deployable building cards (Rift Sentry, Decoy Totem) with
 // solid footprints, finite lifetimes, building-aware targeting and
 // placement rules that keep every river crossing mouth clear.
-export const COMBAT_RULESET_VERSION = "v10" as const;
+export const COMBAT_RULESET_VERSION = "v11" as const;
 export const TICKS_PER_SECOND = 10;
 // Standard ranked timeline (v2): 180s regulation, up to 120s sudden-death overtime.
 // Energy phases: 1x ticks 0-1199, 2x ticks 1200-2399, 3x ticks 2400-2999.
@@ -103,6 +103,17 @@ export interface TroopCardDef {
   projectileTicks: number;
   slowPct: number;
   slowDurationTicks: number;
+  /**
+   * v11 role targeting (absent = v10 rules). "air": eligible flying enemies
+   * in sight first, then other enemy units, then structures; locks only air.
+   * "building": enemy deployable buildings in sight first, then towers/Core,
+   * then units; locks only buildings (a tower lock yields to a building).
+   */
+  targetPriority?: "air" | "building";
+  /** v11: percent of damage dealt to every non-air target (ground units, buildings, towers, Core). */
+  vsGroundPct?: number;
+  /** v11: percent of damage dealt to enemy deployable buildings (overrides vsGroundPct). */
+  vsBuildingPct?: number;
 }
 
 export interface SpellCardDef {
@@ -153,6 +164,14 @@ export const TROOP_CARDS_V1: Record<string, TroopCardDef> = {
   // defenders (melee, Sentry) cannot touch it; towers, archers, Sparkcaster,
   // Hexwing, Deadeye and every spell can. Soaks tower shots and harasses.
   rift_sprites: { id: "rift_sprites", name: "Rift Sprites", cost: 1, count: 2, hp: 24, damage: 8, range: 2, speed: 4, sight: 25, attackIntervalTicks: 8, moveType: "air", hitsAir: false, hitsGround: true, structPriority: false, splashRadius: 0, projectileTicks: 0, slowPct: 0, slowDurationTicks: 0 },
+  // v11 dedicated anti-air: one ground body, 40 per shot vs flying units
+  // (outranges Hexwing 16 vs 14, one-shots each Sprite), only 30% (12) vs
+  // ground units, buildings, towers and Core. Melee and rushers kill it.
+  gale_netter: { id: "gale_netter", name: "Gale Netter", cost: 3, count: 1, hp: 120, damage: 40, range: 16, speed: 2, sight: 28, attackIntervalTicks: 10, moveType: "ground", hitsAir: true, hitsGround: true, structPriority: false, splashRadius: 0, projectileTicks: 4, slowPct: 0, slowDurationTicks: 0, targetPriority: "air", vsGroundPct: 30 },
+  // v11 slow demolition: walks bridges to enemy buildings first (in sight),
+  // 300% (66) vs deployable buildings, 22 vs towers/Core/units. Ignores
+  // troops while a structure is in sight, so cheap defenders swarm it.
+  riftbreaker: { id: "riftbreaker", name: "Riftbreaker", cost: 4, count: 1, hp: 240, damage: 22, range: 2, speed: 2, sight: 30, attackIntervalTicks: 11, moveType: "ground", hitsAir: false, hitsGround: true, structPriority: true, splashRadius: 0, projectileTicks: 0, slowPct: 0, slowDurationTicks: 0, targetPriority: "building", vsBuildingPct: 300 },
 };
 
 export const SPELL_CARDS_V1: Record<string, SpellCardDef> = {
@@ -1161,6 +1180,7 @@ function engageable(t: Point & { moveType: MoveType; range: number }, target: Co
  */
 function acquireTarget(t: TroopEntity, state: CombatState): CombatTarget | null {
   const open = riftOpen(state);
+  const prio = TROOP_CARDS_V1[t.cardId]?.targetPriority;
   if (t.targetId) {
     const cur =
       state.troops.find((e) => e.id === t.targetId && e.hp > 0) ??
@@ -1168,7 +1188,8 @@ function acquireTarget(t: TroopEntity, state: CombatState): CombatTarget | null 
       state.structures.find((s) => s.id === t.targetId && s.alive) ??
       state.buildings.find((b) => b.id === t.targetId && b.alive) ??
       null;
-    if (cur && cur.owner !== t.owner && hittable(t, cur as { moveType?: MoveType }) && (!t.structPriority || cur.kind === "structure" || cur.kind === "building")) {
+    const roleLock = prio === "air" ? (cur as { moveType?: MoveType } | null)?.moveType === "air" : prio === "building" ? cur?.kind === "building" : true;
+    if (cur && roleLock && cur.owner !== t.owner && hittable(t, cur as { moveType?: MoveType }) && (!t.structPriority || cur.kind === "structure" || cur.kind === "building")) {
       const tg = asTarget(cur);
       if (reach2(t.x, t.y, tg) <= t.range * t.range) return tg;
     }
@@ -1200,6 +1221,8 @@ function acquireTarget(t: TroopEntity, state: CombatState): CombatTarget | null 
   // v8: enemy buildings rank alongside towers/Core by reach (in sight only),
   // so a nearer Decoy Totem or Sentry pulls structure-priority units.
   const structs = [...state.structures, ...state.buildings].filter((s) => s.owner !== t.owner && s.alive);
+  if (prio === "air") return scan(foes.filter((e) => e.moveType === "air")) ?? scan(foes) ?? scan(structs);
+  if (prio === "building") return scan(state.buildings.filter((b) => b.owner !== t.owner && b.alive)) ?? scan(structs) ?? scan(foes);
   if (t.structPriority) return scan(structs) ?? scan(foes);
   return scan(foes) ?? scan(structs);
 }
@@ -1263,6 +1286,19 @@ function combatSpeed(e: Fighter, tick: number, state: CombatState): number {
     }
   }
   return Math.max(1, v);
+}
+
+/**
+ * v11 per-target role modifiers, applied after Rally Horn/commander damage
+ * buffs: vsBuildingPct vs deployable buildings, else vsGroundPct vs every
+ * non-air target. Commanders and cards without modifiers are unchanged.
+ */
+function roleDamage(e: Fighter, tgt: { kind: string; moveType?: MoveType }, dmg: number): number {
+  const def = e.kind === "troop" ? TROOP_CARDS_V1[(e as unknown as TroopEntity).cardId] : undefined;
+  if (!def) return dmg;
+  if (tgt.kind === "building" && def.vsBuildingPct !== undefined) return Math.floor((dmg * def.vsBuildingPct) / 100);
+  if (tgt.moveType !== "air" && def.vsGroundPct !== undefined) return Math.floor((dmg * def.vsGroundPct) / 100);
+  return dmg;
 }
 
 function combatDamage(e: Fighter, tick: number): number {
@@ -1435,9 +1471,13 @@ function applyDeploy(state: CombatState, cmd: DeployCommand, counter: { n: numbe
   }
   const tdef = def as TroopCardDef;
   const ids: string[] = [];
-  // Swarm offset: third+ unit sits one row back (+1), or -1 when +1 would
-  // land in the river or off the arena. Spawns never enter water.
-  const backDy = inRiver(cmd.y + 1) || cmd.y + 1 > ARENA_V2.maxY ? -1 : 1;
+  // Swarm offset: third+ unit sits one row back toward its owner's home
+  // (v11: P0 -1, P1 +1, mirror-exact; v10 used +1 for both, which was
+  // forward for P0), flipped when that row is river or off the arena.
+  // Spawns never enter water.
+  const home = cmd.player === 0 ? -1 : 1;
+  const backY = cmd.y + home;
+  const backDy = inRiver(backY) || backY < ARENA_V2.minY || backY > ARENA_V2.maxY ? -home : home;
   for (let i = 0; i < tdef.count; i++) {
     counter.n += 1;
     const id = `t${counter.n}`;
@@ -1972,7 +2012,7 @@ function advanceOneTick(state: CombatState, due: CombatCommand[], counter: { n: 
     const alive = tgt.kind === "troop" || tgt.kind === "commander" ? (tgt as TroopEntity).hp > 0 : (tgt as StructureEntity).alive;
     if (!alive) continue;
     if (t.owner !== tgt.owner && reach2(t.x, t.y, asTarget(tgt)) <= t.range * t.range) {
-      const dmg = combatDamage(t, state.tick);
+      const dmg = roleDamage(t, tgt, combatDamage(t, state.tick));
       if (t.projectileTicks > 0) {
         counter.n += 1;
         state.projectiles.push({
@@ -2304,6 +2344,11 @@ export function combatRulesetSummary() {
     cards: Object.values(CARDS_V1),
     troops: Object.values(TROOP_CARDS_V1),
     spells: Object.values(SPELL_CARDS_V1),
+    troopRoles: {
+      gale_netter: "anti-air: eligible flying enemies in sight first (then other units, then structures), locks only air targets; 40 per projectile vs air, vsGroundPct 30 (12) vs ground units, buildings, towers and Core",
+      riftbreaker: "demolition: enemy deployable buildings in sight first, then towers/Core, then units (structure priority, ignores troops while a structure is in sight); a tower lock yields to a building in sight; vsBuildingPct 300 (66) vs buildings, 22 otherwise; normal bridge routes and solid footprints",
+      modifiers: "role percent applies after Rally Horn and commander damage buffs, floored; projectiles carry the modified value",
+    },
     spellRules: {
       targeting: "any point inside the arena; enemy-only, never friendly fire; each entity hit at most once per cast",
       chaos_bolt: "instant, enemy troops only (ground + air), never commanders, buildings or structures",

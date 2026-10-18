@@ -39,4 +39,6 @@ Durable facts, conventions, and gotchas that should survive across sessions.
 - Arena-v2 river is y 74..86: test deploys at y 74..86 are rejected. Use y<=73 (p0) or y>=87 (p1).
 - Scenario evidence lives in src/lib/arena-scenarios.ts (shared by tests and scripts). botMatch plays from real hands. Hand-blind fixed command lists get mostly rejected.
 - Bot decisions must stay mirror-equivariant (bot-fairness.test.ts): no shared counters across players, p1 coordinates are y -> 160 - y mirrors, first mover alternates. Same-tick seq order changes entity ids and id tie-breaks, so a fixed P0-first order biases results. Check engine symmetry with engineMirrorCheck before trusting win rates.
+- engineMirrorCheck only covers cards in the decks it runs. Any per-player offset in spawn/targeting must point "toward own home" (P0 -y, P1 +y), never a fixed +y (v10 swarm bug, found only once choglings entered the v11 mirror decks). Add every new card to a mirror-checked deck.
+- Same-deck "mirror" matchup games are not true mirrors: each player's lane counter uses its own seed offset, so P0/P1 splits there are seed noise, not proof of bias.
 - Live browser E2E (Privy login) needs a human; no headless token path (dashboard test credentials disabled).
