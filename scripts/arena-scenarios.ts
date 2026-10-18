@@ -14,6 +14,7 @@ import {
   scenarioPocket,
   scenarioReplay,
 } from "@/lib/arena-scenarios";
+import * as B from "@/lib/building-scenarios";
 import { combatRulesetSummary } from "@/lib/combat";
 
 const strip = <T extends { trace?: unknown }>(o: T) => {
@@ -43,5 +44,16 @@ const out = {
     void b;
     return { identical: r.hashA === r.hashB, winner: a.winner, reason: a.endReason, crowns: a.crowns, ticks: a.ticks, ...counts };
   })(),
+  // B2.7a building evidence.
+  buildings: {
+    A_sentryDefense: B.sentryDefense(),
+    BCD_totemDistraction: B.totemDistraction(),
+    E_airVsSentry: B.airVsSentry(),
+    F_mirroredLanes: B.mirroredLanes(),
+    G_placementValue: B.placementValue(),
+    H_expiry: B.expiry(),
+    bridgeClearance: B.bridgeClearance(),
+    IJK_fullMatch: B.buildingMatch(),
+  },
 };
 console.log(JSON.stringify(out, null, 1));

@@ -31,7 +31,10 @@ import type { ChaosSchedule, ChaosEffect } from "@/lib/chaos";
 // v7 (B2.6b): the five active abilities fire only from validated player
 // ability commands (energy cost ABILITY_ACTIVATION_COST_V1, tick cooldowns);
 // deploy and onDeath triggers stay automatic. No active auto-fire remains.
-export const COMBAT_RULESET_VERSION = "v7" as const;
+// v8 (B2.7a): deployable building cards (Rift Sentry, Decoy Totem) with
+// solid footprints, finite lifetimes, building-aware targeting and
+// placement rules that keep every river crossing mouth clear.
+export const COMBAT_RULESET_VERSION = "v8" as const;
 export const TICKS_PER_SECOND = 10;
 // Standard ranked timeline (v2): 180s regulation, up to 120s sudden-death overtime.
 // Energy phases: 1x ticks 0-1199, 2x ticks 1200-2399, 3x ticks 2400-2999.
@@ -133,7 +136,44 @@ export const SPELL_CARDS_V1: Record<string, SpellCardDef> = {
   rally_horn: { id: "rally_horn", name: "Rally Horn", cost: 2, kind: "horn", radius: 12, damage: 0, buffPct: 40, buffDurationTicks: 120 },
 };
 
-export const CARDS_V1: Record<string, TroopCardDef | SpellCardDef> = { ...TROOP_CARDS_V1, ...SPELL_CARDS_V1 };
+/** B2.7a building card: a stationary, solid, finite-lifetime structure. */
+export interface BuildingCardDef {
+  id: string;
+  name: string;
+  cost: number;
+  kind: "building";
+  hp: number;
+  /** 0 = never attacks (Decoy Totem). */
+  damage: number;
+  attackIntervalTicks: number;
+  /** Center-to-center attack range, same metric as towers. */
+  range: number;
+  hitsAir: boolean;
+  hitsGround: boolean;
+  /** Chebyshev half-size of the solid footprint. */
+  footprint: number;
+  /** Ticks after placement before the first attack. */
+  deployTicks: number;
+  lifetimeTicks: number;
+}
+
+// Authored v1 buildings (original Chog Royale cards, no earlier spec exists).
+// Sentry: ground-only turret, so Hexwing is its natural counter. Totem: no
+// attack, a cheap solid structure target that pulls structure-priority and
+// idle units that can see it. Neither is affected by Chaos Pulses, Chaos
+// Bolt, Rally Horn or commander abilities (all keep their unit-only rules).
+export const BUILDING_CARDS_V1: Record<string, BuildingCardDef> = {
+  rift_sentry: { id: "rift_sentry", name: "Rift Sentry", cost: 4, kind: "building", hp: 320, damage: 16, attackIntervalTicks: 8, range: 16, hitsAir: false, hitsGround: true, footprint: 2, deployTicks: 10, lifetimeTicks: 300 },
+  decoy_totem: { id: "decoy_totem", name: "Decoy Totem", cost: 2, kind: "building", hp: 260, damage: 0, attackIntervalTicks: 0, range: 0, hitsAir: false, hitsGround: false, footprint: 1, deployTicks: 0, lifetimeTicks: 200 },
+};
+
+// Placement rules: clearance = free cells left between a building footprint
+// and any live structure/building footprint (enforced by the shared
+// "not within 2 cells of a live footprint" corner rule); crossingMouthRows =
+// rows next to each bank, across every crossing's x span, that stay clear.
+export const BUILDING_RULES_V1 = { clearance: 2, crossingMouthRows: 6, maxLivePerPlayer: 3 } as const;
+
+export const CARDS_V1: Record<string, TroopCardDef | SpellCardDef | BuildingCardDef> = { ...TROOP_CARDS_V1, ...SPELL_CARDS_V1, ...BUILDING_CARDS_V1 };
 
 // ---------------------------------------------------------------------------
 // B2.6a commander card economy.
@@ -402,6 +442,28 @@ export interface StructureEntity {
   alive: boolean;
 }
 
+export interface BuildingEntity {
+  id: string;
+  kind: "building";
+  owner: PlayerIndex;
+  cardId: string;
+  x: number;
+  y: number;
+  hp: number;
+  maxHp: number;
+  alive: boolean;
+  damage: number;
+  range: number;
+  interval: number;
+  cooldownUntil: number;
+  hitsAir: boolean;
+  hitsGround: boolean;
+  footprint: number;
+  targetId: string | null;
+  spawnTick: number;
+  expiresAt: number;
+}
+
 export type CombatEvent =
   | { type: "deploy"; tick: number; player: PlayerIndex; cardId: string; entityIds: string[] }
   | { type: "death"; tick: number; entityId: string; owner: PlayerIndex }
@@ -431,7 +493,9 @@ export type CombatEvent =
   | { type: "pulse_warning"; tick: number; eventId: string; family: string; activationTick: number }
   | { type: "pulse_active"; tick: number; eventId: string; family: string }
   | { type: "pulse_expired"; tick: number; eventId: string; family: string }
-  | { type: "rift_crossing"; tick: number; open: boolean; until: number };
+  | { type: "rift_crossing"; tick: number; open: boolean; until: number }
+  | { type: "building_spawned"; tick: number; player: PlayerIndex; buildingId: string; cardId: string; x: number; y: number; activeAt: number; expiresAt: number }
+  | { type: "building_removed"; tick: number; buildingId: string; owner: PlayerIndex; cardId: string; reason: "destroyed" | "expired" };
 
 export interface CommanderSlotInput {
   commanderId: string;
@@ -459,6 +523,7 @@ export interface CombatState {
   projectiles: ProjectileEntity[];
   commanders: CommanderEntity[];
   structures: StructureEntity[];
+  buildings: BuildingEntity[];
   chaos: null | {
     schedule: ChaosSchedule;
     warned: boolean[];
@@ -591,6 +656,7 @@ export function initMatch(config: CombatConfig): CombatState {
     projectiles: [],
     commanders: [],
     structures,
+    buildings: [],
     chaos: config.chaos
       ? { schedule: config.chaos, warned: config.chaos.events.map(() => false), active: config.chaos.events.map(() => false), expired: config.chaos.events.map(() => false) }
       : null,
@@ -738,6 +804,10 @@ export interface Solid {
 }
 export function solidsOf(structures: Array<{ x: number; y: number; alive: boolean; structure: "tower" | "core" }>): Solid[] {
   return structures.filter((s) => s.alive).map((s) => ({ x: s.x, y: s.y, r: STRUCTURE_FOOTPRINT_V5[s.structure] }));
+}
+/** v8: live building footprints are solid exactly like structure footprints. */
+export function buildingSolids(buildings: BuildingEntity[]): Solid[] {
+  return buildings.filter((b) => b.alive).map((b) => ({ x: b.x, y: b.y, r: b.footprint }));
 }
 function inSolid(x: number, y: number, s: Solid): boolean {
   return Math.abs(x - s.x) <= s.r && Math.abs(y - s.y) <= s.r;
@@ -948,12 +1018,19 @@ export function laneObjective(e: { owner: PlayerIndex; x: number }, structures: 
  * (x 5..49 left, 51..95 right) opens for the first 20 rows past the river
  * (p0 y 87..106, p1 y 54..73).
  */
-export function troopDeployCheck(structures: StructureEntity[], player: PlayerIndex, x: number, y: number): { ok: true; zone: "own" | "pocket-left" | "pocket-right" } | { ok: false; reason: string } {
+export function troopDeployCheck(
+  structures: StructureEntity[],
+  player: PlayerIndex,
+  x: number,
+  y: number,
+  extraSolids: Solid[] = []
+): { ok: true; zone: "own" | "pocket-left" | "pocket-right" } | { ok: false; reason: string } {
   const margin = ARENA_V2.deployMarginX;
   if (!inArena(x, y) || x < ARENA_V2.minX + margin || x > ARENA_V2.maxX - margin) return { ok: false, reason: "Deployment outside arena territory" };
   if (inRiver(y)) return { ok: false, reason: "Deployment on river or bridge" };
-  // v5: no deploys on or within swarm-offset reach (2 cells) of a live footprint.
-  if (solidsOf(structures).some((s) => Math.abs(x - s.x) <= s.r + 2 && Math.abs(y - s.y) <= s.r + 2)) {
+  // v5: no deploys on or within swarm-offset reach (2 cells) of a live footprint
+  // (v8: building footprints included via extraSolids).
+  if ([...solidsOf(structures), ...extraSolids].some((s) => Math.abs(x - s.x) <= s.r + 2 && Math.abs(y - s.y) <= s.r + 2)) {
     return { ok: false, reason: "Deployment on structure" };
   }
   if (sideOf(y) === player) return { ok: true, zone: "own" };
@@ -970,6 +1047,38 @@ export function troopDeployCheck(structures: StructureEntity[], player: PlayerIn
   return { ok: false, reason: "Deployment outside own territory" };
 }
 
+/**
+ * v8 building placement. The center and every footprint corner must pass
+ * the troop territory rule (own side or open pocket, x 5..95, never river or
+ * bridge, never within 2 cells of a live footprint), which leaves exactly
+ * BUILDING_RULES_V1.clearance (2) free cells to every live structure and
+ * building footprint. On top of that: no living ground unit inside the new footprint, the
+ * footprint (plus 1) never touches the crossingMouthRows next to either bank
+ * across any crossing span (left, right and Rift Ford), so no placement can
+ * seal a bridge, and at most maxLivePerPlayer live buildings per player.
+ */
+export function buildingDeployCheck(state: CombatState, player: PlayerIndex, x: number, y: number, def: BuildingCardDef): { ok: true } | { ok: false; reason: string } {
+  const rules = BUILDING_RULES_V1;
+  if (state.buildings.filter((b) => b.owner === player && b.alive).length >= rules.maxLivePerPlayer) return { ok: false, reason: "Building limit reached" };
+  const h = def.footprint;
+  const own = buildingSolids(state.buildings);
+  for (const [cx, cy] of [[x, y], [x - h, y - h], [x + h, y - h], [x - h, y + h], [x + h, y + h]] as const) {
+    const zone = troopDeployCheck(state.structures, player, cx, cy, own);
+    if (!zone.ok) return zone;
+  }
+  if (sideOf(y - h) !== sideOf(y + h)) return { ok: false, reason: "Deployment outside own territory" };
+  const rows = rules.crossingMouthRows;
+  const mouths = [[RIVER.minY - rows, RIVER.minY - 1], [RIVER.maxY + 1, RIVER.maxY + rows]] as const;
+  for (const c of openCrossings(true)) {
+    const xHit = x + h + 1 >= c.minX && x - h - 1 <= c.maxX;
+    if (xHit && mouths.some(([lo, hi]) => y + h + 1 >= lo && y - h - 1 <= hi)) return { ok: false, reason: "Building blocks a river crossing" };
+  }
+  if ([...state.troops, ...state.commanders].some((u) => u.hp > 0 && u.moveType === "ground" && Math.abs(u.x - x) <= h && Math.abs(u.y - y) <= h)) {
+    return { ok: false, reason: "Building footprint occupied" };
+  }
+  return { ok: true };
+}
+
 export interface CombatTarget {
   id: string;
   x: number;
@@ -977,7 +1086,7 @@ export interface CombatTarget {
   r: number;
 }
 function asTarget(e: { id: string; x: number; y: number; kind: string }): CombatTarget {
-  const r = e.kind === "structure" ? STRUCTURE_FOOTPRINT_V5[(e as StructureEntity).structure] : 0;
+  const r = e.kind === "structure" ? STRUCTURE_FOOTPRINT_V5[(e as StructureEntity).structure] : e.kind === "building" ? (e as BuildingEntity).footprint : 0;
   return { id: e.id, x: e.x, y: e.y, r };
 }
 
@@ -1003,8 +1112,9 @@ function acquireTarget(t: TroopEntity, state: CombatState): CombatTarget | null 
       state.troops.find((e) => e.id === t.targetId && e.hp > 0) ??
       state.commanders.find((c) => c.id === t.targetId && c.hp > 0) ??
       state.structures.find((s) => s.id === t.targetId && s.alive) ??
+      state.buildings.find((b) => b.id === t.targetId && b.alive) ??
       null;
-    if (cur && cur.owner !== t.owner && hittable(t, cur as { moveType?: MoveType }) && (!t.structPriority || cur.kind === "structure")) {
+    if (cur && cur.owner !== t.owner && hittable(t, cur as { moveType?: MoveType }) && (!t.structPriority || cur.kind === "structure" || cur.kind === "building")) {
       const tg = asTarget(cur);
       if (reach2(t.x, t.y, tg) <= t.range * t.range) return tg;
     }
@@ -1033,7 +1143,9 @@ function acquireTarget(t: TroopEntity, state: CombatState): CombatTarget | null 
     return best;
   };
   const foes = [...state.troops, ...state.commanders].filter((e) => e.owner !== t.owner && e.hp > 0 && hittable(t, e));
-  const structs = state.structures.filter((s) => s.owner !== t.owner && s.alive);
+  // v8: enemy buildings rank alongside towers/Core by reach (in sight only),
+  // so a nearer Decoy Totem or Sentry pulls structure-priority units.
+  const structs = [...state.structures, ...state.buildings].filter((s) => s.owner !== t.owner && s.alive);
   if (t.structPriority) return scan(structs) ?? scan(foes);
   return scan(foes) ?? scan(structs);
 }
@@ -1106,7 +1218,7 @@ function pickCommanderTarget(
   c: CommanderEntity,
   troops: TroopEntity[],
   commanders: CommanderEntity[],
-  structures: StructureEntity[],
+  structures: Array<StructureEntity | BuildingEntity>,
   preference: string,
   open = false
 ): CombatTarget | null {
@@ -1188,7 +1300,7 @@ function deployCommander(state: CombatState, cmd: DeployCommand): void {
   if (commanderAlive(state, cmd.player)) throw new AppError("UNPROCESSABLE", "Commander already deployed");
   const cost = COMMANDER_COMBAT_PROFILE_V1[snap.class].cost;
   if (state.energy[cmd.player] < cost) throw new AppError("UNPROCESSABLE", "Insufficient energy");
-  const zone = troopDeployCheck(state.structures, cmd.player, cmd.x, cmd.y);
+  const zone = troopDeployCheck(state.structures, cmd.player, cmd.x, cmd.y, buildingSolids(state.buildings));
   if (!zone.ok) throw new AppError("UNPROCESSABLE", zone.reason);
   state.energy[cmd.player] -= cost;
   playFromHand(state, cmd.player, cmd.cardId);
@@ -1220,8 +1332,12 @@ function applyDeploy(state: CombatState, cmd: DeployCommand, counter: { n: numbe
   if (!hand.includes(cmd.cardId)) throw new AppError("UNPROCESSABLE", `Card ${cmd.cardId} not in hand`);
   if (state.energy[cmd.player] < def.cost) throw new AppError("UNPROCESSABLE", "Insufficient energy");
   const isSpell = (def as SpellCardDef).kind === "bolt" || (def as SpellCardDef).kind === "horn";
-  if (!isSpell) {
-    const zone = troopDeployCheck(state.structures, cmd.player, cmd.x, cmd.y);
+  const bdef = (def as BuildingCardDef).kind === "building" ? (def as BuildingCardDef) : null;
+  if (bdef) {
+    const zone = buildingDeployCheck(state, cmd.player, cmd.x, cmd.y, bdef);
+    if (!zone.ok) throw new AppError("UNPROCESSABLE", zone.reason);
+  } else if (!isSpell) {
+    const zone = troopDeployCheck(state.structures, cmd.player, cmd.x, cmd.y, buildingSolids(state.buildings));
     if (!zone.ok) throw new AppError("UNPROCESSABLE", zone.reason);
   }
   if (isSpell && !inArena(cmd.x, cmd.y)) throw new AppError("UNPROCESSABLE", "Spell target outside arena");
@@ -1230,6 +1346,34 @@ function applyDeploy(state: CombatState, cmd: DeployCommand, counter: { n: numbe
   state.seenSeqs.push(cmd.seq);
   if (isSpell) {
     castSpell(state, cmd, def as SpellCardDef);
+    return;
+  }
+  if (bdef) {
+    counter.n += 1;
+    const b: BuildingEntity = {
+      id: `b${counter.n}`,
+      kind: "building",
+      owner: cmd.player,
+      cardId: bdef.id,
+      x: cmd.x,
+      y: cmd.y,
+      hp: bdef.hp,
+      maxHp: bdef.hp,
+      alive: true,
+      damage: bdef.damage,
+      range: bdef.range,
+      interval: bdef.attackIntervalTicks,
+      cooldownUntil: state.tick + bdef.deployTicks,
+      hitsAir: bdef.hitsAir,
+      hitsGround: bdef.hitsGround,
+      footprint: bdef.footprint,
+      targetId: null,
+      spawnTick: state.tick,
+      expiresAt: state.tick + bdef.lifetimeTicks,
+    };
+    state.buildings.push(b);
+    state.events.push({ type: "deploy", tick: state.tick, player: cmd.player, cardId: cmd.cardId, entityIds: [b.id] });
+    state.events.push({ type: "building_spawned", tick: state.tick, player: cmd.player, buildingId: b.id, cardId: b.cardId, x: b.x, y: b.y, activeAt: b.cooldownUntil, expiresAt: b.expiresAt });
     return;
   }
   const tdef = def as TroopCardDef;
@@ -1628,6 +1772,16 @@ function advanceOneTick(state: CombatState, due: CombatCommand[], counter: { n: 
       }
     }
   }
+  // v8 building expiry runs before commands, movement and attacks, so an
+  // expired building neither attracts nor blocks anything this tick, and an
+  // expiry always wins over same-tick damage (stable priority).
+  for (const b of state.buildings) {
+    if (b.alive && state.tick >= b.expiresAt) {
+      b.alive = false;
+      state.events.push({ type: "building_removed", tick: state.tick, buildingId: b.id, owner: b.owner, cardId: b.cardId, reason: "expired" });
+    }
+  }
+  state.buildings = state.buildings.filter((b) => b.alive);
   for (const cmd of due) {
     try {
       applyCommand(state, cmd, counter);
@@ -1646,7 +1800,7 @@ function advanceOneTick(state: CombatState, due: CombatCommand[], counter: { n: 
   const fighters: Fighter[] = [...state.troops, ...state.commanders];
   const open = riftOpen(state);
   // v5: footprints of structures alive at movement time are solid.
-  const solids = solidsOf(state.structures);
+  const solids = [...solidsOf(state.structures), ...buildingSolids(state.buildings)];
   const advance = (u: TroopEntity | CommanderEntity, target: CombatTarget | null) => {
     const speed = combatSpeed(u, state.tick, state);
     const lane = target ? null : laneObjective(u, state.structures);
@@ -1669,13 +1823,14 @@ function advanceOneTick(state: CombatState, due: CombatCommand[], counter: { n: 
   }
   for (const c of state.commanders) {
     if (c.hp <= 0 || state.tick < c.stunUntil) continue;
-    advance(c, pickCommanderTarget(c, state.troops, state.commanders, state.structures, c.preference, open));
+    advance(c, pickCommanderTarget(c, state.troops, state.commanders, [...state.structures, ...state.buildings], c.preference, open));
   }
   // Simultaneous attacks.
-  const byId = new Map<string, TroopEntity | CommanderEntity | StructureEntity>();
+  const byId = new Map<string, TroopEntity | CommanderEntity | StructureEntity | BuildingEntity>();
   for (const t of state.troops) byId.set(t.id, t);
   for (const c of state.commanders) byId.set(c.id, c);
   for (const s of state.structures) byId.set(s.id, s);
+  for (const b of state.buildings) byId.set(b.id, b);
   const damage = new Map<string, number>();
   const hit = (id: string, amount: number) => damage.set(id, (damage.get(id) ?? 0) + amount);
   // Projectile arrivals resolve before new attacks (deterministic order).
@@ -1751,6 +1906,30 @@ function advanceOneTick(state: CombatState, due: CombatCommand[], counter: { n: 
     }
     if (best) hit(best.id, def.damage);
   }
+  // v8 Rift Sentry fire: per-building cooldown (first shot at activeAt),
+  // keeps its current target while it stays hittable and in range, else the
+  // nearest hittable enemy unit by center distance, ties by id.
+  for (const b of state.buildings) {
+    if (!b.alive || b.damage <= 0 || state.tick < b.cooldownUntil) continue;
+    const valid = (t: Fighter) => t.owner !== b.owner && t.hp > 0 && hittable(b, t) && dist2(b.x, b.y, t.x, t.y) <= b.range * b.range;
+    let target = b.targetId ? fighters.find((t) => t.id === b.targetId && valid(t)) ?? null : null;
+    if (!target) {
+      let bestD = Infinity;
+      for (const t of fighters) {
+        if (!valid(t)) continue;
+        const d = dist2(b.x, b.y, t.x, t.y);
+        if (d < bestD || (d === bestD && target !== null && t.id < target.id)) {
+          bestD = d;
+          target = t;
+        }
+      }
+    }
+    b.targetId = target ? target.id : null;
+    if (target) {
+      hit(target.id, b.damage);
+      b.cooldownUntil = state.tick + b.interval;
+    }
+  }
   const eventsBeforeDamage = state.events.length;
   const absorbDamage = (ent: TroopEntity | CommanderEntity, amount: number): number => {
     let rem = amount;
@@ -1769,6 +1948,16 @@ function advanceOneTick(state: CombatState, due: CombatCommand[], counter: { n: 
     if (!ent) continue;
     if (ent.kind === "troop" || ent.kind === "commander") {
       absorbDamage(ent as TroopEntity | CommanderEntity, amount);
+    } else if (ent.kind === "building") {
+      const b = ent as BuildingEntity;
+      if (b.alive) {
+        b.hp -= amount;
+        if (b.hp <= 0) {
+          b.hp = 0;
+          b.alive = false;
+          state.events.push({ type: "building_removed", tick: state.tick, buildingId: b.id, owner: b.owner, cardId: b.cardId, reason: "destroyed" });
+        }
+      }
     } else {
       const st = ent as StructureEntity;
       if (st.alive) {
@@ -1784,6 +1973,8 @@ function advanceOneTick(state: CombatState, due: CombatCommand[], counter: { n: 
       }
     }
   }
+  // Destroyed buildings leave no rubble: entity and footprint are removed now.
+  state.buildings = state.buildings.filter((b) => b.alive);
   const deadTroops = state.troops.filter((t) => t.hp <= 0);
   state.troops = state.troops.filter((t) => t.hp > 0);
   for (const d of deadTroops) state.events.push({ type: "death", tick: state.tick, entityId: d.id, owner: d.owner });
@@ -1895,6 +2086,7 @@ export function stateHash(state: CombatState): string {
         commanders: [...state.commanders].sort((a, b) => (a.id < b.id ? -1 : 1)),
         chaos: state.chaos ? { warned: state.chaos.warned, active: state.chaos.active, expired: state.chaos.expired, mods: [state.moveModUntil, state.moveModPct, state.energyModUntil, state.energyModPct, state.zoneMods, state.riftOpenUntil] } : null,
         structures: [...state.structures].sort((a, b) => (a.id < b.id ? -1 : 1)),
+        buildings: [...state.buildings].sort((a, b) => (a.id < b.id ? -1 : 1)),
         winner: state.winner,
         crowns: state.crowns,
       })}`
@@ -1985,6 +2177,17 @@ export function combatRulesetSummary() {
     troops: Object.values(TROOP_CARDS_V1),
     spells: Object.values(SPELL_CARDS_V1),
     structures: STRUCTURE_V1,
+    buildings: {
+      cards: Object.values(BUILDING_CARDS_V1),
+      rules: BUILDING_RULES_V1,
+      placement:
+        "center and all footprint corners pass troop territory rules (own side or open pocket, x 5..95, no river/bridge, not within 2 of a live footprint, which leaves 2 free cells between footprints); footprint+1 never touches the crossingMouthRows beside either bank over any crossing span (left, right, Rift Ford); no living ground unit inside; at most maxLivePerPlayer live per player",
+      targeting:
+        "enemy buildings join towers/Core in the structure pool (in sight, ranked by reach); structure-priority units prefer them when nearer; others take them only with no enemy unit in sight; air units can hit them; Sentry hits ground only",
+      lifecycle:
+        "deploy event + building_spawned; Sentry first shot at activeAt (spawn + deployTicks), then every attackIntervalTicks; expiry at the start of tick expiresAt (before commands, movement and attacks, so it beats same-tick damage); destruction at damage resolution; both emit building_removed and remove entity + footprint immediately; never award crowns",
+      immunities: "Chaos Pulses, Chaos Bolt, Rally Horn and commander abilities never affect buildings (unchanged unit-only rules); troop splash hits only the primary building",
+    },
     playableCards: Object.keys(CARDS_V1),
     commanders: {
       slots: 1,
@@ -2015,6 +2218,6 @@ export function combatRulesetSummary() {
       buff: "override on recast, fully reverts on expiry, troops only",
     },
     deferred: [],
-    compatibility: "v7 differs from v6 only in commander actives (command-driven, energy-costed) and ability events; v6 configs are rejected by validation. v6 configs differ from v5 (decks require a commander card; commanders spawn only by deploy; ids c<player>-<n>); v5 configs are rejected by validation. No persisted replays of earlier versions exist (pre-release, headless fixtures only)",
+    compatibility: "v8 adds building cards, state.buildings (hashed) and building events; decks without buildings simulate as in v7 apart from the version in the hash domain; v7 configs are rejected by validation. v7 differs from v6 only in commander actives (command-driven, energy-costed) and ability events; v6 configs are rejected by validation. v6 configs differ from v5 (decks require a commander card; commanders spawn only by deploy; ids c<player>-<n>); v5 configs are rejected by validation. No persisted replays of earlier versions exist (pre-release, headless fixtures only)",
   };
 }

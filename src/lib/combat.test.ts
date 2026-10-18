@@ -637,7 +637,7 @@ describe("b2.4 match rules", () => {
   });
   it("ruleset reports v2 with phases, crowns, and the compatibility boundary", () => {
     const summary = combatRulesetSummary();
-    expect(summary.version).toBe("v7");
+    expect(summary.version).toBe("v8");
     expect(summary.timeline.overtimeTicks).toBe(1200);
   });
 });

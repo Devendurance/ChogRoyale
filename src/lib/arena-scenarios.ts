@@ -18,6 +18,10 @@ import {
   isCommanderCard,
   freeStarterSlot,
   ABILITY_ACTIVATION_COST_V1,
+  BUILDING_CARDS_V1,
+  buildingDeployCheck,
+  buildingSolids,
+  type BuildingCardDef,
   type CombatCommand,
   type CommanderSlotInput,
   type CombatConfig,
@@ -134,10 +138,35 @@ export function botMove(state: CombatState, p: PlayerIndex, n: number): { cardId
       if (own[0]) return { cardId: card, x: own[0].x, y: own[0].y };
       continue;
     }
+    const bdef = BUILDING_CARDS_V1[card];
+    if (bdef) {
+      const spot = botBuildingSpot(state, p, bdef);
+      if (spot) return { cardId: card, ...spot };
+      continue;
+    }
     for (let k = 0; k < lanes.length * 4; k++) {
       const x = lanes[(n + k) % lanes.length]!;
       const y = p === 0 ? 50 + ((n * 7 + k * 5) % 24) : 87 + ((n * 11 + k * 5) % 24);
-      if (troopDeployCheck(state.structures, p, x, y).ok) return { cardId: card, x, y };
+      if (troopDeployCheck(state.structures, p, x, y, buildingSolids(state.buildings)).ok) return { cardId: card, x, y };
+    }
+  }
+  return null;
+}
+
+/**
+ * B2.7a building policy: only when an enemy unit is on the bot's half of the
+ * arena. Defends the lane holding the most such enemies (ties: left), in
+ * front of its own lane tower; first legal spot from a fixed candidate list.
+ */
+export function botBuildingSpot(state: CombatState, p: PlayerIndex, def: BuildingCardDef): { x: number; y: number } | null {
+  const invaders = [...state.troops, ...state.commanders].filter((u) => u.owner !== p && u.hp > 0 && (p === 0 ? u.y < 80 : u.y > 80));
+  if (invaders.length === 0) return null;
+  const left = invaders.filter((u) => u.x <= 50).length;
+  const laneX = left >= invaders.length - left ? 30 : 70;
+  const ys = p === 0 ? [56, 52, 60, 48] : [104, 108, 100, 112];
+  for (const y of ys) {
+    for (const dx of [0, 6, -6, 10, -10]) {
+      if (buildingDeployCheck(state, p, laneX + dx, y, def).ok) return { x: laneX + dx, y };
     }
   }
   return null;
