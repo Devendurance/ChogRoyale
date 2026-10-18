@@ -6,8 +6,8 @@ Durable facts, conventions, and gotchas that should survive across sessions.
 
 - Long sessions keep state in `agent-state/`: `project-state.md`, `memory.md`, `left-off.md`.
 - Rules and preferences live in `AGENTS.md`. Read it first.
-- Do not push without explicit approval. Repo stays private.
-- Meaningful checkpoints get committed (per AGENTS.md auto-commit rule); push only when approved.
+- Auto-commit and push meaningful checkpoints per current `AGENTS.md`. Repo stays private.
+- Blender experiments and test outputs belong in `C:/Users/USER/Documents/ChogRoyale-Assets`, outside the source repository. Reuse the existing MCP connection, bind its bridge to loopback, and preserve live Blender work.
 
 ## Project facts
 

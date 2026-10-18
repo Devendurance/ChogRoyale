@@ -95,6 +95,11 @@
 - Always follow or reference the UI design system when creating or reviewing components or pages.
 - Design System: @DESIGN.md
 
+## LOCAL ASSET PRODUCTION
+
+- Keep Blender experiments and test outputs outside this repository in `C:/Users/USER/Documents/ChogRoyale-Assets`.
+- Reuse the existing local Blender MCP connection, keep its bridge bound to loopback, and preserve live Blender work when verifying or producing assets.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 ## This is NOT the Next.js you know

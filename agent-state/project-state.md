@@ -1,6 +1,6 @@
 # Project State
 
-Last updated: 2026-10-17
+Last updated: 2026-10-18
 
 ## What this is
 
@@ -33,3 +33,10 @@ Last updated: 2026-10-17
 - Failure writes never regress resolved metadata rows (fixes concurrent-worker race).
 - Token 0 absent; collection = token IDs 1..1969; all metadata under one shared IPFS CID.
 - Tier is prestige-only in commander derivation; tokenId is identity-only, never a stat input.
+
+## Local asset workflow
+
+- Blender 5.2.2 LTS is installed at `C:/Users/USER/AppData/Local/Programs/Blender Foundation/Blender 5.2/blender.exe`.
+- Codex Desktop already has `mcp_servers.blender`, running `C:/Users/USER/AppData/Local/hermes/bin/uvx.EXE` with `mcp-for-blender`.
+- Matching Blender add-on is enabled with saved preferences and telemetry disabled. The bridge listens on `127.0.0.1:9876`.
+- Blender MCP verified end to end through scene inspection, test `.blend` save, GLB export, and a 384x384 PNG render inspected through MCP. Outputs are in `C:/Users/USER/Documents/ChogRoyale-Assets/mcp-verification-20261018`.

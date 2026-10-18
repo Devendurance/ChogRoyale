@@ -11,7 +11,9 @@ Last updated: 2026-10-18
 
 ## Currently working on
 
-- Nothing in progress.
+- No game feature recorded as in progress here. Preserve existing game work in the working tree.
+- Local Blender MCP setup verified end to end through scene inspection, `.blend` save, GLB export, and a 384x384 PNG render inspected through MCP. Test outputs are in `C:/Users/USER/Documents/ChogRoyale-Assets/mcp-verification-20261018`.
+- Verification uses a separate Blender instance, PID 31608, with the bridge at `127.0.0.1:9876`. Original Blender PID 28880 was left untouched.
 
 ## Next up
 
