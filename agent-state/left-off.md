@@ -14,6 +14,7 @@ Last updated: 2026-10-18
 - Mirror fairness (ruleset v10): dev bot made side-neutral (per-player seeded lanes, mirrored depth, alternating first mover), zone band off-by-one fixed, engine mirror check 144/144, side wins now 36/36 and 35/37. Reaver is no longer weakest once the bot is fair.
 - B2.7c1 (ruleset v11): Gale Netter (3e anti-air, 40 vs air, 12 vs ground) and Riftbreaker (4e demolition, 66 vs buildings, building-first targeting). Swarm spawn offset mirror bug fixed. v11 matchup (128 games) + engine mirror 128/128 x2. Neon DB test later passed in the full suite. Details in .fast-build/STATE.md.
 - B2.7c2 (ruleset v12): Ember Mauler (4e, 220hp, radius-4 ground shockwave around itself, 24/swing, no air). Counters clustered cheap ground pushes; loses to flyers, ranged, tank-led pushes and melee duels. Swarm deck still 64/64 with or without it. Lane-swap check shows the engine and bot are side-neutral; the raw Chaos schedule is not. Full suite 28/28 incl. Neon.
+- Ranked Chaos spatial fairness (ruleset v13): raw B1 zones were side-biased (Ember 128/169, Rift Shift 158/172 events across 6 trait sets x 50 seeds; Rift Shift skews to P1 home 139 vs 19). Combat now closes zones under the mirror with budget split. Also fixed Ember Rift damage, which never landed before v13. Raw side swaps 40/48 -> 48/48, lane-swap raw 31/40 -> 40/40. B1 schedules and hashes untouched.
 
 ## Currently working on
 
@@ -26,7 +27,7 @@ Last updated: 2026-10-18
 
 ## Next up
 
-- B2.7c3 cheap-deck economy investigation (swarm deck 64/64), then spawner building, then B3 transport (Colyseus). Decide whether Chaos zone schedules must be side-neutral per match before ranked play. B3 transport covers: authenticated match creation, entitlement verification feeding the trusted engine inputs, settlement events feeding legacy intake. Neither started; no fabricated matches exist.
+- B2.7c3 cheap-deck economy investigation (swarm deck 64/64), then spawner building, then B3 transport (Colyseus). Ember Rift now really deals damage, so re-baseline bot matchups before reading balance. B3 transport covers: authenticated match creation, entitlement verification feeding the trusted engine inputs, settlement events feeding legacy intake. Neither started; no fabricated matches exist.
 
 ## Known issues / open items
 

@@ -34,7 +34,7 @@ import type { ChaosSchedule, ChaosEffect } from "@/lib/chaos";
 // v8 (B2.7a): deployable building cards (Rift Sentry, Decoy Totem) with
 // solid footprints, finite lifetimes, building-aware targeting and
 // placement rules that keep every river crossing mouth clear.
-export const COMBAT_RULESET_VERSION = "v12" as const;
+export const COMBAT_RULESET_VERSION = "v13" as const;
 export const TICKS_PER_SECOND = 10;
 // Standard ranked timeline (v2): 180s regulation, up to 120s sudden-death overtime.
 // Energy phases: 1x ticks 0-1199, 2x ticks 1200-2399, 3x ticks 2400-2999.
@@ -1288,6 +1288,30 @@ function zoneOf(y: number): string {
   return "center";
 }
 
+export const chaosZoneOf = zoneOf;
+
+const CHAOS_ZONE_ORDER = ["north", "center", "south"] as const;
+const CHAOS_ZONE_MIRROR: Record<string, string> = { north: "south", south: "north", center: "center" };
+
+/**
+ * v13 ranked Chaos spatial rule. B1 schedules name absolute zones, and north
+ * is P1's home third while south is P0's, so a raw ["north"] hazard only ever
+ * lands on one side's base. Ranked play closes every zone set under the
+ * y -> 160 - y mirror and spreads the authored budget over the closure:
+ * `num / den` = authored zones / closed zones. Mirror-invariant sets
+ * ({center}, {north, south}, all three) are unchanged.
+ */
+export function rankedChaosZones(zones: readonly string[]): { zones: string[]; num: number; den: number } {
+  const authored = new Set(zones.filter((z) => z in CHAOS_ZONE_MIRROR));
+  const closed = new Set([...authored].flatMap((z) => [z, CHAOS_ZONE_MIRROR[z]!]));
+  return { zones: CHAOS_ZONE_ORDER.filter((z) => closed.has(z)), num: authored.size, den: Math.max(1, closed.size) };
+}
+
+/** Exact integer share of an authored per-tick hazard on tick `elapsed` (0-based) after activation. */
+export function rankedHazardTick(perTick: number, elapsed: number, num: number, den: number): number {
+  return Math.floor(((elapsed + 1) * perTick * num) / den) - Math.floor((elapsed * perTick * num) / den);
+}
+
 function combatSpeed(e: Fighter, tick: number, state: CombatState): number {
   let v = e.speed;
   if (tick < e.hasteUntil) v = Math.floor((v * (100 + e.hastePct)) / 100);
@@ -1845,7 +1869,11 @@ function applyChaosActivation(state: CombatState, ev: { family: string; effect: 
   } else if (effect.kind === "zone") {
     // RIFT_SHIFT: the named zone keeps its slowed/hasted speed modifier and
     // the central Rift Ford opens as a real ground crossing for both players.
-    state.zoneMods.push({ zone: effect.crossing, modifier: effect.modifier, until });
+    // v13: a home-third crossing applies to both home thirds for half the
+    // authored time (same zone-tick budget); the Ford keeps full duration.
+    const ranked = rankedChaosZones([effect.crossing]);
+    const zoneUntil = activationTick + Math.max(1, Math.floor((durTicks * ranked.num) / ranked.den));
+    for (const zone of ranked.zones) state.zoneMods.push({ zone, modifier: effect.modifier, until: zoneUntil });
     state.riftOpenUntil = Math.max(state.riftOpenUntil, until);
     state.events.push({ type: "rift_crossing", tick: state.tick, open: true, until: state.riftOpenUntil });
   } else if (effect.kind === "buff" && effect.stat === "attack") {
@@ -2122,6 +2150,24 @@ function advanceOneTick(state: CombatState, due: CombatCommand[], counter: { n: 
   const landing = state.pendingImpacts.filter((p) => p.impactTick <= state.tick);
   state.pendingImpacts = state.pendingImpacts.filter((p) => p.impactTick > state.tick);
   for (const p of landing) resolveImpact(state, p, fighters, hit);
+  // Ember Rift hazard ticks join the same damage pass (v13; through v12 they
+  // were queued after the pass and silently dropped). Window = activation
+  // tick .. activation + duration - 1, the pulse's active window. Ranked
+  // mirror-closed zones share the authored damage budget exactly.
+  if (state.chaos) {
+    for (const ev of state.chaos.schedule.events) {
+      if (ev.family !== "ember_rift" || ev.effect.kind !== "hazard") continue;
+      const elapsed = state.tick - Math.round(ev.activationMs / 100);
+      if (elapsed < 0 || elapsed >= Math.max(1, Math.round(ev.effect.durationMs / 100))) continue;
+      const ranked = rankedChaosZones(ev.zones);
+      const dmg = rankedHazardTick(Math.max(1, Math.round(ev.effect.dps / 10)), elapsed, ranked.num, ranked.den);
+      if (dmg <= 0) continue;
+      for (const t of [...state.troops, ...state.commanders]) {
+        if ((t.owner !== 0 && t.owner !== 1) || t.hp <= 0) continue;
+        if (ranked.zones.includes(zoneOf(t.y))) hit(t.id, dmg);
+      }
+    }
+  }
   const eventsBeforeDamage = state.events.length;
   const absorbDamage = (ent: TroopEntity | CommanderEntity, amount: number): number => {
     let rem = amount;
@@ -2206,19 +2252,6 @@ function advanceOneTick(state: CombatState, due: CombatCommand[], counter: { n: 
         state.events.push({ type: "pulse_expired", tick: state.tick, eventId: ev.id, family: ev.family });
       }
     });
-    for (let i = 0; i < schedule.events.length; i++) {
-      const ev = schedule.events[i] as (typeof schedule.events)[number];
-      if (!state.chaos!.active[i] || state.chaos!.expired[i] || ev.family !== "ember_rift") continue;
-      const fx = ev.effect as { kind: string; dps?: number };
-      if (fx.kind !== "hazard") continue;
-      const perTick = Math.max(1, Math.round(((fx.dps ?? 0) as number) / 10));
-      for (const t of [...state.troops, ...state.commanders]) {
-        if (t.owner !== 0 && t.owner !== 1) continue;
-        if (t.hp <= 0) continue;
-        if (!(ev.zones as string[]).includes(zoneOf(t.y))) continue;
-        hit(t.id, perTick);
-      }
-    }
   }
   // Victory / lifecycle (ranked rules v2).
   // Crowns: +1 per enemy tower destroyed, Core kill = instant 3-crown win.
@@ -2419,12 +2452,14 @@ export function combatRulesetSummary() {
       ticks: "activationMs/100, warning 50 ticks prior",
       zones: "north y>=107, center 54..106, south y<=53 (mirror-exact)",
       dpsResolution: "per-tick max(1, round(dps/10))",
+      rankedSpatialRule:
+        "v13: Ember Rift and Rift Shift zone sets are closed under the y -> 160 - y mirror (north <-> south, center fixed). The authored budget is spread over the closure (authored/closed zones): Ember per-tick damage via exact integer floor accumulation, Rift Shift zone modifier time (Rift Ford keeps full duration). Mirror-invariant sets are unchanged. Frost Crossing, Energy Surge and Chaos Rally are board-wide. Raw B1 schedules and scheduleHash are untouched",
     },
     statuses: {
       slow: "refresh duration, strongest pct wins, fully reverts on expiry",
       buff: "override on recast, fully reverts on expiry, troops only",
     },
     deferred: [],
-    compatibility: "v8 adds building cards, state.buildings (hashed) and building events; decks without buildings simulate as in v7 apart from the version in the hash domain; v7 configs are rejected by validation. v7 differs from v6 only in commander actives (command-driven, energy-costed) and ability events; v6 configs are rejected by validation. v6 configs differ from v5 (decks require a commander card; commanders spawn only by deploy; ids c<player>-<n>); v5 configs are rejected by validation. No persisted replays of earlier versions exist (pre-release, headless fixtures only)",
+    compatibility: "v13 changes only Chaos zone interpretation (ranked mirror closure): v12 and v13 replay identically for schedules whose Ember/Rift Shift zones are already mirror-invariant, otherwise v12 applied raw absolute zones. Chaos ruleset v1 schedules and their hashes are unchanged. v8 adds building cards, state.buildings (hashed) and building events; decks without buildings simulate as in v7 apart from the version in the hash domain; v7 configs are rejected by validation. v7 differs from v6 only in commander actives (command-driven, energy-costed) and ability events; v6 configs are rejected by validation. v6 configs differ from v5 (decks require a commander card; commanders spawn only by deploy; ids c<player>-<n>); v5 configs are rejected by validation. No persisted replays of earlier versions exist (pre-release, headless fixtures only)",
   };
 }

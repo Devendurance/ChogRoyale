@@ -35,7 +35,7 @@ const rejections = (s: CombatState) => s.events.flatMap((e) => (e.type === "comm
 
 describe("B2.7b card registry and deck economy", () => {
   it("registers three versioned cards under ruleset v9", () => {
-    expect(COMBAT_RULESET_VERSION).toBe("v12");
+    expect(COMBAT_RULESET_VERSION).toBe("v13");
     expect(CARDS_V1.chaos_comet?.cost).toBe(4);
     expect(CARDS_V1.rift_snare?.cost).toBe(2);
     expect(CARDS_V1.rift_sprites?.cost).toBe(1);

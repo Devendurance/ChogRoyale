@@ -21,7 +21,8 @@
     "arena:scenarios": "tsx scripts/arena-scenarios.ts",
     "commanders:balance": "tsx scripts/commander-balance.ts",
     "buildings:matchup": "tsx scripts/building-matchup.ts",
-    "roster:scenarios": "tsx scripts/roster-scenarios.ts"
+    "roster:scenarios": "tsx scripts/roster-scenarios.ts",
+    "chaos:fairness": "tsx scripts/chaos-fairness.ts"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

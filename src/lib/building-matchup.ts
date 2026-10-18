@@ -188,9 +188,9 @@ export function positionReport(rows: MatchupRow[]) {
 }
 
 /**
- * `chaos: "rift"` (default) plays the raw seed schedule, whose zone effects
- * name fixed board zones and so are not side-neutral; "none" plays without
- * Chaos for positional checks.
+ * `chaos: "rift"` (default) plays the raw seed schedule. Its zone effects
+ * name fixed board zones; since v13 the engine closes them under the board
+ * mirror, so raw play is side-neutral. "none" plays without Chaos.
  */
 export function runMatchup(decks: Record<string, string[]>, seeds = MATCHUP_SEEDS, chaos: "rift" | "none" = "rift"): MatchupRow[] {
   const names = Object.keys(decks);
@@ -231,8 +231,8 @@ export function mirrorSchedule(s: ChaosSchedule): ChaosSchedule {
  * Engine symmetry probe. Records a bot command stream, mirrors it (players
  * swapped, y reflected, decks swapped, Chaos zones swapped) and checks the
  * transformed outcome: winner/crowns/tower damage/energy swapped, same
- * length. A raw schedule names fixed zones, so it is only side-neutral
- * when mirrored with the board.
+ * length. Through v12 a raw schedule was only side-neutral when mirrored
+ * with the board; v13 interprets raw and mirrored schedules identically.
  */
 export function engineMirrorCheck(decks: Record<string, string[]>, seeds = MATCHUP_SEEDS, withChaos = false) {
   const rows: Array<{ p0: string; p1: string; seed: string; symmetric: boolean; a: string; b: string }> = [];
