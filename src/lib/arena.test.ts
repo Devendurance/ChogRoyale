@@ -40,7 +40,7 @@ const structures = (): StructureEntity[] => initMatch(scenarioConfig(deckWith(),
 
 describe("arena-v2 geometry", () => {
   it("is versioned and bounded", () => {
-    expect(COMBAT_RULESET_VERSION).toBe("v5");
+    expect(COMBAT_RULESET_VERSION).toBe("v6");
     expect(ARENA_VERSION).toBe("arena-v2");
     expect(combatRulesetSummary().arena.version).toBe("arena-v2");
     expect([ARENA_V2.minX, ARENA_V2.maxX, ARENA_V2.minY, ARENA_V2.maxY]).toEqual([0, 100, 0, 160]);
@@ -279,7 +279,7 @@ describe("b2.5 headless scenarios", () => {
   it("no ground unit walks on closed water across a full chaotic match", () => {
     const cards = ["chog_guardian", "boulderback", "chaos_archer", "rift_runner", "choglings", "frostshell", "sparkcaster", "hexwing"];
     const schedule = riftSchedule("invariant");
-    const { state, samples, commands } = botMatch(scenarioConfig([...cards], [...cards].reverse(), schedule, "inv"), 3100, 20);
+    const { state, samples, commands } = botMatch(scenarioConfig(deckWith(...cards.slice(0, 7), "cmdr:free-deadeye"), deckWith("cmdr:free-scout", ...cards.slice(1, 8)), schedule, "inv"), 3100, 20);
     expect(state.phase).toBe("final");
     expect(commands.length).toBeGreaterThanOrEqual(30);
     expect(state.events.filter((e) => e.type === "rift_crossing")).toHaveLength(2);

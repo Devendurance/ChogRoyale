@@ -28,6 +28,9 @@ Durable facts, conventions, and gotchas that should survive across sessions.
 - Combat movement (v5) is cell-by-cell octile: straight 10, diagonal 14, budget speed*10 plus carried remainder (moveCarry). Route costs use octile too. Equal-cost crossing ties still occur, so ties break on smallest lateral detour first.
 - Structure reach is measured to the footprint ring (half-size + 1), so melee units stop up to `range` cells outside the ring. Test "arrived" with reach2, not center distance.
 - Use stepMatch freely in tests: entity ids come from state.nextEntityId, so stepped runs and runMatch produce identical hashes.
+- v6 configs: every deck is 7 ordinary + `cmdr:<commanderId>` and needs a commander slot. Use deckWith()/scenarioConfig() (src/lib/arena-scenarios.ts), which default to cmdr:free-bulwark last and infer free slots. freeStarterSlot(cls) builds trusted free snapshots.
+- Commander combat numbers live in COMMANDER_COMBAT_PROFILE_V1 / ABILITY_RUNTIME_V1 (combat.ts), never in B1 stats. Bot round robins are cost-sensitive: deadeye at cost 4 jumped to 29/32 wins.
+- Bots must play the commander deliberately (botMove saves energy for a held commander); without that, commanders were almost never deployed and balance data was meaningless.
 - Structures only fire on tick % 10 === 0. Use a no-troop control run to isolate troop damage, not tick parity.
 - Arena-v2 river is y 74..86: test deploys at y 74..86 are rejected. Use y<=73 (p0) or y>=87 (p1).
 - Scenario evidence lives in src/lib/arena-scenarios.ts (shared by tests and scripts). botMatch plays from real hands. Hand-blind fixed command lists get mostly rejected.

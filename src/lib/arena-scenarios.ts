@@ -14,6 +14,10 @@ import {
   reach2,
   COMBAT_RULESET_VERSION,
   CARDS_V1,
+  COMMANDER_COMBAT_PROFILE_V1,
+  isCommanderCard,
+  freeStarterSlot,
+  type CommanderSlotInput,
   type CombatConfig,
   type CombatState,
   type DeployCommand,
@@ -22,6 +26,7 @@ import {
 } from "@/lib/combat";
 import { derivePatronConfig } from "@/lib/patrons";
 import { deriveChaosSchedule, type ChaosSchedule } from "@/lib/chaos";
+import type { CommanderClass } from "@/lib/commanders";
 
 export interface TraceSample {
   tick: number;
@@ -39,13 +44,38 @@ export type CrossingUse = "left" | "right" | "rift" | "water";
 
 const ALL = ["chog_guardian", "boulderback", "chaos_archer", "rift_runner", "choglings", "frostshell", "sparkcaster", "hexwing"];
 
-/** Deck with the requested cards first (they start in hand), rest in fixed order. */
+export const DEFAULT_SCENARIO_COMMANDER = "cmdr:free-bulwark";
+
+/**
+ * v6 deck: the requested cards first (they start in hand), then ordinary
+ * cards in fixed order up to 7, plus exactly one commander card. A
+ * `cmdr:` entry in `front` places the commander; otherwise the default free
+ * commander card goes last (in the queue, not the opening hand).
+ */
 export function deckWith(...front: string[]): string[] {
-  return [...front, ...ALL.filter((c) => !front.includes(c))];
+  const cmdr = front.find((c) => isCommanderCard(c)) ?? null;
+  const ordinary = [...front.filter((c) => !isCommanderCard(c)), ...ALL.filter((c) => !front.includes(c))].slice(0, 7);
+  if (!cmdr) return [...ordinary, DEFAULT_SCENARIO_COMMANDER];
+  const at = front.indexOf(cmdr);
+  return [...ordinary.slice(0, at), cmdr, ...ordinary.slice(at)];
 }
 
-export function scenarioConfig(p0: string[], p1: string[], chaos: ChaosSchedule | null = null, seed = "arena"): CombatConfig {
-  return { rulesetVersion: COMBAT_RULESET_VERSION, seed, decks: [p0, p1], chaos };
+/** Free-starter slot inferred from a deck's `cmdr:free-<class>` card. */
+export function slotForDeck(deck: string[]): CommanderSlotInput | null {
+  const card = deck.find((c) => isCommanderCard(c));
+  const id = card?.slice("cmdr:".length) ?? "";
+  if (!id.startsWith("free-")) return null;
+  return freeStarterSlot(id.slice("free-".length) as CommanderClass);
+}
+
+export function scenarioConfig(
+  p0: string[],
+  p1: string[],
+  chaos: ChaosSchedule | null = null,
+  seed = "arena",
+  commanders?: [CommanderSlotInput | null, CommanderSlotInput | null]
+): CombatConfig {
+  return { rulesetVersion: COMBAT_RULESET_VERSION, seed, decks: [p0, p1], chaos, commanders: commanders ?? [slotForDeck(p0), slotForDeck(p1)] };
 }
 
 /** Run tick by tick through the real stepper, sampling every ground/air unit. */
@@ -79,9 +109,17 @@ export function traceMatch(config: CombatConfig, commands: DeployCommand[], upto
 export function botMove(state: CombatState, p: PlayerIndex, n: number): { cardId: string; x: number; y: number } | null {
   const lanes = [30, 70, 50, 20, 80, 40, 60];
   const homeY = p === 0 ? 0 : 160;
-  for (const card of state.hands[p]) {
-    const def = CARDS_V1[card];
-    if (!def || def.cost > state.energy[p]) continue;
+  // Commander priority: a held commander card is played as soon as it is
+  // affordable; until then the bot saves energy for it (plays nothing).
+  const cmdrCard = state.hands[p].find((c) => isCommanderCard(c));
+  const snapNow = state.commanderSnapshots[p];
+  const order = cmdrCard ? [cmdrCard] : state.hands[p];
+  if (cmdrCard && snapNow && COMMANDER_COMBAT_PROFILE_V1[snapNow.class].cost > state.energy[p]) return null;
+  for (const card of order) {
+    const snap = state.commanderSnapshots[p];
+    const cost = isCommanderCard(card) ? (snap ? COMMANDER_COMBAT_PROFILE_V1[snap.class].cost : 99) : (CARDS_V1[card]?.cost ?? 99);
+    if (cost > state.energy[p]) continue;
+    if (isCommanderCard(card) && state.commanders.some((c) => c.owner === p && c.hp > 0)) continue;
     if (card === "chaos_bolt") {
       const foes = [...state.troops, ...state.commanders].filter((u) => u.owner !== p && u.hp > 0);
       foes.sort((a, b) => Math.abs(a.y - homeY) - Math.abs(b.y - homeY) || (a.id < b.id ? -1 : 1));
@@ -336,7 +374,7 @@ export function scenarioVictories() {
     seq += 1;
     siege.push(cmd(seq, 0, t, rotation[seq % 8] as string, seq % 2 === 0 ? 30 : 70, 60));
   }
-  const core = runMatch(scenarioConfig([...rotation], [...rotation]), siege);
+  const core = runMatch(scenarioConfig(deckWith(...rotation.slice(0, 7)), deckWith(...rotation.slice(0, 7))), siege);
   const one: DeployCommand[] = [cmd(1, 0, 84, "boulderback", 30, 60), cmd(2, 0, 85, "chaos_archer", 30, 20)];
   const crowns = runMatch(scenarioConfig(deckWith("boulderback", "chaos_archer"), deckWith("choglings")), one);
   return {
@@ -371,8 +409,8 @@ export function scenarioPocket() {
 // K: identical commands -> identical hashes (including a chaos match).
 export function scenarioReplay() {
   const schedule = riftSchedule("replay");
-  const p0 = ["chog_guardian", "boulderback", "chaos_archer", "rift_runner", "choglings", "frostshell", "sparkcaster", "hexwing"];
-  const p1 = ["choglings", "sparkcaster", "chog_guardian", "hexwing", "frostshell", "rift_runner", "chaos_archer", "boulderback"];
+  const p0 = ["chog_guardian", "boulderback", "chaos_archer", "rift_runner", "choglings", "frostshell", "sparkcaster", "cmdr:free-reaver"];
+  const p1 = ["choglings", "sparkcaster", "chog_guardian", "hexwing", "frostshell", "rift_runner", "chaos_archer", "cmdr:free-warden"];
   const cfg = () => scenarioConfig([...p0], [...p1], schedule, "replay");
   const { commands } = botMatch(cfg(), 3100, 25);
   const a = runMatch(cfg(), commands);

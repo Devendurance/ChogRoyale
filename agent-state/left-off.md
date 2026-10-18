@@ -5,7 +5,8 @@ Last updated: 2026-10-18
 ## Just finished
 
 - B2.5 two-lane arena (ruleset v4, arena-v2): river, two bridges, RIFT_SHIFT ford, deterministic ground routing, lane objectives, target lock, territory + pocket deploys.
-- B2.5 integrity hardening (ruleset v5): troops target commanders, solid structure footprints with detours, octile movement with carried remainder, legal-move bot runner, per-match entity ids, stronger replay tests. 232/232 tests + typecheck/lint/build green. Details in .fast-build/STATE.md.
+- B2.5 integrity hardening (ruleset v5): troops target commanders, solid structure footprints with detours, octile movement with carried remainder, legal-move bot runner, per-match entity ids, stronger replay tests.
+- B2.6a commander card economy (ruleset v6): 7 ordinary + 1 commander card decks, deploy from hand for energy, no tick-0 spawn, hold-while-alive cycle policy, class-keyed runtime profile cp-v1 (free == NFT), tuned via real encounters. 249/249 tests + typecheck/lint/build green. Details in .fast-build/STATE.md.
 
 ## Currently working on
 
@@ -13,11 +14,11 @@ Last updated: 2026-10-18
 
 ## Next up
 
-- B2.6 commander deck changes, B2.7 expanded cards/buildings, then B3 transport (Colyseus): authenticated match creation, entitlement verification feeding the trusted engine inputs, settlement events feeding legacy intake. Neither started; no fabricated matches exist.
+- B2.6b player-activated commander abilities, B2.7 expanded cards/buildings, then B3 transport (Colyseus): authenticated match creation, entitlement verification feeding the trusted engine inputs, settlement events feeding legacy intake. Neither started; no fabricated matches exist.
 
 ## Known issues / open items
 
-- Balance: a lone free commander destroys 2 towers + Core in ~235-400 ticks (B2.3 1:1 stat mapping). Must be addressed in B2.6.
+- Balance is bot-measured only (32 games/class); deadeye/scout lowest. Re-tune after B2.6b changes ability timing.
 - Units have no unit-unit body collision yet (overlap allowed).
 
 - Human E2E at `/dev/onboarding` still unverified (Privy login, wallet sync, claim flow).

@@ -16,42 +16,18 @@ import {
   isWalkable,
   troopDeployCheck,
   STRUCTURE_FOOTPRINT_V5,
-  COMBAT_RULESET_VERSION,
   ENERGY_V1,
   type CombatConfig,
   type DeployCommand,
   type CombatState,
 } from "@/lib/combat";
-import { freeCommanderTemplates, type CommanderClass } from "@/lib/commanders";
+import type { CommanderClass } from "@/lib/commanders";
 import { deckWith, traceMatch, botMatch, scenarioConfig, riftSchedule } from "@/lib/arena-scenarios";
 
-const slot = (cls: CommanderClass, tag: string) => {
-  const t = freeCommanderTemplates().find((x) => x.class === cls)!;
-  return {
-    commanderId: `it-${tag}`,
-    definition: {
-      rulesetVersion: "v1" as const,
-      class: t.class,
-      affinity: t.class,
-      scores: {} as Record<CommanderClass, number>,
-      signals: [],
-      unmatchedTraits: [],
-      stats: t.stats,
-      abilities: t.abilities,
-      variant: "free",
-      prestige: "Common",
-      powerScore: t.powerScore,
-      derivationHash: `it-${tag}`,
-    },
-  };
-};
-
-const cmdCfg = (p1: CommanderClass): CombatConfig => ({
-  rulesetVersion: COMBAT_RULESET_VERSION,
-  seed: "cmd",
-  decks: [deckWith("chog_guardian", "chaos_archer"), deckWith("choglings")],
-  commanders: [null, slot(p1, "p1")],
-});
+// v6: commanders are deck cards; the p1 commander is deployed by command.
+const cmdCfg = (p1: CommanderClass, p0Deck: string[] = deckWith("chog_guardian", "chaos_archer")): CombatConfig =>
+  scenarioConfig(p0Deck, deckWith(`cmdr:free-${p1}`, "choglings"));
+const p1Commander = (p1: CommanderClass): DeployCommand => ({ seq: 100, player: 1, tick: 2, cardId: `cmdr:free-${p1}`, x: 50, y: 130 });
 const pressure: DeployCommand[] = [
   { seq: 1, player: 0, tick: 20, cardId: "chog_guardian", x: 36, y: 66 },
   { seq: 2, player: 0, tick: 80, cardId: "chaos_archer", x: 36, y: 56 },
@@ -74,29 +50,33 @@ describe("commander targetability", () => {
     // A hexwing (air, hits ground) versus a ground-only reaver commander:
     // the commander cannot answer it (air/ground rules), the hexwing chases
     // and damages it, the commander dies and the hexwing retargets.
-    const cid = "c1";
+    const cid = "c1-1";
     let firstTargeted = -1;
     let deathTick = -1;
     let retargeted = false;
-    const cfg: CombatConfig = { ...cmdCfg("scout"), decks: [deckWith("hexwing"), deckWith("choglings")] };
+    let seen = false;
+    const cfg: CombatConfig = cmdCfg("scout", deckWith("hexwing"));
     // Control run (no troops) isolates troop damage from structure damage.
     const controlHp: number[] = [];
-    play(cfg, [], 150, (st) => controlHp.push(st.commanders.find((x) => x.id === cid)?.hp ?? 0));
+    play(cfg, [p1Commander("scout")], 150, (st) => controlHp.push(st.commanders.find((x) => x.id === cid)?.hp ?? 0));
     const withHp: number[] = [];
-    const s = play(cfg, [{ seq: 1, player: 0, tick: 2, cardId: "hexwing", x: 40, y: 60 }], 900, (st) => {
+    const s = play(cfg, [p1Commander("scout"), { seq: 1, player: 0, tick: 2, cardId: "hexwing", x: 40, y: 60 }], 900, (st) => {
       const mine = st.troops.filter((t) => t.owner === 0);
       if (firstTargeted < 0 && mine.some((t) => t.targetId === cid)) firstTargeted = st.tick;
       const c = st.commanders.find((x) => x.id === cid);
       if (st.tick <= 150) withHp.push(c?.hp ?? 0);
       if (c) expect(c.targetId === null || !mine.some((t) => t.id === c.targetId)).toBe(true);
-      if (deathTick < 0 && !st.commanders.some((c) => c.id === cid)) deathTick = st.tick;
+      if (c) seen = true;
+      if (seen && deathTick < 0 && !c) deathTick = st.tick;
       if (deathTick > 0 && st.tick > deathTick && mine.length > 0) {
         expect(mine.every((t) => t.targetId !== cid)).toBe(true);
         if (mine.some((t) => t.targetId !== null)) retargeted = true;
       }
     });
     expect(firstTargeted).toBeGreaterThan(0);
-    expect(controlHp[149]! - withHp[149]!).toBeGreaterThanOrEqual(100);
+    // Tick 60: both commanders alive; the hexwing's hits are the only difference.
+    expect(controlHp[59]!).toBeGreaterThan(0);
+    expect(controlHp[59]! - withHp[59]!).toBeGreaterThanOrEqual(50);
     expect(deathTick).toBeGreaterThan(firstTargeted);
     expect(s.events.some((e) => e.type === "death" && e.entityId === cid && e.tick === deathTick)).toBe(true);
     expect(s.commanders.some((c) => c.id === cid)).toBe(false);
@@ -106,10 +86,10 @@ describe("commander targetability", () => {
     let absorbed = false;
     let prev = 0;
     let hurt = false;
-    play(cmdCfg("bulwark"), pressure, 400, (st) => {
-      const c = st.commanders.find((x) => x.id === "c1");
+    play(cmdCfg("bulwark"), [p1Commander("bulwark"), ...pressure], 400, (st) => {
+      const c = st.commanders.find((x) => x.id === "c1-1");
       if (!c) return;
-      const targeted = st.troops.some((t) => t.owner === 0 && t.targetId === "c1");
+      const targeted = st.troops.some((t) => t.owner === 0 && t.targetId === "c1-1");
       if (targeted && prev > 0 && c.shieldHp < prev && st.tick < c.shieldUntil) absorbed = true;
       if (c.hp < c.maxHp) hurt = true;
       prev = c.shieldHp;
@@ -118,11 +98,13 @@ describe("commander targetability", () => {
     expect(hurt).toBe(true);
   });
   it("never targets friendly commanders and replays identically", () => {
-    const cfg = (): CombatConfig => ({ ...scenarioConfig(deckWith(), [...deckWith()].reverse(), riftSchedule("cmdr"), "cmdr"), commanders: [slot("warden", "a"), slot("scout", "b")] });
+    const cfg = (): CombatConfig => scenarioConfig(deckWith("cmdr:free-warden"), deckWith("hexwing", "cmdr:free-scout"), riftSchedule("cmdr"), "cmdr");
     const a = botMatch(cfg(), 3100, 20);
-    const targetedCommander = a.samples.filter((s) => s.targetId === "c0" || s.targetId === "c1");
-    expect(targetedCommander.some((s) => !s.cardId.startsWith("commander:"))).toBe(true);
-    for (const s of targetedCommander) expect(s.owner).not.toBe(s.targetId === "c0" ? 0 : 1);
+    const targetedCommander = a.samples.filter((s) => s.targetId !== null && /^c[01]-\d+$/.test(s.targetId));
+    for (const s of targetedCommander) expect(s.owner).not.toBe(Number(s.targetId![1]));
+    // Commanders are engaged by enemy units in this match, so the check above is not vacuous.
+    expect(targetedCommander.length).toBeGreaterThan(0);
+    expect(a.state.events.filter((e) => e.type === "commander_deployed").length).toBeGreaterThanOrEqual(2);
     const r1 = runMatch(cfg(), a.commands);
     const r2 = runMatch(cfg(), [...a.commands].reverse());
     expect(r1.result.stateHash).toBe(r2.result.stateHash);
@@ -186,7 +168,7 @@ describe("structure footprints and movement", () => {
   });
   it("no ground unit stands inside a live footprint across full bot matches", () => {
     for (const seed of ["fp-1", "fp-2"]) {
-      const cfg = { ...scenarioConfig(deckWith(), [...deckWith()].reverse(), riftSchedule(seed), seed), commanders: [slot("reaver", "x"), slot("deadeye", "y")] } as CombatConfig;
+      const cfg = scenarioConfig(deckWith("cmdr:free-reaver"), deckWith("hexwing", "cmdr:free-deadeye"), riftSchedule(seed), seed);
       const { state, samples } = botMatch(cfg, 3100, 20);
       expect(state.phase).toBe("final");
       const destroyedAt = new Map<string, number>();

@@ -7,6 +7,7 @@ import {
   stepMatch,
   stateHash,
   validateDeck,
+  freeStarterSlot,
   fireCommanderAbility,
   resolveOvertimeTiebreak,
   energyPhaseMult,
@@ -21,10 +22,11 @@ import { freeCommanderTemplates, type CommanderClass } from "@/lib/commanders";
 import { derivePatronConfig } from "@/lib/patrons";
 import { deriveChaosSchedule } from "@/lib/chaos";
 
-const DECK = ["choglings", "chaos_archer", "boulderback", "frostshell", "rift_runner", "sparkcaster", "chog_guardian", "hexwing"];
+const DECK = ["choglings", "chaos_archer", "boulderback", "frostshell", "rift_runner", "sparkcaster", "chog_guardian", "cmdr:free-bulwark"];
+const FREE = (): [ReturnType<typeof freeStarterSlot>, ReturnType<typeof freeStarterSlot>] => [freeStarterSlot("bulwark"), freeStarterSlot("bulwark")];
 
 function config(overrides: Partial<CombatConfig> = {}): CombatConfig {
-  return { rulesetVersion: COMBAT_RULESET_VERSION, seed: "test-seed", decks: [[...DECK], [...DECK]], ...overrides };
+  return { rulesetVersion: COMBAT_RULESET_VERSION, seed: "test-seed", decks: [[...DECK], [...DECK]], commanders: FREE(), ...overrides };
 }
 
 function cmd(seq: number, player: 0 | 1, tick: number, cardId = "choglings", x = 50, y?: number): DeployCommand {
@@ -32,12 +34,17 @@ function cmd(seq: number, player: 0 | 1, tick: number, cardId = "choglings", x =
 }
 
 describe("validateDeck", () => {
-  it("accepts the 8-card v1 contract and rejects the rest", () => {
-    expect(() => validateDeck([...DECK])).not.toThrow();
-    expect(() => validateDeck(DECK.slice(0, 4))).toThrow();
-    expect(() => validateDeck([...DECK.slice(0, 7), "choglings"])).toThrow();
-    expect(() => validateDeck([...DECK.slice(0, 7), "chaos_bolt"])).not.toThrow();
-    expect(() => validateDeck([...DECK.slice(0, 7), "unknown_card"])).toThrow();
+  it("accepts exactly 7 ordinary cards + 1 matching commander and rejects the rest", () => {
+    const slot = freeStarterSlot("bulwark");
+    expect(() => validateDeck([...DECK], slot)).not.toThrow();
+    expect(() => validateDeck([...DECK])).toThrow();
+    expect(() => validateDeck(DECK.slice(0, 4), slot)).toThrow();
+    expect(() => validateDeck([...DECK.slice(0, 6), "choglings", "cmdr:free-bulwark"], slot)).toThrow();
+    expect(() => validateDeck([...DECK.slice(0, 6), "chaos_bolt", "cmdr:free-bulwark"], slot)).not.toThrow();
+    expect(() => validateDeck([...DECK.slice(0, 6), "unknown_card", "cmdr:free-bulwark"], slot)).toThrow();
+    expect(() => validateDeck([...DECK.slice(0, 7), "hexwing"], slot)).toThrow();
+    expect(() => validateDeck([...DECK.slice(0, 7), "cmdr:free-reaver"], slot)).toThrow();
+    expect(() => validateDeck([...DECK.slice(0, 6), "cmdr:free-bulwark", "cmdr:free-reaver"], slot)).toThrow();
   });
 });
 
@@ -171,17 +178,18 @@ describe("combat and victory", () => {
 
 
 describe("b2.2 mechanics", () => {
-  const FLY_DECK_P1 = ["hexwing", "choglings", "chaos_archer", "boulderback", "frostshell", "rift_runner", "sparkcaster", "chog_guardian"];
-  const flyConfig = (): CombatConfig => ({ rulesetVersion: COMBAT_RULESET_VERSION, seed: "fly", decks: [[...DECK], [...FLY_DECK_P1]] });
-  const SPELL_DECK = ["choglings", "chaos_archer", "chaos_bolt", "rally_horn", "boulderback", "frostshell", "rift_runner", "sparkcaster"];
+  const FLY_DECK_P1 = ["hexwing", "choglings", "chaos_archer", "boulderback", "frostshell", "rift_runner", "sparkcaster", "cmdr:free-bulwark"];
+  const flyConfig = (): CombatConfig => ({ rulesetVersion: COMBAT_RULESET_VERSION, seed: "fly", commanders: FREE(), decks: [[...DECK], [...FLY_DECK_P1]] });
+  const SPELL_DECK = ["choglings", "chaos_archer", "chaos_bolt", "rally_horn", "boulderback", "frostshell", "rift_runner", "cmdr:free-bulwark"];
   const spellConfig = (overrides: Partial<CombatConfig> = {}): CombatConfig => ({
     rulesetVersion: COMBAT_RULESET_VERSION,
     seed: "spells",
+    commanders: FREE(),
     decks: [[...SPELL_DECK], [...SPELL_DECK]],
     ...overrides,
   });
-  const RIFT_DECK_P0 = ["rift_runner", "choglings", "chaos_archer", "boulderback", "frostshell", "sparkcaster", "chog_guardian", "hexwing"];
-  const riftConfig = (): CombatConfig => ({ rulesetVersion: COMBAT_RULESET_VERSION, seed: "rift", decks: [[...RIFT_DECK_P0], [...DECK]] });
+  const RIFT_DECK_P0 = ["rift_runner", "choglings", "chaos_archer", "boulderback", "frostshell", "sparkcaster", "chog_guardian", "cmdr:free-bulwark"];
+  const riftConfig = (): CombatConfig => ({ rulesetVersion: COMBAT_RULESET_VERSION, seed: "rift", commanders: FREE(), decks: [[...RIFT_DECK_P0], [...DECK]] });
 
   it("ground melee cannot hit flying", () => {
     const { state } = runMatch(flyConfig(), [cmd(1, 1, 5, "hexwing", 50, 100), cmd(2, 0, 5, "choglings", 50, 72)], 40);
@@ -201,8 +209,8 @@ describe("b2.2 mechanics", () => {
     const hexHurt = state.troops.some((t) => t.cardId === "hexwing" && t.hp < t.maxHp);
     expect(hexGone || hexHurt).toBe(true);
   });
-  const SPARK_DECK_P1 = ["sparkcaster", "choglings", "chaos_archer", "boulderback", "frostshell", "rift_runner", "chog_guardian", "hexwing"];
-  const sparkConfig = (): CombatConfig => ({ rulesetVersion: COMBAT_RULESET_VERSION, seed: "spark", decks: [[...DECK], [...SPARK_DECK_P1]] });
+  const SPARK_DECK_P1 = ["sparkcaster", "choglings", "chaos_archer", "boulderback", "frostshell", "rift_runner", "chog_guardian", "cmdr:free-bulwark"];
+  const sparkConfig = (): CombatConfig => ({ rulesetVersion: COMBAT_RULESET_VERSION, seed: "spark", commanders: FREE(), decks: [[...DECK], [...SPARK_DECK_P1]] });
   it("sparkcaster splash damages grouped enemies", () => {
     const { state } = runMatch(
       sparkConfig(),
@@ -316,35 +324,36 @@ describe("b2.3 commanders", () => {
       derivationHash: `test-${tag}`,
     };
   };
-  const cmdCfg = (p0: CommanderClass | null, p1: CommanderClass | null): CombatConfig => ({
+  const cmdCfg = (p0: CommanderClass, p1: CommanderClass): CombatConfig => ({
     rulesetVersion: COMBAT_RULESET_VERSION,
     seed: "cmdr",
-    decks: [[...DECK], [...DECK]],
-    commanders: [
-      p0 ? { commanderId: `test-${p0}`, definition: mkDef(p0, "a") } : null,
-      p1 ? { commanderId: `test-${p1}`, definition: mkDef(p1, "b") } : null,
-    ],
+    decks: [[`cmdr:free-${p0}`, ...DECK.slice(0, 7)], [`cmdr:free-${p1}`, ...DECK.slice(0, 7)]],
+    commanders: [freeStarterSlot(p0), freeStarterSlot(p1)],
   });
-  it("spawns commanders with deploy abilities applied", () => {
-    const { state } = runMatch(cmdCfg("bulwark", "warden"), [], 5);
+  const deployC = (seq: number, player: 0 | 1, tick: number, cls: CommanderClass, x = 50, y?: number): DeployCommand => ({
+    seq, player, tick, cardId: `cmdr:free-${cls}`, x, y: y ?? (player === 0 ? 50 : 110),
+  });
+  it("never spawns at tick 0; deploys from hand with deploy abilities applied", () => {
+    expect(runMatch(cmdCfg("bulwark", "warden"), [], 5).state.commanders).toHaveLength(0);
+    const { state } = runMatch(cmdCfg("bulwark", "warden"), [deployC(1, 0, 3, "bulwark"), deployC(2, 1, 3, "warden")], 5);
     expect(state.commanders).toHaveLength(2);
     expect(state.events.filter((e) => e.type === "commander_deployed")).toHaveLength(2);
-    expect(state.events.some((e) => e.type === "ability_fired")).toBe(true);
-    const bulwark = state.commanders.find((c) => c.owner === 0)!;
-    expect(bulwark.hp).toBeLessThanOrEqual(bulwark.maxHp);
+    expect(state.events.some((e) => e.type === "ability_fired" && e.abilityId === "bulwark-bedrock")).toBe(true);
+    expect(state.events.some((e) => e.type === "ability_fired" && e.abilityId === "warden-mend")).toBe(true);
+    expect(state.energy).toEqual([0, 0]);
   });
   it("auto-fires shield when the commander is hurt", () => {
-    const { state } = runMatch(cmdCfg("bulwark", null), [cmd(1, 1, 5, "chaos_archer", 50, 100)], 400);
+    const { state } = runMatch(cmdCfg("bulwark", "warden"), [deployC(1, 0, 3, "bulwark"), cmd(2, 1, 5, "chaos_archer", 50, 100)], 400);
     const fired = state.events.filter((e) => e.type === "ability_fired" && e.abilityId === "bulwark-aegis-wall");
     expect(fired.length).toBeGreaterThan(0);
   });
   it("bloodlust detonates on death", () => {
-    const { state } = runMatch(cmdCfg("reaver", null), [cmd(1, 1, 5, "boulderback", 50, 60)], 600);
-    const reaverDeaths = state.events.filter((e) => e.type === "death" && e.entityId === "c0");
-    expect(reaverDeaths.length).toBeLessThanOrEqual(1);
+    const { state } = runMatch(cmdCfg("reaver", "warden"), [deployC(1, 0, 3, "reaver"), cmd(2, 1, 60, "boulderback", 50, 100)], 900);
+    const reaverDeaths = state.events.filter((e) => e.type === "death" && e.entityId === "c0-1");
+    expect(reaverDeaths).toHaveLength(1);
   });
   it("manual fire enforces cooldowns and validates", () => {
-    const { state } = runMatch(cmdCfg("deadeye", null), [], 5);
+    const { state } = runMatch(cmdCfg("deadeye", "warden"), [deployC(1, 0, 3, "deadeye")], 5);
     expect(() => fireCommanderAbility(state, 0, "nope")).toThrow();
     expect(() => fireCommanderAbility(state, 1, "deadeye-piercing-volley")).toThrow();
   });
@@ -355,7 +364,7 @@ describe("b2.3 commanders", () => {
     expect(a.abilities).toEqual(b.abilities);
   });
   it("full commander match completes deterministically", () => {
-    const commands = [cmd(1, 0, 5, "choglings", 50, 40), cmd(2, 1, 5, "choglings", 50, 120)];
+    const commands = [cmd(1, 0, 5, "choglings", 50, 40), cmd(2, 1, 5, "choglings", 50, 120), deployC(3, 0, 140, "scout"), deployC(4, 1, 140, "warden")];
     const a = runMatch(cmdCfg("scout", "warden"), commands);
     const b = runMatch(cmdCfg("scout", "warden"), [...commands]);
     expect(a.result.stateHash).toBe(b.result.stateHash);
@@ -372,6 +381,7 @@ describe("b2.3 chaos", () => {
     ({
       rulesetVersion: COMBAT_RULESET_VERSION,
       seed: "chaos-t",
+      commanders: FREE(),
       decks: [[...DECK], [...DECK]],
       chaos: mkSchedule(seed, [{ trait_type: "Background", value: "Crimson Glow" }]),
     }) as CombatConfig;
@@ -408,31 +418,11 @@ describe("b2.3 chaos", () => {
     ).toThrow();
   });
   it("full commander + chaos match completes and replays identically", () => {
-    const mkDef = (cls: "reaver" | "warden") => {
-      const t = freeCommanderTemplates().find((x) => x.class === cls)!;
-      return {
-        rulesetVersion: "v1" as const,
-        class: t.class,
-        affinity: "bulwark" as const,
-        scores: {} as Record<CommanderClass, number>,
-        signals: [],
-        unmatchedTraits: [],
-        stats: t.stats,
-        abilities: t.abilities,
-        variant: "free",
-        prestige: "Common",
-        powerScore: t.powerScore,
-        derivationHash: `test-${cls}`,
-      };
-    };
     const base: CombatConfig = {
       rulesetVersion: COMBAT_RULESET_VERSION,
       seed: "full-b23",
-      decks: [[...DECK], [...DECK]],
-      commanders: [
-        { commanderId: "test-reaver", definition: mkDef("reaver") },
-        { commanderId: "test-warden", definition: mkDef("warden") },
-      ],
+      decks: [["cmdr:free-reaver", ...DECK.slice(0, 7)], ["cmdr:free-warden", ...DECK.slice(0, 7)]],
+      commanders: [freeStarterSlot("reaver"), freeStarterSlot("warden")],
       chaos: mkSchedule("full", [{ trait_type: "Background", value: "Deep Frost" }]),
     };
     const cmds = [
@@ -440,6 +430,8 @@ describe("b2.3 chaos", () => {
       cmd(2, 1, 5, "choglings", 50, 120),
       cmd(3, 0, 200, "boulderback", 50, 70),
       cmd(4, 1, 200, "boulderback", 50, 90),
+      { seq: 5, player: 0 as const, tick: 400, cardId: "cmdr:free-reaver", x: 30, y: 60 },
+      { seq: 6, player: 1 as const, tick: 400, cardId: "cmdr:free-warden", x: 70, y: 100 },
     ];
     const a = runMatch(base, cmds);
     const b = runMatch({ ...base }, cmds.map((c) => ({ ...c })));
@@ -645,7 +637,7 @@ describe("b2.4 match rules", () => {
   });
   it("ruleset reports v2 with phases, crowns, and the compatibility boundary", () => {
     const summary = combatRulesetSummary();
-    expect(summary.version).toBe("v5");
+    expect(summary.version).toBe("v6");
     expect(summary.timeline.overtimeTicks).toBe(1200);
   });
 });

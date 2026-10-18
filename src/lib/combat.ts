@@ -14,6 +14,7 @@
 
 import { createHash } from "crypto";
 import { AppError } from "@/lib/errors";
+import { CLASS_ROSTER, freeCommanderTemplates } from "@/lib/commanders";
 import type { CommanderDefinition, CommanderAbility, CommanderClass } from "@/lib/commanders";
 import type { ChaosSchedule, ChaosEffect } from "@/lib/chaos";
 
@@ -23,7 +24,11 @@ import type { ChaosSchedule, ChaosEffect } from "@/lib/chaos";
 // v5 (B2.5 hardening): troops target enemy commanders, live structures have
 // solid footprints (ground units detour; range measured to footprint edge),
 // octile movement accounting (straight 10, diagonal 14, carried remainder).
-export const COMBAT_RULESET_VERSION = "v5" as const;
+// v6 (B2.6a): commanders are one of the eight deck cards (7 ordinary + 1
+// commander), deployed from hand for energy; no tick-0 spawn; runtime stats
+// come from the class-keyed competitive profile COMMANDER_COMBAT_PROFILE_V1
+// (free and NFT commanders of a class are identical in combat).
+export const COMBAT_RULESET_VERSION = "v6" as const;
 export const TICKS_PER_SECOND = 10;
 // Standard ranked timeline (v2): 180s regulation, up to 120s sudden-death overtime.
 // Energy phases: 1x ticks 0-1199, 2x ticks 1200-2399, 3x ticks 2400-2999.
@@ -126,6 +131,98 @@ export const SPELL_CARDS_V1: Record<string, SpellCardDef> = {
 };
 
 export const CARDS_V1: Record<string, TroopCardDef | SpellCardDef> = { ...TROOP_CARDS_V1, ...SPELL_CARDS_V1 };
+
+// ---------------------------------------------------------------------------
+// B2.6a commander card economy.
+// A deck is exactly 7 distinct ordinary cards + 1 commander card whose id is
+// `cmdr:<commanderId>` and must match the trusted commander snapshot for
+// that player. B1 stays authoritative for class identity, traits and ability
+// semantics; combat numbers come from this versioned class-keyed profile,
+// so Tier/prestige and B1 sidegrade variants never change combat strength
+// and free starters equal NFT commanders of the same class.
+// ---------------------------------------------------------------------------
+export const COMMANDER_CARD_PREFIX = "cmdr:";
+export const COMMANDER_PROFILE_VERSION = "cp-v1" as const;
+
+export interface CommanderCombatProfile {
+  cost: number;
+  hp: number;
+  damage: number;
+  intervalTicks: number;
+  range: number;
+  speed: number;
+  sight: number;
+  armor: number;
+  hitsAir: boolean;
+}
+
+// Tuned with headless encounters (see src/lib/commander-balance.ts): an
+// unanswered commander cannot destroy an intact side tower; ordinary 3-5
+// energy counters can kill each class; classes keep their B1 roles.
+export const COMMANDER_COMBAT_PROFILE_V1: Record<CommanderClass, CommanderCombatProfile> = {
+  bulwark: { cost: 5, hp: 450, damage: 16, intervalTicks: 12, range: 2, speed: 1, sight: 24, armor: 1, hitsAir: false },
+  reaver: { cost: 5, hp: 330, damage: 27, intervalTicks: 11, range: 2, speed: 2, sight: 24, armor: 1, hitsAir: false },
+  deadeye: { cost: 5, hp: 280, damage: 34, intervalTicks: 13, range: 16, speed: 2, sight: 28, armor: 0, hitsAir: true },
+  scout: { cost: 4, hp: 290, damage: 16, intervalTicks: 7, range: 3, speed: 3, sight: 28, armor: 0, hitsAir: false },
+  warden: { cost: 5, hp: 380, damage: 22, intervalTicks: 12, range: 8, speed: 2, sight: 26, armor: 1, hitsAir: false },
+};
+
+// Runtime overrides for HP-scale magnitudes and B1 cell radii, per ability
+// effect index. Fractions (haste/slow/buff/reflect), durations, cooldowns,
+// triggers and targets stay exactly as authored in B1.3.
+export const ABILITY_RUNTIME_V1: Record<string, Array<{ magnitude?: number; radius?: number }>> = {
+  "bulwark-aegis-wall": [{ magnitude: 100 }],
+  "bulwark-bedrock": [{}],
+  "reaver-frenzy-rush": [{}, {}],
+  "reaver-bloodlust": [{ magnitude: 40, radius: 6 }],
+  // B1 authored volley radius == attack range (5 cells); runtime keeps it near range.
+  "deadeye-piercing-volley": [{ magnitude: 70, radius: 14 }],
+  "deadeye-overwatch": [{}],
+  "scout-shadow-step": [{}, {}],
+  "scout-pathfinder": [{ radius: 10 }],
+  "warden-null-field": [{ radius: 8 }, { magnitude: 80 }],
+  "warden-mend": [{ magnitude: 60 }],
+};
+
+export function commanderCardId(commanderId: string): string {
+  return `${COMMANDER_CARD_PREFIX}${commanderId}`;
+}
+export function isCommanderCard(cardId: string): boolean {
+  return cardId.startsWith(COMMANDER_CARD_PREFIX);
+}
+
+/** Runtime abilities: B1 roster semantics with ABILITY_RUNTIME_V1 overrides. */
+export function runtimeAbilities(cls: CommanderClass): CommanderAbility[] {
+  return CLASS_ROSTER[cls].abilities.map((a) => ({
+    ...a,
+    effects: a.effects.map((e, i) => {
+      const o = ABILITY_RUNTIME_V1[a.id]?.[i] ?? {};
+      return { ...e, magnitude: o.magnitude ?? e.magnitude, radiusOrRange: o.radius ?? e.radiusOrRange };
+    }),
+  }));
+}
+
+/** Trusted free-starter snapshot (no NFT required), same budget as NFTs. */
+export function freeStarterSlot(cls: CommanderClass): CommanderSlotInput {
+  const t = freeCommanderTemplates().find((x) => x.class === cls)!;
+  return {
+    commanderId: t.id,
+    definition: {
+      rulesetVersion: "v1",
+      class: t.class,
+      affinity: t.class,
+      scores: { bulwark: 0, reaver: 0, deadeye: 0, scout: 0, warden: 0 },
+      signals: [],
+      unmatchedTraits: [],
+      stats: t.stats,
+      abilities: t.abilities,
+      variant: "free",
+      prestige: "Free",
+      powerScore: t.powerScore,
+      derivationHash: t.id,
+    },
+  };
+}
 
 export const ENERGY_V1 = { max: 10, start: 5, regenTicksPerPoint: 28 } as const;
 
@@ -320,6 +417,9 @@ export interface CombatState {
   riftOpenUntil: number;
   // Per-match entity/projectile id counter (deterministic, never global).
   nextEntityId: number;
+  // Trusted commander snapshots (validated at init) and per-player deploy counts.
+  commanderSnapshots: [{ commanderId: string; class: CommanderClass; derivationHash: string } | null, { commanderId: string; class: CommanderClass; derivationHash: string } | null];
+  commanderDeploys: [number, number];
   seenSeqs: number[];
   events: CombatEvent[];
   winner: PlayerIndex | "draw" | null;
@@ -353,6 +453,17 @@ export function validateCommanders(slots: [CommanderSlotInput | null, CommanderS
       if (typeof n !== "number" || !Number.isFinite(n) || n < 0) throw new AppError("BAD_REQUEST", "Commander stats must be non-negative numbers");
     }
     if (!Array.isArray(def.abilities)) throw new AppError("BAD_REQUEST", "Commander abilities must be an array");
+    // Unauthorized snapshot guard: abilities must be exactly the B1 roster
+    // set for the class, and free starter ids must name their own class.
+    const want = CLASS_ROSTER[def.class].abilities.map((a) => a.id).sort().join(",");
+    const got = def.abilities.map((a) => a?.id).sort().join(",");
+    if (want !== got) throw new AppError("BAD_REQUEST", "Commander abilities do not match the class roster");
+    if (slot.commanderId.startsWith("free-") && slot.commanderId !== `free-${def.class}`) {
+      throw new AppError("BAD_REQUEST", "Free starter id does not match its class");
+    }
+    if (typeof def.derivationHash !== "string" || def.derivationHash.length === 0) {
+      throw new AppError("BAD_REQUEST", "Commander snapshot requires a derivation hash");
+    }
   }
 }
 
@@ -363,16 +474,27 @@ export function validateChaos(schedule: ChaosSchedule | null | undefined): void 
     throw new AppError("BAD_REQUEST", "Chaos schedule requires events");
   }
 }
-export function validateDeck(deck: string[]): void {
+/** v6 deck contract: exactly 7 distinct ordinary cards + 1 commander card
+ * matching the player's trusted commander snapshot. */
+export function validateDeck(deck: string[], slot: CommanderSlotInput | null = null): void {
   if (!Array.isArray(deck) || deck.length !== 8) {
     throw new AppError("BAD_REQUEST", "Deck must contain exactly 8 cards");
   }
   const seen = new Set<string>();
+  let commanders = 0;
   for (const id of deck) {
-    if (!CARDS_V1[id]) throw new AppError("BAD_REQUEST", `Card not playable: ${id}`);
+    if (typeof id !== "string") throw new AppError("BAD_REQUEST", "Card ids must be strings");
     if (seen.has(id)) throw new AppError("BAD_REQUEST", `Duplicate card in deck: ${id}`);
     seen.add(id);
+    if (isCommanderCard(id)) {
+      commanders += 1;
+      if (!slot) throw new AppError("BAD_REQUEST", "Commander card requires a trusted commander snapshot");
+      if (id !== commanderCardId(slot.commanderId)) throw new AppError("BAD_REQUEST", `Commander card does not match snapshot: ${id}`);
+      continue;
+    }
+    if (!CARDS_V1[id]) throw new AppError("BAD_REQUEST", `Card not playable: ${id}`);
   }
+  if (commanders !== 1) throw new AppError("BAD_REQUEST", "Deck must contain exactly 7 ordinary cards and 1 commander card");
 }
 
 export function initMatch(config: CombatConfig): CombatState {
@@ -380,8 +502,10 @@ export function initMatch(config: CombatConfig): CombatState {
     throw new AppError("BAD_REQUEST", `Unsupported combat ruleset: ${config.rulesetVersion}`);
   }
   if (!config.seed || config.seed.trim().length === 0) throw new AppError("BAD_REQUEST", "Match requires a seed");
-  validateDeck(config.decks[0]);
-  validateDeck(config.decks[1]);
+  validateCommanders(config.commanders);
+  const slots = config.commanders ?? [null, null];
+  validateDeck(config.decks[0], slots[0]);
+  validateDeck(config.decks[1], slots[1]);
   if (config.commanderIds) {
     for (const c of config.commanderIds) {
       if (c !== null && (typeof c !== "string" || c.length === 0 || c.length > 120)) {
@@ -389,7 +513,6 @@ export function initMatch(config: CombatConfig): CombatState {
       }
     }
   }
-  validateCommanders(config.commanders);
   validateChaos(config.chaos);
   const structures: StructureEntity[] = [];
   for (const t of ARENA_V2.towers) {
@@ -421,38 +544,48 @@ export function initMatch(config: CombatConfig): CombatState {
     zoneMods: [],
     riftOpenUntil: 0,
     nextEntityId: 0,
+    commanderSnapshots: [
+      slots[0] ? { commanderId: slots[0].commanderId, class: slots[0].definition.class, derivationHash: slots[0].definition.derivationHash } : null,
+      slots[1] ? { commanderId: slots[1].commanderId, class: slots[1].definition.class, derivationHash: slots[1].definition.derivationHash } : null,
+    ],
+    commanderDeploys: [0, 0],
     seenSeqs: [],
     events: [],
     winner: null,
     endReason: null,
     crowns: [0, 0],
   };
-  const slots = config.commanders ?? [null, null];
-  (slots as Array<CommanderSlotInput | null>).forEach((slot, i) => {
-    if (!slot) return;
-    const owner = i as PlayerIndex;
-    const def = slot.definition;
-    const commander: CommanderEntity = {
-      id: `c${i}`,
+  // v6: no commander exists at tick 0; it is deployed from hand.
+  return state;
+}
+
+/** Spawn the authoritative commander entity from the trusted snapshot and
+ * the class-keyed runtime profile (client stats are never used). */
+function spawnCommander(state: CombatState, owner: PlayerIndex, x: number, y: number): CommanderEntity {
+  const snap = state.commanderSnapshots[owner]!;
+  const p = COMMANDER_COMBAT_PROFILE_V1[snap.class];
+  state.commanderDeploys[owner] += 1;
+  const commander: CommanderEntity = {
+      id: `c${owner}-${state.commanderDeploys[owner]}`,
       kind: "commander",
       owner,
-      commanderId: slot.commanderId,
-      class: def.class,
-      x: 50,
-      y: owner === 0 ? 30 : 130,
-      hp: Math.round(def.stats.health),
-      maxHp: Math.round(def.stats.health),
-      damage: Math.round(def.stats.damage),
-      range: Math.max(1, Math.round(def.stats.range)),
-      speed: Math.max(1, Math.round(def.stats.moveSpeed)),
-      sight: 30,
-      interval: Math.max(1, Math.round(def.stats.attackIntervalMs / 100)),
-      cooldownUntil: 0,
+      commanderId: snap.commanderId,
+      class: snap.class,
+      x,
+      y,
+      hp: p.hp,
+      maxHp: p.hp,
+      damage: p.damage,
+      range: p.range,
+      speed: p.speed,
+      sight: p.sight,
+      interval: p.intervalTicks,
+      cooldownUntil: state.tick,
       targetId: null,
-      armor: Math.max(0, Math.floor(def.stats.armor)),
-      preference: def.stats.targetPreference,
+      armor: p.armor,
+      preference: CLASS_ROSTER[snap.class].baseStats.targetPreference,
       moveType: "ground",
-      hitsAir: def.class === "deadeye",
+      hitsAir: p.hitsAir,
       hitsGround: true,
       structPriority: false,
       splashRadius: 0,
@@ -473,18 +606,13 @@ export function initMatch(config: CombatConfig): CombatState {
       reflectFracDenom: 1,
       guardUntil: 0,
       guardPct: 0,
-      abilities: def.abilities,
+      abilities: runtimeAbilities(snap.class),
       abilityReadyAt: {},
-      derivationHash: def.derivationHash,
+      derivationHash: snap.derivationHash,
       moveCarry: 0,
-    };
-    state.commanders.push(commander);
-    state.events.push({ type: "commander_deployed", tick: 0, player: owner, commanderId: slot.commanderId, class: def.class });
-    for (const ability of def.abilities) {
-      if (ability.trigger === "deploy") fireCommanderAbility(state, owner, ability.id);
-    }
-  });
-  return state;
+  };
+  state.commanders.push(commander);
+  return commander;
 }
 
 function dist2(ax: number, ay: number, bx: number, by: number): number {
@@ -969,11 +1097,58 @@ function pickCommanderTarget(
 }
 
 
+function commanderAlive(state: CombatState, p: PlayerIndex): boolean {
+  return state.commanders.some((c) => c.owner === p && c.hp > 0);
+}
+
+/**
+ * Card cycle (v6): the played card leaves the hand, the queue head is drawn,
+ * then the played card joins the queue tail. Commander hold policy: while
+ * the player's commander is alive its card cannot be drawn; if it reaches
+ * the queue head it moves to the tail and the next card is drawn instead,
+ * so the hand never holds an unplayable commander. After the commander dies
+ * the card is drawable again from its current queue position.
+ */
+function playFromHand(state: CombatState, p: PlayerIndex, cardId: string): void {
+  const hand = state.hands[p];
+  hand.splice(hand.indexOf(cardId), 1);
+  const queue = state.queues[p];
+  const held = commanderAlive(state, p) || isCommanderCard(cardId);
+  if (held && queue.length > 1 && isCommanderCard(queue[0]!)) queue.push(queue.shift()!);
+  const next = queue.shift();
+  if (next !== undefined) hand.push(next);
+  queue.push(cardId);
+}
+
+/** Deploy the commander card: same hand/energy/territory rules as troops,
+ * one living commander per player, stats from the trusted snapshot class. */
+function deployCommander(state: CombatState, cmd: DeployCommand): void {
+  const snap = state.commanderSnapshots[cmd.player];
+  if (!snap || cmd.cardId !== commanderCardId(snap.commanderId)) throw new AppError("BAD_REQUEST", "Wrong commander reference");
+  const hand = state.hands[cmd.player];
+  if (!hand.includes(cmd.cardId)) throw new AppError("UNPROCESSABLE", `Card ${cmd.cardId} not in hand`);
+  if (commanderAlive(state, cmd.player)) throw new AppError("UNPROCESSABLE", "Commander already deployed");
+  const cost = COMMANDER_COMBAT_PROFILE_V1[snap.class].cost;
+  if (state.energy[cmd.player] < cost) throw new AppError("UNPROCESSABLE", "Insufficient energy");
+  const zone = troopDeployCheck(state.structures, cmd.player, cmd.x, cmd.y);
+  if (!zone.ok) throw new AppError("UNPROCESSABLE", zone.reason);
+  state.energy[cmd.player] -= cost;
+  playFromHand(state, cmd.player, cmd.cardId);
+  state.seenSeqs.push(cmd.seq);
+  const c = spawnCommander(state, cmd.player, cmd.x, cmd.y);
+  state.events.push({ type: "deploy", tick: state.tick, player: cmd.player, cardId: cmd.cardId, entityIds: [c.id] });
+  state.events.push({ type: "commander_deployed", tick: state.tick, player: cmd.player, commanderId: snap.commanderId, class: snap.class });
+  for (const ability of c.abilities) {
+    if (ability.trigger === "deploy") fireAbilityOn(state, c, ability.id);
+  }
+}
+
 function applyDeploy(state: CombatState, cmd: DeployCommand, counter: { n: number }): void {
   if (state.phase === "final") throw new AppError("CONFLICT", "Match already finalized");
   if (state.seenSeqs.includes(cmd.seq)) throw new AppError("CONFLICT", `Duplicate command seq: ${cmd.seq}`);
   if (cmd.tick < state.tick) throw new AppError("UNPROCESSABLE", `Stale command tick ${cmd.tick} < ${state.tick}`);
   if (cmd.player !== 0 && cmd.player !== 1) throw new AppError("BAD_REQUEST", "Invalid player");
+  if (typeof cmd.cardId === "string" && isCommanderCard(cmd.cardId)) return deployCommander(state, cmd);
   const def = CARDS_V1[cmd.cardId];
   if (!def) throw new AppError("BAD_REQUEST", `Card not playable: ${cmd.cardId}`);
   const hand = state.hands[cmd.player];
@@ -986,11 +1161,7 @@ function applyDeploy(state: CombatState, cmd: DeployCommand, counter: { n: numbe
   }
   if (isSpell && !inArena(cmd.x, cmd.y)) throw new AppError("UNPROCESSABLE", "Spell target outside arena");
   state.energy[cmd.player] -= def.cost;
-  hand.splice(hand.indexOf(cmd.cardId), 1);
-  const queue = state.queues[cmd.player];
-  const next = queue.shift();
-  if (next !== undefined) hand.push(next);
-  queue.push(cmd.cardId);
+  playFromHand(state, cmd.player, cmd.cardId);
   state.seenSeqs.push(cmd.seq);
   if (isSpell) {
     castSpell(state, cmd, def as SpellCardDef);
@@ -1674,10 +1845,13 @@ export function combatRulesetSummary() {
     playableCards: Object.keys(CARDS_V1),
     commanders: {
       slots: 1,
-      entitlement: "trusted-server-input (B3 verifies ownership/lease; engine never re-checks wallets)",
-      spawn: "own-territory fixed positions (50,30)/(50,130) at tick 0, river-aware navigation like ground troops",
-      statMapping: "hp/damage 1:1, range cells 1:1 min 1, speed round min 1, interval ms/100, sight 30 default, armor flat min-1",
-      triggers: "deploy on spawn, onDeath on death, active auto-fire when off cooldown and targeting condition holds",
+      entitlement: "trusted-server-input (B3 verifies ownership/lease; engine never re-checks wallets); snapshot must carry the exact B1 roster abilities for its class; free ids must name their class",
+      deck: "exactly 7 distinct ordinary cards + 1 commander card `cmdr:<commanderId>` matching the snapshot",
+      deploy: "from hand only, pays profile cost, same territory/pocket/river/footprint rules as troops; no tick-0 spawn; one living commander per player",
+      cycle: "played card -> queue tail after drawing the head; while the commander lives its card is skipped at the queue head (moved to tail), so the hand never holds it; drawable again after death",
+      profile: { version: COMMANDER_PROFILE_VERSION, stats: COMMANDER_COMBAT_PROFILE_V1, abilityOverrides: ABILITY_RUNTIME_V1 },
+      statMapping: "class-keyed runtime profile; B1 stats, sidegrade variant and Tier never affect combat (free == NFT per class)",
+      triggers: "deploy on deploy, onDeath on death, active auto-fire when off cooldown and targeting condition holds (B2.6b moves actives to player activation)",
     },
     chaos: {
       ticks: "activationMs/100, warning 50 ticks prior",
@@ -1689,6 +1863,6 @@ export function combatRulesetSummary() {
       buff: "override on recast, fully reverts on expiry, troops only",
     },
     deferred: [],
-    compatibility: "v5 hashes differ from v4 by construction (commander targetability, footprints, octile movement, moveCarry + per-match entity ids in state); no persisted replays of earlier versions exist (pre-release, headless fixtures only)",
+    compatibility: "v6 configs differ from v5 (decks require a commander card; commanders spawn only by deploy; ids c<player>-<n>); v5 configs are rejected by validation. No persisted replays of earlier versions exist (pre-release, headless fixtures only)",
   };
 }

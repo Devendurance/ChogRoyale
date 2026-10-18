@@ -18,7 +18,8 @@
     "patrons:validate": "tsx scripts/patron-validate.ts",
     "chaos:validate": "tsx scripts/chaos-validate.ts",
     "combat:run": "tsx scripts/combat-run.ts",
-    "arena:scenarios": "tsx scripts/arena-scenarios.ts"
+    "arena:scenarios": "tsx scripts/arena-scenarios.ts",
+    "commanders:balance": "tsx scripts/commander-balance.ts"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

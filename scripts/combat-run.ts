@@ -3,22 +3,33 @@
 // authored v1 decks, optional commanders and a real B1.4b chaos schedule
 // derived from actual Genesis metadata (read-only). Prints the battle
 // summary and state hash. Never writes to any database.
-// Usage: npm run combat:run [-- --seed <s> --every <ticks> --commanders <class|free-class,class|free-class> --chaosPatron <tokenId>]
+// Usage: npm run combat:run [-- --seed <s> --every <ticks> --commanders <class|nft:<tokenId>,class|nft:<tokenId>> --chaosPatron <tokenId>]
+// Commanders default to free-warden,free-reaver. `nft:<tokenId>` derives the
+// commander from real Genesis metadata via B1 deriveCommander (read-only).
 import "dotenv/config";
-import { runMatch, COMBAT_RULESET_VERSION, TROOP_CARDS_V1, SPELL_CARDS_V1, type CombatConfig } from "@/lib/combat";
+import { runMatch, COMBAT_RULESET_VERSION, TROOP_CARDS_V1, SPELL_CARDS_V1, COMMANDER_COMBAT_PROFILE_V1, freeStarterSlot, commanderCardId, isCommanderCard, type CombatConfig, type CommanderSlotInput } from "@/lib/combat";
 import { botMatch } from "@/lib/arena-scenarios";
-import { freeCommanderTemplates, type CommanderClass } from "@/lib/commanders";
+import { deriveCommander, COMMANDER_CLASSES, type CommanderClass } from "@/lib/commanders";
 import { derivePatronConfig } from "@/lib/patrons";
 import { deriveChaosSchedule } from "@/lib/chaos";
 import { getNftByTokenId } from "@/db/nfts";
 
-const DECKS: [string[], string[]] = [
-  ["choglings", "chaos_archer", "chaos_bolt", "rally_horn", "boulderback", "frostshell", "rift_runner", "sparkcaster"],
-  ["boulderback", "frostshell", "choglings", "chaos_archer", "chog_guardian", "hexwing", "rift_runner", "sparkcaster"],
+const ORDINARY: [string[], string[]] = [
+  ["choglings", "chaos_archer", "chaos_bolt", "rally_horn", "boulderback", "frostshell", "rift_runner"],
+  ["boulderback", "frostshell", "choglings", "chaos_archer", "chog_guardian", "hexwing", "sparkcaster"],
 ];
 
-function cardCost(id: string): number {
-  return TROOP_CARDS_V1[id]?.cost ?? SPELL_CARDS_V1[id]?.cost ?? 99;
+async function slotFor(arg: string): Promise<CommanderSlotInput> {
+  if (arg.startsWith("nft:")) {
+    const tokenId = arg.slice(4);
+    const nft = await getNftByTokenId(tokenId);
+    if (!nft?.metadata || nft.metadata.status !== "resolved") throw new Error(`No resolved metadata for ${tokenId}`);
+    const definition = deriveCommander({ attributes: (nft.metadata.attributesOriginal ?? []) as Array<{ trait_type: string; value: string | number }> });
+    return { commanderId: `nft-${tokenId}`, definition };
+  }
+  const cls = arg.replace(/^free-/, "") as CommanderClass;
+  if (!(COMMANDER_CLASSES as readonly string[]).includes(cls)) throw new Error(`Unknown commander class: ${arg}`);
+  return freeStarterSlot(cls);
 }
 
 async function main() {
@@ -26,38 +37,16 @@ async function main() {
   const seedIdx = args.indexOf("--seed");
   const seed = seedIdx >= 0 ? (args[seedIdx + 1] ?? "dev-1") : "dev-1";
   const cmdIdx = args.indexOf("--commanders");
-  const cmdArg = cmdIdx >= 0 ? (args[cmdIdx + 1] ?? "") : "";
+  const cmdArg = cmdIdx >= 0 ? (args[cmdIdx + 1] ?? "") : "warden,reaver";
   const chaosIdx = args.indexOf("--chaosPatron");
   const chaosToken = chaosIdx >= 0 ? (args[chaosIdx + 1] ?? "") : "";
-  const config: CombatConfig = { rulesetVersion: COMBAT_RULESET_VERSION, seed, decks: DECKS };
-  if (cmdArg) {
-    const [c0, c1] = cmdArg.split(",");
-    const templates = freeCommanderTemplates();
-    const toSlot = (c: string | undefined, tag: string) => {
-      if (!c) return null;
-      const cls = c.replace(/^free-/, "") as CommanderClass;
-      const t = templates.find((x) => x.class === cls);
-      if (!t) throw new Error(`Unknown commander class: ${c}`);
-      return {
-        commanderId: `dev-${tag}-${t.id}`,
-        definition: {
-          rulesetVersion: "v1" as const,
-          class: t.class,
-          affinity: t.class,
-          scores: {} as Record<CommanderClass, number>,
-          signals: [],
-          unmatchedTraits: [],
-          stats: t.stats,
-          abilities: t.abilities,
-          variant: "dev",
-          prestige: "Common",
-          powerScore: t.powerScore,
-          derivationHash: `dev-${tag}`,
-        },
-      };
-    };
-    config.commanders = [toSlot(c0, "p0"), toSlot(c1, "p1")];
-  }
+  const [a0, a1] = cmdArg.split(",");
+  const slots: [CommanderSlotInput, CommanderSlotInput] = [await slotFor(a0 ?? "warden"), await slotFor(a1 ?? "reaver")];
+  // Commander card sits 5th in each deck (starts in the queue, drawn by cycling).
+  const deckOf = (p: 0 | 1) => [...ORDINARY[p].slice(0, 4), commanderCardId(slots[p].commanderId), ...ORDINARY[p].slice(4)];
+  const config: CombatConfig = { rulesetVersion: COMBAT_RULESET_VERSION, seed, decks: [deckOf(0), deckOf(1)], commanders: slots };
+  const cardCost = (id: string, p: 0 | 1) =>
+    isCommanderCard(id) ? COMMANDER_COMBAT_PROFILE_V1[slots[p].definition.class].cost : (TROOP_CARDS_V1[id]?.cost ?? SPELL_CARDS_V1[id]?.cost ?? 99);
   if (chaosToken) {
     const nft = await getNftByTokenId(chaosToken);
     if (!nft?.metadata || nft.metadata.status !== "resolved") throw new Error(`No resolved metadata for ${chaosToken}`);
@@ -90,11 +79,12 @@ async function main() {
         deploys: ev.filter((e) => e.type === "deploy").length,
         spells: ev.filter((e) => e.type === "spell_cast").length,
         rejected: ev.filter((e) => e.type === "command_rejected"),
-        energySpent: [0, 1].map((p) => bot.commands.filter((c) => c.player === p).reduce((n, c) => n + cardCost(c.cardId), 0)),
+        commanderSnapshots: slots.map((s) => ({ id: s.commanderId, class: s.definition.class, variant: s.definition.variant, prestige: s.definition.prestige })),
+        energySpent: ([0, 1] as const).map((p) => bot.commands.filter((c) => c.player === p).reduce((n, c) => n + cardCost(c.cardId, p), 0)),
         cardsPlayed: count(bot.commands.map((c) => `p${c.player}:${c.cardId}`)),
         lanes: count(troopCmds.map((c) => `p${c.player}:${lane(c.x)}`)),
         commanders: {
-          deployed: ev.filter((e) => e.type === "commander_deployed").length,
+          deployed: ev.filter((e) => e.type === "commander_deployed").map((e) => (e.type === "commander_deployed" ? `p${e.player}:${e.class}@${e.tick}` : "")),
           abilitiesFired: ev.filter((e) => e.type === "ability_fired").length,
           deaths: ev.filter((e) => e.type === "death" && e.entityId.startsWith("c")).map((e) => (e.type === "death" ? `${e.entityId}@${e.tick}` : "")),
         },
