@@ -23,7 +23,8 @@
     "buildings:matchup": "tsx scripts/building-matchup.ts",
     "roster:scenarios": "tsx scripts/roster-scenarios.ts",
     "chaos:fairness": "tsx scripts/chaos-fairness.ts",
-    "bots:economy": "tsx scripts/bot-economy.ts"
+    "bots:economy": "tsx scripts/bot-economy.ts",
+    "balance:calibrate": "tsx scripts/balance-calibration.ts"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

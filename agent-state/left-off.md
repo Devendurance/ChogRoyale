@@ -17,6 +17,7 @@ Last updated: 2026-10-18
 - Ranked Chaos spatial fairness (ruleset v13): raw B1 zones were side-biased (Ember 128/169, Rift Shift 158/172 events across 6 trait sets x 50 seeds; Rift Shift skews to P1 home 139 vs 19). Combat now closes zones under the mirror with budget split. Also fixed Ember Rift damage, which never landed before v13. Raw side swaps 40/48 -> 48/48, lane-swap raw 31/40 -> 40/40. B1 schedules and hashes untouched.
 - Neon test stabilization: the 3 assertion failures were leftover legacy fixtures from a cleanup hook that timed out (reproduced exactly). players.test.ts had no TEST routing and wrote to PROD, leaving 7 did:privy:test_ players (5 wallets, 9 roles) on PROD. Fixed routing + VITEST fail-closed guard + endpoint guard + self-healing batched cleanup + 60s hooks. TEST leftovers (4 players) removed. DB files together 58/58, full suite 354/354.
 - B2.7c4 (ruleset v14): resource-aware smartMove bot + economy harness (npm run bots:economy). Smart beats simple 34/36. Swarm still dominates under both bots (simple 27/30, smart 30/30). Ablations point at cheap always-useful card density and the 4e scout commander, not energy waste or first-affordable play. Engine fix: footprint detour ties now mirror for P1.
+- B2.7c5 calibration (npm run balance:calibrate): Scout 5e, Choglings 3e, Choglings 50 HP tested in isolation. HOLD, no shipped change, v14 kept. Only Choglings 3e moved swarm a lot and mostly under the simple bot. Revised control deck went 4/80 -> 44/80 with unchanged cards. Smart bot is seed-free, so no-Chaos smart samples are 10 distinct games per deck. Details in .fast-build/STATE.md.
 
 ## Currently working on
 
@@ -29,7 +30,7 @@ Last updated: 2026-10-18
 
 ## Next up
 
-- B2.7c3 cheap-deck economy investigation (swarm deck 64/64), then spawner building, then B3 transport (Colyseus). First review proposed balance numbers from B2.7c4 (scout 4e -> 5e, cheap-unit efficiency, control deck rework). B3 transport covers: authenticated match creation, entitlement verification feeding the trusted engine inputs, settlement events feeding legacy intake. Neither started; no fabricated matches exist.
+- User review of the B2.7c5 hold. Swarm and breaker share a cheap core (choglings, sprites, snare, archer, guardian, scout) and both still beat revised control 0/16. Then spawner building, then B3 transport (Colyseus). B3 transport covers: authenticated match creation, entitlement verification feeding the trusted engine inputs, settlement events feeding legacy intake. Neither started; no fabricated matches exist.
 
 ## Known issues / open items
 
