@@ -36,6 +36,7 @@ Last updated: 2026-10-19
 
 ## Local asset workflow
 
+- Chogling c001 2D cutout is frozen at `C:/Users/USER/Documents/ChogRoyale-Assets/chogling-2d-production/c001-cutout-prototype-20261019-154531/`, with `REPORT.md` and `gallery.html`. Editable ORA has 11 layers, plus linked-PNG SVG, rig JSON and regeneration scripts. Approved m001 head RGB is preserved before transforms; the generated replacement head is unused. Eight-key walk is 800 ms and punch is 840 ms. Delivery has 18 GIFs and 96 RGBA frame PNGs, including phased three-unit previews, full and 192x256 canvases and neutral character heights 128/96/64/48 px. Independent preservation passed 444/444. Method is promising and the rightward punch reads at 48/64 px, but this candidate is not production-accepted: hip/torso joins, ankle cap lines and a short shuffle stride remain. Zero keyed stance drift and a 2 px full-resolution filtered sole fringe do not validate interpolation or runtime motion. One bounded iteration stopped, no atlas, Phaser test, Tripo, 3D edits, gameplay edits or push.
 - Reference workflow proposal: `docs/character-reference-workflow.md`. User selected five NFT commanders plus two original troops. Source evidence and original portraits are outside the repo in `C:/Users/USER/Documents/ChogRoyale-Assets/reference-research-20261018`.
 - Verified v1 pilot IDs: 341 bulwark (CHOG #1802), 897 reaver (#389), 171 deadeye (#1632), 1128 scout (#620), 1720 warden (#1212). Original troop pilot: Choglings and Boulderback. Exporter and models are proposed, not implemented.
 

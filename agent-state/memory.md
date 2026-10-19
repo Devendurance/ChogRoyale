@@ -22,6 +22,7 @@ Durable facts, conventions, and gotchas that should survive across sessions.
 
 ## Gotchas
 
+- 2D cutout c001 is frozen under `C:/Users/USER/Documents/ChogRoyale-Assets/chogling-2d-production/c001-cutout-prototype-20261019-154531/`. Preserve m001 head RGB and assert alpha after part extraction. Scale every key from one neutral character height, not canvas height. Whole punch intent survives at 48/64 px, while lower-body joins and short shuffle stride still block this candidate. Keyed zero stance drift does not prove interpolated motion or Phaser integration. ORA edits alone are not consumed by regeneration: save replacement part art separately and update rig source/crop/pivot. Independent preservation passed 444/444 source files.
 - On-chain token IDs differ from artwork/display numbers. Always follow `token_uri_original` and `image_original`, never build filenames from token ID.
 - `nft_metadata.content_hash` hashes fetched JSON bytes. JSONB exports preserve semantics and need a separate exported-file hash. Commander hashes are separate derivation hashes.
 - Chog visual DNA (measured on r001 pixels): cream face #eee8d8, or brown #552d1f to #613222 on Skin Black. Backswept 4 to 5 two-tone rear spikes in the Skin color (Red #ee0e0e, Origin violet #5c36b1, Black charcoal #212327 with grey #919191). Blush #d6407c on all five samples. No nose, no ears. Skull form has no spikes. Collection: Form Chog 1899 / Skull 60, Side Right 1309 / Left 650. Skin Pink 557 and Yellow 246 are not in the local samples.
