@@ -38,15 +38,43 @@ import {
   type BattleFrame,
   type CardInfo,
   type ChaosView,
+  type CommanderIdentity,
   type EndMessage,
   type FrameEvent,
   type LobbyMessage,
   type SessionPhase,
   type StartMessage,
 } from "@/lib/battle-protocol";
+import {
+  commanderCardId as engineCommanderCardId,
+  isCommanderCard,
+  validateDeck,
+  type BuildingCardDef,
+  type SpellCardDef,
+  type TroopCardDef,
+} from "@/lib/combat";
+import type { CommanderGrant } from "@/server/battle/entitlement";
 
-/** Server-approved B3.1 decks: free commanders only, no NFT entitlement claims. */
-export const APPROVED_DECKS: Record<string, string[]> = DECKS_V13;
+/** Loadout suggestions derived from the B3.1 field decks. Advisory only;
+ * players build their own 7 + commander and the server re-validates. */
+export const PRESETS: Record<string, { cards: string[]; commanderClass: string }> = Object.fromEntries(
+  Object.entries(DECKS_V13).map(([name, deck]) => {
+    const cmdr = deck.find((c) => isCommanderCard(c)) ?? "";
+    return [name, { cards: deck.filter((c) => !isCommanderCard(c)), commanderClass: cmdr.replace(/^cmdr:free-/, "") }];
+  })
+);
+
+/** A player-built loadout after server-side entitlement resolution. */
+export interface TrustedLoadout {
+  /** The 7 ordinary cards, in the player's own order. */
+  cards: string[];
+  grant: CommanderGrant;
+}
+
+/** 8-card engine deck: the player's 7 ordinary cards, commander card last. */
+export function deckFor(loadout: TrustedLoadout): string[] {
+  return [...loadout.cards, engineCommanderCardId(loadout.grant.slot.commanderId)];
+}
 /** Per-seat command cap per tick; extra intents are rejected, not queued. */
 export const MAX_COMMANDS_PER_TICK = 2;
 
@@ -70,6 +98,8 @@ export interface ReplayRecord {
   winner: PlayerIndex | "draw" | null;
   endReason: string | null;
   ticks: number;
+  /** Commander identity per seat, from the grants locked at match start. */
+  commanders: [CommanderIdentity, CommanderIdentity];
 }
 
 interface Pending {
@@ -90,23 +120,75 @@ const PUBLIC_EVENTS = new Set([
 ]);
 const OWN_EVENTS = new Set(["command_rejected", "ability_ready"]);
 
+// Descriptions are derived mechanically from the authored def fields; no
+// hand-written numbers and no new rules.
+function describe(card: TroopCardDef | SpellCardDef | BuildingCardDef): string {
+  if ("lifetimeTicks" in card) {
+    const b = card;
+    const attack = b.damage > 0 ? `, ${b.damage} damage every ${b.attackIntervalTicks / 10}s, range ${b.range}${b.hitsAir ? ", hits air" : ""}` : ", no attack";
+    return `Building with ${b.hp} hp${attack}. Lasts ${b.lifetimeTicks / 10}s, footprint ${b.footprint}.`;
+  }
+  if ("count" in card) {
+    const t = card;
+    const parts = [
+      t.count > 1 ? `${t.count} units` : "Unit",
+      `${t.hp} hp`,
+      t.damage > 0 ? `${t.damage} damage` : "no attack",
+      `range ${t.range}`,
+      `speed ${t.speed}`,
+    ];
+    if (t.moveType === "air") parts.push("air");
+    else if (t.hitsAir) parts.push("hits air");
+    if (t.splashRadius > 0) parts.push(`splash ${t.splashRadius}`);
+    if (t.structPriority) parts.push("targets structures");
+    if (t.slowPct > 0) parts.push(`slows ${t.slowPct}%`);
+    if (t.targetPriority === "air") parts.push("prioritizes air");
+    if (t.targetPriority === "building") parts.push("prioritizes buildings");
+    return `${parts.join(", ")}.`;
+  }
+  const s = card;
+  const parts = [`radius ${s.radius}`];
+  if (s.damage > 0) parts.push(`${s.damage} damage`);
+  if (s.buffPct !== 0) parts.push(`${s.buffPct}% buff for ${s.buffDurationTicks / 10}s`);
+  if (s.impact) parts.push(`lands after ${s.impact.delayTicks / 10}s`);
+  return `Spell: ${parts.join(", ")}.`;
+}
+
+function commanderDescription(cls: string): string {
+  const p = COMMANDER_COMBAT_PROFILE_V1[cls as keyof typeof COMMANDER_COMBAT_PROFILE_V1];
+  if (!p) return "";
+  return `${cls[0]!.toUpperCase()}${cls.slice(1)} commander: ${p.hp} hp, ${p.damage} damage, range ${p.range}, speed ${p.speed}${p.armor > 0 ? `, armor ${p.armor}` : ""}${p.hitsAir ? ", hits air" : ""}.`;
+}
+
 export function cardCatalog(): Record<string, CardInfo> {
   const out: Record<string, CardInfo> = {};
-  for (const t of Object.values(TROOP_CARDS_V1)) out[t.id] = { id: t.id, name: t.name, cost: t.cost, kind: "troop", air: t.moveType === "air", radius: 0 };
-  for (const s of Object.values(SPELL_CARDS_V1)) out[s.id] = { id: s.id, name: s.name, cost: s.cost, kind: "spell", air: false, radius: s.radius };
-  for (const b of Object.values(BUILDING_CARDS_V1)) out[b.id] = { id: b.id, name: b.name, cost: b.cost, kind: "building", air: false, radius: b.footprint };
+  for (const t of Object.values(TROOP_CARDS_V1)) out[t.id] = { id: t.id, name: t.name, cost: t.cost, kind: "troop", air: t.moveType === "air", radius: 0, description: describe(t) };
+  for (const s of Object.values(SPELL_CARDS_V1)) out[s.id] = { id: s.id, name: s.name, cost: s.cost, kind: "spell", air: false, radius: s.radius, description: describe(s) };
+  for (const b of Object.values(BUILDING_CARDS_V1)) out[b.id] = { id: b.id, name: b.name, cost: b.cost, kind: "building", air: false, radius: b.footprint, description: describe(b) };
   for (const [cls, p] of Object.entries(COMMANDER_COMBAT_PROFILE_V1)) {
     const id = `cmdr:free-${cls}`;
-    out[id] = { id, name: `${cls[0]!.toUpperCase()}${cls.slice(1)} Commander`, cost: p.cost, kind: "commander", air: false, radius: 0 };
+    out[id] = { id, name: `${cls[0]!.toUpperCase()}${cls.slice(1)} Commander`, cost: p.cost, kind: "commander", air: false, radius: 0, description: commanderDescription(cls) };
   }
   return out;
+}
+
+/** The 18 ordinary (non-commander) cards the loadout picker offers. */
+const cap = (s: string) => `${s[0]!.toUpperCase()}${s.slice(1)}`;
+
+export function ordinaryCatalog(): CardInfo[] {
+  return Object.values(cardCatalog()).filter((c) => c.kind !== "commander");
 }
 
 export class BattleSession {
   phase: SessionPhase = "waiting";
   /** Join order slots; seats are assigned by the server at start. */
   readonly slots: Array<SeatPlayer | null> = [null, null];
-  readonly ready: Array<string | null> = [null, null];
+  /** Confirmed loadouts per join slot; a non-null entry means ready. */
+  private readonly loadouts: Array<TrustedLoadout | null> = [null, null];
+  /** Set when both players are ready; loadouts can no longer change. */
+  locked = false;
+  /** Bumped on every lock/unlock so a stale async start cannot fire. */
+  lockEpoch = 0;
   /** slot -> seat, set at start. */
   seatOfSlot: [PlayerIndex, PlayerIndex] = [0, 1];
   config: CombatConfig | null = null;
@@ -144,37 +226,95 @@ export class BattleSession {
     if (slot < 0) return;
     if (this.phase === "waiting") {
       this.slots[slot] = null;
-      this.ready[slot] = null;
+      this.loadouts[slot] = null;
+      if (this.locked) {
+        this.locked = false;
+        this.lockEpoch += 1;
+      }
     } else if (this.phase === "active") {
       this.phase = "aborted";
       this.abortReason = "Opponent disconnected. No result recorded (reconnect is a later B3 slice).";
     }
   }
 
-  setReady(playerId: string, deck: string): boolean {
+  setReady(playerId: string, loadout: TrustedLoadout): boolean {
     const slot = this.slotOf(playerId);
     if (slot < 0 || this.phase !== "waiting") throw new Error("Not waiting for this player");
-    if (!APPROVED_DECKS[deck]) throw new Error("Unknown deck");
-    this.ready[slot] = deck;
-    if (this.slots.every((p) => p !== null) && this.ready.every((d) => d !== null)) {
-      this.start();
-      return true;
-    }
-    return false;
+    if (this.locked) throw new Error("Loadouts are locked");
+    // Rejects duplicates, unknown ids and extra/mismatched commander cards.
+    validateDeck(deckFor(loadout), loadout.grant.slot);
+    this.loadouts[slot] = loadout;
+    return this.slots.every((p) => p !== null) && this.loadouts.every((l) => l !== null);
+  }
+
+  unready(playerId: string): void {
+    const slot = this.slotOf(playerId);
+    if (slot < 0 || this.phase !== "waiting") throw new Error("Not waiting for this player");
+    if (this.locked) throw new Error("Loadouts are locked");
+    this.loadouts[slot] = null;
+  }
+
+  /** Lock both confirmed loadouts for the async re-check before start. */
+  lock(): number {
+    this.locked = true;
+    this.lockEpoch += 1;
+    return this.lockEpoch;
+  }
+
+  /** Undo one player's ready and unlock (e.g. entitlement failed at start). */
+  clearReady(slot: number): void {
+    this.loadouts[slot] = null;
+    this.locked = false;
+    this.lockEpoch += 1;
+  }
+
+  /** Snapshot of the locked loadouts, indexed by join slot. */
+  readyLoadouts(): [TrustedLoadout | null, TrustedLoadout | null] {
+    const snap = (l: TrustedLoadout | null): TrustedLoadout | null => (l ? { cards: [...l.cards], grant: l.grant } : null);
+    return [snap(this.loadouts[0]), snap(this.loadouts[1])];
   }
 
   lobby(slot: number): LobbyMessage {
-    return { phase: this.phase, you: slot, players: this.slots.map((p, i) => ({ username: p?.username ?? "", ready: this.ready[i] !== null, deck: this.ready[i] ?? null })), decks: APPROVED_DECKS };
+    const mine = this.loadouts[slot];
+    return {
+      phase: this.phase,
+      you: slot,
+      locked: this.locked,
+      players: this.slots.map((p, i) => ({ username: p?.username ?? "", ready: this.loadouts[i] !== null })),
+      catalog: ordinaryCatalog(),
+      presets: PRESETS,
+      mine: mine ? { cards: [...mine.cards], commander: mine.grant.identity } : null,
+    };
   }
 
-  private start(): void {
+  /**
+   * Start after lock(): requires the same epoch (any unlock/leave in between
+   * abandons it). `rechecked` carries the grants re-verified post-lock,
+   * indexed by join slot.
+   */
+  start(epoch: number, rechecked: [TrustedLoadout, TrustedLoadout]): void {
+    if (this.phase !== "waiting" || !this.locked || epoch !== this.lockEpoch) {
+      throw new Error("Loadout lock is stale");
+    }
+    // The re-check may refresh a grant but never change what was locked.
+    for (const s of [0, 1] as const) {
+      const locked = this.loadouts[s];
+      const r = rechecked[s];
+      if (!locked || locked.cards.join(",") !== r.cards.join(",") || locked.grant.slot.commanderId !== r.grant.slot.commanderId) {
+        throw new Error("Loadout changed after lock");
+      }
+      validateDeck(deckFor(r), r.grant.slot);
+    }
+    this.loadouts[0] = rechecked[0];
+    this.loadouts[1] = rechecked[1];
     // Server-controlled seats, seed and Chaos patron. The seed never leaves the server.
     this.seatOfSlot = this.rng.int(2) === 0 ? [0, 1] : [1, 0];
     const seed = this.rng.seed();
     const patrons = Object.keys(FAIRNESS_PATRONS);
     const schedule = fairnessSchedule(patrons[this.rng.int(patrons.length)]!, seed);
-    const deckOf = (seat: PlayerIndex) => APPROVED_DECKS[this.ready[this.seatOfSlot.indexOf(seat)]!]!;
-    this.config = scenarioConfig(deckOf(0), deckOf(1), schedule, seed);
+    const deckOf = (seat: PlayerIndex) => deckFor(rechecked[this.seatOfSlot.indexOf(seat)]!);
+    const slotOf = (seat: PlayerIndex) => rechecked[this.seatOfSlot.indexOf(seat)]!.grant.slot;
+    this.config = scenarioConfig(deckOf(0), deckOf(1), schedule, seed, [slotOf(0), slotOf(1)]);
     this.state = initMatch(this.config);
     this.phase = "active";
   }
@@ -182,6 +322,19 @@ export class BattleSession {
   startMessage(slot: number): StartMessage {
     const seat = this.seatOfSlot[slot]!;
     const opp = this.slots[this.seatOfSlot.indexOf((1 - seat) as PlayerIndex)]!;
+    const grant = this.loadouts[slot]!.grant;
+    const catalog = cardCatalog();
+    // The player's own commander card uses the identity name (e.g. an NFT's
+    // "CHOG #1462 · Scout"); the opponent's commander is never listed here.
+    catalog[grant.identity.cardId] = {
+      id: grant.identity.cardId,
+      name: grant.identity.kind === "nft" ? `${grant.identity.name} · ${cap(grant.identity.class)}` : grant.identity.name,
+      cost: COMMANDER_COMBAT_PROFILE_V1[grant.slot.definition.class].cost,
+      kind: "commander",
+      air: false,
+      radius: 0,
+      description: commanderDescription(grant.identity.class),
+    };
     return {
       protocol: BATTLE_PROTOCOL_VERSION,
       ruleset: COMBAT_RULESET_VERSION,
@@ -189,7 +342,8 @@ export class BattleSession {
       seat,
       opponent: opp.username,
       deck: [...this.config!.decks[seat]],
-      catalog: cardCatalog(),
+      commander: grant.identity,
+      catalog,
       geometry: {
         width: ARENA_V2.maxX,
         height: ARENA_V2.maxY,
@@ -264,7 +418,8 @@ export class BattleSession {
     const replay = runMatch(this.config!, this.commands);
     const liveHash = stateHash(state);
     const players = [this.slots[this.seatOfSlot.indexOf(0)]!, this.slots[this.seatOfSlot.indexOf(1)]!] as [SeatPlayer, SeatPlayer];
-    this.replay = { config: this.config!, commands: [...this.commands], players, liveHash, replayHash: replay.result.stateHash, replayIdentical: replay.result.stateHash === liveHash, winner: state.winner, endReason: state.endReason, ticks: state.tick };
+    const commanders = [this.loadouts[this.seatOfSlot.indexOf(0)]!.grant.identity, this.loadouts[this.seatOfSlot.indexOf(1)]!.grant.identity] as [CommanderIdentity, CommanderIdentity];
+    this.replay = { config: this.config!, commands: [...this.commands], players, liveHash, replayHash: replay.result.stateHash, replayIdentical: replay.result.stateHash === liveHash, winner: state.winner, endReason: state.endReason, ticks: state.tick, commanders };
     const msg = (seat: PlayerIndex): EndMessage => ({
       result: state.winner === "draw" || state.winner === null ? "draw" : state.winner === seat ? "win" : "loss",
       reason: state.endReason,

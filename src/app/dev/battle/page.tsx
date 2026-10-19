@@ -7,9 +7,10 @@ import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PrivyProvider, usePrivy, useLogin } from "@privy-io/react-auth";
 import { Client, type Room } from "@colyseus/sdk";
-import { BATTLE_ROOM, type AckMessage, type BattleFrame, type CardInfo, type EndMessage, type LobbyMessage, type StartMessage } from "@/lib/battle-protocol";
+import { BATTLE_ROOM, type AckMessage, type BattleFrame, type CardInfo, type CommanderChoice, type EndMessage, type LobbyMessage, type StartMessage } from "@/lib/battle-protocol";
 import { aimPoint, endGesture, moveGesture, placementHint, startGesture, type ArenaPoint, type Gesture } from "@/lib/battle-input";
 import type { BoardMapper, CanvasFeed } from "./BattleCanvas";
+import LoadoutPicker from "./LoadoutPicker";
 
 const BattleCanvas = dynamic(() => import("./BattleCanvas"), { ssr: false });
 const APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID ?? "";
@@ -26,7 +27,6 @@ function BattlePanel() {
   const [code, setCode] = useState("");
   const [room, setRoom] = useState<Room | null>(null);
   const [lobby, setLobby] = useState<LobbyMessage | null>(null);
-  const [deck, setDeck] = useState("swarm");
   const [start, setStart] = useState<StartMessage | null>(null);
   const [frame, setFrame] = useState<BattleFrame | null>(null);
   const [acks, setAcks] = useState<Array<AckMessage & { label: string }>>([]);
@@ -206,20 +206,16 @@ function BattlePanel() {
           <div>Share the room code with your opponent. Seats, seed and Chaos patron are chosen by the server.</div>
           {lobby.players.map((p, i) => (
             <div key={i}>
-              Slot {i + 1}: {p.username || "(empty)"} {p.ready ? `ready (${p.deck})` : ""} {i === lobby.you ? "(you)" : ""}
+              Slot {i + 1}: {p.username || "(empty)"} {p.ready ? "ready" : ""} {i === lobby.you ? "(you)" : ""}
             </div>
           ))}
-          <div style={{ display: "flex", gap: 8 }}>
-            <select value={deck} onChange={(e) => setDeck(e.target.value)} style={{ color: "#000" }}>
-              {Object.keys(lobby.decks).map((d) => (
-                <option key={d} value={d}>
-                  {d}
-                </option>
-              ))}
-            </select>
-            <button onClick={() => room?.send("ready", { deck })}>Ready</button>
-          </div>
-          <div style={{ fontSize: 12 }}>{lobby.decks[deck]?.join(", ")}</div>
+          <LoadoutPicker
+            lobby={lobby}
+            mine={lobby.mine}
+            getAccessToken={getAccessToken}
+            onConfirm={(cards, commander: CommanderChoice) => room?.send("ready", { cards, commander })}
+            onEdit={() => room?.send("unready")}
+          />
         </section>
       )}
 
@@ -229,6 +225,16 @@ function BattlePanel() {
             <span>vs {start.opponent}</span>
             <span>
               {frame ? `${frame.phase === "overtime" ? "OT " : ""}${secs(frame.clockTicks)}` : "--"} · crowns you {frame?.crowns[me] ?? 0} - {frame?.crowns[1 - me] ?? 0} them
+            </span>
+          </div>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 11 }}>
+            {start.commander.imageOriginal && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={start.commander.imageOriginal.startsWith("ipfs://") ? `https://ipfs.filebase.io/ipfs/${start.commander.imageOriginal.slice(7)}` : start.commander.imageOriginal} alt={start.commander.name} width={28} height={28} />
+            )}
+            <span>
+              your commander: {start.commander.name} ({start.commander.class} · {start.commander.variant} · {start.commander.prestige})
+              {start.commander.kind === "nft" ? ` · token ${start.commander.tokenId}` : " · free"}
             </span>
           </div>
           <div style={{ fontSize: 11 }}>them: {towers(1 - me)}</div>

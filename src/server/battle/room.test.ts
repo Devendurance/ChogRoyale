@@ -1,5 +1,6 @@
 // Real Colyseus server + real SDK clients over WebSockets. Only the Privy
-// verifier and player loader are injected (no network auth, no DB).
+// verifier, player loader and commander entitlement deps are injected (no
+// network auth, no DB, no real chain reads).
 import { existsSync, mkdtempSync, readFileSync } from "fs";
 import os from "os";
 import path from "path";
@@ -8,7 +9,21 @@ import { Client, type Room } from "@colyseus/sdk";
 import type { Server } from "@colyseus/core";
 import { getEnv } from "@/lib/env";
 import type { Player } from "@/db/schema";
-import { BATTLE_ROOM, type AckMessage, type BattleFrame, type EndMessage, type StartMessage } from "@/lib/battle-protocol";
+import {
+  BATTLE_ROOM,
+  CHOG_GENESIS_CHAIN_ID,
+  CHOG_GENESIS_CONTRACT,
+  type AckMessage,
+  type BattleFrame,
+  type CommanderChoice,
+  type EndMessage,
+  type LobbyMessage,
+  type StartMessage,
+} from "@/lib/battle-protocol";
+import { PRESETS } from "@/server/battle/session";
+import { freeCommanderTemplates, type CommanderClass } from "@/lib/commanders";
+import type { EntitlementDeps, NftCommanderRecord } from "@/server/battle/entitlement";
+import type { Commander } from "@/db/schema";
 import { startBattleServer } from "@/server/battle/server";
 
 const PORT = 28000 + Math.floor(Math.random() * 1000);
@@ -20,6 +35,48 @@ const player = (id: string, onboarded = true) =>
   ({ id, privyDid: `did:privy:${id}`, username: id, usernameKey: onboarded ? id : null, displayName: id, avatarId: onboarded ? "chog-1" : null, accountStatus: "active", onboardingStatus: onboarded ? "complete" : "pending" }) as unknown as Player;
 const PLAYERS: Record<string, Player> = { alice: player("alice"), bob: player("bob"), newbie: player("newbie", false) };
 
+const OWNER_ALICE = "0xa11ce";
+const TOKEN = "1462";
+
+function nftRow(tokenId: string, cls: CommanderClass = "scout"): Commander {
+  const t = freeCommanderTemplates().find((x) => x.class === cls)!;
+  return {
+    id: "cmdr-row",
+    nftId: "nft-row",
+    rulesetVersion: "v1",
+    tokenId,
+    class: cls,
+    affinity: cls,
+    stats: t.stats,
+    abilities: t.abilities,
+    variant: "bastion",
+    prestige: "Mythic",
+    sourceTraits: [],
+    unmatchedTraits: [],
+    scores: { bulwark: 0, reaver: 0, deadeye: 0, scout: 0, warden: 0 },
+    powerScore: t.powerScore,
+    contentHash: `hash-${tokenId}`,
+    previousContentHash: null,
+    derivationCount: 1,
+    derivedAt: new Date(),
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  } as unknown as Commander;
+}
+
+// Mutable so individual tests can reshape the "chain" between calls.
+const chain: { ownerOf: EntitlementDeps["ownerOf"]; load: EntitlementDeps["loadNftCommander"]; wallets: (pid: string) => Promise<string[]> } = {
+  ownerOf: async () => ({ owner: OWNER_ALICE, chainId: CHOG_GENESIS_CHAIN_ID }),
+  load: async (tokenId): Promise<NftCommanderRecord> => ({ tokenId, name: "CHOG #1462", imageOriginal: "ipfs://img", commander: nftRow(tokenId) }),
+  wallets: async (pid) => (pid === "alice" ? [OWNER_ALICE] : []),
+};
+const entitlement: EntitlementDeps = {
+  verifiedWallets: (pid) => chain.wallets(pid),
+  ownerOf: (t) => chain.ownerOf(t),
+  loadNftCommander: (t) => chain.load(t),
+  timeoutMs: 60,
+};
+
 beforeAll(async () => {
   const appId = getEnv().NEXT_PUBLIC_PRIVY_APP_ID;
   server = await startBattleServer(PORT, {
@@ -29,6 +86,7 @@ beforeAll(async () => {
       return { appId, userId: `did:privy:${t.slice(4)}`, sessionId: "s", issuer: "privy.io", issuedAt: 0, expiration: 0 };
     },
     loader: async (did) => PLAYERS[did.replace("did:privy:", "")] ?? null,
+    entitlement,
     tickMs: 2,
     replayDir,
     closeAfterMs: 50,
@@ -40,22 +98,27 @@ afterAll(async () => {
 
 const client = (token?: string) => new Client(URL_, token ? { headers: { authorization: `Bearer ${token}` } } : {});
 
+const ready = (preset: string, commander: CommanderChoice = { kind: "free", class: "scout" }) => ({ cards: [...PRESETS[preset]!.cards], commander });
+const nftReady = (tokenId = TOKEN) => ({ cards: [...PRESETS.swarm!.cards], commander: { kind: "nft", chainId: CHOG_GENESIS_CHAIN_ID, contract: CHOG_GENESIS_CONTRACT, tokenId } satisfies CommanderChoice });
+
 interface Seen {
   start?: StartMessage;
+  lobby?: LobbyMessage;
+  errors: string[];
   frames: BattleFrame[];
   acks: AckMessage[];
   end?: EndMessage;
   aborted?: string;
 }
 function watch(room: Room): Seen {
-  const seen: Seen = { frames: [], acks: [] };
+  const seen: Seen = { frames: [], acks: [], errors: [] };
   room.onMessage("start", (m: StartMessage) => (seen.start = m));
+  room.onMessage("lobby", (m: LobbyMessage) => (seen.lobby = m));
   room.onMessage("frame", (f: BattleFrame) => seen.frames.push(f));
   room.onMessage("ack", (a: AckMessage) => seen.acks.push(a));
   room.onMessage("end", (e: EndMessage) => (seen.end = e));
   room.onMessage("aborted", (a: { reason: string }) => (seen.aborted = a.reason));
-  room.onMessage("lobby", () => {});
-  room.onMessage("error", () => {});
+  room.onMessage("error", (e: { reason: string }) => seen.errors.push(e.reason));
   return seen;
 }
 const until = async (cond: () => boolean, ms = 20_000) => {
@@ -71,8 +134,8 @@ async function pair(deckA = "swarm", deckB = "antiSwarm") {
   const rb = await client("tok-bob").joinById(ra.roomId);
   const a = watch(ra);
   const b = watch(rb);
-  ra.send("ready", { deck: deckA });
-  rb.send("ready", { deck: deckB });
+  ra.send("ready", ready(deckA));
+  rb.send("ready", ready(deckB));
   await until(() => !!a.start && !!b.start);
   return { ra, rb, a, b };
 }
@@ -96,6 +159,9 @@ describe("B3.1 Colyseus battle room", () => {
     expect(new Set([a.start!.seat, b.start!.seat])).toEqual(new Set([0, 1]));
     expect(a.start!.opponent).toBe("bob");
     expect(JSON.stringify(a.start)).not.toMatch(/"seed"/);
+    // The opponent's loadout is never exposed: lobby players carry no deck or commander info.
+    expect(a.start!.commander.kind).toBe("free");
+    expect(JSON.stringify(a.lobby!.players)).not.toMatch(/card|commander|deck/);
     await until(() => a.frames.length > 5 && b.frames.length > 5);
     const mine = (s: Seen) => s.frames.at(-1)!;
     // Spell-free legal deploy: own lane, own territory.
@@ -132,14 +198,126 @@ describe("B3.1 Colyseus battle room", () => {
     await rb.leave().catch(() => {});
   });
 
-  it("plays a full networked match to a real result with an identical replay record", async () => {
-    const { ra, rb, a, b } = await pair("swarm", "siege");
+  it("starts with two different player-built decks and unready edits before lock", async () => {
+    const ra = await client("tok-alice").create(BATTLE_ROOM);
+    const rb = await client("tok-bob").joinById(ra.roomId);
+    const a = watch(ra);
+    const b = watch(rb);
+    const custom = { cards: ["choglings", "rift_runner", "chaos_archer", "sparkcaster", "boulderback", "hexwing", "frostshell"], commander: { kind: "free", class: "reaver" } satisfies CommanderChoice };
+    ra.send("ready", custom);
+    await until(() => a.lobby?.players.some((p) => p.username === "alice" && p.ready) ?? false);
+    expect(a.lobby!.mine!.commander.class).toBe("reaver");
+    ra.send("unready");
+    await until(() => a.lobby?.players.every((p) => !p.ready) ?? false);
+    ra.send("ready", custom);
+    rb.send("ready", ready("siege", { kind: "free", class: "warden" }));
+    await until(() => !!a.start && !!b.start);
+    expect(a.start!.deck).toEqual([...custom.cards, "cmdr:free-reaver"]);
+    expect(b.start!.deck[7]).toBe("cmdr:free-warden");
+    expect(a.start!.deck.length).toBe(8);
+    await Promise.all([ra.leave().catch(() => {}), rb.leave().catch(() => {})]);
+  });
+
+  it("rejects malformed and forged readies without seating a loadout", async () => {
+    const ra = await client("tok-alice").create(BATTLE_ROOM);
+    const rb = await client("tok-bob").joinById(ra.roomId);
+    const a = watch(ra);
+    const b = watch(rb);
+    ra.send("ready", { deck: "swarm" });
+    ra.send("ready", { cards: ["x"], commander: { kind: "free", class: "scout" } });
+    // NFT claim from bob, who has no verified wallet holding the token.
+    rb.send("ready", nftReady());
+    await until(() => a.errors.length + b.errors.length >= 3);
+    expect(a.errors).toContain("Malformed ready");
+    expect(b.errors.some((e) => /not owned by a verified linked wallet/.test(e))).toBe(true);
+    expect(b.lobby?.players.every((p) => !p.ready)).toBe(true);
+    await Promise.all([ra.leave().catch(() => {}), rb.leave().catch(() => {})]);
+  });
+
+  it("fails closed at match start when ownership changed between confirm and lock", async () => {
+    const ra = await client("tok-alice").create(BATTLE_ROOM);
+    const rb = await client("tok-bob").joinById(ra.roomId);
+    const a = watch(ra);
+    const b = watch(rb);
+    let calls = 0;
+    const prev = chain.ownerOf;
+    chain.ownerOf = async () => ({ owner: ++calls === 1 ? OWNER_ALICE : "0xthief", chainId: CHOG_GENESIS_CHAIN_ID });
+    try {
+      ra.send("ready", nftReady());
+      await until(() => a.lobby?.players.find((p) => p.username === "alice")?.ready === true);
+      rb.send("ready", ready("siege"));
+      await until(() => a.errors.some((e) => e.includes("match start")));
+      expect(a.errors.at(-1)).toMatch(/Commander entitlement failed at match start: .*not owned/);
+      expect(a.start).toBeUndefined();
+      expect(b.start).toBeUndefined();
+      // The NFT player is un-readied and told why; bob stays ready.
+      await until(() => a.lobby?.players.find((p) => p.username === "alice")?.ready === false);
+      expect(b.lobby?.players.find((p) => p.username === "bob")?.ready).toBe(true);
+    } finally {
+      chain.ownerOf = prev;
+    }
+    await Promise.all([ra.leave().catch(() => {}), rb.leave().catch(() => {})]);
+  });
+
+  it("rejects an NFT ready when the chain read times out, then accepts a free fallback", async () => {
+    const ra = await client("tok-alice").create(BATTLE_ROOM);
+    const rb = await client("tok-bob").joinById(ra.roomId);
+    const a = watch(ra);
+    const b = watch(rb);
+    const prev = chain.ownerOf;
+    chain.ownerOf = () => new Promise<{ owner: string; chainId: number }>(() => {});
+    try {
+      ra.send("ready", nftReady());
+      await until(() => a.errors.some((e) => /ownership check unavailable/i.test(e)), 5_000);
+    } finally {
+      chain.ownerOf = prev;
+    }
+    ra.send("ready", ready("swarm"));
+    rb.send("ready", ready("siege"));
+    await until(() => !!a.start && !!b.start);
+    await Promise.all([ra.leave().catch(() => {}), rb.leave().catch(() => {})]);
+  });
+
+  it("rejects ready messages after the match started", async () => {
+    const { ra, a } = await pair();
+    ra.send("ready", ready("siege"));
+    await until(() => a.errors.some((e) => /Not waiting|locked/i.test(e)));
+    await ra.leave().catch(() => {});
+  });
+
+  it("starts an NFT-owned loadout and only that seat sees the NFT identity", async () => {
+    const ra = await client("tok-alice").create(BATTLE_ROOM);
+    const rb = await client("tok-bob").joinById(ra.roomId);
+    const a = watch(ra);
+    const b = watch(rb);
+    ra.send("ready", nftReady());
+    rb.send("ready", ready("antiSwarm", { kind: "free", class: "deadeye" }));
+    await until(() => !!a.start && !!b.start);
+    expect(a.start!.commander).toMatchObject({ kind: "nft", tokenId: TOKEN, class: "scout", variant: "bastion", basis: "direct-owner", name: "CHOG #1462" });
+    expect(a.start!.commander.verifiedAt).not.toBeNull();
+    expect(a.start!.catalog[a.start!.commander.cardId]?.name).toContain("CHOG #1462");
+    expect(b.start!.commander.kind).toBe("free");
+    // Bob never receives alice's NFT identity: not in his start, lobby or frames.
+    expect(JSON.stringify(b.start)).not.toContain("CHOG #1462");
+    expect(JSON.stringify(b.start)).not.toContain(TOKEN);
+    expect(JSON.stringify(b.lobby)).not.toContain("CHOG");
+    await Promise.all([ra.leave().catch(() => {}), rb.leave().catch(() => {})]);
+  });
+
+  it("plays a full networked match with an NFT commander to a real result with an identical replay record", async () => {
+    const ra = await client("tok-alice").create(BATTLE_ROOM);
+    const rb = await client("tok-bob").joinById(ra.roomId);
+    const a = watch(ra);
+    const b = watch(rb);
+    ra.send("ready", nftReady());
+    rb.send("ready", ready("siege"));
+    await until(() => !!a.start && !!b.start);
     let n = 0;
     const drive = (room: Room, s: Seen) => {
       const f = s.frames.at(-1);
       if (!f || s.end) return;
-      const ready = f.abilities.find((x) => x.ready && !x.blockedBy);
-      if (ready && n % 3 === 0) room.send("cmd", { type: "ability", cid: `ab${n++}`, abilityId: ready.abilityId });
+      const readyA = f.abilities.find((x) => x.ready && !x.blockedBy);
+      if (readyA && n % 3 === 0) room.send("cmd", { type: "ability", cid: `ab${n++}`, abilityId: readyA.abilityId });
       const pick = f.hand.find((c) => {
         const k = s.start!.catalog[c]!;
         return (k.kind === "troop" || k.kind === "commander") && k.cost <= f.energy;
@@ -166,11 +344,14 @@ describe("B3.1 Colyseus battle room", () => {
     expect(a.acks.filter((x) => x.ok).length + b.acks.filter((x) => x.ok).length).toBeGreaterThan(10);
     expect(a.frames.some((f) => f.structures.some((s) => s.hp < s.maxHp))).toBe(true);
     expect(a.frames.flatMap((f) => f.events).some((e) => e.type === "ability_fired" && e.trigger === "active")).toBe(true);
+    // The NFT commander was actually deployed and its abilities offered.
+    expect(a.frames.flatMap((f) => f.events).some((e) => e.type === "commander_deployed")).toBe(true);
     const files = (await import("fs")).readdirSync(replayDir);
     expect(files.length).toBeGreaterThan(0);
-    const rec = JSON.parse(readFileSync(path.join(replayDir, files[0]!), "utf8"));
+    const rec = JSON.parse(readFileSync(path.join(replayDir, files.at(-1)!), "utf8"));
     expect(rec.replayIdentical).toBe(true);
     expect(rec.commands.length).toBe(a.end!.commands);
+    expect(rec.commanders.some((c: { kind: string }) => c.kind === "nft")).toBe(true);
     expect(existsSync(replayDir)).toBe(true);
     await Promise.all([ra.leave().catch(() => {}), rb.leave().catch(() => {})]);
   }, 120_000);

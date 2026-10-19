@@ -1,23 +1,99 @@
 import { describe, expect, it } from "vitest";
-import { APPROVED_DECKS, BattleSession, MAX_COMMANDS_PER_TICK, type SessionRandom } from "@/server/battle/session";
+import { BattleSession, MAX_COMMANDS_PER_TICK, PRESETS, deckFor, type SessionRandom, type TrustedLoadout } from "@/server/battle/session";
+import { commanderCardId, type PlayerIndex } from "@/lib/combat";
 import { botAbility } from "@/lib/arena-scenarios";
 import { smartMove } from "@/lib/smart-bot";
-import type { PlayerIndex } from "@/lib/combat";
+import type { CommanderClass } from "@/lib/commanders";
+import { freeGrant, makeLoadout } from "@/server/battle/test-helpers";
 
 const SEED = "feedfacefeedfacefeedfacefeedface";
 const rng = (seatFlip = 0): SessionRandom => ({ seed: () => SEED, int: (n) => (n === 2 ? seatFlip : 0) });
 const A = { playerId: "pa", username: "alice" };
 const B = { playerId: "pb", username: "bob" };
 
+const presetLoadout = (name: string) => makeLoadout([...PRESETS[name]!.cards], PRESETS[name]!.commanderClass as CommanderClass);
+
 function started(seatFlip = 0, decks: [string, string] = ["swarm", "siege"]) {
   const s = new BattleSession(rng(seatFlip));
   s.join(A);
   s.join(B);
-  expect(s.setReady("pa", decks[0])).toBe(false);
-  expect(s.setReady("pb", decks[1])).toBe(true);
+  expect(s.setReady("pa", presetLoadout(decks[0]))).toBe(false);
+  expect(s.setReady("pb", presetLoadout(decks[1]))).toBe(true);
+  const epoch = s.lock();
+  s.start(epoch, s.readyLoadouts() as [TrustedLoadout, TrustedLoadout]);
   return s;
 }
 const idOf = (s: BattleSession, seat: PlayerIndex) => (s.seatOf("pa") === seat ? "pa" : "pb");
+
+describe("B3.2a loadouts and locking", () => {
+  it("presets derive 7 ordinary cards plus a free commander class from the field decks", () => {
+    for (const p of Object.values(PRESETS)) {
+      expect(p.cards.length).toBe(7);
+      expect(new Set(p.cards).size).toBe(7);
+      expect(p.cards.every((c) => !c.startsWith("cmdr:"))).toBe(true);
+      expect(["bulwark", "reaver", "deadeye", "scout", "warden"]).toContain(p.commanderClass);
+    }
+  });
+
+  it("rejects duplicate, unknown, extra-commander and short decks at ready", () => {
+    const s = new BattleSession(rng());
+    s.join(A);
+    s.join(B);
+    const base = [...PRESETS.swarm!.cards];
+    expect(() => s.setReady("pa", makeLoadout([...base.slice(0, 6), base[0]!]))).toThrow(/exactly 8|Duplicate/);
+    expect(() => s.setReady("pa", makeLoadout([...base.slice(0, 6), "not_a_card"]))).toThrow(/not playable/i);
+    expect(() => s.setReady("pa", { cards: [...base.slice(0, 6), commanderCardId("free-scout")], grant: freeGrant("scout") })).toThrow();
+    expect(() => s.setReady("pa", makeLoadout(base.slice(0, 6)))).toThrow(/exactly 8/);
+    // A commander card inside `cards` is never trusted as an ordinary card.
+    expect(() => s.setReady("pa", makeLoadout([...base.slice(0, 6), "cmdr:free-warden"], "scout"))).toThrow();
+  });
+
+  it("rejects setReady/unready after lock and start with a stale epoch", () => {
+    const s = new BattleSession(rng());
+    s.join(A);
+    s.join(B);
+    s.setReady("pa", presetLoadout("swarm"));
+    s.setReady("pb", presetLoadout("siege"));
+    const epoch = s.lock();
+    expect(() => s.setReady("pa", presetLoadout("swarm"))).toThrow(/locked/);
+    expect(() => s.unready("pa")).toThrow(/locked/);
+    expect(() => s.start(epoch + 1, s.readyLoadouts() as [TrustedLoadout, TrustedLoadout])).toThrow(/stale/);
+    s.clearReady(0);
+    s.setReady("pa", presetLoadout("control"));
+    const epoch2 = s.lock();
+    s.start(epoch2, s.readyLoadouts() as [TrustedLoadout, TrustedLoadout]);
+    expect(s.phase).toBe("active");
+  });
+
+  it("clears lock and ready state when a player leaves while waiting", () => {
+    const s = new BattleSession(rng());
+    s.join(A);
+    s.join(B);
+    s.setReady("pa", presetLoadout("swarm"));
+    const epoch = s.lock();
+    s.leave("pa");
+    expect(s.locked).toBe(false);
+    expect(s.lockEpoch).toBe(epoch + 1);
+    expect(() => s.start(epoch, s.readyLoadouts() as [TrustedLoadout, TrustedLoadout])).toThrow(/stale/);
+  });
+
+  it("seats two different player-built decks on the right seats", () => {
+    const s = new BattleSession(rng(0));
+    s.join(A);
+    s.join(B);
+    const a = makeLoadout(["choglings", "rift_runner", "chaos_archer", "sparkcaster", "boulderback", "hexwing", "frostshell"], "reaver");
+    const b = makeLoadout(["chog_guardian", "rift_snare", "gale_netter", "chaos_comet", "decoy_totem", "rift_sentry", "frostshell"], "warden");
+    s.setReady("pa", a);
+    s.setReady("pb", b);
+    const epoch = s.lock();
+    s.start(epoch, s.readyLoadouts() as [TrustedLoadout, TrustedLoadout]);
+    const seatA = s.seatOf("pa")!;
+    expect(s.config!.decks[seatA]).toEqual([...a.cards, commanderCardId("free-reaver")]);
+    expect(s.config!.decks[1 - seatA]).toEqual([...b.cards, commanderCardId("free-warden")]);
+    expect(s.config!.commanders![seatA]!.commanderId).toBe("free-reaver");
+    expect(s.config!.commanders![1 - seatA]!.commanderId).toBe("free-warden");
+  });
+});
 
 describe("B3.1 battle session", () => {
   it("seats two distinct players, rejects extras and frees slots while waiting", () => {
@@ -30,15 +106,15 @@ describe("B3.1 battle session", () => {
     s.leave("pa");
     expect(s.slots[0]).toBeNull();
     expect(s.join({ playerId: "pc", username: "c" })).toBe(0);
-    expect(() => s.setReady("pc", "not-a-deck")).toThrow(/Unknown deck/);
+    expect(() => s.setReady("pc", makeLoadout([...PRESETS.swarm!.cards.slice(0, 6), "bogus"]))).toThrow();
   });
 
-  it("starts only when both are ready, with server-assigned seats and approved free-commander decks", () => {
+  it("starts only when both are ready, with server-assigned seats and free commanders", () => {
     const s = started(1);
     expect(s.phase).toBe("active");
     expect(s.seatOf("pa")).toBe(1);
     expect(s.seatOf("pb")).toBe(0);
-    expect(s.config!.decks[1]).toEqual(APPROVED_DECKS.swarm);
+    expect(s.config!.decks[1]).toEqual(deckFor(presetLoadout("swarm")));
     expect(s.config!.commanders!.every((c) => c!.commanderId.startsWith("free-"))).toBe(true);
     expect(s.config!.chaos!.events.length).toBe(3);
     expect(() => s.join({ playerId: "pc", username: "c" })).toThrow(/already started/);
@@ -97,6 +173,12 @@ describe("B3.1 battle session", () => {
     expect(JSON.stringify(start)).not.toContain(SEED);
     expect(JSON.stringify(start)).not.toContain('"seed"');
     expect(start.deck).toEqual(s.config!.decks[0]);
+    // Lobby hides the opponent's loadout entirely (players carry no deck info).
+    const lobby = s.lobby(0);
+    expect(JSON.stringify(lobby.players)).not.toMatch(/card|commander|deck/);
+    expect(lobby.mine).not.toBeNull();
+    expect(start.commander.kind).toBe("free");
+    expect(start.catalog[start.commander.cardId]?.kind).toBe("commander");
   });
 
   it("plays a full match from network intents to a real result with an identical server replay", () => {
@@ -127,6 +209,7 @@ describe("B3.1 battle session", () => {
     expect(fired.length).toBeGreaterThan(0);
     expect(towerDamaged).toBe(true);
     expect(s.replay!.replayIdentical).toBe(true);
+    expect(s.replay!.commanders.length).toBe(2);
     expect(end![0].stateHash).toBe(end![1].stateHash);
     const results = [end![0].result, end![1].result].sort();
     expect(results).toEqual(end![0].result === "draw" ? ["draw", "draw"] : ["loss", "win"]);

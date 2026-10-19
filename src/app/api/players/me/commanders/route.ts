@@ -8,7 +8,18 @@ import {
 } from "@/db/commanders";
 import { freeCommanderTemplates } from "@/lib/commanders";
 import { readOwner, parseTokenId } from "@/lib/nft-contract";
+import { getIpfsGateways } from "@/lib/metadata";
 import { logger } from "@/lib/logger";
+
+// Display URL only; the original URI is also returned verbatim. ipfs://
+// resolves through the first configured gateway, https passes through,
+// anything else has no display URL.
+function displayUrl(imageOriginal: string | null): string | null {
+  if (!imageOriginal) return null;
+  if (imageOriginal.startsWith("ipfs://")) return `${getIpfsGateways()[0]}/${imageOriginal.slice("ipfs://".length)}`;
+  if (imageOriginal.startsWith("https://")) return imageOriginal;
+  return null;
+}
 
 // Authenticated commander eligibility. NFT commanders are eligible only when
 // a verified linked wallet holds the token; cached observations support
@@ -51,11 +62,19 @@ export async function GET(request: Request) {
     }
 
     const rows = await getCommanderEligibility(holdings.map((h) => h.tokenId));
+    const holdingOf = new Map(holdings.map((h) => [h.tokenId, h]));
     const nftCommanders = rows.map((r) => {
       const eligible = eligibleIds.has(r.tokenId);
+      const holding = holdingOf.get(r.tokenId);
+      const media = {
+        name: holding?.name ?? null,
+        imageOriginal: holding?.image ?? null,
+        imageUrl: displayUrl(holding?.image ?? null),
+      };
       if (!r.commander) {
         return {
           tokenId: r.tokenId,
+          ...media,
           status: "pending" as const,
           metadataStatus: r.metadataStatus ?? "missing",
           eligible: false,
@@ -67,6 +86,7 @@ export async function GET(request: Request) {
       }
       return {
         tokenId: r.tokenId,
+        ...media,
         status: "derived" as const,
         metadataStatus: r.metadataStatus,
         eligible,

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ARENA_H, ARENA_W, DRAG_THRESHOLD_PX, TOUCH_LIFT_PX, aimPoint, endGesture, moveGesture, placementHint, screenToArena, startGesture, type Rect } from "@/lib/battle-input";
-import { BattleSession, type SessionRandom } from "@/server/battle/session";
+import { BattleSession, PRESETS, type SessionRandom, type TrustedLoadout } from "@/server/battle/session";
+import { makeLoadout } from "@/server/battle/test-helpers";
 import { troopDeployCheck, type PlayerIndex } from "@/lib/combat";
 
 // Renderer's forward mapping (BattleCanvas sx/sy), expressed as a fraction of the rendered rect.
@@ -108,8 +109,10 @@ describe("B3.1 drag input: advisory placement hints", () => {
     const s = new BattleSession(rng());
     s.join({ playerId: "pa", username: "alice" });
     s.join({ playerId: "pb", username: "bob" });
-    s.setReady("pa", "swarm");
-    s.setReady("pb", "siege");
+    s.setReady("pa", makeLoadout([...PRESETS.swarm!.cards], "scout"));
+    s.setReady("pb", makeLoadout([...PRESETS.siege!.cards], "reaver"));
+    const epoch = s.lock();
+    s.start(epoch, s.readyLoadouts() as [TrustedLoadout, TrustedLoadout]);
     return s;
   }
   const slotFor = (s: BattleSession, seat: PlayerIndex) => s.slotOf(s.seatOf("pa") === seat ? "pa" : "pb");
@@ -153,7 +156,7 @@ describe("B3.1 drag input: advisory placement hints", () => {
     const card = start.catalog[frame.hand[0]!]!;
     expect(placementHint(card, { x: 50, y: 30 }, start, frame)).toEqual({ ok: false, reason: `Need ${card.cost} more energy` });
     const rich = { ...frame, energy: 10, hand: ["chaos_bolt"] };
-    expect(placementHint(start.catalog.chaos_bolt ?? { id: "chaos_bolt", name: "Bolt", cost: 2, kind: "spell", air: false, radius: 8 }, { x: 50, y: 140 }, start, rich)).toEqual({ ok: true });
+    expect(placementHint(start.catalog.chaos_bolt ?? { id: "chaos_bolt", name: "Bolt", cost: 2, kind: "spell", air: false, radius: 8, description: "" }, { x: 50, y: 140 }, start, rich)).toEqual({ ok: true });
     expect(placementHint(start.catalog[frame.hand[0]!], { x: 50, y: 30 }, start, { ...frame, hand: [] })).toEqual({ ok: false, reason: "Card not in hand" });
   });
 });
