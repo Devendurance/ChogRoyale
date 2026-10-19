@@ -1,6 +1,6 @@
 # Left Off
 
-Last updated: 2026-10-18
+Last updated: 2026-10-19
 
 ## Just finished
 
@@ -34,8 +34,9 @@ Last updated: 2026-10-18
 
 ## Next up
 
-- B3.1 playable alpha built (Colyseus 0.18 room + Phaser 4 view at /dev/battle, real Privy auth, server-authoritative BattleSession). A human two-browser match (Endychog vs Blossom) finished with a core win 3-2 and an identical server replay. Only a manual ability press in the browser is still unshown. Details in .fast-build/STATE.md.
-- User review of the B2.7c5 hold. Swarm and breaker share a cheap core (choglings, sprites, snare, archer, guardian, scout) and both still beat revised control 0/16. Then spawner building, then B3 transport (Colyseus). B3 transport covers: authenticated match creation, entitlement verification feeding the trusted engine inputs, settlement events feeding legacy intake. Neither started; no fabricated matches exist.
+- B3.1 playable alpha COMPLETE (8fdb762 room + client, c5c70fb drag/touch input). Closing match 0lc82opDV: drag, click, emulated touch, rejections, manual Scout abilities from both players, crowns win, replay hash identical. No PROD match/settlement/legacy writes. Real phone test pending (Chrome emulation only). Details in .fast-build/STATE.md.
+- Next: B3.2 (fresh NFT entitlement checks, matchmaking, reconnect, then settlement + legacy). Not started.
+- User review of the B2.7c5 hold. Swarm and breaker share a cheap core (choglings, sprites, snare, archer, guardian, scout) and both still beat revised control 0/16. Spawner building still waits on that review. No matches have been written to any database.
 
 ## Known issues / open items
 
