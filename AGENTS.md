@@ -104,6 +104,7 @@
 - Preserve original NFT metadata and artwork separately from authored reference views. Use existing trait-derived commander classes, and keep original troop designs separate from NFT identities.
 - Derive troop art direction from the actual r001 portrait pixels, not written briefs. Original troops must keep the Chog face mask, backswept rear spike fan, Round eyes, blush and heavy outline. Don't give troops ears or a nose, because no authentic portrait shows them.
 - Before writing into a shared asset review folder, list it for files from other sessions and write into a separate subfolder instead of overwriting their README or approvals.
+- For mesh audits, distinguish UV/normal split vertices and fitted-detail borders from true holes. Report BVH overlap candidates separately from validated triangle crossings. Don't blindly remesh or cap detail bases, since that can erase intentional geometry or disguise fit issues.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

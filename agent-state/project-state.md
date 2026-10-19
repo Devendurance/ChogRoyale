@@ -1,6 +1,6 @@
 # Project State
 
-Last updated: 2026-10-18
+Last updated: 2026-10-19
 
 ## What this is
 
@@ -44,3 +44,10 @@ Last updated: 2026-10-18
 - Codex Desktop already has `mcp_servers.blender`, running `C:/Users/USER/AppData/Local/hermes/bin/uvx.EXE` with `mcp-for-blender`.
 - Matching Blender add-on is enabled with saved preferences and telemetry disabled. The bridge listens on `127.0.0.1:9876`.
 - Blender MCP verified end to end through scene inspection, test `.blend` save, GLB export, and a 384x384 PNG render inspected through MCP. Outputs are in `C:/Users/USER/Documents/ChogRoyale-Assets/mcp-verification-20261018`.
+
+### Chogling mesh audit (2026-10-19)
+
+- Read-only audit files and working blend are in `C:/Users/USER/Documents/ChogRoyale-Assets/chogling-3d-audit/textured-1beb2ae7-20261019-041632/`: `chogling-audit.blend`, `mesh_metrics.py`, `metrics.json`, `uv-connectivity.json`, and four 900x900 views. The three source GLB hashes were verified unchanged. The source job ID was supplied separately and is not embedded in the deliverables. Current user authorization is m001; local approval records are stale.
+- `Chogling_Tripo_OriginalMesh`: 8,792 raw vertices, 10,521 triangles; positional weld at 1e-6 yields 5,303 vertices across three components (main mesh plus two brows). The 89 welded boundary edges include 66 around brow bases and 23 across five small groups, so boundaries need visual/contextual review before being called holes.
+- Diagnostic reports 251 strict crossing pairs (207 brow, 44 body), not 251 independent holes. No validated crossing pairs were found above Z=0.7; the highest crossing centroid is Z=0.68465 and the whole model is about 0.9995 units tall. Surface has one material, one packed 4K base-color texture, and 371 seam-aware UV charts within 0..1 with no degenerate UV faces. No rig, weights, or animation are present.
+- Verdict: useful for static review, not production-ready. Next is focused cleanup, then an assisted rig/weight probe. Preserve original source geometry and verify detail-base fit before any repair.

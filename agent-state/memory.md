@@ -8,6 +8,8 @@ Durable facts, conventions, and gotchas that should survive across sessions.
 - Rules and preferences live in `AGENTS.md`. Read it first.
 - Auto-commit and push meaningful checkpoints per current `AGENTS.md`. Repo stays private.
 - Blender experiments and test outputs belong in `C:/Users/USER/Documents/ChogRoyale-Assets`, outside the source repository. Reuse the existing MCP connection, bind its bridge to loopback, and preserve live Blender work.
+- Mesh audit interpretation: keep raw UV-split counts distinct from positional-welded topology. Boundary edges at fitted detail bases can be intentional, and BVH candidate pairs are not validated crossings. Never infer independent holes directly from pair counts or blindly remesh/cap detail bases.
+- Chogling Tripo audit (2026-10-19), scene `Chogling_Audit`, object `Chogling_Tripo_OriginalMesh`, files in `C:/Users/USER/Documents/ChogRoyale-Assets/chogling-3d-audit/textured-1beb2ae7-20261019-041632/`, including `uv-connectivity.json`. The 8,792 raw vertices weld to 5,303 in three components; 89 welded boundary edges include 66 brow-base edges and 23 across five small groups. Audit found 251 strict crossing pairs (207 brow, 44 body), not 251 independent holes, and none above Z=0.7 (highest crossing centroid Z=0.68465; model height about 0.9995). It has 1 material, a packed 4K base-color texture, 371 seam-aware UV charts in [0,1] without degenerate UV faces, and no rig/weights/animation. The three source GLB hashes remained unchanged. Treat as useful for static review, not production-ready; clean up focused areas before an assisted rig/weight probe.
 
 ## Project facts
 

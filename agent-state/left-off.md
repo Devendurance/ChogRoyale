@@ -21,6 +21,11 @@ Last updated: 2026-10-19
 
 ## Currently working on
 
+- Chogling Tripo audit (2026-10-19), separate from gameplay and c002 concept review. Audit artifacts: `C:/Users/USER/Documents/ChogRoyale-Assets/chogling-3d-audit/textured-1beb2ae7-20261019-041632/` with `chogling-audit.blend`, `mesh_metrics.py`, `metrics.json`, `uv-connectivity.json`, and four 900x900 views. User authorization m001 supersedes stale local approval records. The three source GLB hashes are unchanged; source job ID was supplied separately and is not embedded.
+- Audit found 8,792 raw vertices / 10,521 triangles, 5,303 vertices and 3 components after positional weld, 89 welded boundary edges (66 brow bases, 23 across five small groups), 251 strict crossing pairs (207 brow / 44 body, not 251 independent holes), and no validated crossings above Z=0.7 (highest crossing centroid Z=0.68465, model height about 0.9995). One material, packed 4K base-color texture, 371 seam-aware UV charts in [0,1], no degenerate UV faces, no rig/weights/animation. Suitable for static review, not production-ready.
+- User prohibited pushes for this audit; coordinator may create a local docs checkpoint only.
+- Next: focused cleanup based on detail-base fit, then an assisted rig/weight probe. Keep raw split counts, fitted-detail borders, BVH candidates, and validated crossings distinct. Avoid blind remeshing/capping.
+
 - Original troop art direction c002 (2026-10-19): Choglings (A Bonk, B Ladle, C Prong) and Boulderback redesigned from the five r001 portraits. Outputs in `C:/Users/USER/Documents/ChogRoyale-Assets/original-troop-concept-review/c002/troop-concepts/`: art bible (A/B/C split), DNA evidence board, two troop sheets, side-by-side validation board, views, approvals (all pending), provenance, preservation check (175/175 baseline files unchanged). Hand-authored SVG, no AI image tool, no Tripo, no gameplay change.
 - Next: user reviews c002. Open risks are the Boulderback front crest reading as a halo, the violet head ring reading as a hood, generic Chogling bodies, and no back views. c001 stays rejected.
 - A separate session wrote a c002 source study in the parent `c002/` folder (README, character-art-bible, approvals, final-audit). It was left untouched.
