@@ -403,6 +403,9 @@ function BattlePanel() {
             <button disabled={!code.trim()} onClick={() => void connect("join")}>Join battle</button>
           </div>
           <RecentMatches getAccessToken={getAccessToken} />
+          <div style={{ fontSize: 12 }}>
+            <a href="/dev/progress">Stats and casual leaderboard</a>
+          </div>
         </section>
       )}
 
