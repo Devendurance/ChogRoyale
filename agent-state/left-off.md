@@ -43,7 +43,8 @@ Last updated: 2026-10-19
 - B3.2a loadouts + NFT entitlement (3c1dfca): accepted for planning. Custom-deck browser QA and NFT-holder E2E deferred to community testing, not performed.
 - B3.2b unranked matchmaking: code done, automated tests green, human two-browser queue match still pending. Single in-memory MatchCoordinator (one battle-server process). Details in .fast-build/STATE.md.
 - B3.2c activity exclusivity + 30s reconnect grace with Privy re-auth and rotating resume token: code done, tests green, browser reconnect test pending.
-- Next: browser checks for B3.2b queue and B3.2c reconnect, then saved player loadouts.
+- B3.2d account-saved loadouts: code done, migration 0007 applied to TEST only, PROD migration needs user approval. Browser QA pending.
+- Next: approve PROD migration, browser checks for B3.2a-d, then B3.3 settlement.
 - User review of the B2.7c5 hold. Swarm and breaker share a cheap core (choglings, sprites, snare, archer, guardian, scout) and both still beat revised control 0/16. Spawner building still waits on that review. No matches have been written to any database.
 
 ## Known issues / open items

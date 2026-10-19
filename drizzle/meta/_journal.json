@@ -50,6 +50,13 @@
       "when": 1792274305648,
       "tag": "0006_flashy_polaris",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792382113344,
+      "tag": "0007_polite_epoch",
+      "breakpoints": true
     }
   ]
 }

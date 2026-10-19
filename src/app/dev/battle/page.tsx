@@ -58,6 +58,7 @@ function BattlePanel() {
   /** Latest {roomId, resumeToken} for the active seat; cleared on end/abort/leave. */
   const resumeInfo = useRef<{ roomId: string; resumeToken: string; graceMs: number } | null>(null);
   const resumeDeadline = useRef(0);
+  const [resumeDeadlineAt, setResumeDeadlineAt] = useState(0);
   /** Bump to cancel any in-flight reconnect loop. */
   const reconnectGen = useRef(0);
   const cidN = useRef(0);
@@ -109,6 +110,7 @@ function BattlePanel() {
         // Unconsented drop during a live match: try to resume the seat.
         if (s === "active" && code !== 4000 && resumeInfo.current) {
           resumeDeadline.current = Date.now() + resumeInfo.current.graceMs;
+          setResumeDeadlineAt(resumeDeadline.current);
           return "reconnecting";
         }
         resumeInfo.current = null;
@@ -259,6 +261,7 @@ function BattlePanel() {
     const t = setTimeout(() => {
       resumeInfo.current = info;
       resumeDeadline.current = Date.now() + info.graceMs;
+      setResumeDeadlineAt(resumeDeadline.current);
       setStage("reconnecting");
     }, 0);
     return () => clearTimeout(t);
@@ -409,7 +412,7 @@ function BattlePanel() {
 
       {stage === "reconnecting" && (
         <section style={{ display: "grid", gap: 6 }}>
-          <div>Connection lost, reconnecting… {Math.max(0, Math.ceil((resumeDeadline.current - now) / 1000))}s left</div>
+          <div>Connection lost, reconnecting… {Math.max(0, Math.ceil((resumeDeadlineAt - now) / 1000))}s left</div>
           <div>
             <button onClick={reset}>Give up</button>
           </div>

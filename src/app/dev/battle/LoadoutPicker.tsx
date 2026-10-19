@@ -6,7 +6,7 @@
 // deck, and NFT ownership is proven onchain when confirming and again at
 // match start. Client-side checks only catch obvious mistakes early.
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   CHOG_GENESIS_CHAIN_ID,
   CHOG_GENESIS_CONTRACT,
@@ -14,6 +14,7 @@ import {
   type CommanderChoice,
   type LobbyMessage,
 } from "@/lib/battle-protocol";
+import { chooseInitialLoadout, LOADOUT_SCHEMA_VERSION, type SavedLoadout } from "@/lib/loadout";
 
 interface NftCandidate {
   tokenId: string;
@@ -37,7 +38,12 @@ interface CommandersResponse {
 interface Envelope<T> {
   success: boolean;
   data?: T;
-  error?: { code: string; message: string };
+  error?: { code: string; message: string; details?: { loadout?: SavedLoadout | null } };
+}
+
+interface LoadoutGetResponse {
+  loadout: SavedLoadout | null;
+  invalidSaved?: { revision: number; reason: string };
 }
 
 const STORAGE_KEY = "b3.loadout";
@@ -63,8 +69,8 @@ export default function LoadoutPicker(props: {
 }) {
   const { lobby, mine } = props;
   const ordinary = lobby.catalog;
-  // Convenience only: the last confirmed loadout is remembered locally.
-  // The server re-validates everything; durable deck saving is a later slice.
+  // Convenience only: the last confirmed loadout is remembered locally and is
+  // used as the draft when the account has no saved deck. The server copy wins.
   const [saved] = useState(() => (typeof window === "undefined" ? null : loadSaved()));
   const [cards, setCards] = useState<string[]>(() => saved?.cards.filter((c) => ordinary.some((o) => o.id === c)) ?? []);
   const [commander, setCommander] = useState<CommanderChoice>(saved?.commander ?? { kind: "free", class: "scout" });
@@ -72,6 +78,41 @@ export default function LoadoutPicker(props: {
   const [nfts, setNfts] = useState<NftCandidate[]>([]);
   const [nftStatus, setNftStatus] = useState<string | null>(null);
   const [nftFreshness, setNftFreshness] = useState<string>("cached");
+  // Account-saved deck state. null while the GET is still in flight.
+  const [serverDeck, setServerDeck] = useState<LoadoutGetResponse | null>(null);
+  const [saveMsg, setSaveMsg] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [conflict, setConflict] = useState<SavedLoadout | null>(null);
+  const dirty = useRef(false); // edits made before the GET resolved must not be clobbered
+
+  const fetchLoadout = useCallback(async () => {
+    try {
+      const token = await props.getAccessToken();
+      if (!token) {
+        setServerDeck({ loadout: null });
+        return;
+      }
+      const res = await fetch("/api/players/me/loadout", { headers: { authorization: `Bearer ${token}` } });
+      const j = (await res.json()) as Envelope<LoadoutGetResponse>;
+      if (!j.success || !j.data) {
+        setServerDeck({ loadout: null });
+        return;
+      }
+      setServerDeck(j.data);
+      if (!dirty.current) {
+        const pick = chooseInitialLoadout({ server: j.data.loadout, serverInvalid: !!j.data.invalidSaved, localDraft: saved, presets: lobby.presets });
+        setCards(pick.cards.filter((c) => ordinary.some((o) => o.id === c)));
+        setCommander(pick.commander);
+      }
+    } catch {
+      setServerDeck({ loadout: null });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    const t = setTimeout(() => void fetchLoadout(), 0);
+    return () => clearTimeout(t);
+  }, [fetchLoadout]);
 
   const fetchNfts = useCallback(
     async (fresh: boolean) => {
@@ -104,7 +145,55 @@ export default function LoadoutPicker(props: {
     return () => clearTimeout(t);
   }, [fetchNfts]);
 
-  const toggle = (id: string) => setCards((cs) => (cs.includes(id) ? cs.filter((c) => c !== id) : cs.length < 7 ? [...cs, id] : cs));
+  const markDirty = () => {
+    dirty.current = true;
+  };
+  const toggle = (id: string) => (markDirty(), setCards((cs) => (cs.includes(id) ? cs.filter((c) => c !== id) : cs.length < 7 ? [...cs, id] : cs)));
+
+  const saveDeck = async (expectedRevision: number | null) => {
+    setSaving(true);
+    setSaveMsg(null);
+    try {
+      const token = await props.getAccessToken();
+      if (!token) {
+        setSaveMsg("no session");
+        return;
+      }
+      const res = await fetch("/api/players/me/loadout", {
+        method: "PUT",
+        headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+        body: JSON.stringify({ schemaVersion: LOADOUT_SCHEMA_VERSION, cards, commander, expectedRevision }),
+      });
+      const j = (await res.json()) as Envelope<{ loadout: SavedLoadout }>;
+      if (res.status === 409) {
+        setConflict(j.error?.details?.loadout ?? null);
+        setSaveMsg("A newer deck was saved elsewhere");
+        return;
+      }
+      if (!j.success || !j.data) {
+        setSaveMsg(j.error?.message ?? "Save failed");
+        return;
+      }
+      setConflict(null);
+      setServerDeck({ loadout: j.data.loadout });
+      setSaveMsg(`Saved to account (rev ${j.data.loadout.revision})`);
+    } catch {
+      setSaveMsg("Save failed, retry");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const sameAs = (a: { cards: string[]; commander: CommanderChoice } | null | undefined) =>
+    !!a && JSON.stringify(a.cards) === JSON.stringify(cards) && JSON.stringify(a.commander) === JSON.stringify(commander);
+
+  const deckStatus = (() => {
+    if (serverDeck === null) return "Loading saved deck…";
+    const server = serverDeck.loadout;
+    if (server) return sameAs(server) ? `Saved to account (rev ${server.revision})` : "Unsaved changes";
+    if (serverDeck.invalidSaved) return `Saved deck needs review (rev ${serverDeck.invalidSaved.revision}): ${serverDeck.invalidSaved.reason}`;
+    return saved ? (sameAs(saved) ? "Local draft, not saved" : "Unsaved changes") : "No saved deck yet";
+  })();
   const catalog = useMemo(() => new Map(ordinary.map((c) => [c.id, c])), [ordinary]);
   const avg = cards.length ? (cards.reduce((s, c) => s + (catalog.get(c)?.cost ?? 0), 0) / cards.length).toFixed(1) : "0";
 
@@ -115,7 +204,7 @@ export default function LoadoutPicker(props: {
     return null;
   }, [cards, commander]);
 
-  const selectNft = (tokenId: string) => setCommander({ kind: "nft", chainId: CHOG_GENESIS_CHAIN_ID, contract: CHOG_GENESIS_CONTRACT, tokenId });
+  const selectNft = (tokenId: string) => (markDirty(), setCommander({ kind: "nft", chainId: CHOG_GENESIS_CHAIN_ID, contract: CHOG_GENESIS_CONTRACT, tokenId }));
   const nftSelected = commander.kind === "nft" ? commander.tokenId : null;
 
   if (mine) {
@@ -139,7 +228,7 @@ export default function LoadoutPicker(props: {
 
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
         {Object.entries(lobby.presets).map(([name, p]) => (
-          <button key={name} style={{ fontSize: 11 }} onClick={() => (setCards([...p.cards]), setCommander({ kind: "free", class: p.commanderClass as (typeof COMMANDER_CLASS_CHOICES)[number] }))}>
+          <button key={name} style={{ fontSize: 11 }} onClick={() => (markDirty(), setCards([...p.cards]), setCommander({ kind: "free", class: p.commanderClass as (typeof COMMANDER_CLASS_CHOICES)[number] }))}>
             preset: {name}
           </button>
         ))}
@@ -166,7 +255,7 @@ export default function LoadoutPicker(props: {
       <div style={{ fontSize: 13 }}>Commander</div>
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
         {COMMANDER_CLASS_CHOICES.map((cls) => (
-          <button key={cls} onClick={() => setCommander({ kind: "free", class: cls })} style={{ fontSize: 11, border: commander.kind === "free" && commander.class === cls ? "2px solid #fbbf24" : "1px solid #4b5563" }}>
+          <button key={cls} onClick={() => (markDirty(), setCommander({ kind: "free", class: cls }))} style={{ fontSize: 11, border: commander.kind === "free" && commander.class === cls ? "2px solid #fbbf24" : "1px solid #4b5563" }}>
             Free {cls}
           </button>
         ))}
@@ -221,10 +310,37 @@ export default function LoadoutPicker(props: {
       </div>
 
       {advisory && <div style={{ fontSize: 12, color: "#fca5a5" }}>{advisory}</div>}
-      <div>
+
+      <div style={{ fontSize: 11, color: "#9ca3af" }}>{deckStatus}</div>
+      {conflict && (
+        <div style={{ fontSize: 12, color: "#fbbf24", display: "flex", gap: 8, alignItems: "center" }}>
+          <span>
+            Account copy (rev {conflict.revision}): {conflict.cards.length} cards + {conflict.commander.kind === "nft" ? `NFT ${conflict.commander.tokenId}` : `free ${conflict.commander.class}`}
+          </span>
+          <button
+            style={{ fontSize: 11 }}
+            onClick={() => {
+              setCards(conflict.cards.filter((c) => ordinary.some((o) => o.id === c)));
+              setCommander(conflict.commander);
+              setServerDeck({ loadout: conflict });
+              setConflict(null);
+              setSaveMsg(null);
+            }}>
+            Load account deck
+          </button>
+          <button style={{ fontSize: 11 }} disabled={saving} onClick={() => void saveDeck(conflict.revision)}>
+            Overwrite with mine
+          </button>
+        </div>
+      )}
+      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
         <button disabled={!!advisory} onClick={() => (localStorage.setItem(STORAGE_KEY, JSON.stringify({ cards, commander })), props.onConfirm(cards, commander))}>
           Confirm loadout
         </button>
+        <button disabled={!!advisory || saving || serverDeck === null} onClick={() => void saveDeck(serverDeck?.loadout?.revision ?? serverDeck?.invalidSaved?.revision ?? null)}>
+          {saving ? "Saving…" : "Save deck"}
+        </button>
+        {saveMsg && <span style={{ fontSize: 11, color: saveMsg.includes("Saved") ? "#86efac" : "#fca5a5" }}>{saveMsg}</span>}
       </div>
     </section>
   );

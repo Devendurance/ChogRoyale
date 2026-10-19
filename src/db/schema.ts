@@ -7,6 +7,7 @@ import {
   timestamp,
   jsonb,
   integer,
+  smallint,
   uniqueIndex,
   index,
   check,
@@ -409,3 +410,51 @@ export const nftAchievementAwards = pgTable(
 export type NftLegacyEvent = typeof nftLegacyEvents.$inferSelect;
 export type LegacyAchievement = typeof legacyAchievements.$inferSelect;
 export type NftAchievementAward = typeof nftAchievementAwards.$inferSelect;
+
+// B3.2d account-saved battle loadout. One row per player today (slot 0;
+// future extra slots relax the slot check, the unique index already scopes
+// per slot). This is a selection claim only: no ownership, stats, entitlement,
+// wallet or commander snapshot. NFT commander ownership is re-proven onchain
+// by the battle server at ready and again at match start.
+export const playerLoadouts = pgTable(
+  "player_loadouts",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    playerId: uuid("player_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "cascade" }),
+    slot: smallint("slot").notNull().default(0),
+    schemaVersion: integer("schema_version").notNull().default(1),
+    cards: text("cards").array().notNull(),
+    commanderKind: text("commander_kind").notNull(),
+    commanderClass: text("commander_class"),
+    nftChainId: integer("nft_chain_id"),
+    nftContract: text("nft_contract"),
+    nftTokenId: text("nft_token_id"),
+    revision: integer("revision").notNull().default(1),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("player_loadouts_player_slot_unique").on(t.playerId, t.slot),
+    check("player_loadouts_slot_check", sql`${t.slot} = 0`),
+    check("player_loadouts_schema_version_check", sql`${t.schemaVersion} = 1`),
+    check("player_loadouts_cards_count_check", sql`cardinality(${t.cards}) = 7`),
+    check("player_loadouts_commander_kind_check", sql`${t.commanderKind} in ('free','nft')`),
+    check(
+      "player_loadouts_commander_shape_check",
+      sql`((${t.commanderKind} = 'free'
+          and ${t.commanderClass} in ('bulwark','reaver','deadeye','scout','warden')
+          and ${t.nftChainId} is null and ${t.nftContract} is null and ${t.nftTokenId} is null)
+        or (${t.commanderKind} = 'nft'
+          and ${t.commanderClass} is null
+          and ${t.nftChainId} = 143
+          and ${t.nftContract} = '0xc96d31f8626c6d03fae5dcd3d61e3fb9f4a73763'
+          and ${t.nftTokenId} ~ '^[1-9][0-9]{0,77}$'))`
+    ),
+  ]
+);
+
+export type PlayerLoadout = typeof playerLoadouts.$inferSelect;

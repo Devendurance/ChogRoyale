@@ -213,7 +213,7 @@ describe("B3.2c reconnect", () => {
     await until(() => a2.acks.some((x) => x.cid === "pre-drop"));
     expect(a2.acks.find((x) => x.cid === "pre-drop")).toMatchObject({ ok: false, reason: "Duplicate command" });
     // Play to a real end.
-    let curA: { room: Room; seen: Seen } = { room: ra2, seen: a2 };
+    const curA: { room: Room; seen: Seen } = { room: ra2, seen: a2 };
     await driveToEnd(() => ({ ra: curA.room, rb }), a2, b);
     expect(a2.end!.replayIdentical).toBe(true);
     expect(a2.end!.stateHash).toBe(b.end!.stateHash);

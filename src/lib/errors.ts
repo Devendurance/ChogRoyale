@@ -55,7 +55,7 @@ export function failure(err: unknown, requestId: string) {
     return NextResponse.json(
       {
         success: false,
-        error: { code: err.code, message: err.message, requestId, retryable: err.retryable },
+        error: { code: err.code, message: err.message, requestId, retryable: err.retryable, details: err.details },
       },
       { status: err.status }
     );
