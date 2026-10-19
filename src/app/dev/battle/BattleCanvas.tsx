@@ -157,17 +157,23 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover }:
             const x = sx(b.x);
             const y = sy(b.y);
             g.fillStyle(col(b.owner), 0.6).fillRect(x - r, y - r, r * 2, r * 2);
-            g.lineStyle(2, b.cardId === "rift_sentry" ? 0xfbbf24 : b.cardId === "chog_burrow" ? 0xa78bfa : 0xd1d5db, 1).strokeRect(x - r, y - r, r * 2, r * 2);
+            g.lineStyle(2, b.cardId === "rift_sentry" ? 0xfbbf24 : b.cardId === "chog_burrow" ? 0xa78bfa : b.cardId === "rift_mortar" ? 0xf97316 : 0xd1d5db, 1).strokeRect(x - r, y - r, r * 2, r * 2);
             hpBar(x, y - r - 6, r * 2, b.hp, b.maxHp);
-            label(b.id, b.cardId === "rift_sentry" ? "SEN" : b.cardId === "chog_burrow" ? "BUR" : "TOT", x, y);
+            label(b.id, b.cardId === "rift_sentry" ? "SEN" : b.cardId === "chog_burrow" ? "BUR" : b.cardId === "rift_mortar" ? "MOR" : "TOT", x, y);
             if (b.nextSpawnAt !== undefined && b.spawnsLeft && b.spawnsLeft > 0) {
               const frac = 1 - Math.max(0, Math.min(1, (b.nextSpawnAt - frame.tick) / 50));
               g.lineStyle(2, 0xa78bfa, 0.9).beginPath().arc(x, y - r - 10, 4, -Math.PI / 2, -Math.PI / 2 + frac * Math.PI * 2).strokePath();
             }
           }
           for (const i of frame.impacts) {
-            const r = (start.catalog[i.cardId]?.radius ?? 6) * S;
-            g.lineStyle(2, 0xfde047, 0.9).strokeCircle(sx(i.x), sy(i.y), r);
+            const r = (i.radius ?? start.catalog[i.cardId]?.radius ?? 6) * S;
+            g.lineStyle(2, i.cardId === "rift_mortar" ? 0xf97316 : 0xfde047, 0.9).strokeCircle(sx(i.x), sy(i.y), r);
+            if (i.cardId === "rift_mortar") {
+              const src = frame.buildings
+                .filter((b) => b.cardId === "rift_mortar" && b.owner === i.owner)
+                .sort((a, b) => (a.x - i.x) ** 2 + (a.y - i.y) ** 2 - ((b.x - i.x) ** 2 + (b.y - i.y) ** 2))[0];
+              if (src) g.lineStyle(1, 0xf97316, 0.5).moveTo(sx(src.x), sy(src.y)).lineTo(sx(i.x), sy(i.y)).strokePath();
+            }
           }
           for (const u of frame.troops) {
             const p = lerp(u.id, u.x, u.y);

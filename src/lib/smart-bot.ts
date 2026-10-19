@@ -25,7 +25,7 @@ import {
   type CombatState,
   type PlayerIndex,
 } from "@/lib/combat";
-import { botAntiAirSpot, botAntiSwarmSpot, botBuildingSpot, botMove, botSpellSpot, type MovePolicy } from "@/lib/arena-scenarios";
+import { botAntiAirSpot, botAntiSwarmSpot, botBuildingSpot, botMove, botSiegeSpot, botSpellSpot, type MovePolicy } from "@/lib/arena-scenarios";
 
 type Move = { cardId: string; x: number; y: number };
 type Unit = { id: string; x: number; y: number; hp: number; owner: PlayerIndex; moveType: string };
@@ -89,7 +89,9 @@ export const smartMove: MovePolicy = (state, p, n) => {
           at = botSpellSpot(state, p, c);
           score = c === "chaos_comet" ? 4 : 3;
         } else if (BUILDING_CARDS_V1[c]) {
-          if (!air || BUILDING_CARDS_V1[c]!.damage === 0) [at, score] = [botBuildingSpot(state, p, BUILDING_CARDS_V1[c]!), 3];
+          // Siege buildings stay out of the defense branch; overflow places them.
+          if (BUILDING_CARDS_V1[c]!.shell) [at, score] = [null, 0];
+          else if (!air || BUILDING_CARDS_V1[c]!.damage === 0) [at, score] = [botBuildingSpot(state, p, BUILDING_CARDS_V1[c]!), 3];
         } else if (r) {
           if ((air && !r.hitsAir && ground === 0) || (!air && !r.hitsGround)) continue;
           if (isCommanderCard(c) && threat < 200) continue;
@@ -151,6 +153,11 @@ export const smartMove: MovePolicy = (state, p, n) => {
     for (const c of playable) {
       const b = BUILDING_CARDS_V1[c];
       if (!b) continue;
+      if (b.shell) {
+        const at = botSiegeSpot(state, p, b);
+        if (at) return { cardId: c, ...at };
+        continue;
+      }
       const gx = pushX === 30 ? 70 : 30;
       for (const d of [56, 52, 60]) for (const dx of [0, 6, -6]) if (buildingDeployCheck(state, p, gx + dx, Y(d), b).ok) return { cardId: c, x: gx + dx, y: Y(d) };
     }

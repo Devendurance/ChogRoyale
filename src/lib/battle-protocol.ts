@@ -239,7 +239,7 @@ export interface BattleFrame {
   structures: StructureView[];
   buildings: BuildingView[];
   projectiles: Array<{ id: string; owner: Seat; x: number; y: number; targetId: string }>;
-  impacts: Array<{ id: string; owner: Seat; cardId: string; x: number; y: number; impactTick: number }>;
+  impacts: Array<{ id: string; owner: Seat; cardId: string; x: number; y: number; impactTick: number; radius?: number }>;
   chaos: ChaosView[];
   riftOpen: boolean;
   events: FrameEvent[];

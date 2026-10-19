@@ -31,12 +31,12 @@ function stepTo(s: CombatState, cmds: DeployCommand[], tick: number) {
 
 describe("building card domain", () => {
   it("registers two authored buildings and bumps the ruleset", () => {
-    expect(COMBAT_RULESET_VERSION).toBe("v15");
-    expect(Object.keys(BUILDING_CARDS_V1)).toEqual(["rift_sentry", "decoy_totem", "chog_burrow"]);
+    expect(COMBAT_RULESET_VERSION).toBe("v16");
+    expect(Object.keys(BUILDING_CARDS_V1)).toEqual(["rift_sentry", "decoy_totem", "chog_burrow", "rift_mortar"]);
     expect(CARDS_V1.rift_sentry).toBe(SENTRY);
     expect([SENTRY.cost, SENTRY.hp, SENTRY.damage, SENTRY.attackIntervalTicks, SENTRY.range, SENTRY.lifetimeTicks, SENTRY.hitsAir]).toEqual([4, 320, 16, 8, 16, 300, false]);
     expect([TOTEM.cost, TOTEM.hp, TOTEM.damage, TOTEM.lifetimeTicks]).toEqual([2, 260, 0, 200]);
-    expect(combatRulesetSummary().buildings.cards).toHaveLength(3);
+    expect(combatRulesetSummary().buildings.cards).toHaveLength(4);
   });
 
   it("validates decks: buildings fill ordinary slots, unknown and duplicate cards fail", () => {

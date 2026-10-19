@@ -1,0 +1,2537 @@
+{
+ "note": "B2.8b v15 golden fixtures: synthetic bot matches (no human data). Each entry must replay to stateHash under the new engine with its stored v15 config.",
+ "entries": [
+  {
+   "p0": "burrow",
+   "p1": "swarm",
+   "policy": "smart",
+   "chaos": "rift",
+   "seed": "c1",
+   "config": {
+    "rulesetVersion": "v15",
+    "seed": "c1",
+    "decks": [
+     [
+      "chog_burrow",
+      "chog_guardian",
+      "chaos_archer",
+      "sparkcaster",
+      "hexwing",
+      "rift_snare",
+      "chaos_bolt",
+      "cmdr:free-warden"
+     ],
+     [
+      "choglings",
+      "rift_sprites",
+      "rift_snare",
+      "rift_runner",
+      "chaos_archer",
+      "chog_guardian",
+      "sparkcaster",
+      "cmdr:free-scout"
+     ]
+    ],
+    "chaos": {
+     "rulesetVersion": "v1",
+     "patronTokenId": "1",
+     "patronConfigHash": "7fe53c8b248ff8af118405349677a55aa5ad2a2bcc8417c48969be59c2087bab",
+     "patronRulesetVersion": "v1",
+     "seedHash": "4288b4167c36467fd3d49cbad52a669612ae06a1d86a11beaf6e8ca3a92d7170",
+     "timeline": {
+      "durationMs": 180000,
+      "pulseAtMs": [
+       45000,
+       90000,
+       135000
+      ],
+      "warnMs": 5000,
+      "overtimeMs": 30000
+     },
+     "events": [
+      {
+       "id": "m-c1:rift_shift:45000",
+       "slot": 0,
+       "family": "rift_shift",
+       "displayName": "Unranked Rift Shift",
+       "warnMs": 41000,
+       "activationMs": 45000,
+       "expireMs": 55000,
+       "zones": [
+        "north",
+        "center",
+        "south"
+       ],
+       "effect": {
+        "kind": "zone",
+        "crossing": "north",
+        "modifier": "hasted",
+        "scope": "all_units",
+        "durationMs": 10000,
+        "stacking": "override",
+        "expires": "restore"
+       },
+       "telegraphed": true
+      },
+      {
+       "id": "m-c1:chaos_rally:90000",
+       "slot": 1,
+       "family": "chaos_rally",
+       "displayName": "Unranked Chaos Rally",
+       "warnMs": 87000,
+       "activationMs": 90000,
+       "expireMs": 100000,
+       "zones": [
+        "north",
+        "center",
+        "south"
+       ],
+       "effect": {
+        "kind": "buff",
+        "stat": "defense",
+        "scope": "both_players_units",
+        "multiplierPct": 115,
+        "durationMs": 10000,
+        "zones": [
+         "north",
+         "center",
+         "south"
+        ],
+        "stacking": "refresh",
+        "expires": "expire_end"
+       },
+       "telegraphed": true
+      },
+      {
+       "id": "m-c1:ember_rift:135000",
+       "slot": 2,
+       "family": "ember_rift",
+       "displayName": "Unranked Ember Rift",
+       "warnMs": 132000,
+       "activationMs": 135000,
+       "expireMs": 144000,
+       "zones": [
+        "north"
+       ],
+       "effect": {
+        "kind": "hazard",
+        "hazardType": "area_damage",
+        "scope": "all_units",
+        "targets": "all_units",
+        "zones": [
+         "north"
+        ],
+        "dps": 14,
+        "radiusPct": 10,
+        "telegraphMs": 3000,
+        "durationMs": 9000,
+        "stacking": "refresh",
+        "expires": "expire_end"
+       },
+       "telegraphed": true
+      }
+     ],
+     "scheduleHash": "34c05eeae2ccf6907272f4bd89d267a3445183f3a97ed924a696d40f12d1cb92"
+    },
+    "commanders": [
+     {
+      "commanderId": "free-warden",
+      "definition": {
+       "rulesetVersion": "v1",
+       "class": "warden",
+       "affinity": "warden",
+       "scores": {
+        "bulwark": 0,
+        "reaver": 0,
+        "deadeye": 0,
+        "scout": 0,
+        "warden": 0
+       },
+       "signals": [],
+       "unmatchedTraits": [],
+       "stats": {
+        "health": 1050,
+        "damage": 85,
+        "attackIntervalMs": 1300,
+        "range": 3,
+        "moveSpeed": 2.5,
+        "energyCost": 5,
+        "targetPreference": "closest",
+        "armor": 1,
+        "dps": 65.38
+       },
+       "abilities": [
+        {
+         "id": "warden-null-field",
+         "name": "Null Field",
+         "trigger": "active",
+         "cooldownMs": 24000,
+         "durationMs": 4000,
+         "effects": [
+          {
+           "kind": "slow",
+           "target": "enemiesInRadius",
+           "magnitude": 0.4,
+           "radiusOrRange": 3,
+           "durationMs": 4000
+          },
+          {
+           "kind": "shield",
+           "target": "self",
+           "magnitude": 220,
+           "radiusOrRange": null,
+           "durationMs": 4000
+          }
+         ]
+        },
+        {
+         "id": "warden-mend",
+         "name": "Mend",
+         "trigger": "deploy",
+         "cooldownMs": null,
+         "durationMs": null,
+         "effects": [
+          {
+           "kind": "heal",
+           "target": "self",
+           "magnitude": 180,
+           "radiusOrRange": null,
+           "durationMs": null
+          }
+         ]
+        }
+       ],
+       "variant": "free",
+       "prestige": "Free",
+       "powerScore": 488.64,
+       "derivationHash": "free-warden"
+      }
+     },
+     {
+      "commanderId": "free-scout",
+      "definition": {
+       "rulesetVersion": "v1",
+       "class": "scout",
+       "affinity": "scout",
+       "scores": {
+        "bulwark": 0,
+        "reaver": 0,
+        "deadeye": 0,
+        "scout": 0,
+        "warden": 0
+       },
+       "signals": [],
+       "unmatchedTraits": [],
+       "stats": {
+        "health": 850,
+        "damage": 95,
+        "attackIntervalMs": 1000,
+        "range": 2,
+        "moveSpeed": 3.6,
+        "energyCost": 4,
+        "targetPreference": "weakest",
+        "armor": 0,
+        "dps": 95
+       },
+       "abilities": [
+        {
+         "id": "scout-shadow-step",
+         "name": "Shadow Step",
+         "trigger": "active",
+         "cooldownMs": 16000,
+         "durationMs": 3000,
+         "effects": [
+          {
+           "kind": "haste",
+           "target": "self",
+           "magnitude": 0.5,
+           "radiusOrRange": null,
+           "durationMs": 3000
+          },
+          {
+           "kind": "cleanse",
+           "target": "self",
+           "magnitude": 1,
+           "radiusOrRange": null,
+           "durationMs": null
+          }
+         ]
+        },
+        {
+         "id": "scout-pathfinder",
+         "name": "Pathfinder",
+         "trigger": "deploy",
+         "cooldownMs": null,
+         "durationMs": 5000,
+         "effects": [
+          {
+           "kind": "haste",
+           "target": "allies",
+           "magnitude": 0.15,
+           "radiusOrRange": 4,
+           "durationMs": 5000
+          }
+         ]
+        }
+       ],
+       "variant": "free",
+       "prestige": "Free",
+       "powerScore": 529,
+       "derivationHash": "free-scout"
+      }
+     }
+    ]
+   },
+   "commands": [
+    {
+     "seq": 1,
+     "player": 0,
+     "tick": 60,
+     "cardId": "chog_guardian",
+     "x": 70,
+     "y": 66
+    },
+    {
+     "seq": 2,
+     "player": 0,
+     "tick": 80,
+     "cardId": "chaos_archer",
+     "x": 70,
+     "y": 70
+    },
+    {
+     "seq": 3,
+     "player": 1,
+     "tick": 80,
+     "cardId": "rift_snare",
+     "x": 70,
+     "y": 106
+    },
+    {
+     "seq": 4,
+     "player": 1,
+     "tick": 100,
+     "cardId": "rift_sprites",
+     "x": 70,
+     "y": 106
+    },
+    {
+     "seq": 5,
+     "player": 1,
+     "tick": 120,
+     "cardId": "chog_guardian",
+     "x": 70,
+     "y": 106
+    },
+    {
+     "seq": 6,
+     "player": 0,
+     "tick": 160,
+     "cardId": "rift_snare",
+     "x": 69,
+     "y": 59
+    },
+    {
+     "seq": 7,
+     "player": 1,
+     "tick": 160,
+     "cardId": "chaos_archer",
+     "x": 69,
+     "y": 90
+    },
+    {
+     "seq": 8,
+     "player": 0,
+     "tick": 200,
+     "cardId": "chaos_bolt",
+     "x": 69,
+     "y": 46
+    },
+    {
+     "seq": 9,
+     "player": 1,
+     "tick": 380,
+     "cardId": "cmdr:free-scout",
+     "x": 70,
+     "y": 94
+    },
+    {
+     "seq": 10,
+     "player": 0,
+     "tick": 400,
+     "cardId": "chog_burrow",
+     "x": 70,
+     "y": 56
+    },
+    {
+     "kind": "ability",
+     "seq": 100001,
+     "player": 1,
+     "tick": 431,
+     "abilityId": "scout-shadow-step"
+    },
+    {
+     "seq": 11,
+     "player": 0,
+     "tick": 440,
+     "cardId": "chog_guardian",
+     "x": 74,
+     "y": 54
+    },
+    {
+     "seq": 12,
+     "player": 1,
+     "tick": 440,
+     "cardId": "sparkcaster",
+     "x": 68,
+     "y": 90
+    },
+    {
+     "seq": 13,
+     "player": 1,
+     "tick": 500,
+     "cardId": "rift_snare",
+     "x": 68,
+     "y": 89
+    },
+    {
+     "seq": 14,
+     "player": 1,
+     "tick": 520,
+     "cardId": "rift_sprites",
+     "x": 70,
+     "y": 106
+    },
+    {
+     "seq": 15,
+     "player": 1,
+     "tick": 540,
+     "cardId": "choglings",
+     "x": 70,
+     "y": 106
+    },
+    {
+     "seq": 16,
+     "player": 0,
+     "tick": 580,
+     "cardId": "sparkcaster",
+     "x": 70,
+     "y": 46
+    },
+    {
+     "seq": 17,
+     "player": 0,
+     "tick": 600,
+     "cardId": "rift_snare",
+     "x": 70,
+     "y": 48
+    },
+    {
+     "seq": 18,
+     "player": 1,
+     "tick": 620,
+     "cardId": "chaos_archer",
+     "x": 70,
+     "y": 114
+    },
+    {
+     "seq": 19,
+     "player": 0,
+     "tick": 680,
+     "cardId": "chaos_archer",
+     "x": 70,
+     "y": 46
+    },
+    {
+     "seq": 20,
+     "player": 1,
+     "tick": 720,
+     "cardId": "rift_runner",
+     "x": 70,
+     "y": 106
+    },
+    {
+     "seq": 21,
+     "player": 1,
+     "tick": 940,
+     "cardId": "chog_guardian",
+     "x": 70,
+     "y": 94
+    },
+    {
+     "seq": 22,
+     "player": 0,
+     "tick": 940,
+     "cardId": "cmdr:free-warden",
+     "x": 70,
+     "y": 66
+    },
+    {
+     "seq": 23,
+     "player": 0,
+     "tick": 960,
+     "cardId": "hexwing",
+     "x": 70,
+     "y": 70
+    },
+    {
+     "seq": 24,
+     "player": 1,
+     "tick": 960,
+     "cardId": "cmdr:free-scout",
+     "x": 70,
+     "y": 90
+    },
+    {
+     "kind": "ability",
+     "seq": 100002,
+     "player": 0,
+     "tick": 981,
+     "abilityId": "warden-null-field"
+    },
+    {
+     "kind": "ability",
+     "seq": 100003,
+     "player": 1,
+     "tick": 982,
+     "abilityId": "scout-shadow-step"
+    },
+    {
+     "seq": 25,
+     "player": 1,
+     "tick": 1120,
+     "cardId": "sparkcaster",
+     "x": 70,
+     "y": 114
+    },
+    {
+     "seq": 26,
+     "player": 0,
+     "tick": 1180,
+     "cardId": "chog_burrow",
+     "x": 70,
+     "y": 56
+    },
+    {
+     "seq": 27,
+     "player": 0,
+     "tick": 1200,
+     "cardId": "rift_snare",
+     "x": 70,
+     "y": 64
+    },
+    {
+     "seq": 28,
+     "player": 1,
+     "tick": 1220,
+     "cardId": "rift_snare",
+     "x": 70,
+     "y": 97
+    },
+    {
+     "seq": 29,
+     "player": 0,
+     "tick": 1280,
+     "cardId": "chog_guardian",
+     "x": 70,
+     "y": 66
+    },
+    {
+     "seq": 30,
+     "player": 1,
+     "tick": 1280,
+     "cardId": "rift_sprites",
+     "x": 70,
+     "y": 106
+    },
+    {
+     "seq": 31,
+     "player": 1,
+     "tick": 1300,
+     "cardId": "chog_guardian",
+     "x": 70,
+     "y": 106
+    },
+    {
+     "seq": 32,
+     "player": 0,
+     "tick": 1300,
+     "cardId": "sparkcaster",
+     "x": 70,
+     "y": 70
+    },
+    {
+     "seq": 33,
+     "player": 1,
+     "tick": 1320,
+     "cardId": "cmdr:free-scout",
+     "x": 70,
+     "y": 106
+    },
+    {
+     "seq": 34,
+     "player": 1,
+     "tick": 1340,
+     "cardId": "chaos_archer",
+     "x": 70,
+     "y": 92
+    },
+    {
+     "seq": 35,
+     "player": 0,
+     "tick": 1360,
+     "cardId": "chaos_bolt",
+     "x": 70,
+     "y": 72
+    },
+    {
+     "seq": 36,
+     "player": 0,
+     "tick": 1380,
+     "cardId": "chaos_archer",
+     "x": 70,
+     "y": 46
+    },
+    {
+     "kind": "ability",
+     "seq": 100004,
+     "player": 1,
+     "tick": 1383,
+     "abilityId": "scout-shadow-step"
+    },
+    {
+     "seq": 37,
+     "player": 0,
+     "tick": 1400,
+     "cardId": "rift_snare",
+     "x": 70,
+     "y": 49
+    },
+    {
+     "seq": 38,
+     "player": 1,
+     "tick": 1440,
+     "cardId": "rift_snare",
+     "x": 70,
+     "y": 104
+    },
+    {
+     "seq": 39,
+     "player": 1,
+     "tick": 1460,
+     "cardId": "rift_sprites",
+     "x": 70,
+     "y": 106
+    },
+    {
+     "seq": 40,
+     "player": 0,
+     "tick": 1480,
+     "cardId": "hexwing",
+     "x": 70,
+     "y": 46
+    },
+    {
+     "seq": 41,
+     "player": 1,
+     "tick": 1500,
+     "cardId": "chog_guardian",
+     "x": 70,
+     "y": 94
+    },
+    {
+     "seq": 42,
+     "player": 0,
+     "tick": 1520,
+     "cardId": "chog_burrow",
+     "x": 70,
+     "y": 56
+    },
+    {
+     "seq": 43,
+     "player": 1,
+     "tick": 1520,
+     "cardId": "cmdr:free-scout",
+     "x": 70,
+     "y": 90
+    },
+    {
+     "seq": 44,
+     "player": 1,
+     "tick": 1540,
+     "cardId": "chaos_archer",
+     "x": 70,
+     "y": 90
+    },
+    {
+     "seq": 45,
+     "player": 0,
+     "tick": 1560,
+     "cardId": "chaos_bolt",
+     "x": 70,
+     "y": 54
+    },
+    {
+     "kind": "ability",
+     "seq": 100005,
+     "player": 1,
+     "tick": 1591,
+     "abilityId": "scout-shadow-step"
+    },
+    {
+     "seq": 46,
+     "player": 0,
+     "tick": 1600,
+     "cardId": "chaos_archer",
+     "x": 70,
+     "y": 46
+    },
+    {
+     "seq": 47,
+     "player": 0,
+     "tick": 1640,
+     "cardId": "rift_snare",
+     "x": 69,
+     "y": 63
+    },
+    {
+     "seq": 48,
+     "player": 1,
+     "tick": 1660,
+     "cardId": "rift_snare",
+     "x": 69,
+     "y": 84
+    },
+    {
+     "seq": 49,
+     "player": 1,
+     "tick": 1720,
+     "cardId": "choglings",
+     "x": 70,
+     "y": 94
+    },
+    {
+     "seq": 50,
+     "player": 1,
+     "tick": 1740,
+     "cardId": "chog_guardian",
+     "x": 70,
+     "y": 94
+    },
+    {
+     "seq": 51,
+     "player": 0,
+     "tick": 1740,
+     "cardId": "sparkcaster",
+     "x": 70,
+     "y": 46
+    },
+    {
+     "seq": 52,
+     "player": 0,
+     "tick": 1760,
+     "cardId": "chog_burrow",
+     "x": 70,
+     "y": 56
+    },
+    {
+     "seq": 53,
+     "player": 1,
+     "tick": 1760,
+     "cardId": "cmdr:free-scout",
+     "x": 70,
+     "y": 90
+    },
+    {
+     "seq": 54,
+     "player": 1,
+     "tick": 1780,
+     "cardId": "sparkcaster",
+     "x": 70,
+     "y": 90
+    },
+    {
+     "seq": 55,
+     "player": 0,
+     "tick": 1780,
+     "cardId": "chaos_bolt",
+     "x": 70,
+     "y": 52
+    },
+    {
+     "seq": 56,
+     "player": 1,
+     "tick": 1820,
+     "cardId": "chaos_archer",
+     "x": 70,
+     "y": 90
+    },
+    {
+     "seq": 57,
+     "player": 0,
+     "tick": 1820,
+     "cardId": "chaos_archer",
+     "x": 70,
+     "y": 46
+    },
+    {
+     "seq": 58,
+     "player": 0,
+     "tick": 1860,
+     "cardId": "rift_snare",
+     "x": 36,
+     "y": 36
+    },
+    {
+     "kind": "ability",
+     "seq": 100006,
+     "player": 1,
+     "tick": 1861,
+     "abilityId": "scout-shadow-step"
+    }
+   ],
+   "winner": 1,
+   "crowns": [
+    1,
+    2
+   ],
+   "ticks": 1913,
+   "stateHash": "d0059e3048d61795404b9adeb56501c6590f92018f35f11d213238b354053792"
+  },
+  {
+   "p0": "siege",
+   "p1": "control",
+   "policy": "smart",
+   "chaos": "none",
+   "seed": "c1",
+   "config": {
+    "rulesetVersion": "v15",
+    "seed": "c1",
+    "decks": [
+     [
+      "rift_runner",
+      "boulderback",
+      "hexwing",
+      "decoy_totem",
+      "sparkcaster",
+      "chaos_comet",
+      "riftbreaker",
+      "cmdr:free-reaver"
+     ],
+     [
+      "rift_sentry",
+      "gale_netter",
+      "sparkcaster",
+      "rift_snare",
+      "chaos_comet",
+      "chog_guardian",
+      "hexwing",
+      "cmdr:free-warden"
+     ]
+    ],
+    "chaos": null,
+    "commanders": [
+     {
+      "commanderId": "free-reaver",
+      "definition": {
+       "rulesetVersion": "v1",
+       "class": "reaver",
+       "affinity": "reaver",
+       "scores": {
+        "bulwark": 0,
+        "reaver": 0,
+        "deadeye": 0,
+        "scout": 0,
+        "warden": 0
+       },
+       "signals": [],
+       "unmatchedTraits": [],
+       "stats": {
+        "health": 1100,
+        "damage": 130,
+        "attackIntervalMs": 1200,
+        "range": 1,
+        "moveSpeed": 2.8,
+        "energyCost": 5,
+        "targetPreference": "closest",
+        "armor": 1,
+        "dps": 108.33
+       },
+       "abilities": [
+        {
+         "id": "reaver-frenzy-rush",
+         "name": "Frenzy Rush",
+         "trigger": "active",
+         "cooldownMs": 20000,
+         "durationMs": 5000,
+         "effects": [
+          {
+           "kind": "haste",
+           "target": "self",
+           "magnitude": 0.3,
+           "radiusOrRange": null,
+           "durationMs": 5000
+          },
+          {
+           "kind": "damageBuff",
+           "target": "self",
+           "magnitude": 0.25,
+           "radiusOrRange": null,
+           "durationMs": 5000
+          }
+         ]
+        },
+        {
+         "id": "reaver-bloodlust",
+         "name": "Bloodlust",
+         "trigger": "onDeath",
+         "cooldownMs": null,
+         "durationMs": null,
+         "effects": [
+          {
+           "kind": "damage",
+           "target": "enemiesInRadius",
+           "magnitude": 150,
+           "radiusOrRange": 2,
+           "durationMs": null
+          }
+         ]
+        }
+       ],
+       "variant": "free",
+       "prestige": "Free",
+       "powerScore": 551.99,
+       "derivationHash": "free-reaver"
+      }
+     },
+     {
+      "commanderId": "free-warden",
+      "definition": {
+       "rulesetVersion": "v1",
+       "class": "warden",
+       "affinity": "warden",
+       "scores": {
+        "bulwark": 0,
+        "reaver": 0,
+        "deadeye": 0,
+        "scout": 0,
+        "warden": 0
+       },
+       "signals": [],
+       "unmatchedTraits": [],
+       "stats": {
+        "health": 1050,
+        "damage": 85,
+        "attackIntervalMs": 1300,
+        "range": 3,
+        "moveSpeed": 2.5,
+        "energyCost": 5,
+        "targetPreference": "closest",
+        "armor": 1,
+        "dps": 65.38
+       },
+       "abilities": [
+        {
+         "id": "warden-null-field",
+         "name": "Null Field",
+         "trigger": "active",
+         "cooldownMs": 24000,
+         "durationMs": 4000,
+         "effects": [
+          {
+           "kind": "slow",
+           "target": "enemiesInRadius",
+           "magnitude": 0.4,
+           "radiusOrRange": 3,
+           "durationMs": 4000
+          },
+          {
+           "kind": "shield",
+           "target": "self",
+           "magnitude": 220,
+           "radiusOrRange": null,
+           "durationMs": 4000
+          }
+         ]
+        },
+        {
+         "id": "warden-mend",
+         "name": "Mend",
+         "trigger": "deploy",
+         "cooldownMs": null,
+         "durationMs": null,
+         "effects": [
+          {
+           "kind": "heal",
+           "target": "self",
+           "magnitude": 180,
+           "radiusOrRange": null,
+           "durationMs": null
+          }
+         ]
+        }
+       ],
+       "variant": "free",
+       "prestige": "Free",
+       "powerScore": 488.64,
+       "derivationHash": "free-warden"
+      }
+     }
+    ]
+   },
+   "commands": [
+    {
+     "seq": 1,
+     "player": 0,
+     "tick": 120,
+     "cardId": "boulderback",
+     "x": 70,
+     "y": 66
+    },
+    {
+     "seq": 2,
+     "player": 1,
+     "tick": 120,
+     "cardId": "rift_sentry",
+     "x": 70,
+     "y": 104
+    },
+    {
+     "seq": 3,
+     "player": 1,
+     "tick": 140,
+     "cardId": "rift_snare",
+     "x": 70,
+     "y": 86
+    },
+    {
+     "seq": 4,
+     "player": 0,
+     "tick": 140,
+     "cardId": "hexwing",
+     "x": 70,
+     "y": 70
+    },
+    {
+     "seq": 5,
+     "player": 1,
+     "tick": 160,
+     "cardId": "gale_netter",
+     "x": 70,
+     "y": 110
+    },
+    {
+     "seq": 6,
+     "player": 0,
+     "tick": 240,
+     "cardId": "decoy_totem",
+     "x": 70,
+     "y": 56
+    },
+    {
+     "seq": 7,
+     "player": 0,
+     "tick": 260,
+     "cardId": "rift_runner",
+     "x": 74,
+     "y": 54
+    },
+    {
+     "seq": 8,
+     "player": 1,
+     "tick": 280,
+     "cardId": "chaos_comet",
+     "x": 70,
+     "y": 56
+    },
+    {
+     "seq": 9,
+     "player": 1,
+     "tick": 460,
+     "cardId": "chog_guardian",
+     "x": 30,
+     "y": 94
+    },
+    {
+     "seq": 10,
+     "player": 0,
+     "tick": 480,
+     "cardId": "riftbreaker",
+     "x": 30,
+     "y": 54
+    },
+    {
+     "seq": 11,
+     "player": 1,
+     "tick": 480,
+     "cardId": "cmdr:free-warden",
+     "x": 30,
+     "y": 90
+    },
+    {
+     "seq": 12,
+     "player": 0,
+     "tick": 500,
+     "cardId": "sparkcaster",
+     "x": 30,
+     "y": 46
+    },
+    {
+     "kind": "ability",
+     "seq": 100001,
+     "player": 1,
+     "tick": 561,
+     "abilityId": "warden-null-field"
+    },
+    {
+     "seq": 13,
+     "player": 0,
+     "tick": 600,
+     "cardId": "hexwing",
+     "x": 30,
+     "y": 46
+    },
+    {
+     "seq": 14,
+     "player": 1,
+     "tick": 660,
+     "cardId": "hexwing",
+     "x": 30,
+     "y": 114
+    },
+    {
+     "seq": 15,
+     "player": 0,
+     "tick": 700,
+     "cardId": "decoy_totem",
+     "x": 30,
+     "y": 56
+    },
+    {
+     "seq": 16,
+     "player": 0,
+     "tick": 800,
+     "cardId": "boulderback",
+     "x": 30,
+     "y": 66
+    },
+    {
+     "seq": 17,
+     "player": 1,
+     "tick": 820,
+     "cardId": "rift_snare",
+     "x": 30,
+     "y": 86
+    },
+    {
+     "seq": 18,
+     "player": 1,
+     "tick": 840,
+     "cardId": "chaos_comet",
+     "x": 30,
+     "y": 56
+    },
+    {
+     "seq": 19,
+     "player": 0,
+     "tick": 900,
+     "cardId": "riftbreaker",
+     "x": 30,
+     "y": 66
+    },
+    {
+     "seq": 20,
+     "player": 1,
+     "tick": 940,
+     "cardId": "chog_guardian",
+     "x": 30,
+     "y": 106
+    },
+    {
+     "seq": 21,
+     "player": 1,
+     "tick": 1020,
+     "cardId": "gale_netter",
+     "x": 30,
+     "y": 90
+    },
+    {
+     "seq": 22,
+     "player": 0,
+     "tick": 1020,
+     "cardId": "rift_runner",
+     "x": 30,
+     "y": 54
+    },
+    {
+     "seq": 23,
+     "player": 0,
+     "tick": 1100,
+     "cardId": "hexwing",
+     "x": 30,
+     "y": 46
+    },
+    {
+     "seq": 24,
+     "player": 1,
+     "tick": 1240,
+     "cardId": "cmdr:free-warden",
+     "x": 30,
+     "y": 94
+    },
+    {
+     "seq": 25,
+     "player": 1,
+     "tick": 1260,
+     "cardId": "hexwing",
+     "x": 30,
+     "y": 90
+    },
+    {
+     "seq": 26,
+     "player": 0,
+     "tick": 1260,
+     "cardId": "decoy_totem",
+     "x": 30,
+     "y": 56
+    },
+    {
+     "seq": 27,
+     "player": 0,
+     "tick": 1280,
+     "cardId": "sparkcaster",
+     "x": 30,
+     "y": 46
+    },
+    {
+     "seq": 28,
+     "player": 1,
+     "tick": 1300,
+     "cardId": "sparkcaster",
+     "x": 30,
+     "y": 90
+    },
+    {
+     "seq": 29,
+     "player": 0,
+     "tick": 1300,
+     "cardId": "riftbreaker",
+     "x": 34,
+     "y": 54
+    },
+    {
+     "kind": "ability",
+     "seq": 100002,
+     "player": 1,
+     "tick": 1315,
+     "abilityId": "warden-null-field"
+    },
+    {
+     "seq": 30,
+     "player": 0,
+     "tick": 1340,
+     "cardId": "rift_runner",
+     "x": 34,
+     "y": 54
+    },
+    {
+     "seq": 31,
+     "player": 1,
+     "tick": 1380,
+     "cardId": "chog_guardian",
+     "x": 30,
+     "y": 94
+    },
+    {
+     "seq": 32,
+     "player": 0,
+     "tick": 1400,
+     "cardId": "hexwing",
+     "x": 30,
+     "y": 46
+    },
+    {
+     "seq": 33,
+     "player": 0,
+     "tick": 1420,
+     "cardId": "decoy_totem",
+     "x": 30,
+     "y": 56
+    },
+    {
+     "seq": 34,
+     "player": 1,
+     "tick": 1480,
+     "cardId": "gale_netter",
+     "x": 30,
+     "y": 110
+    },
+    {
+     "seq": 35,
+     "player": 0,
+     "tick": 1500,
+     "cardId": "boulderback",
+     "x": 34,
+     "y": 54
+    },
+    {
+     "seq": 36,
+     "player": 1,
+     "tick": 1540,
+     "cardId": "chaos_comet",
+     "x": 30,
+     "y": 40
+    },
+    {
+     "seq": 37,
+     "player": 0,
+     "tick": 1540,
+     "cardId": "sparkcaster",
+     "x": 32,
+     "y": 64
+    },
+    {
+     "seq": 38,
+     "player": 1,
+     "tick": 1560,
+     "cardId": "rift_snare",
+     "x": 42,
+     "y": 97
+    },
+    {
+     "seq": 39,
+     "player": 1,
+     "tick": 1580,
+     "cardId": "rift_sentry",
+     "x": 30,
+     "y": 104
+    },
+    {
+     "seq": 40,
+     "player": 1,
+     "tick": 1620,
+     "cardId": "chog_guardian",
+     "x": 38,
+     "y": 106
+    },
+    {
+     "seq": 41,
+     "player": 0,
+     "tick": 1620,
+     "cardId": "cmdr:free-reaver",
+     "x": 35,
+     "y": 70
+    },
+    {
+     "kind": "ability",
+     "seq": 100003,
+     "player": 0,
+     "tick": 1635,
+     "abilityId": "reaver-frenzy-rush"
+    },
+    {
+     "seq": 42,
+     "player": 1,
+     "tick": 1660,
+     "cardId": "gale_netter",
+     "x": 36,
+     "y": 110
+    },
+    {
+     "seq": 43,
+     "player": 0,
+     "tick": 1680,
+     "cardId": "hexwing",
+     "x": 36,
+     "y": 70
+    },
+    {
+     "seq": 44,
+     "player": 1,
+     "tick": 1720,
+     "cardId": "chaos_comet",
+     "x": 30,
+     "y": 40
+    },
+    {
+     "seq": 45,
+     "player": 1,
+     "tick": 1740,
+     "cardId": "rift_snare",
+     "x": 36,
+     "y": 103
+    },
+    {
+     "seq": 46,
+     "player": 0,
+     "tick": 1780,
+     "cardId": "riftbreaker",
+     "x": 70,
+     "y": 66
+    },
+    {
+     "seq": 47,
+     "player": 1,
+     "tick": 1800,
+     "cardId": "rift_sentry",
+     "x": 76,
+     "y": 104
+    },
+    {
+     "kind": "ability",
+     "seq": 100004,
+     "player": 0,
+     "tick": 1835,
+     "abilityId": "reaver-frenzy-rush"
+    },
+    {
+     "seq": 48,
+     "player": 1,
+     "tick": 1860,
+     "cardId": "chog_guardian",
+     "x": 70,
+     "y": 106
+    },
+    {
+     "seq": 49,
+     "player": 0,
+     "tick": 1860,
+     "cardId": "boulderback",
+     "x": 70,
+     "y": 66
+    },
+    {
+     "seq": 50,
+     "player": 0,
+     "tick": 1880,
+     "cardId": "sparkcaster",
+     "x": 70,
+     "y": 70
+    },
+    {
+     "seq": 51,
+     "player": 1,
+     "tick": 1900,
+     "cardId": "gale_netter",
+     "x": 70,
+     "y": 109
+    },
+    {
+     "seq": 52,
+     "player": 0,
+     "tick": 1960,
+     "cardId": "cmdr:free-reaver",
+     "x": 70,
+     "y": 66
+    },
+    {
+     "seq": 53,
+     "player": 1,
+     "tick": 1960,
+     "cardId": "cmdr:free-warden",
+     "x": 70,
+     "y": 108
+    },
+    {
+     "kind": "ability",
+     "seq": 100005,
+     "player": 0,
+     "tick": 1970,
+     "abilityId": "reaver-frenzy-rush"
+    },
+    {
+     "kind": "ability",
+     "seq": 100006,
+     "player": 1,
+     "tick": 1987,
+     "abilityId": "warden-null-field"
+    },
+    {
+     "seq": 54,
+     "player": 0,
+     "tick": 2020,
+     "cardId": "hexwing",
+     "x": 70,
+     "y": 70
+    },
+    {
+     "seq": 55,
+     "player": 1,
+     "tick": 2060,
+     "cardId": "hexwing",
+     "x": 70,
+     "y": 114
+    },
+    {
+     "seq": 56,
+     "player": 0,
+     "tick": 2060,
+     "cardId": "decoy_totem",
+     "x": 70,
+     "y": 56
+    },
+    {
+     "seq": 57,
+     "player": 1,
+     "tick": 2100,
+     "cardId": "sparkcaster",
+     "x": 70,
+     "y": 90
+    },
+    {
+     "seq": 58,
+     "player": 0,
+     "tick": 2100,
+     "cardId": "riftbreaker",
+     "x": 74,
+     "y": 54
+    },
+    {
+     "seq": 59,
+     "player": 1,
+     "tick": 2160,
+     "cardId": "chog_guardian",
+     "x": 70,
+     "y": 94
+    },
+    {
+     "seq": 60,
+     "player": 0,
+     "tick": 2180,
+     "cardId": "sparkcaster",
+     "x": 70,
+     "y": 46
+    },
+    {
+     "seq": 61,
+     "player": 0,
+     "tick": 2200,
+     "cardId": "rift_runner",
+     "x": 74,
+     "y": 54
+    },
+    {
+     "seq": 62,
+     "player": 1,
+     "tick": 2200,
+     "cardId": "gale_netter",
+     "x": 70,
+     "y": 90
+    },
+    {
+     "seq": 63,
+     "player": 0,
+     "tick": 2260,
+     "cardId": "chaos_comet",
+     "x": 70,
+     "y": 60
+    },
+    {
+     "seq": 64,
+     "player": 1,
+     "tick": 2340,
+     "cardId": "cmdr:free-warden",
+     "x": 70,
+     "y": 94
+    },
+    {
+     "seq": 65,
+     "player": 0,
+     "tick": 2360,
+     "cardId": "decoy_totem",
+     "x": 70,
+     "y": 56
+    },
+    {
+     "seq": 66,
+     "player": 1,
+     "tick": 2360,
+     "cardId": "hexwing",
+     "x": 70,
+     "y": 90
+    },
+    {
+     "seq": 67,
+     "player": 0,
+     "tick": 2380,
+     "cardId": "hexwing",
+     "x": 70,
+     "y": 46
+    },
+    {
+     "seq": 68,
+     "player": 0,
+     "tick": 2400,
+     "cardId": "sparkcaster",
+     "x": 70,
+     "y": 46
+    },
+    {
+     "seq": 69,
+     "player": 1,
+     "tick": 2400,
+     "cardId": "sparkcaster",
+     "x": 70,
+     "y": 90
+    },
+    {
+     "kind": "ability",
+     "seq": 100007,
+     "player": 1,
+     "tick": 2407,
+     "abilityId": "warden-null-field"
+    },
+    {
+     "seq": 70,
+     "player": 0,
+     "tick": 2440,
+     "cardId": "riftbreaker",
+     "x": 70,
+     "y": 54
+    },
+    {
+     "seq": 71,
+     "player": 1,
+     "tick": 2460,
+     "cardId": "chog_guardian",
+     "x": 70,
+     "y": 94
+    },
+    {
+     "seq": 72,
+     "player": 0,
+     "tick": 2480,
+     "cardId": "chaos_comet",
+     "x": 70,
+     "y": 68
+    },
+    {
+     "seq": 73,
+     "player": 1,
+     "tick": 2480,
+     "cardId": "gale_netter",
+     "x": 70,
+     "y": 90
+    },
+    {
+     "seq": 74,
+     "player": 0,
+     "tick": 2500,
+     "cardId": "decoy_totem",
+     "x": 76,
+     "y": 56
+    },
+    {
+     "seq": 75,
+     "player": 0,
+     "tick": 2520,
+     "cardId": "rift_runner",
+     "x": 70,
+     "y": 54
+    },
+    {
+     "seq": 76,
+     "player": 0,
+     "tick": 2560,
+     "cardId": "hexwing",
+     "x": 70,
+     "y": 46
+    },
+    {
+     "seq": 77,
+     "player": 1,
+     "tick": 2560,
+     "cardId": "chaos_comet",
+     "x": 70,
+     "y": 40
+    },
+    {
+     "seq": 78,
+     "player": 1,
+     "tick": 2580,
+     "cardId": "hexwing",
+     "x": 70,
+     "y": 114
+    },
+    {
+     "seq": 79,
+     "player": 0,
+     "tick": 2620,
+     "cardId": "sparkcaster",
+     "x": 70,
+     "y": 46
+    },
+    {
+     "seq": 80,
+     "player": 0,
+     "tick": 2640,
+     "cardId": "riftbreaker",
+     "x": 70,
+     "y": 66
+    },
+    {
+     "seq": 81,
+     "player": 1,
+     "tick": 2640,
+     "cardId": "cmdr:free-warden",
+     "x": 70,
+     "y": 94
+    },
+    {
+     "seq": 82,
+     "player": 1,
+     "tick": 2660,
+     "cardId": "sparkcaster",
+     "x": 70,
+     "y": 90
+    },
+    {
+     "seq": 83,
+     "player": 0,
+     "tick": 2680,
+     "cardId": "cmdr:free-reaver",
+     "x": 70,
+     "y": 70
+    },
+    {
+     "seq": 84,
+     "player": 1,
+     "tick": 2680,
+     "cardId": "gale_netter",
+     "x": 70,
+     "y": 90
+    },
+    {
+     "kind": "ability",
+     "seq": 100008,
+     "player": 1,
+     "tick": 2683,
+     "abilityId": "warden-null-field"
+    },
+    {
+     "kind": "ability",
+     "seq": 100009,
+     "player": 0,
+     "tick": 2685,
+     "abilityId": "reaver-frenzy-rush"
+    },
+    {
+     "seq": 85,
+     "player": 1,
+     "tick": 2700,
+     "cardId": "rift_snare",
+     "x": 70,
+     "y": 82
+    },
+    {
+     "seq": 86,
+     "player": 1,
+     "tick": 2740,
+     "cardId": "chog_guardian",
+     "x": 70,
+     "y": 106
+    },
+    {
+     "seq": 87,
+     "player": 0,
+     "tick": 2740,
+     "cardId": "boulderback",
+     "x": 70,
+     "y": 66
+    },
+    {
+     "seq": 88,
+     "player": 1,
+     "tick": 2780,
+     "cardId": "rift_sentry",
+     "x": 70,
+     "y": 104
+    },
+    {
+     "seq": 89,
+     "player": 0,
+     "tick": 2780,
+     "cardId": "hexwing",
+     "x": 70,
+     "y": 70
+    },
+    {
+     "seq": 90,
+     "player": 1,
+     "tick": 2800,
+     "cardId": "gale_netter",
+     "x": 70,
+     "y": 110
+    },
+    {
+     "seq": 91,
+     "player": 1,
+     "tick": 2820,
+     "cardId": "rift_snare",
+     "x": 70,
+     "y": 99
+    },
+    {
+     "seq": 92,
+     "player": 0,
+     "tick": 2820,
+     "cardId": "sparkcaster",
+     "x": 70,
+     "y": 70
+    },
+    {
+     "seq": 93,
+     "player": 1,
+     "tick": 2860,
+     "cardId": "chaos_comet",
+     "x": 74,
+     "y": 90
+    },
+    {
+     "seq": 94,
+     "player": 0,
+     "tick": 2860,
+     "cardId": "riftbreaker",
+     "x": 70,
+     "y": 66
+    },
+    {
+     "seq": 95,
+     "player": 1,
+     "tick": 2900,
+     "cardId": "chog_guardian",
+     "x": 70,
+     "y": 106
+    },
+    {
+     "seq": 96,
+     "player": 0,
+     "tick": 2900,
+     "cardId": "cmdr:free-reaver",
+     "x": 70,
+     "y": 66
+    }
+   ],
+   "winner": 0,
+   "crowns": [
+    2,
+    1
+   ],
+   "ticks": 2902,
+   "stateHash": "b21e5ad2a0c22e4a21d17a6a58df58bf66d398f06dc77834ee523d845d771b31"
+  },
+  {
+   "p0": "control",
+   "p1": "swarm",
+   "policy": "simple",
+   "chaos": "rift",
+   "seed": "c2",
+   "config": {
+    "rulesetVersion": "v15",
+    "seed": "c2",
+    "decks": [
+     [
+      "rift_sentry",
+      "gale_netter",
+      "sparkcaster",
+      "rift_snare",
+      "chaos_comet",
+      "chog_guardian",
+      "hexwing",
+      "cmdr:free-warden"
+     ],
+     [
+      "choglings",
+      "rift_sprites",
+      "rift_snare",
+      "rift_runner",
+      "chaos_archer",
+      "chog_guardian",
+      "sparkcaster",
+      "cmdr:free-scout"
+     ]
+    ],
+    "chaos": {
+     "rulesetVersion": "v1",
+     "patronTokenId": "1",
+     "patronConfigHash": "7fe53c8b248ff8af118405349677a55aa5ad2a2bcc8417c48969be59c2087bab",
+     "patronRulesetVersion": "v1",
+     "seedHash": "c35b1d22b0faccefe7276aa90b23931f0557893c3ac72dfb8135a06855987cf2",
+     "timeline": {
+      "durationMs": 180000,
+      "pulseAtMs": [
+       45000,
+       90000,
+       135000
+      ],
+      "warnMs": 5000,
+      "overtimeMs": 30000
+     },
+     "events": [
+      {
+       "id": "m-c2:rift_shift:45000",
+       "slot": 0,
+       "family": "rift_shift",
+       "displayName": "Unranked Rift Shift",
+       "warnMs": 42000,
+       "activationMs": 45000,
+       "expireMs": 58000,
+       "zones": [
+        "north",
+        "center",
+        "south"
+       ],
+       "effect": {
+        "kind": "zone",
+        "crossing": "north",
+        "modifier": "slowed",
+        "scope": "all_units",
+        "durationMs": 13000,
+        "stacking": "override",
+        "expires": "restore"
+       },
+       "telegraphed": true
+      },
+      {
+       "id": "m-c2:frost_crossing:90000",
+       "slot": 1,
+       "family": "frost_crossing",
+       "displayName": "Unranked Frost Crossing",
+       "warnMs": 85000,
+       "activationMs": 90000,
+       "expireMs": 99000,
+       "zones": [
+        "north",
+        "center",
+        "south"
+       ],
+       "effect": {
+        "kind": "modifier",
+        "stat": "move_speed",
+        "scope": "all_units",
+        "multiplierPct": 130,
+        "durationMs": 9000,
+        "zones": [
+         "north",
+         "center",
+         "south"
+        ],
+        "stacking": "refresh",
+        "expires": "expire_end"
+       },
+       "telegraphed": true
+      },
+      {
+       "id": "m-c2:energy_surge:135000",
+       "slot": 2,
+       "family": "energy_surge",
+       "displayName": "Unranked Energy Surge",
+       "warnMs": 132000,
+       "activationMs": 135000,
+       "expireMs": 146000,
+       "zones": [
+        "north",
+        "center",
+        "south"
+       ],
+       "effect": {
+        "kind": "modifier",
+        "stat": "energy_regen",
+        "scope": "both_players",
+        "deltaPct": 120,
+        "durationMs": 11000,
+        "zones": [
+         "north",
+         "center",
+         "south"
+        ],
+        "stacking": "override",
+        "expires": "expire_end"
+       },
+       "telegraphed": true
+      }
+     ],
+     "scheduleHash": "b0a9004a8e9573ffb28f3f70e94850e9ee53fad2c0103b8eb353bee72b454165"
+    },
+    "commanders": [
+     {
+      "commanderId": "free-warden",
+      "definition": {
+       "rulesetVersion": "v1",
+       "class": "warden",
+       "affinity": "warden",
+       "scores": {
+        "bulwark": 0,
+        "reaver": 0,
+        "deadeye": 0,
+        "scout": 0,
+        "warden": 0
+       },
+       "signals": [],
+       "unmatchedTraits": [],
+       "stats": {
+        "health": 1050,
+        "damage": 85,
+        "attackIntervalMs": 1300,
+        "range": 3,
+        "moveSpeed": 2.5,
+        "energyCost": 5,
+        "targetPreference": "closest",
+        "armor": 1,
+        "dps": 65.38
+       },
+       "abilities": [
+        {
+         "id": "warden-null-field",
+         "name": "Null Field",
+         "trigger": "active",
+         "cooldownMs": 24000,
+         "durationMs": 4000,
+         "effects": [
+          {
+           "kind": "slow",
+           "target": "enemiesInRadius",
+           "magnitude": 0.4,
+           "radiusOrRange": 3,
+           "durationMs": 4000
+          },
+          {
+           "kind": "shield",
+           "target": "self",
+           "magnitude": 220,
+           "radiusOrRange": null,
+           "durationMs": 4000
+          }
+         ]
+        },
+        {
+         "id": "warden-mend",
+         "name": "Mend",
+         "trigger": "deploy",
+         "cooldownMs": null,
+         "durationMs": null,
+         "effects": [
+          {
+           "kind": "heal",
+           "target": "self",
+           "magnitude": 180,
+           "radiusOrRange": null,
+           "durationMs": null
+          }
+         ]
+        }
+       ],
+       "variant": "free",
+       "prestige": "Free",
+       "powerScore": 488.64,
+       "derivationHash": "free-warden"
+      }
+     },
+     {
+      "commanderId": "free-scout",
+      "definition": {
+       "rulesetVersion": "v1",
+       "class": "scout",
+       "affinity": "scout",
+       "scores": {
+        "bulwark": 0,
+        "reaver": 0,
+        "deadeye": 0,
+        "scout": 0,
+        "warden": 0
+       },
+       "signals": [],
+       "unmatchedTraits": [],
+       "stats": {
+        "health": 850,
+        "damage": 95,
+        "attackIntervalMs": 1000,
+        "range": 2,
+        "moveSpeed": 3.6,
+        "energyCost": 4,
+        "targetPreference": "weakest",
+        "armor": 0,
+        "dps": 95
+       },
+       "abilities": [
+        {
+         "id": "scout-shadow-step",
+         "name": "Shadow Step",
+         "trigger": "active",
+         "cooldownMs": 16000,
+         "durationMs": 3000,
+         "effects": [
+          {
+           "kind": "haste",
+           "target": "self",
+           "magnitude": 0.5,
+           "radiusOrRange": null,
+           "durationMs": 3000
+          },
+          {
+           "kind": "cleanse",
+           "target": "self",
+           "magnitude": 1,
+           "radiusOrRange": null,
+           "durationMs": null
+          }
+         ]
+        },
+        {
+         "id": "scout-pathfinder",
+         "name": "Pathfinder",
+         "trigger": "deploy",
+         "cooldownMs": null,
+         "durationMs": 5000,
+         "effects": [
+          {
+           "kind": "haste",
+           "target": "allies",
+           "magnitude": 0.15,
+           "radiusOrRange": 4,
+           "durationMs": 5000
+          }
+         ]
+        }
+       ],
+       "variant": "free",
+       "prestige": "Free",
+       "powerScore": 529,
+       "derivationHash": "free-scout"
+      }
+     }
+    ]
+   },
+   "commands": [
+    {
+     "seq": 1,
+     "player": 0,
+     "tick": 20,
+     "cardId": "sparkcaster",
+     "x": 50,
+     "y": 65
+    },
+    {
+     "seq": 2,
+     "player": 1,
+     "tick": 20,
+     "cardId": "choglings",
+     "x": 20,
+     "y": 88
+    },
+    {
+     "seq": 3,
+     "player": 1,
+     "tick": 40,
+     "cardId": "rift_sprites",
+     "x": 80,
+     "y": 105
+    },
+    {
+     "seq": 4,
+     "player": 0,
+     "tick": 40,
+     "cardId": "rift_snare",
+     "x": 40,
+     "y": 73
+    },
+    {
+     "seq": 5,
+     "player": 1,
+     "tick": 60,
+     "cardId": "rift_snare",
+     "x": 34,
+     "y": 94
+    },
+    {
+     "seq": 6,
+     "player": 1,
+     "tick": 100,
+     "cardId": "rift_runner",
+     "x": 60,
+     "y": 91
+    },
+    {
+     "seq": 7,
+     "player": 0,
+     "tick": 160,
+     "cardId": "chog_guardian",
+     "x": 80,
+     "y": 55
+    },
+    {
+     "seq": 8,
+     "player": 1,
+     "tick": 200,
+     "cardId": "cmdr:free-scout",
+     "x": 30,
+     "y": 108
+    },
+    {
+     "seq": 9,
+     "player": 0,
+     "tick": 260,
+     "cardId": "rift_sentry",
+     "x": 30,
+     "y": 56
+    },
+    {
+     "seq": 10,
+     "player": 1,
+     "tick": 260,
+     "cardId": "choglings",
+     "x": 70,
+     "y": 101
+    },
+    {
+     "seq": 11,
+     "player": 1,
+     "tick": 300,
+     "cardId": "rift_sprites",
+     "x": 50,
+     "y": 94
+    },
+    {
+     "seq": 12,
+     "player": 1,
+     "tick": 380,
+     "cardId": "chaos_archer",
+     "x": 20,
+     "y": 87
+    },
+    {
+     "seq": 13,
+     "player": 0,
+     "tick": 400,
+     "cardId": "cmdr:free-warden",
+     "x": 60,
+     "y": 69
+    },
+    {
+     "seq": 14,
+     "player": 1,
+     "tick": 440,
+     "cardId": "rift_snare",
+     "x": 66,
+     "y": 108
+    },
+    {
+     "seq": 15,
+     "player": 0,
+     "tick": 520,
+     "cardId": "hexwing",
+     "x": 30,
+     "y": 52
+    },
+    {
+     "seq": 16,
+     "player": 1,
+     "tick": 540,
+     "cardId": "cmdr:free-scout",
+     "x": 40,
+     "y": 97
+    },
+    {
+     "seq": 17,
+     "player": 0,
+     "tick": 580,
+     "cardId": "rift_snare",
+     "x": 34,
+     "y": 47
+    },
+    {
+     "kind": "ability",
+     "seq": 100001,
+     "player": 1,
+     "tick": 581,
+     "abilityId": "scout-shadow-step"
+    },
+    {
+     "seq": 18,
+     "player": 1,
+     "tick": 620,
+     "cardId": "choglings",
+     "x": 60,
+     "y": 90
+    },
+    {
+     "seq": 19,
+     "player": 1,
+     "tick": 660,
+     "cardId": "rift_sprites",
+     "x": 30,
+     "y": 107
+    },
+    {
+     "seq": 20,
+     "player": 0,
+     "tick": 680,
+     "cardId": "gale_netter",
+     "x": 30,
+     "y": 50
+    },
+    {
+     "seq": 21,
+     "player": 1,
+     "tick": 740,
+     "cardId": "rift_runner",
+     "x": 70,
+     "y": 100
+    },
+    {
+     "seq": 22,
+     "player": 0,
+     "tick": 760,
+     "cardId": "sparkcaster",
+     "x": 20,
+     "y": 73
+    },
+    {
+     "seq": 23,
+     "player": 1,
+     "tick": 800,
+     "cardId": "rift_snare",
+     "x": 26,
+     "y": 96
+    },
+    {
+     "seq": 24,
+     "player": 0,
+     "tick": 900,
+     "cardId": "cmdr:free-warden",
+     "x": 80,
+     "y": 56
+    },
+    {
+     "seq": 25,
+     "player": 1,
+     "tick": 900,
+     "cardId": "cmdr:free-scout",
+     "x": 20,
+     "y": 110
+    },
+    {
+     "seq": 26,
+     "player": 1,
+     "tick": 960,
+     "cardId": "choglings",
+     "x": 80,
+     "y": 103
+    },
+    {
+     "kind": "ability",
+     "seq": 100002,
+     "player": 0,
+     "tick": 961,
+     "abilityId": "warden-null-field"
+    },
+    {
+     "seq": 27,
+     "player": 1,
+     "tick": 1000,
+     "cardId": "rift_sprites",
+     "x": 40,
+     "y": 96
+    },
+    {
+     "seq": 28,
+     "player": 1,
+     "tick": 1080,
+     "cardId": "chaos_archer",
+     "x": 60,
+     "y": 89
+    },
+    {
+     "seq": 29,
+     "player": 0,
+     "tick": 1080,
+     "cardId": "chaos_comet",
+     "x": 70,
+     "y": 120
+    },
+    {
+     "seq": 30,
+     "player": 0,
+     "tick": 1140,
+     "cardId": "rift_snare",
+     "x": 55,
+     "y": 31
+    },
+    {
+     "seq": 31,
+     "player": 1,
+     "tick": 1160,
+     "cardId": "rift_runner",
+     "x": 30,
+     "y": 106
+    },
+    {
+     "seq": 32,
+     "player": 0,
+     "tick": 1220,
+     "cardId": "chog_guardian",
+     "x": 30,
+     "y": 53
+    },
+    {
+     "seq": 33,
+     "player": 1,
+     "tick": 1240,
+     "cardId": "cmdr:free-scout",
+     "x": 70,
+     "y": 99
+    },
+    {
+     "seq": 34,
+     "player": 1,
+     "tick": 1260,
+     "cardId": "rift_snare",
+     "x": 30,
+     "y": 114
+    },
+    {
+     "seq": 35,
+     "player": 1,
+     "tick": 1280,
+     "cardId": "rift_sprites",
+     "x": 20,
+     "y": 109
+    },
+    {
+     "seq": 36,
+     "player": 0,
+     "tick": 1280,
+     "cardId": "rift_sentry",
+     "x": 70,
+     "y": 56
+    },
+    {
+     "seq": 37,
+     "player": 1,
+     "tick": 1320,
+     "cardId": "choglings",
+     "x": 80,
+     "y": 102
+    },
+    {
+     "seq": 38,
+     "player": 1,
+     "tick": 1360,
+     "cardId": "chog_guardian",
+     "x": 40,
+     "y": 95
+    },
+    {
+     "seq": 39,
+     "player": 0,
+     "tick": 1360,
+     "cardId": "cmdr:free-warden",
+     "x": 50,
+     "y": 67
+    },
+    {
+     "kind": "ability",
+     "seq": 100003,
+     "player": 0,
+     "tick": 1368,
+     "abilityId": "warden-null-field"
+    },
+    {
+     "seq": 40,
+     "player": 1,
+     "tick": 1400,
+     "cardId": "chaos_archer",
+     "x": 60,
+     "y": 88
+    },
+    {
+     "seq": 41,
+     "player": 0,
+     "tick": 1420,
+     "cardId": "hexwing",
+     "x": 20,
+     "y": 50
+    },
+    {
+     "seq": 42,
+     "player": 1,
+     "tick": 1420,
+     "cardId": "rift_sprites",
+     "x": 30,
+     "y": 105
+    },
+    {
+     "seq": 43,
+     "player": 1,
+     "tick": 1440,
+     "cardId": "rift_runner",
+     "x": 70,
+     "y": 98
+    },
+    {
+     "seq": 44,
+     "player": 0,
+     "tick": 1440,
+     "cardId": "rift_snare",
+     "x": 65,
+     "y": 59
+    },
+    {
+     "seq": 45,
+     "player": 0,
+     "tick": 1500,
+     "cardId": "sparkcaster",
+     "x": 40,
+     "y": 64
+    },
+    {
+     "seq": 46,
+     "player": 1,
+     "tick": 1500,
+     "cardId": "cmdr:free-scout",
+     "x": 50,
+     "y": 91
+    },
+    {
+     "seq": 47,
+     "player": 1,
+     "tick": 1520,
+     "cardId": "choglings",
+     "x": 20,
+     "y": 108
+    },
+    {
+     "seq": 48,
+     "player": 1,
+     "tick": 1560,
+     "cardId": "chaos_archer",
+     "x": 80,
+     "y": 101
+    },
+    {
+     "seq": 49,
+     "player": 0,
+     "tick": 1560,
+     "cardId": "chaos_comet",
+     "x": 45,
+     "y": 44
+    },
+    {
+     "seq": 50,
+     "player": 1,
+     "tick": 1580,
+     "cardId": "rift_sprites",
+     "x": 40,
+     "y": 94
+    }
+   ],
+   "winner": 1,
+   "crowns": [
+    1,
+    3
+   ],
+   "ticks": 1606,
+   "stateHash": "6d23d5f6ffd9e237bb2ffa905dea030405390edcaa74fc7e008449782fb8cd86"
+  }
+ ]
+}

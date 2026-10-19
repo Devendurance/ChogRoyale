@@ -25,6 +25,7 @@ import {
   SPELL_CARDS_V1,
   buildingDeployCheck,
   buildingSolids,
+  STRUCTURE_FOOTPRINT_V5,
   type BuildingCardDef,
   type CombatCommand,
   type CommanderSlotInput,
@@ -143,7 +144,7 @@ export function botMove(state: CombatState, p: PlayerIndex, n: number): { cardId
     }
     const bdef = BUILDING_CARDS_V1[card];
     if (bdef) {
-      const spot = botBuildingSpot(state, p, bdef);
+      const spot = bdef.shell ? botSiegeSpot(state, p, bdef) : botBuildingSpot(state, p, bdef);
       if (spot) return { cardId: card, ...spot };
       continue;
     }
@@ -208,6 +209,31 @@ export function botBuildingSpot(state: CombatState, p: PlayerIndex, def: Buildin
   for (const y of ys) {
     for (const dx of [0, 6, -6, 10, -10]) {
       if (buildingDeployCheck(state, p, laneX + dx, y, def).ok) return { x: laneX + dx, y };
+    }
+  }
+  return null;
+}
+
+/**
+ * B2.8b siege placement: the mortar sits near the river in the lane of the
+ * weakest (ties: left, x unchanged by the y-mirror) alive enemy tower,
+ * close enough that the tower's footprint edge is within range. Scans rows
+ * from the river edge backward and x offsets around the lane in a fixed
+ * order; first spot that passes buildingDeployCheck AND reaches the tower.
+ */
+export function botSiegeSpot(state: CombatState, p: PlayerIndex, def: BuildingCardDef): { x: number; y: number } | null {
+  const tower = state.structures
+    .filter((s) => s.owner !== p && s.alive && s.structure === "tower")
+    .sort((a, b) => a.hp - b.hp || a.x - b.x)[0];
+  if (!tower) return null;
+  const laneX = tower.x <= 50 ? 30 : 70;
+  const maxR2 = def.range * def.range;
+  for (let y = 73; y >= 60; y -= 1) {
+    const yy = p === 0 ? y : ARENA_V2.maxY - y;
+    for (const dx of [0, 8, -8, 12, -12, 16, -16]) {
+      const x = laneX + dx;
+      if (reach2(x, yy, { x: tower.x, y: tower.y, r: STRUCTURE_FOOTPRINT_V5.tower }) > maxR2) continue;
+      if (buildingDeployCheck(state, p, x, yy, def).ok) return { x, y: yy };
     }
   }
   return null;

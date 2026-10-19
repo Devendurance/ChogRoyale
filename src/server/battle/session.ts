@@ -122,7 +122,7 @@ export interface TickOutput {
 const PUBLIC_EVENTS = new Set([
   "deploy", "death", "shockwave", "structure_destroyed", "match_end", "spell_cast", "commander_deployed", "ability_fired", "ability_expired",
   "pulse_warning", "pulse_active", "pulse_expired", "rift_crossing", "building_spawned", "building_removed", "spell_impact",
-  "unit_spawned", "spawn_skipped",
+  "unit_spawned", "spawn_skipped", "siege_fired",
 ]);
 const OWN_EVENTS = new Set(["command_rejected", "ability_ready"]);
 
@@ -131,6 +131,10 @@ const OWN_EVENTS = new Set(["command_rejected", "ability_ready"]);
 function describe(card: TroopCardDef | SpellCardDef | BuildingCardDef): string {
   if ("lifetimeTicks" in card) {
     const b = card;
+    if (b.shell) {
+      const s = b.shell;
+      return `Siege building, ${b.hp} hp. Lobs a shell every ${b.attackIntervalTicks / 10}s at enemy towers/Core first, then buildings, then ground troops, range ${b.minRange ?? 0}-${b.range}. Shell lands ${s.flightTicks / 10}s later: ${s.unitDamage} to units/buildings, ${s.structureDamage} to towers/Core, radius ${s.radius}, never air. Lasts ${b.lifetimeTicks / 10}s.`;
+    }
     const attack = b.damage > 0 ? `, ${b.damage} damage every ${b.attackIntervalTicks / 10}s, range ${b.range}${b.hitsAir ? ", hits air" : ""}` : ", no attack";
     const spawn = b.spawnCardId
       ? ` Spawns ${b.spawnCount ?? 1} ${SPAWNED_TROOPS_V1[b.spawnCardId]?.name ?? b.spawnCardId} every ${(b.spawnIntervalTicks ?? 0) / 10}s, first after ${b.deployTicks / 10}s, up to ${spawnWavesFor(b)}, lasts ${b.lifetimeTicks / 10}s.`
@@ -485,7 +489,7 @@ export class BattleSession {
       structures: s.structures.map((x) => ({ id: x.id, owner: x.owner, kind: x.structure, x: x.x, y: x.y, hp: x.hp, maxHp: x.maxHp, alive: x.alive })),
       buildings: s.buildings.filter((b) => b.alive).map((b) => ({ id: b.id, owner: b.owner, cardId: b.cardId, x: b.x, y: b.y, hp: b.hp, maxHp: b.maxHp, footprint: b.footprint, expiresAt: b.expiresAt, ...(b.nextSpawnAt !== undefined ? { nextSpawnAt: b.nextSpawnAt, spawnsLeft: b.spawnsLeft ?? 0 } : {}) })),
       projectiles: s.projectiles.map((p) => ({ id: p.id, owner: p.owner, x: p.snapX, y: p.snapY, targetId: p.targetId })),
-      impacts: s.pendingImpacts.map((i) => ({ id: i.id, owner: i.owner, cardId: i.cardId, x: i.x, y: i.y, impactTick: i.impactTick })),
+      impacts: s.pendingImpacts.map((i) => ({ id: i.id, owner: i.owner, cardId: i.cardId, x: i.x, y: i.y, impactTick: i.impactTick, ...(BUILDING_CARDS_V1[i.cardId]?.shell ? { radius: BUILDING_CARDS_V1[i.cardId]!.shell!.radius } : {}) })),
       chaos,
       riftOpen: s.tick < s.riftOpenUntil,
       events: fresh.filter((e) => PUBLIC_EVENTS.has(e.type) || (OWN_EVENTS.has(e.type) && "player" in e && e.player === seat)) as unknown as FrameEvent[],

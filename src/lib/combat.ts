@@ -34,12 +34,12 @@ import type { ChaosSchedule, ChaosEffect } from "@/lib/chaos";
 // v8 (B2.7a): deployable building cards (Rift Sentry, Decoy Totem) with
 // solid footprints, finite lifetimes, building-aware targeting and
 // placement rules that keep every river crossing mouth clear.
-export const COMBAT_RULESET_VERSION = "v15" as const;
-/** Rulesets initMatch accepts. v14 replays keep their exact v14 hashes. */
-export const SUPPORTED_COMBAT_RULESETS = ["v14", "v15"] as const;
+export const COMBAT_RULESET_VERSION = "v16" as const;
+/** Rulesets initMatch accepts. v14/v15 replays keep their exact hashes. */
+export const SUPPORTED_COMBAT_RULESETS = ["v14", "v15", "v16"] as const;
 export type CombatRuleset = (typeof SUPPORTED_COMBAT_RULESETS)[number];
-/** v15-only cards rejected from v14 configs (burrow + its spawn rules are v15). */
-const V15_ONLY_CARDS = new Set(["chog_burrow"]);
+/** Per-card minimum ruleset: a config older than the card's ruleset rejects it. */
+const CARD_MIN_RULESET: Record<string, CombatRuleset> = { chog_burrow: "v15", rift_mortar: "v16" };
 export const TICKS_PER_SECOND = 10;
 // Standard ranked timeline (v2): 180s regulation, up to 120s sudden-death overtime.
 // Energy phases: 1x ticks 0-1199, 2x ticks 1200-2399, 3x ticks 2400-2999.
@@ -234,6 +234,10 @@ export interface BuildingCardDef {
   spawnCardId?: string;
   spawnIntervalTicks?: number;
   spawnCount?: number;
+  /** v16 siege buildings: minimum reach to a valid target (dead zone). */
+  minRange?: number;
+  /** v16 siege buildings: lobbed shell resolved as a pending impact. */
+  shell?: { radius: number; flightTicks: number; unitDamage: number; buildingDamage: number; structureDamage: number };
 }
 
 // Authored v1 buildings (original Chog Royale cards, no earlier spec exists).
@@ -249,6 +253,12 @@ export const BUILDING_CARDS_V1: Record<string, BuildingCardDef> = {
   // at placement + deployTicks (20), then every spawnIntervalTicks (50):
   // ticks +20/+70/+120/+170/+220, five scrappers while it lives (260 ticks).
   chog_burrow: { id: "chog_burrow", name: "Chog Burrow", cost: 4, kind: "building", hp: 300, damage: 0, attackIntervalTicks: 0, range: 0, hitsAir: false, hitsGround: false, footprint: 1, deployTicks: 20, lifetimeTicks: 260, spawnCardId: "burrow_scrapper", spawnIntervalTicks: 50, spawnCount: 1 },
+  // v16 siege: a mortar that lobs shells at enemy towers/Core first, then
+  // buildings, then ground units. Dead zone inside minRange 12, max reach
+  // 50 (footprint edge), shell lands flightTicks 15 after each shot.
+  // damage carries the unit shell damage for descriptions/views; firing
+  // goes through the shell branch, never the turret path.
+  rift_mortar: { id: "rift_mortar", name: "Rift Mortar", cost: 5, kind: "building", hp: 300, damage: 40, attackIntervalTicks: 40, range: 50, hitsAir: false, hitsGround: true, footprint: 2, deployTicks: 30, lifetimeTicks: 300, minRange: 12, shell: { radius: 4, flightTicks: 15, unitDamage: 40, buildingDamage: 40, structureDamage: 30 } },
 };
 
 /** v15 spawned units: real troops under engine rules, never deckable. */
@@ -604,7 +614,8 @@ export type CombatEvent =
   | { type: "building_removed"; tick: number; buildingId: string; owner: PlayerIndex; cardId: string; reason: "destroyed" | "expired" }
   | { type: "spell_impact"; tick: number; player: PlayerIndex; cardId: string; impactId: string; x: number; y: number; units: number; buildings: number; structures: number }
   | { type: "unit_spawned"; tick: number; buildingId: string; troopId: string; x: number; y: number }
-  | { type: "spawn_skipped"; tick: number; buildingId: string; reason: "blocked" | "cap" };
+  | { type: "spawn_skipped"; tick: number; buildingId: string; reason: "blocked" | "cap" }
+  | { type: "siege_fired"; tick: number; buildingId: string; owner: PlayerIndex; targetId: string; impactId: string; x: number; y: number; impactTick: number };
 
 /** v9 queued impact spell, resolved in the damage pass of `impactTick`. */
 export interface PendingImpact {
@@ -751,10 +762,12 @@ export function initMatch(config: CombatConfig): CombatState {
   const slots = config.commanders ?? [null, null];
   validateDeck(config.decks[0], slots[0]);
   validateDeck(config.decks[1], slots[1]);
-  if (config.rulesetVersion === "v14") {
-    for (const deck of config.decks) {
-      for (const id of deck) {
-        if (V15_ONLY_CARDS.has(id)) throw new AppError("BAD_REQUEST", `Card requires ruleset v15: ${id}`);
+  const rulesetIdx = (SUPPORTED_COMBAT_RULESETS as readonly string[]).indexOf(config.rulesetVersion);
+  for (const deck of config.decks) {
+    for (const id of deck) {
+      const min = CARD_MIN_RULESET[id];
+      if (min && rulesetIdx < SUPPORTED_COMBAT_RULESETS.indexOf(min)) {
+        throw new AppError("BAD_REQUEST", `Card requires ruleset ${min}: ${id}`);
       }
     }
   }
@@ -1637,15 +1650,40 @@ function footprintGap2(x: number, y: number, s: Solid): number {
   return dx * dx + dy * dy;
 }
 
+/** Pending impacts come from spells and from v16 siege shells. Spells keep
+ * their authored ImpactSpec and radius; a shell maps to an equivalent spec
+ * derived from the building def. */
+export function impactSpecFor(cardId: string): { spec: ImpactSpec; radius: number } {
+  const spell = SPELL_CARDS_V1[cardId];
+  if (spell) return { spec: spell.impact!, radius: spell.radius };
+  const shell = BUILDING_CARDS_V1[cardId]?.shell;
+  if (shell) {
+    return {
+      spec: {
+        delayTicks: shell.flightTicks,
+        unitDamage: shell.unitDamage,
+        buildingDamage: shell.buildingDamage,
+        structureDamage: shell.structureDamage,
+        slowPct: 0,
+        slowDurationTicks: 0,
+        hitsAir: false,
+        hitsGround: true,
+        hitsCommanders: true,
+      },
+      radius: shell.radius,
+    };
+  }
+  throw new AppError("BAD_REQUEST", `Unknown impact card: ${cardId}`);
+}
+
 /**
  * Land one impact spell: enemy units by center distance, buildings and
  * towers/Core when the radius overlaps their footprint. Damage is added to
  * the tick's simultaneous damage map; slows apply immediately.
  */
 function resolveImpact(state: CombatState, p: PendingImpact, fighters: Fighter[], hit: (id: string, amount: number) => void): void {
-  const def = SPELL_CARDS_V1[p.cardId]!;
-  const spec = def.impact!;
-  const r2 = def.radius * def.radius;
+  const { spec, radius } = impactSpecFor(p.cardId);
+  const r2 = radius * radius;
   let units = 0;
   let buildings = 0;
   let structures = 0;
@@ -2175,6 +2213,48 @@ function advanceOneTick(state: CombatState, due: CombatCommand[], counter: { n: 
   // keeps its current target while it stays hittable and in range, else the
   // nearest hittable enemy unit by center distance, ties by id.
   for (const b of state.buildings) {
+    const bdef = BUILDING_CARDS_V1[b.cardId]!;
+    if (bdef.shell) {
+      // v16 siege fire: re-selects a target every shot (no lock). Priority
+      // classes structures > buildings > ground units; within a class the
+      // smallest reach2 then id. A shot queues a PendingImpact on the
+      // target's center snapshot and consumes the cooldown only on fire.
+      if (!b.alive || state.tick < b.cooldownUntil) continue;
+      const shell = bdef.shell;
+      const minR2 = (bdef.minRange ?? 0) * (bdef.minRange ?? 0);
+      const maxR2 = b.range * b.range;
+      const inBand = (t: { x: number; y: number; r: number }) => {
+        const d = reach2(b.x, b.y, t);
+        return d >= minR2 && d <= maxR2 ? d : null;
+      };
+      const cands: Array<{ id: string; x: number; y: number; cls: number; d: number }> = [];
+      for (const s of state.structures) {
+        if (!s.alive || s.owner === b.owner) continue;
+        const d = inBand(asTarget(s));
+        if (d !== null) cands.push({ id: s.id, x: s.x, y: s.y, cls: 0, d });
+      }
+      for (const o of state.buildings) {
+        if (!o.alive || o.owner === b.owner) continue;
+        const d = inBand(asTarget(o));
+        if (d !== null) cands.push({ id: o.id, x: o.x, y: o.y, cls: 1, d });
+      }
+      for (const f of fighters) {
+        if (f.owner === b.owner || f.hp <= 0 || f.moveType === "air") continue;
+        const d = inBand(asTarget(f));
+        if (d !== null) cands.push({ id: f.id, x: f.x, y: f.y, cls: 2, d });
+      }
+      cands.sort((a, z) => a.cls - z.cls || a.d - z.d || (a.id < z.id ? -1 : a.id > z.id ? 1 : 0));
+      const t = cands[0];
+      if (!t) continue;
+      counter.n += 1;
+      const impactId = `s${counter.n}`;
+      const impactTick = state.tick + shell.flightTicks;
+      state.pendingImpacts.push({ id: impactId, owner: b.owner, cardId: b.cardId, x: t.x, y: t.y, castTick: state.tick, impactTick });
+      b.cooldownUntil = state.tick + b.interval;
+      b.targetId = t.id;
+      state.events.push({ type: "siege_fired", tick: state.tick, buildingId: b.id, owner: b.owner, targetId: t.id, impactId, x: t.x, y: t.y, impactTick });
+      continue;
+    }
     if (!b.alive || b.damage <= 0 || state.tick < b.cooldownUntil) continue;
     const valid = (t: Fighter) => t.owner !== b.owner && t.hp > 0 && hittable(b, t) && dist2(b.x, b.y, t.x, t.y) <= b.range * b.range;
     let target = b.targetId ? fighters.find((t) => t.id === b.targetId && valid(t)) ?? null : null;
@@ -2531,6 +2611,8 @@ export function combatRulesetSummary() {
       lifecycle:
         "deploy event + building_spawned; Sentry first shot at activeAt (spawn + deployTicks), then every attackIntervalTicks; expiry at the start of tick expiresAt (before commands, movement and attacks, so it beats same-tick damage); destruction at damage resolution; both emit building_removed and remove entity + footprint immediately; never award crowns",
       immunities: "Chaos Pulses, Chaos Bolt, Rally Horn and commander abilities never affect buildings (unchanged unit-only rules); troop splash hits only the primary building",
+      siege:
+        "v16 Rift Mortar: lobs a shell every attackIntervalTicks (first at deployTicks) while a valid target exists; targets re-selected per shot, enemy towers/Core first, then enemy buildings, then enemy ground troops/commanders, smallest reach2 then id; dead zone inside minRange, max reach to footprint edge; each shot queues a PendingImpact on the target center snapshot (lands after shell.flightTicks even if the mortar dies), resolved in the normal spell_impact pass (enemy-only, radius, unit/building/structure damage), emits siege_fired; no target -> no shot, no cooldown consumed",
     },
     playableCards: Object.keys(CARDS_V1),
     commanders: {
@@ -2564,6 +2646,6 @@ export function combatRulesetSummary() {
       buff: "override on recast, fully reverts on expiry, troops only",
     },
     deferred: [],
-    compatibility: "v15 adds the Chog Burrow spawner building (chog_burrow, building card) and its Burrow Scrapper unit (burrow_scrapper, spawned only, never deckable), unit_spawned/spawn_skipped events, and spawner fields on building entities; v14 configs replay identically (hash domain uses the config's ruleset, new fields absent on non-spawner entities) and v14 decks containing v15-only cards are rejected. v14 changes only footprint-detour corner ties for P1 (owner-relative y order, mirror of P0); P0 movement and all untied detours are identical to v13. v13 changes only Chaos zone interpretation (ranked mirror closure): v12 and v13 replay identically for schedules whose Ember/Rift Shift zones are already mirror-invariant, otherwise v12 applied raw absolute zones. Chaos ruleset v1 schedules and their hashes are unchanged. v8 adds building cards, state.buildings (hashed) and building events; decks without buildings simulate as in v7 apart from the version in the hash domain; v7 configs are rejected by validation. v7 differs from v6 only in commander actives (command-driven, energy-costed) and ability events; v6 configs are rejected by validation. v6 configs differ from v5 (decks require a commander card; commanders spawn only by deploy; ids c<player>-<n>); v5 configs are rejected by validation. No persisted replays of earlier versions exist (pre-release, headless fixtures only)",
+    compatibility: "v16 adds the Rift Mortar siege building (rift_mortar, building card) with shell impacts resolved through the shared pending-impact pass and siege_fired events; v14/v15 configs replay identically (hash domain uses the config's ruleset) and decks below a card's minimum ruleset are rejected (chog_burrow v15, rift_mortar v16). v15 adds the Chog Burrow spawner building (chog_burrow, building card) and its Burrow Scrapper unit (burrow_scrapper, spawned only, never deckable), unit_spawned/spawn_skipped events, and spawner fields on building entities; v14 configs replay identically (hash domain uses the config's ruleset, new fields absent on non-spawner entities) and v14 decks containing v15-only cards are rejected. v14 changes only footprint-detour corner ties for P1 (owner-relative y order, mirror of P0); P0 movement and all untied detours are identical to v13. v13 changes only Chaos zone interpretation (ranked mirror closure): v12 and v13 replay identically for schedules whose Ember/Rift Shift zones are already mirror-invariant, otherwise v12 applied raw absolute zones. Chaos ruleset v1 schedules and their hashes are unchanged. v8 adds building cards, state.buildings (hashed) and building events; decks without buildings simulate as in v7 apart from the version in the hash domain; v7 configs are rejected by validation. v7 differs from v6 only in commander actives (command-driven, energy-costed) and ability events; v6 configs are rejected by validation. v6 configs differ from v5 (decks require a commander card; commanders spawn only by deploy; ids c<player>-<n>); v5 configs are rejected by validation. No persisted replays of earlier versions exist (pre-release, headless fixtures only)",
   };
 }

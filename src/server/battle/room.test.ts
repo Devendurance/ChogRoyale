@@ -414,4 +414,63 @@ describe("B3.1 Colyseus battle room", () => {
     expect(a.end!.replayIdentical).toBe(true);
     await Promise.all([ra.leave().catch(() => {}), rb.leave().catch(() => {})]);
   }, 120_000);
+
+  it("plays a match with the Rift Mortar and both clients see siege_fired and shell impacts identically", async () => {
+    const ra = await client("tok-alice").create(BATTLE_ROOM);
+    const rb = await client("tok-bob").joinById(ra.roomId);
+    const a = watch(ra);
+    const b = watch(rb);
+    const mortarDeck = { cards: ["rift_mortar", "choglings", "chaos_archer", "sparkcaster", "hexwing", "rift_snare", "chaos_bolt"], commander: { kind: "free", class: "warden" } satisfies CommanderChoice };
+    ra.send("ready", mortarDeck);
+    rb.send("ready", ready("antiSwarm"));
+    await until(() => !!a.start && !!b.start);
+    expect(a.start!.catalog.rift_mortar?.kind).toBe("building");
+    expect(a.start!.deck).toContain("rift_mortar");
+    let n = 0;
+    const drive = (room: Room, s: Seen) => {
+      const f = s.frames.at(-1);
+      if (!f || s.end) return;
+      const readyA = f.abilities.find((x) => x.ready && !x.blockedBy);
+      if (readyA && n % 3 === 0) room.send("cmd", { type: "ability", cid: `ab${n++}`, abilityId: readyA.abilityId });
+      // Mortars need river-side cells to reach the enemy lane towers.
+      const y = s.start!.seat === 0 ? 68 : 92;
+      const pick = f.hand.find((c) => c === "rift_mortar" && f.energy >= 5)
+        ?? f.hand.find((c) => {
+          const k = s.start!.catalog[c]!;
+          return (k.kind === "troop" || k.kind === "commander" || k.kind === "building") && k.cost <= f.energy;
+        });
+      // x 40/60 sit between bridge and ford mouth spans but still reach a lane tower.
+      if (pick && f.tick % 15 === 0) room.send("cmd", { type: "deploy", cid: `d${n++}`, cardId: pick, x: n % 2 ? 40 : 60, y });
+    };
+    const lastTick = { a: -1, b: -1 };
+    await until(() => {
+      const fa = a.frames.at(-1);
+      const fb = b.frames.at(-1);
+      if (fa && fa.tick !== lastTick.a) { lastTick.a = fa.tick; drive(ra, a); }
+      if (fb && fb.tick !== lastTick.b) { lastTick.b = fb.tick; drive(rb, b); }
+      return !!a.end && !!b.end;
+    }, 90_000);
+    expect(a.frames.some((f) => f.buildings.some((x) => x.cardId === "rift_mortar"))).toBe(true);
+    const events = a.frames.flatMap((f) => f.events);
+    const fired = events.filter((e) => e.type === "siege_fired");
+    const impacts = events.filter((e) => e.type === "spell_impact" && e.cardId === "rift_mortar");
+    expect(fired.length).toBeGreaterThan(0);
+    expect(impacts.length).toBeGreaterThan(0);
+    // Shared ticks render identically on both screens, mortar and shells included.
+    const byTick = new Map(b.frames.map((f) => [f.tick, f]));
+    const shared = a.frames.filter((f) => byTick.has(f.tick)).slice(-10);
+    expect(shared.length).toBeGreaterThan(0);
+    for (const f of shared) {
+      const g = byTick.get(f.tick)!;
+      expect(f.buildings).toEqual(g.buildings);
+      expect(f.impacts).toEqual(g.impacts);
+      expect(f.events).toEqual(g.events);
+    }
+    // In-flight shells show up in the impact views with the shell radius.
+    const shellViews = a.frames.flatMap((f) => f.impacts).filter((i) => i.cardId === "rift_mortar");
+    expect(shellViews.every((i) => i.radius === 4)).toBe(true);
+    expect(a.end!.stateHash).toBe(b.end!.stateHash);
+    expect(a.end!.replayIdentical).toBe(true);
+    await Promise.all([ra.leave().catch(() => {}), rb.leave().catch(() => {})]);
+  }, 120_000);
 });

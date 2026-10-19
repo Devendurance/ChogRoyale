@@ -29,7 +29,7 @@ const dur = (s: ChaosSchedule) => Math.round(s.events[0]!.effect.durationMs / 10
 
 describe("v13 ranked chaos zones", () => {
   it("bumps the combat ruleset", () => {
-    expect(COMBAT_RULESET_VERSION).toBe("v15");
+    expect(COMBAT_RULESET_VERSION).toBe("v16");
   });
 
   it("closes every zone set under the mirror and preserves the budget ratio", () => {

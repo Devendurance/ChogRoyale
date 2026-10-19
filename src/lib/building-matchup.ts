@@ -3,7 +3,7 @@
 // several seeds, then replays each recorded command stream through runMatch.
 // Pure: no DB, no network. Shared by tests and scripts/building-matchup.ts.
 
-import { runMatch, stateHash, ARENA_V2, CARDS_V1, SPELL_CARDS_V1, COMMANDER_COMBAT_PROFILE_V1, STRUCTURE_V1, type CombatCommand, type CombatState, type PlayerIndex } from "@/lib/combat";
+import { runMatch, stateHash, ARENA_V2, CARDS_V1, SPELL_CARDS_V1, COMMANDER_COMBAT_PROFILE_V1, STRUCTURE_V1, impactSpecFor, type CombatCommand, type CombatState, type PlayerIndex } from "@/lib/combat";
 import { scenarioConfig, deckWith, botMatch, riftSchedule, type BotEconomy, type MovePolicy } from "@/lib/arena-scenarios";
 import type { ArenaZone, ChaosSchedule } from "@/lib/chaos";
 
@@ -128,7 +128,7 @@ export function measure(state: CombatState): Omit<MatchupRow, "p0" | "p1" | "see
       shockwave.swings += 1;
       shockwave.extraHits += e.extraHits;
     } else if (e.type === "spell_impact") {
-      spellStructureDamage += e.structures * (SPELL_CARDS_V1[e.cardId]?.impact?.structureDamage ?? 0);
+      spellStructureDamage += e.structures * (SPELL_CARDS_V1[e.cardId] ? SPELL_CARDS_V1[e.cardId]!.impact?.structureDamage ?? 0 : impactSpecFor(e.cardId).spec.structureDamage);
     }
   }
   for (const [, t] of spawnAt) buildings.lifetimeTicks += state.tick - t;

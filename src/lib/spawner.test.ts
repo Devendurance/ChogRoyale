@@ -27,6 +27,7 @@ import {
 import { deckWith, scenarioConfig, botMatch } from "@/lib/arena-scenarios";
 import type { ChaosSchedule } from "@/lib/chaos";
 const golden = JSON.parse(readFileSync(join(__dirname, "__fixtures__", "v14-golden.json"), "utf8")) as { entries: Array<{ config: unknown; commands: unknown[]; winner: unknown; crowns: number[]; ticks: number; stateHash: string }> };
+const golden15 = JSON.parse(readFileSync(join(__dirname, "__fixtures__", "v15-golden.json"), "utf8")) as { entries: Array<{ config: unknown; commands: unknown[]; winner: unknown; crowns: number[]; ticks: number; stateHash: string }> };
 
 const BURROW = BUILDING_CARDS_V1.chog_burrow!;
 const SCRAPPER = SPAWNED_TROOPS_V1.burrow_scrapper!;
@@ -49,7 +50,7 @@ const blocker = (id: string, owner: PlayerIndex, x: number, y: number, footprint
 
 describe("spawner card domain", () => {
   it("registers the v15 building and the non-deckable scrapper", () => {
-    expect(COMBAT_RULESET_VERSION).toBe("v15");
+    expect(COMBAT_RULESET_VERSION).toBe("v16");
     expect([BURROW.cost, BURROW.hp, BURROW.footprint, BURROW.deployTicks, BURROW.lifetimeTicks, BURROW.damage]).toEqual([4, 300, 1, 20, 260, 0]);
     expect(BURROW.spawnCardId).toBe("burrow_scrapper");
     expect([SCRAPPER.hp, SCRAPPER.damage, SCRAPPER.range, SCRAPPER.speed, SCRAPPER.attackIntervalTicks]).toEqual([45, 10, 2, 2, 8]);
@@ -307,6 +308,16 @@ describe("symmetry and replay", () => {
 
   it("v14 golden fixtures reproduce exactly under the new engine", () => {
     for (const e of golden.entries) {
+      const r = runMatch(e.config as never, e.commands as never);
+      expect(r.result.stateHash).toBe(e.stateHash);
+      expect(r.result.winner).toBe(e.winner);
+      expect(r.result.crowns).toEqual(e.crowns);
+      expect(r.result.ticks).toBe(e.ticks);
+    }
+  });
+
+  it("v15 golden fixtures reproduce exactly under the new engine", () => {
+    for (const e of golden15.entries) {
       const r = runMatch(e.config as never, e.commands as never);
       expect(r.result.stateHash).toBe(e.stateHash);
       expect(r.result.winner).toBe(e.winner);
