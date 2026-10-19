@@ -17,6 +17,7 @@ import {
   type EndMessage,
   type LobbyMessage,
   type MatchFoundMessage,
+  type PresenceMessage,
   type QueueStatusMessage,
   type StartMessage,
 } from "@/lib/battle-protocol";
@@ -29,7 +30,8 @@ const APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID ?? "";
 const SERVER = process.env.NEXT_PUBLIC_BATTLE_SERVER_URL ?? "http://127.0.0.1:2567";
 const ENABLED = process.env.NODE_ENV !== "production" || process.env.NEXT_PUBLIC_ENABLE_DEV_BATTLE === "1";
 
-type Stage = "idle" | "connecting" | "searching" | "lobby" | "active" | "ended" | "aborted" | "closed";
+type Stage = "idle" | "connecting" | "searching" | "lobby" | "active" | "reconnecting" | "ended" | "aborted" | "failed" | "closed";
+const RESUME_KEY = "b3.resume";
 
 function BattlePanel() {
   const { ready, authenticated, getAccessToken, logout } = usePrivy();
@@ -50,7 +52,14 @@ function BattlePanel() {
   const feed = useRef<CanvasFeed | null>(null);
   const [queueRoom, setQueueRoom] = useState<Room | null>(null);
   const [queueStatus, setQueueStatus] = useState<QueueStatusMessage | null>(null);
+  const [presence, setPresence] = useState<PresenceMessage | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [now, setNow] = useState(0);
+  /** Latest {roomId, resumeToken} for the active seat; cleared on end/abort/leave. */
+  const resumeInfo = useRef<{ roomId: string; resumeToken: string; graceMs: number } | null>(null);
+  const resumeDeadline = useRef(0);
+  /** Bump to cancel any in-flight reconnect loop. */
+  const reconnectGen = useRef(0);
   const cidN = useRef(0);
   const mapRef = useRef<BoardMapper | null>(null);
   const gesture = useRef<Gesture | null>(null);
@@ -58,11 +67,25 @@ function BattlePanel() {
   const preview = useRef<HTMLDivElement>(null);
   const sentLabels = useRef(new Map<string, string>());
 
-  // One handler set shared by room-code create/join and matched reservations.
+  // One handler set shared by room-code create/join, matched reservations
+  // and resume re-joins. SDK auto-reconnect is disabled: our resume flow owns
+  // recovery, and the built-in retry would delay onLeave past the grace window.
   const attachRoom = useCallback((r: Room) => {
+    r.reconnection.enabled = false;
     r.onMessage("lobby", (m: LobbyMessage) => (setLobby(m), setStage((s) => (s === "connecting" || s === "searching" ? "lobby" : s))));
     r.onMessage("start", (m: StartMessage) => {
       feed.current = { start: m, frame: null, prev: null, receivedAt: performance.now(), selected: null, ghost: null };
+      setSelected(null);
+      setDragging(null);
+      gesture.current = null;
+      resumeInfo.current = { roomId: r.roomId, resumeToken: m.resumeToken, graceMs: m.reconnectGraceMs };
+      try {
+        sessionStorage.setItem(RESUME_KEY, JSON.stringify(resumeInfo.current));
+      } catch {
+        /* storage may be unavailable */
+      }
+      if (m.resumed) setNotice("Match restored");
+      setPresence(null);
       setStart(m);
       setStage("active");
     });
@@ -77,10 +100,22 @@ function BattlePanel() {
       sentLabels.current.delete(a.cid);
       setAcks((xs) => [{ ...a, label }, ...xs].slice(0, 5));
     });
-    r.onMessage("end", (e: EndMessage) => (setEnd(e), setStage("ended")));
-    r.onMessage("aborted", (a: { reason: string }) => (setAbort(a.reason), setStage("aborted")));
+    r.onMessage("end", (e: EndMessage) => (resumeInfo.current = null, sessionStorage.removeItem(RESUME_KEY), setEnd(e), setStage("ended")));
+    r.onMessage("aborted", (a: { reason: string }) => (resumeInfo.current = null, sessionStorage.removeItem(RESUME_KEY), setAbort(a.reason), setStage("aborted")));
+    r.onMessage("presence", (m: PresenceMessage) => setPresence(m));
     r.onMessage("error", (e: { reason: string }) => setError(e.reason));
-    r.onLeave(() => setStage((s) => (s === "ended" || s === "aborted" ? s : "closed")));
+    r.onLeave((code: number) => {
+      setStage((s) => {
+        // Unconsented drop during a live match: try to resume the seat.
+        if (s === "active" && code !== 4000 && resumeInfo.current) {
+          resumeDeadline.current = Date.now() + resumeInfo.current.graceMs;
+          return "reconnecting";
+        }
+        resumeInfo.current = null;
+        sessionStorage.removeItem(RESUME_KEY);
+        return s === "ended" || s === "aborted" ? s : "closed";
+      });
+    });
     setRoom(r);
   }, []);
 
@@ -140,6 +175,9 @@ function BattlePanel() {
   const cancelSearch = useCallback(() => void queueRoom?.leave().catch(() => {}), [queueRoom]);
 
   const reset = useCallback(() => {
+    reconnectGen.current += 1;
+    resumeInfo.current = null;
+    sessionStorage.removeItem(RESUME_KEY);
     void room?.leave().catch(() => {});
     void queueRoom?.leave().catch(() => {});
     setRoom(null);
@@ -149,6 +187,8 @@ function BattlePanel() {
     setFrame(null);
     setEnd(null);
     setAbort(null);
+    setPresence(null);
+    setNotice(null);
     setQueueStatus(null);
     feed.current = null;
     setStage("idle");
@@ -156,12 +196,88 @@ function BattlePanel() {
 
   useEffect(() => () => void room?.leave(), [room]);
   useEffect(() => () => void queueRoom?.leave(), [queueRoom]);
-  // Ticker for the search elapsed time and the matched-lobby countdown.
+
+  // Reconnect loop: retry joinById with the resume token until the grace
+  // deadline or a definitive rejection.
   useEffect(() => {
-    if (stage !== "searching" && !(stage === "lobby" && lobby?.match)) return;
+    if (stage !== "reconnecting") return;
+    const gen = ++reconnectGen.current;
+    let timer: ReturnType<typeof setTimeout>;
+    const attempt = async () => {
+      if (gen !== reconnectGen.current) return;
+      const info = resumeInfo.current;
+      if (!info) {
+        setStage("failed");
+        return;
+      }
+      if (Date.now() >= resumeDeadline.current) {
+        resumeInfo.current = null;
+        sessionStorage.removeItem(RESUME_KEY);
+        setError("Reconnect window expired");
+        setStage("failed");
+        return;
+      }
+      try {
+        const token = await getAccessToken();
+        if (!token) throw new Error("No Privy access token. Log in first.");
+        const client = new Client(SERVER, { headers: { authorization: `Bearer ${token}` } });
+        const r = await client.joinById(info.roomId, { resume: info.resumeToken });
+        if (gen !== reconnectGen.current) {
+          void r.leave().catch(() => {});
+          return;
+        }
+        attachRoom(r); // the resumed start message flips stage back to active
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (/over|authorized|not found|already started|expired|seat already connected/i.test(msg)) {
+          resumeInfo.current = null;
+          sessionStorage.removeItem(RESUME_KEY);
+          setError(`Recovery failed: ${msg}`);
+          setStage("failed");
+          return;
+        }
+        if (gen === reconnectGen.current) timer = setTimeout(() => void attempt(), 2000);
+      }
+    };
+    timer = setTimeout(() => void attempt(), 800);
+    return () => clearTimeout(timer);
+  }, [stage, getAccessToken, attachRoom]);
+
+  // After a refresh, offer the stored seat one automatic resume attempt.
+  const autoResumeTried = useRef(false);
+  useEffect(() => {
+    if (!ready || !authenticated || stage !== "idle" || autoResumeTried.current) return;
+    let stored: { roomId: string; resumeToken: string; graceMs: number } | null = null;
+    try {
+      stored = JSON.parse(sessionStorage.getItem(RESUME_KEY) ?? "null");
+    } catch {
+      stored = null;
+    }
+    if (!stored?.roomId || !stored.resumeToken) return;
+    autoResumeTried.current = true;
+    const info = stored;
+    const t = setTimeout(() => {
+      resumeInfo.current = info;
+      resumeDeadline.current = Date.now() + info.graceMs;
+      setStage("reconnecting");
+    }, 0);
+    return () => clearTimeout(t);
+  }, [ready, authenticated, stage]);
+
+  useEffect(() => {
+    if (!notice) return;
+    const t = setTimeout(() => setNotice(null), 4000);
+    return () => clearTimeout(t);
+  }, [notice]);
+
+  // Ticker for search elapsed, matched-lobby countdown, reconnect countdown
+  // and the opponent-presence countdown.
+  useEffect(() => {
+    const wants = stage === "searching" || stage === "reconnecting" || (stage === "lobby" && !!lobby?.match) || (stage === "active" && !!presence?.reconnectDeadlineAt);
+    if (!wants) return;
     const t = setInterval(() => setNow(Date.now()), 500);
     return () => clearInterval(t);
-  }, [stage, lobby?.match]);
+  }, [stage, lobby?.match, presence?.reconnectDeadlineAt]);
   useEffect(() => {
     if (feed.current && start) feed.current = { ...feed.current, selected: selected ? start.catalog[selected] ?? null : null };
   }, [selected, start]);
@@ -267,6 +383,7 @@ function BattlePanel() {
         <span>stage: {stage}</span>
         {room && <span>room code: <b>{room.roomId}</b></span>}
         {error && <span style={{ color: "#f87171" }}>{error}</span>}
+        {notice && <span style={{ color: "#86efac" }}>{notice}</span>}
         <button onClick={() => void logout()}>Log out</button>
       </div>
 
@@ -286,6 +403,15 @@ function BattlePanel() {
           </div>
           <div>
             <button onClick={cancelSearch}>Cancel search</button>
+          </div>
+        </section>
+      )}
+
+      {stage === "reconnecting" && (
+        <section style={{ display: "grid", gap: 6 }}>
+          <div>Connection lost, reconnecting… {Math.max(0, Math.ceil((resumeDeadline.current - now) / 1000))}s left</div>
+          <div>
+            <button onClick={reset}>Give up</button>
           </div>
         </section>
       )}
@@ -314,8 +440,15 @@ function BattlePanel() {
         </section>
       )}
 
-      {start && (stage === "active" || stage === "ended" || stage === "aborted") && (
+      {start && (stage === "active" || stage === "reconnecting" || stage === "ended" || stage === "aborted") && (
         <section style={{ display: "grid", gap: 8 }}>
+          {presence && (
+            <div style={{ fontSize: 12, color: presence.opponentConnected ? "#86efac" : "#fbbf24" }}>
+              {presence.opponentConnected
+                ? "Opponent reconnected"
+                : `Opponent disconnected, ${Math.max(0, Math.ceil(((presence.reconnectDeadlineAt ?? 0) - now) / 1000))}s to reconnect`}
+            </div>
+          )}
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
             <span>vs {start.opponent}</span>
             <span>
@@ -439,8 +572,9 @@ function BattlePanel() {
           )}
         </section>
       )}
-      {stage === "closed" && <div>Disconnected from the battle server. Reconnect is not supported in B3.1.</div>}
-      {(stage === "ended" || stage === "aborted" || stage === "closed") && (
+      {stage === "closed" && <div>Disconnected from the battle server.</div>}
+      {stage === "failed" && <div>Could not restore the match.</div>}
+      {(stage === "ended" || stage === "aborted" || stage === "closed" || stage === "failed") && (
         <div>
           <button onClick={reset}>Back to lobby</button>
         </div>

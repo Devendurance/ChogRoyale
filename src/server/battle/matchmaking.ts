@@ -37,11 +37,14 @@ export interface PendingMatch {
 const DEFAULT_MAX_WAIT_MS = 300_000;
 const DEFAULT_CLOSE_DELAY_MS = 1_000;
 
+/** One activity per player: a queue ticket OR a live battle room seat. */
+type Activity = { kind: "queue"; ticketId: string } | { kind: "room"; roomId: string };
+
 export class MatchCoordinator {
   /** playerId -> open queue ticket. At most one per player. */
   private readonly tickets = new Map<string, Ticket>();
-  /** playerId -> battle roomId while a matched room is live. */
-  private readonly inMatch = new Map<string, string>();
+  /** playerId -> their single live activity. */
+  private readonly activities = new Map<string, Activity>();
   /** One-shot keys handed to BattleRoom.onCreate via createRoom options. */
   private readonly pendingMatches = new Map<string, PendingMatch>();
   private readonly maxWaitMs: number;
@@ -60,8 +63,9 @@ export class MatchCoordinator {
 
   /** Join the queue and immediately attempt to pair. Throws on conflicts. */
   enqueue(player: SeatPlayer, send: Ticket["send"], close: Ticket["close"]): Ticket {
-    if (this.tickets.has(player.playerId)) throw new ServerError(409, "Already searching");
-    if (this.inMatch.has(player.playerId)) throw new ServerError(409, "Already in a match");
+    const act = this.activities.get(player.playerId);
+    if (act?.kind === "queue") throw new ServerError(409, "Already searching");
+    if (act?.kind === "room") throw new ServerError(409, "Already in a battle");
     const ticket: Ticket = {
       ticketId: randomBytes(16).toString("hex"),
       player,
@@ -72,6 +76,7 @@ export class MatchCoordinator {
       expires: setTimeout(() => this.expire(player.playerId), this.maxWaitMs),
     };
     this.tickets.set(player.playerId, ticket);
+    this.activities.set(player.playerId, { kind: "queue", ticketId: ticket.ticketId });
     this.pair();
     return ticket;
   }
@@ -82,6 +87,29 @@ export class MatchCoordinator {
     if (!t || t.ticketId !== ticketId) return;
     clearTimeout(t.expires);
     this.tickets.delete(playerId);
+    const act = this.activities.get(playerId);
+    if (act?.kind === "queue" && act.ticketId === ticketId) this.activities.delete(playerId);
+  }
+
+  /**
+   * Pin a player to a battle room. Idempotent for the same roomId (matched
+   * reservations pre-pin it at match_found); rejects while the player holds
+   * any other activity.
+   */
+  claimRoom(playerId: string, roomId: string): void {
+    const act = this.activities.get(playerId);
+    if (!act) {
+      this.activities.set(playerId, { kind: "room", roomId });
+      return;
+    }
+    if (act.kind === "room" && act.roomId === roomId) return;
+    throw new ServerError(409, act.kind === "queue" ? "Already searching" : "Already in a battle");
+  }
+
+  /** Free one player's room pin, only when it still points at this room. */
+  releaseRoom(playerId: string, roomId: string): void {
+    const act = this.activities.get(playerId);
+    if (act?.kind === "room" && act.roomId === roomId) this.activities.delete(playerId);
   }
 
   /** BattleRoom.onCreate consumes a key exactly once. Returns null for forged or consumed keys. */
@@ -92,16 +120,16 @@ export class MatchCoordinator {
     return m;
   }
 
-  /** Free both players' in-match pins when the room ends, aborts or disposes. Idempotent. */
+  /** Free both players' room pins when the room ends, aborts or disposes. Idempotent. */
   release(roomId: string): void {
-    for (const [pid, rid] of this.inMatch) if (rid === roomId) this.inMatch.delete(pid);
+    for (const [pid, act] of this.activities) if (act.kind === "room" && act.roomId === roomId) this.activities.delete(pid);
   }
 
   /** Test/server shutdown helper: expire every ticket and drop all state. */
   dispose(): void {
     for (const t of this.tickets.values()) clearTimeout(t.expires);
     this.tickets.clear();
-    this.inMatch.clear();
+    this.activities.clear();
     this.pendingMatches.clear();
   }
 
@@ -109,6 +137,8 @@ export class MatchCoordinator {
     const t = this.tickets.get(playerId);
     if (!t || t.state !== "waiting") return;
     this.tickets.delete(playerId);
+    const act = this.activities.get(playerId);
+    if (act?.kind === "queue" && act.ticketId === t.ticketId) this.activities.delete(playerId);
     t.send("queue_timeout", { reason: "No opponent found in time. Search again." });
     t.close();
     this.pair();
@@ -180,8 +210,8 @@ export class MatchCoordinator {
       this.tickets.delete(b.player.playerId);
       clearTimeout(a.expires);
       clearTimeout(b.expires);
-      this.inMatch.set(a.player.playerId, room.roomId);
-      this.inMatch.set(b.player.playerId, room.roomId);
+      this.activities.set(a.player.playerId, { kind: "room", roomId: room.roomId });
+      this.activities.set(b.player.playerId, { kind: "room", roomId: room.roomId });
       a.send("match_found", { reservation: resA, opponent: b.player.username });
       b.send("match_found", { reservation: resB, opponent: a.player.username });
       setTimeout(() => {

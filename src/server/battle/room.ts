@@ -5,10 +5,19 @@
 // server-side player ids. Combat runs only inside BattleSession. Commander
 // entitlement is resolved here (onchain ownerOf for NFT claims), re-verified
 // after both players confirm, and only then does the session start.
+//
+// Reconnect policy (B3.2c): only the active phase is resumable. A
+// non-consented leave (close code != CONSENTED) marks the seat dropped for
+// reconnectGraceMs, keeps the simulation running, unlocks the room and
+// disables autoDispose so joinById can deliver a resume. Resume requires the
+// seat owner's Privy identity plus the slot's rotating resumeToken (issued in
+// StartMessage, rotated on each resume). Consented leave while active aborts
+// immediately with no winner, as before.
 
+import { randomBytes, timingSafeEqual } from "crypto";
 import { mkdirSync, writeFileSync } from "fs";
 import path from "path";
-import { Room, ServerError, type Client } from "@colyseus/core";
+import { CloseCode, Room, ServerError, type Client } from "@colyseus/core";
 import { requireOnboardedPlayer, type PlayerLoader } from "@/lib/auth";
 import { AppError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
@@ -34,11 +43,14 @@ export interface BattleRoomDeps {
   matchLobbyMs?: number;
   /** Queue ticket expiry, consumed by the MatchCoordinator. */
   queueMaxWaitMs?: number;
+  /** How long a dropped seat stays reservable during an active match. */
+  reconnectGraceMs?: number;
 }
 
 type BattleClient = Client & { auth: SeatPlayer };
 
 const MATCH_LOBBY_MS = 90_000;
+const RECONNECT_GRACE_MS = 30_000;
 
 let productionDeps: EntitlementDeps | null = null;
 function entitlement(): EntitlementDeps {
@@ -82,6 +94,10 @@ export class BattleRoom extends Room {
   /** Non-null when this room was created by the matchmaker with a matchKey. */
   private matched: MatchedContext | null = null;
   private earlyAbort = false;
+  /** Per-slot secret resume tokens, rotated on every successful resume. */
+  private readonly resumeTokens: [string, string] = ["", ""];
+  /** Join slot -> drop state while inside the reconnect grace window. */
+  private readonly dropped = new Map<number, { deadlineAt: number; timer: { clear(): void } }>();
 
   static async onAuth(token: string | undefined): Promise<SeatPlayer> {
     return authenticateSeat(token, BattleRoom.deps);
@@ -141,25 +157,86 @@ export class BattleRoom extends Room {
     }
   }
 
-  onJoin(client: BattleClient) {
-    if (this.matched && !this.matched.playerIds.has(client.auth.playerId)) {
+  onJoin(client: BattleClient, options?: { resume?: unknown }) {
+    const playerId = client.auth.playerId;
+    if (this.matched && !this.matched.playerIds.has(playerId)) {
       throw new ServerError(409, "Not a player in this match");
     }
+    if (this.session.phase === "finished" || this.session.phase === "aborted") {
+      throw new ServerError(409, "Battle is over");
+    }
+    if (this.session.phase === "active") {
+      this.resume(client, options?.resume);
+      return;
+    }
+    // Waiting phase: claim the activity pin before seating so a player can
+    // only ever be inside one queue/room at a time.
+    const coordinator = BattleRoom.coordinator;
+    coordinator?.claimRoom(playerId, this.roomId);
+    const wasSeated = this.session.slotOf(playerId) >= 0;
     try {
       this.session.join(client.auth);
     } catch (e) {
+      if (!wasSeated) coordinator?.releaseRoom(playerId, this.roomId);
       throw new ServerError(409, e instanceof Error ? e.message : "Cannot join");
     }
     this.sendLobby();
   }
 
-  onLeave(client: BattleClient) {
+  /**
+   * Seat recovery for an unconsented drop during the active phase. The token
+   * authorizes the slot, not the matchmaking request: the Privy identity is
+   * re-verified by static onAuth on every resume.
+   */
+  private resume(client: BattleClient, token: unknown) {
+    const playerId = client.auth.playerId;
+    const slot = this.session.slotOf(playerId);
+    if (slot < 0) throw new ServerError(409, "Battle already started");
+    const drop = this.dropped.get(slot);
+    if (!drop) throw new ServerError(409, "Seat already connected");
+    const expected = Buffer.from(this.resumeTokens[slot]!, "utf8");
+    const given = Buffer.from(typeof token === "string" ? token : "", "utf8");
+    if (Date.now() >= drop.deadlineAt || given.length !== expected.length || !timingSafeEqual(given, expected)) {
+      throw new ServerError(403, "Resume not authorized");
+    }
+    BattleRoom.coordinator?.claimRoom(playerId, this.roomId);
+    drop.timer.clear();
+    this.dropped.delete(slot);
+    this.resumeTokens[slot] = randomBytes(16).toString("hex");
+    if (this.dropped.size === 0) this.lock();
+    const seat = this.session.seatOfSlot[slot]!;
+    const msg = this.session.startMessage(slot);
+    msg.resumeToken = this.resumeTokens[slot]!;
+    msg.resumed = true;
+    msg.reconnectGraceMs = BattleRoom.deps.reconnectGraceMs ?? RECONNECT_GRACE_MS;
+    client.send("start", msg);
+    client.send("frame", this.session.frame(seat, []));
+    this.clientFor(1 - slot)?.send("presence", { opponentConnected: true, reconnectDeadlineAt: null });
+  }
+
+  onLeave(client: BattleClient, code?: number) {
     const playerId = client.auth?.playerId;
+    const slot = playerId ? this.session.slotOf(playerId) : -1;
+    if (this.session.phase === "active" && slot >= 0 && code !== CloseCode.CONSENTED) {
+      // Unconsented drop inside the grace window: the seat stays, the
+      // simulation keeps running, and the room stays open and joinable.
+      const grace = BattleRoom.deps.reconnectGraceMs ?? RECONNECT_GRACE_MS;
+      const deadlineAt = Date.now() + grace;
+      const timer = this.clock.setTimeout(() => this.graceExpired(slot), grace);
+      this.dropped.set(slot, { deadlineAt, timer });
+      this.autoDispose = false;
+      this.unlock();
+      this.clientFor(1 - slot)?.send("presence", { opponentConnected: false, reconnectDeadlineAt: deadlineAt });
+      return;
+    }
     const wasActive = this.session.phase === "active";
-    const wasSeated = playerId ? this.session.slotOf(playerId) >= 0 : false;
+    const wasSeated = slot >= 0;
     if (playerId) {
       this.session.leave(playerId);
       this.choices.delete(playerId);
+      if (wasSeated && this.session.phase === "waiting" && !this.matched) {
+        BattleRoom.coordinator?.releaseRoom(playerId, this.roomId);
+      }
     }
     if (wasActive && this.session.phase === "aborted") {
       this.setSimulationInterval();
@@ -173,6 +250,18 @@ export class BattleRoom extends Room {
       this.releaseMatch();
       void this.disconnect();
     } else if (this.session.phase === "waiting") this.sendLobby();
+  }
+
+  /** Grace ran out for a dropped seat: abort with no winner and no record. */
+  private graceExpired(slot: number) {
+    if (!this.dropped.delete(slot)) return;
+    if (this.session.phase !== "active") return;
+    const name = this.session.slots[slot]?.username ?? "Opponent";
+    this.session.abort(`${name} did not reconnect in time. No result recorded.`);
+    this.setSimulationInterval();
+    this.broadcast("aborted", { reason: this.session.abortReason });
+    this.releaseMatch();
+    this.closeSoon();
   }
 
   private clientFor(slot: number): BattleClient | undefined {
@@ -195,7 +284,9 @@ export class BattleRoom extends Room {
   }
 
   private releaseMatch() {
-    if (this.matched) BattleRoom.coordinator?.release(this.roomId);
+    // Clears room activities for every mode: matched pairs were pinned at
+    // match_found, private/matched players are pinned at onJoin.
+    BattleRoom.coordinator?.release(this.roomId);
   }
 
   /** Fires when a matched lobby never reaches start before the deadline. */
@@ -247,7 +338,14 @@ export class BattleRoom extends Room {
 
   private begin() {
     this.lock();
-    this.session.slots.forEach((_, slot) => this.clientFor(slot)?.send("start", this.session.startMessage(slot)));
+    const grace = BattleRoom.deps.reconnectGraceMs ?? RECONNECT_GRACE_MS;
+    this.session.slots.forEach((_, slot) => {
+      this.resumeTokens[slot] = randomBytes(16).toString("hex");
+      const msg = this.session.startMessage(slot);
+      msg.resumeToken = this.resumeTokens[slot]!;
+      msg.reconnectGraceMs = grace;
+      this.clientFor(slot)?.send("start", msg);
+    });
     this.setSimulationInterval(() => this.step(), BattleRoom.deps.tickMs ?? 100);
   }
 

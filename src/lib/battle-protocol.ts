@@ -147,6 +147,19 @@ export interface StartMessage {
   durationTicks: number;
   overtimeTicks: number;
   ticksPerSecond: number;
+  /** Secret seat-recovery token, rotated on every resume. Never shared. */
+  resumeToken: string;
+  /** True when this start message answers a resume, not a fresh start. */
+  resumed: boolean;
+  /** How long a dropped seat stays reservable, in ms. */
+  reconnectGraceMs: number;
+}
+
+/** Sent to the connected player when the opponent's socket state changes. */
+export interface PresenceMessage {
+  opponentConnected: boolean;
+  /** Epoch ms deadline for the drop's grace window, null when connected. */
+  reconnectDeadlineAt: number | null;
 }
 
 export interface UnitView {

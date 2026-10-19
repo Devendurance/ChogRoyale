@@ -233,8 +233,15 @@ export class BattleSession {
       }
     } else if (this.phase === "active") {
       this.phase = "aborted";
-      this.abortReason = "Opponent disconnected. No result recorded (reconnect is a later B3 slice).";
+      this.abortReason = "Opponent disconnected. No result recorded.";
     }
+  }
+
+  /** Abort a live match without a winner (e.g. reconnect grace expired). */
+  abort(reason: string): void {
+    if (this.phase !== "active") return;
+    this.phase = "aborted";
+    this.abortReason = reason;
   }
 
   setReady(playerId: string, loadout: TrustedLoadout): boolean {
@@ -357,6 +364,10 @@ export class BattleSession {
       durationTicks: COMBAT_TIMELINE_V1.durationTicks,
       overtimeTicks: COMBAT_TIMELINE_V1.overtimeTicks,
       ticksPerSecond: TICKS_PER_SECOND,
+      // Filled in by the room, which owns resume tokens and the grace policy.
+      resumeToken: "",
+      resumed: false,
+      reconnectGraceMs: 0,
     };
   }
 

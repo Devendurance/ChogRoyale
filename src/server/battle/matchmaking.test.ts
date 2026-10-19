@@ -175,13 +175,17 @@ describe("B3.2b matchmaking", () => {
     expect(a.qs.found!.reservation.roomId).toBe(b.qs.found!.reservation.roomId);
     expect(a.qs.found!.reservation.sessionId).not.toBe(b.qs.found!.reservation.sessionId);
     // Matched lobby carries the opponent name and a deadline, never a deck.
-    await until(() => !!a.seen.lobby?.match && !!b.seen.lobby?.match);
+    // The second joiner can miss the lobby sent during its own onJoin (its
+    // handlers attach after consumeSeatReservation resolves), so wait on the
+    // first joiner here and check b's lobby after the ready broadcast below.
+    await until(() => !!a.seen.lobby?.match);
     expect(a.seen.lobby!.match!.opponent).toBe("bob");
     expect(a.seen.lobby!.match!.deadlineAt).toBeGreaterThan(Date.now());
     expect(JSON.stringify(a.seen.lobby)).not.toMatch(/deck|tokenId/);
     a.room.send("ready", ready("swarm", { kind: "free", class: "reaver" }));
     b.room.send("ready", ready("siege", { kind: "free", class: "warden" }));
     await until(() => !!a.seen.start && !!b.seen.start);
+    expect(b.seen.lobby?.match?.opponent).toBe("alice");
     let n = 0;
     const drive = (room: Room, s: Seen) => {
       const f = s.frames.at(-1);
@@ -307,7 +311,7 @@ describe("B3.2b matchmaking", () => {
     a.room.send("ready", ready("swarm"));
     b.room.send("ready", ready("siege"));
     await until(() => !!a.seen.start && !!b.seen.start);
-    await expect(client("tok-alice").joinOrCreate(BATTLE_QUEUE_ROOM)).rejects.toThrow(/Already in a match/);
+    await expect(client("tok-alice").joinOrCreate(BATTLE_QUEUE_ROOM)).rejects.toThrow(/Already in a battle/);
     await a.room.leave(); // aborts the active match
     await until(() => !!b.seen.aborted);
     await sleep(300);
