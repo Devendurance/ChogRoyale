@@ -106,6 +106,8 @@
 - Before writing into a shared asset review folder, list it for files from other sessions and write into a separate subfolder instead of overwriting their README or approvals.
 - For mesh audits, distinguish UV/normal split vertices and fitted-detail borders from true holes. Report BVH overlap candidates separately from validated triangle crossings. Don't blindly remesh or cap detail bases, since that can erase intentional geometry or disguise fit issues.
 - Basic rig setup must be idempotent and leave exactly one armature modifier. Validate automatic weights by measured nonzero weighted-vertex coverage, not by checking whether vertex groups exist. Static foot-height correction does not validate IK or continuous animation.
+- Crossing exceptions need pair identity or component evidence plus camera visibility across sampled motion. A height threshold alone doesn't prove an intentional overlap. Save collapsed triangle face IDs and coordinates with deformation metrics so blockers can be located later.
+- Edited Blender image copies can retain stale packed bytes. Load edited PNGs as new images before packing, then save and reopen the blend to verify active edited-image hashes and unchanged source pixels.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
