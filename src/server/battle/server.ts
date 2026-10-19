@@ -12,6 +12,9 @@ export async function startBattleServer(port: number, deps: BattleRoomDeps = {},
   const coordinator = new MatchCoordinator({ maxWaitMs: deps.queueMaxWaitMs });
   BattleRoom.coordinator = coordinator;
   QueueRoom.coordinator = coordinator;
+  // Retries pending settlement records at startup and periodically. The
+  // service (not the room) owns results, so room dispose can't drop them.
+  deps.settlement?.startSweeper();
   const server = new Server({ transport: new WebSocketTransport(), gracefullyShutdown: false, greet: false } as ConstructorParameters<typeof Server>[0]);
   server.define(BATTLE_ROOM, BattleRoom);
   server.define(BATTLE_QUEUE_ROOM, QueueRoom);

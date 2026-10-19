@@ -57,6 +57,13 @@
       "when": 1792382113344,
       "tag": "0007_polite_epoch",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792383769302,
+      "tag": "0008_good_siren",
+      "breakpoints": true
     }
   ]
 }

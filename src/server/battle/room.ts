@@ -14,7 +14,7 @@
 // StartMessage, rotated on each resume). Consented leave while active aborts
 // immediately with no winner, as before.
 
-import { randomBytes, timingSafeEqual } from "crypto";
+import { randomBytes, randomUUID, timingSafeEqual } from "crypto";
 import { mkdirSync, writeFileSync } from "fs";
 import path from "path";
 import { CloseCode, Room, ServerError, type Client } from "@colyseus/core";
@@ -26,6 +26,7 @@ import { readySchema, type CommanderChoice } from "@/lib/battle-protocol";
 import { BattleSession, type SeatPlayer, type SessionRandom, type TrustedLoadout } from "@/server/battle/session";
 import { productionEntitlementDeps, resolveCommander, type EntitlementDeps } from "@/server/battle/entitlement";
 import type { MatchCoordinator } from "@/server/battle/matchmaking";
+import { recordFromReplay, type SettlementService } from "@/server/battle/settlement";
 
 export interface BattleRoomDeps {
   /** Test-only injection points; production passes none and uses Privy + Neon. */
@@ -45,6 +46,8 @@ export interface BattleRoomDeps {
   queueMaxWaitMs?: number;
   /** How long a dropped seat stays reservable during an active match. */
   reconnectGraceMs?: number;
+  /** Durable settlement service; absent or null disables DB writes. */
+  settlement?: SettlementService | null;
 }
 
 type BattleClient = Client & { auth: SeatPlayer };
@@ -94,6 +97,9 @@ export class BattleRoom extends Room {
   /** Non-null when this room was created by the matchmaker with a matchKey. */
   private matched: MatchedContext | null = null;
   private earlyAbort = false;
+  /** Durable match identity, minted at begin(); participants key off it. */
+  private matchId: string | null = null;
+  private startedAt: Date | null = null;
   /** Per-slot secret resume tokens, rotated on every successful resume. */
   private readonly resumeTokens: [string, string] = ["", ""];
   /** Join slot -> drop state while inside the reconnect grace window. */
@@ -338,6 +344,8 @@ export class BattleRoom extends Room {
 
   private begin() {
     this.lock();
+    this.matchId = randomUUID();
+    this.startedAt = new Date();
     const grace = BattleRoom.deps.reconnectGraceMs ?? RECONNECT_GRACE_MS;
     this.session.slots.forEach((_, slot) => {
       this.resumeTokens[slot] = randomBytes(16).toString("hex");
@@ -358,14 +366,46 @@ export class BattleRoom extends Room {
       if (!c) continue;
       for (const ack of out.acks[seat]) c.send("ack", ack);
       c.send("frame", out.frames[seat]);
-      if (out.end) c.send("end", out.end[seat]);
+      if (out.end) c.send("end", { ...out.end[seat], matchId: this.matchId });
     }
     if (out.end) {
       this.setSimulationInterval();
       this.saveReplay();
+      this.settleResult();
       this.releaseMatch();
       this.closeSoon();
     }
+  }
+
+  /**
+   * Submit the finished match to durable settlement. The room is only a
+   * courier: verification, atomic insert and retry all live in the service,
+   * which outlives the room, so closeSoon/dispose can never drop a result.
+   * Nothing is claimed settled until the DB confirms.
+   */
+  private settleResult() {
+    const service = BattleRoom.deps.settlement;
+    const r = this.session.replay;
+    if (!service) {
+      this.broadcast("settlement", { matchId: this.matchId, status: "disabled" });
+      return;
+    }
+    if (!r || !this.matchId || !this.startedAt || !r.replayIdentical) {
+      logger.error("settlement refused", { roomId: this.roomId, reason: !r ? "no replay" : r.replayIdentical ? "no match id" : "replay mismatch" });
+      this.broadcast("settlement", { matchId: this.matchId, status: "refused" });
+      return;
+    }
+    const record = recordFromReplay(r, {
+      matchId: this.matchId,
+      roomId: this.roomId,
+      matchType: this.matched ? "matchmaking" : "private",
+      startedAt: this.startedAt,
+      crowns: [...this.session.state!.crowns] as [number, number],
+    });
+    void service.submit(record).then((status) => {
+      const mapped = status === "settled" || status === "already-settled" ? status : status === "pending" ? "pending" : "refused";
+      this.broadcast("settlement", { matchId: record.matchId, status: mapped });
+    });
   }
 
   private saveReplay() {

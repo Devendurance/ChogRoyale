@@ -257,6 +257,14 @@ export interface EndMessage {
   replayIdentical: boolean;
   stateHash: string;
   commands: number;
+  /** Server-issued durable match id, present whether or not settlement runs. */
+  matchId: string | null;
+}
+
+/** Durable settlement status, sent after `end` once the service reports back. */
+export interface SettlementMessage {
+  matchId: string | null;
+  status: "settled" | "already-settled" | "pending" | "refused" | "disabled";
 }
 
 export interface AbortMessage {

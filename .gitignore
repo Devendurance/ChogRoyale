@@ -54,3 +54,6 @@ credentials*.json
 
 # B3.1 local battle replay records (contain server seeds)
 .battle-replays/
+
+# B3.3a settlement outbox (contains server seeds)
+.battle-settlements/

@@ -439,6 +439,8 @@ export class BattleSession {
       replayIdentical: this.replay!.replayIdentical,
       stateHash: liveHash,
       commands: this.commands.length,
+      // Filled in by the room, which owns the durable match id.
+      matchId: null,
     });
     return [msg(0), msg(1)];
   }

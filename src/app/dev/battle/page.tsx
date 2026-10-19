@@ -19,6 +19,7 @@ import {
   type MatchFoundMessage,
   type PresenceMessage,
   type QueueStatusMessage,
+  type SettlementMessage,
   type StartMessage,
 } from "@/lib/battle-protocol";
 import { aimPoint, endGesture, moveGesture, placementHint, startGesture, type ArenaPoint, type Gesture } from "@/lib/battle-input";
@@ -45,6 +46,7 @@ function BattlePanel() {
   const [frame, setFrame] = useState<BattleFrame | null>(null);
   const [acks, setAcks] = useState<Array<AckMessage & { label: string }>>([]);
   const [end, setEnd] = useState<EndMessage | null>(null);
+  const [settlement, setSettlement] = useState<SettlementMessage | null>(null);
   const [abort, setAbort] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [dragging, setDragging] = useState<string | null>(null);
@@ -102,6 +104,7 @@ function BattlePanel() {
       setAcks((xs) => [{ ...a, label }, ...xs].slice(0, 5));
     });
     r.onMessage("end", (e: EndMessage) => (resumeInfo.current = null, sessionStorage.removeItem(RESUME_KEY), setEnd(e), setStage("ended")));
+    r.onMessage("settlement", (m: SettlementMessage) => setSettlement(m));
     r.onMessage("aborted", (a: { reason: string }) => (resumeInfo.current = null, sessionStorage.removeItem(RESUME_KEY), setAbort(a.reason), setStage("aborted")));
     r.onMessage("presence", (m: PresenceMessage) => setPresence(m));
     r.onMessage("error", (e: { reason: string }) => setError(e.reason));
@@ -188,6 +191,7 @@ function BattlePanel() {
     setStart(null);
     setFrame(null);
     setEnd(null);
+    setSettlement(null);
     setAbort(null);
     setPresence(null);
     setNotice(null);
@@ -391,12 +395,15 @@ function BattlePanel() {
       </div>
 
       {stage === "idle" && (
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <button onClick={() => void findMatch()}>Find match</button>
-          <button onClick={() => void connect("create")}>Create battle</button>
-          <input placeholder="room code" value={code} onChange={(e) => setCode(e.target.value)} style={{ color: "#000" }} />
-          <button disabled={!code.trim()} onClick={() => void connect("join")}>Join battle</button>
-        </div>
+        <section style={{ display: "grid", gap: 8 }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button onClick={() => void findMatch()}>Find match</button>
+            <button onClick={() => void connect("create")}>Create battle</button>
+            <input placeholder="room code" value={code} onChange={(e) => setCode(e.target.value)} style={{ color: "#000" }} />
+            <button disabled={!code.trim()} onClick={() => void connect("join")}>Join battle</button>
+          </div>
+          <RecentMatches getAccessToken={getAccessToken} />
+        </section>
       )}
 
       {stage === "searching" && (
@@ -487,7 +494,17 @@ function BattlePanel() {
                     <div style={{ fontSize: 11 }}>
                       server replay {end.replayIdentical ? "identical" : "MISMATCH"} · {end.commands} commands · {end.stateHash.slice(0, 12)}
                     </div>
-                    <div style={{ fontSize: 11 }}>Dev alpha: no settlement, legacy or leaderboard update.</div>
+                    <div style={{ fontSize: 11 }}>
+                      {settlement
+                        ? settlement.status === "settled" || settlement.status === "already-settled"
+                          ? `Result recorded (${settlement.status})${settlement.matchId ? ` · ${settlement.matchId.slice(0, 8)}` : ""}`
+                          : settlement.status === "pending"
+                            ? "Result pending, retrying in background"
+                            : settlement.status === "disabled"
+                              ? "Settlement disabled on this server"
+                              : "Result refused by settlement verification"
+                        : "Settlement status pending…"}
+                    </div>
                   </>
                 ) : (
                   <div>{abort}</div>
@@ -583,6 +600,68 @@ function BattlePanel() {
         </div>
       )}
     </div>
+  );
+}
+
+interface MatchItem {
+  matchId: string;
+  matchType: string;
+  settledAt: string;
+  result: "win" | "loss" | "draw";
+  crowns: { mine: number; opponent: number };
+  endReason: string;
+  opponent: { username: string };
+}
+
+/** B3.3a account match history. Read-only; only the caller's own rows. */
+function RecentMatches({ getAccessToken }: { getAccessToken: () => Promise<string | null> }) {
+  const [items, setItems] = useState<MatchItem[] | null>(null);
+  const [cursor, setCursor] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const load = useCallback(
+    async (cur: string | null) => {
+      setLoading(true);
+      try {
+        const token = await getAccessToken();
+        if (!token) return;
+        const res = await fetch(`/api/players/me/matches?limit=5${cur ? `&cursor=${encodeURIComponent(cur)}` : ""}`, {
+          headers: { authorization: `Bearer ${token}` },
+        });
+        const j = (await res.json()) as { success: boolean; data?: { items: MatchItem[]; nextCursor: string | null } };
+        const data = j.data;
+        if (!j.success || !data) return;
+        setItems((prev) => (cur ? [...(prev ?? []), ...data.items] : data.items));
+        setCursor(data.nextCursor);
+      } catch {
+        /* history is advisory */
+      } finally {
+        setLoading(false);
+      }
+    },
+    [getAccessToken]
+  );
+  useEffect(() => {
+    const t = setTimeout(() => void load(null), 0);
+    return () => clearTimeout(t);
+  }, [load]);
+  if (items === null) return null;
+  return (
+    <section style={{ display: "grid", gap: 4, fontSize: 12 }}>
+      <div style={{ fontWeight: 600 }}>Recent matches</div>
+      {items.length === 0 && <div style={{ color: "#9ca3af" }}>No recorded matches yet.</div>}
+      {items.map((m) => (
+        <div key={m.matchId}>
+          {m.result === "win" ? "Won" : m.result === "loss" ? "Lost" : "Drew"} {m.crowns.mine}-{m.crowns.opponent} vs {m.opponent.username} · {m.matchType} · {new Date(m.settledAt).toLocaleString()}
+        </div>
+      ))}
+      {cursor && (
+        <div>
+          <button disabled={loading} onClick={() => void load(cursor)}>
+            {loading ? "Loading…" : "Load more"}
+          </button>
+        </div>
+      )}
+    </section>
   );
 }
 
