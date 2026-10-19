@@ -5,7 +5,38 @@
 import { z } from "zod";
 
 export const BATTLE_ROOM = "battle";
+export const BATTLE_QUEUE_ROOM = "battle_queue";
 export const BATTLE_PROTOCOL_VERSION = "b3.1" as const;
+
+/** Structural copy of a Colyseus seat reservation (client-safe). */
+export interface SeatReservation {
+  name: string;
+  sessionId: string;
+  roomId: string;
+  publicAddress?: string;
+  processId?: string;
+  reconnectionToken?: string;
+  devMode?: boolean;
+}
+
+/** Sent on the queue socket while a ticket waits. */
+export interface QueueStatusMessage {
+  state: "searching";
+  waiting: number;
+  /** Epoch ms when this ticket joined the queue. */
+  since: number;
+}
+
+/** Sent once per matched player; consume the reservation to enter the room. */
+export interface MatchFoundMessage {
+  reservation: SeatReservation;
+  opponent: string;
+}
+
+/** The ticket waited too long; the queue socket is closed after this. */
+export interface QueueTimeoutMessage {
+  reason: string;
+}
 
 export const clientCommandSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("deploy"), cid: z.string().min(1).max(40), cardId: z.string().min(1).max(60), x: z.number().int().min(0).max(100), y: z.number().int().min(0).max(160) }).strict(),
@@ -78,6 +109,8 @@ export interface LobbyMessage {
   presets: Record<string, { cards: string[]; commanderClass: string }>;
   /** Own confirmed loadout, null until ready. */
   mine: { cards: string[]; commander: CommanderIdentity } | null;
+  /** Present only in matchmaking-created rooms. */
+  match?: { opponent: string | null; /** epoch ms */ deadlineAt: number };
 }
 
 export interface CardInfo {

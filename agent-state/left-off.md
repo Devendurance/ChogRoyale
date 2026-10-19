@@ -35,7 +35,9 @@ Last updated: 2026-10-19
 ## Next up
 
 - B3.1 playable alpha COMPLETE (8fdb762 room + client, c5c70fb drag/touch input). Closing match 0lc82opDV: drag, click, emulated touch, rejections, manual Scout abilities from both players, crowns win, replay hash identical. No PROD match/settlement/legacy writes. Real phone test pending (Chrome emulation only). Details in .fast-build/STATE.md.
-- Next: B3.2 (fresh NFT entitlement checks, matchmaking, reconnect, then settlement + legacy). Not started.
+- B3.2a loadouts + NFT entitlement (3c1dfca): accepted for planning. Custom-deck browser QA and NFT-holder E2E deferred to community testing, not performed.
+- B3.2b unranked matchmaking: code done, automated tests green, human two-browser queue match still pending. Single in-memory MatchCoordinator (one battle-server process). Details in .fast-build/STATE.md.
+- Next: B3.2b browser queue match, then B3.2c (reconnect, account-saved decks).
 - User review of the B2.7c5 hold. Swarm and breaker share a cheap core (choglings, sprites, snare, archer, guardian, scout) and both still beat revised control 0/16. Spawner building still waits on that review. No matches have been written to any database.
 
 ## Known issues / open items

@@ -7,7 +7,19 @@ import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PrivyProvider, usePrivy, useLogin } from "@privy-io/react-auth";
 import { Client, type Room } from "@colyseus/sdk";
-import { BATTLE_ROOM, type AckMessage, type BattleFrame, type CardInfo, type CommanderChoice, type EndMessage, type LobbyMessage, type StartMessage } from "@/lib/battle-protocol";
+import {
+  BATTLE_QUEUE_ROOM,
+  BATTLE_ROOM,
+  type AckMessage,
+  type BattleFrame,
+  type CardInfo,
+  type CommanderChoice,
+  type EndMessage,
+  type LobbyMessage,
+  type MatchFoundMessage,
+  type QueueStatusMessage,
+  type StartMessage,
+} from "@/lib/battle-protocol";
 import { aimPoint, endGesture, moveGesture, placementHint, startGesture, type ArenaPoint, type Gesture } from "@/lib/battle-input";
 import type { BoardMapper, CanvasFeed } from "./BattleCanvas";
 import LoadoutPicker from "./LoadoutPicker";
@@ -17,7 +29,7 @@ const APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID ?? "";
 const SERVER = process.env.NEXT_PUBLIC_BATTLE_SERVER_URL ?? "http://127.0.0.1:2567";
 const ENABLED = process.env.NODE_ENV !== "production" || process.env.NEXT_PUBLIC_ENABLE_DEV_BATTLE === "1";
 
-type Stage = "idle" | "connecting" | "lobby" | "active" | "ended" | "aborted" | "closed";
+type Stage = "idle" | "connecting" | "searching" | "lobby" | "active" | "ended" | "aborted" | "closed";
 
 function BattlePanel() {
   const { ready, authenticated, getAccessToken, logout } = usePrivy();
@@ -36,12 +48,41 @@ function BattlePanel() {
   const [dragging, setDragging] = useState<string | null>(null);
   const [hint, setHint] = useState<string | null>(null);
   const feed = useRef<CanvasFeed | null>(null);
+  const [queueRoom, setQueueRoom] = useState<Room | null>(null);
+  const [queueStatus, setQueueStatus] = useState<QueueStatusMessage | null>(null);
+  const [now, setNow] = useState(0);
   const cidN = useRef(0);
   const mapRef = useRef<BoardMapper | null>(null);
   const gesture = useRef<Gesture | null>(null);
   const suppressClickUntil = useRef(0);
   const preview = useRef<HTMLDivElement>(null);
   const sentLabels = useRef(new Map<string, string>());
+
+  // One handler set shared by room-code create/join and matched reservations.
+  const attachRoom = useCallback((r: Room) => {
+    r.onMessage("lobby", (m: LobbyMessage) => (setLobby(m), setStage((s) => (s === "connecting" || s === "searching" ? "lobby" : s))));
+    r.onMessage("start", (m: StartMessage) => {
+      feed.current = { start: m, frame: null, prev: null, receivedAt: performance.now(), selected: null, ghost: null };
+      setStart(m);
+      setStage("active");
+    });
+    r.onMessage("frame", (f: BattleFrame) => {
+      const cur = feed.current;
+      if (!cur || (cur.frame && f.tick <= cur.frame.tick)) return; // never apply older snapshots
+      feed.current = { ...cur, prev: cur.frame, frame: f, receivedAt: performance.now() };
+      setFrame(f);
+    });
+    r.onMessage("ack", (a: AckMessage) => {
+      const label = sentLabels.current.get(a.cid) ?? a.cid;
+      sentLabels.current.delete(a.cid);
+      setAcks((xs) => [{ ...a, label }, ...xs].slice(0, 5));
+    });
+    r.onMessage("end", (e: EndMessage) => (setEnd(e), setStage("ended")));
+    r.onMessage("aborted", (a: { reason: string }) => (setAbort(a.reason), setStage("aborted")));
+    r.onMessage("error", (e: { reason: string }) => setError(e.reason));
+    r.onLeave(() => setStage((s) => (s === "ended" || s === "aborted" ? s : "closed")));
+    setRoom(r);
+  }, []);
 
   const connect = useCallback(
     async (mode: "create" | "join") => {
@@ -53,38 +94,74 @@ function BattlePanel() {
         // Token goes only in the matchmaking request header, never the URL.
         const client = new Client(SERVER, { headers: { authorization: `Bearer ${token}` } });
         const r = mode === "create" ? await client.create(BATTLE_ROOM) : await client.joinById(code.trim());
-        r.onMessage("lobby", (m: LobbyMessage) => (setLobby(m), setStage((s) => (s === "connecting" ? "lobby" : s))));
-        r.onMessage("start", (m: StartMessage) => {
-          feed.current = { start: m, frame: null, prev: null, receivedAt: performance.now(), selected: null, ghost: null };
-          setStart(m);
-          setStage("active");
-        });
-        r.onMessage("frame", (f: BattleFrame) => {
-          const cur = feed.current;
-          if (!cur || (cur.frame && f.tick <= cur.frame.tick)) return; // never apply older snapshots
-          feed.current = { ...cur, prev: cur.frame, frame: f, receivedAt: performance.now() };
-          setFrame(f);
-        });
-        r.onMessage("ack", (a: AckMessage) => {
-          const label = sentLabels.current.get(a.cid) ?? a.cid;
-          sentLabels.current.delete(a.cid);
-          setAcks((xs) => [{ ...a, label }, ...xs].slice(0, 5));
-        });
-        r.onMessage("end", (e: EndMessage) => (setEnd(e), setStage("ended")));
-        r.onMessage("aborted", (a: { reason: string }) => (setAbort(a.reason), setStage("aborted")));
-        r.onMessage("error", (e: { reason: string }) => setError(e.reason));
-        r.onLeave(() => setStage((s) => (s === "ended" || s === "aborted" ? s : "closed")));
-        setRoom(r);
+        attachRoom(r);
         setStage("lobby");
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
         setStage("idle");
       }
     },
-    [code, getAccessToken]
+    [code, getAccessToken, attachRoom]
   );
 
+  const findMatch = useCallback(async () => {
+    setError(null);
+    setStage("searching");
+    setQueueStatus(null);
+    try {
+      const token = await getAccessToken();
+      if (!token) throw new Error("No Privy access token. Log in first.");
+      const client = new Client(SERVER, { headers: { authorization: `Bearer ${token}` } });
+      const q = await client.joinOrCreate(BATTLE_QUEUE_ROOM);
+      q.onMessage("queue_status", (m: QueueStatusMessage) => setQueueStatus(m));
+      q.onMessage("queue_timeout", (m: { reason: string }) => (setError(m.reason), setStage("idle")));
+      q.onMessage("match_found", (m: MatchFoundMessage) => {
+        setQueueStatus(null);
+        setStage("connecting");
+        void (async () => {
+          try {
+            await q.leave().catch(() => {});
+            attachRoom(await client.consumeSeatReservation(m.reservation));
+            setStage("lobby");
+          } catch (e) {
+            setError(e instanceof Error ? e.message : String(e));
+            setStage("idle");
+          }
+        })();
+      });
+      q.onLeave(() => setStage((s) => (s === "searching" ? "idle" : s)));
+      setQueueRoom(q);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      setStage("idle");
+    }
+  }, [getAccessToken, attachRoom]);
+
+  const cancelSearch = useCallback(() => void queueRoom?.leave().catch(() => {}), [queueRoom]);
+
+  const reset = useCallback(() => {
+    void room?.leave().catch(() => {});
+    void queueRoom?.leave().catch(() => {});
+    setRoom(null);
+    setQueueRoom(null);
+    setLobby(null);
+    setStart(null);
+    setFrame(null);
+    setEnd(null);
+    setAbort(null);
+    setQueueStatus(null);
+    feed.current = null;
+    setStage("idle");
+  }, [room, queueRoom]);
+
   useEffect(() => () => void room?.leave(), [room]);
+  useEffect(() => () => void queueRoom?.leave(), [queueRoom]);
+  // Ticker for the search elapsed time and the matched-lobby countdown.
+  useEffect(() => {
+    if (stage !== "searching" && !(stage === "lobby" && lobby?.match)) return;
+    const t = setInterval(() => setNow(Date.now()), 500);
+    return () => clearInterval(t);
+  }, [stage, lobby?.match]);
   useEffect(() => {
     if (feed.current && start) feed.current = { ...feed.current, selected: selected ? start.catalog[selected] ?? null : null };
   }, [selected, start]);
@@ -195,15 +272,33 @@ function BattlePanel() {
 
       {stage === "idle" && (
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button onClick={() => void findMatch()}>Find match</button>
           <button onClick={() => void connect("create")}>Create battle</button>
           <input placeholder="room code" value={code} onChange={(e) => setCode(e.target.value)} style={{ color: "#000" }} />
           <button disabled={!code.trim()} onClick={() => void connect("join")}>Join battle</button>
         </div>
       )}
 
+      {stage === "searching" && (
+        <section style={{ display: "grid", gap: 6 }}>
+          <div>
+            Searching for an opponent{queueStatus ? ` · ${queueStatus.waiting} in queue` : ""} · {queueStatus ? Math.max(0, Math.floor((now - queueStatus.since) / 1000)) : 0}s
+          </div>
+          <div>
+            <button onClick={cancelSearch}>Cancel search</button>
+          </div>
+        </section>
+      )}
+
       {stage === "lobby" && lobby && (
         <section style={{ display: "grid", gap: 6 }}>
-          <div>Share the room code with your opponent. Seats, seed and Chaos patron are chosen by the server.</div>
+          {lobby.match ? (
+            <div>
+              Matched vs {lobby.match.opponent ?? "opponent"} · ready within {Math.max(0, Math.ceil((lobby.match.deadlineAt - now) / 1000))}s
+            </div>
+          ) : (
+            <div>Share the room code with your opponent. Seats, seed and Chaos patron are chosen by the server.</div>
+          )}
           {lobby.players.map((p, i) => (
             <div key={i}>
               Slot {i + 1}: {p.username || "(empty)"} {p.ready ? "ready" : ""} {i === lobby.you ? "(you)" : ""}
@@ -345,6 +440,11 @@ function BattlePanel() {
         </section>
       )}
       {stage === "closed" && <div>Disconnected from the battle server. Reconnect is not supported in B3.1.</div>}
+      {(stage === "ended" || stage === "aborted" || stage === "closed") && (
+        <div>
+          <button onClick={reset}>Back to lobby</button>
+        </div>
+      )}
     </div>
   );
 }

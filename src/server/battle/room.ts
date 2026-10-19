@@ -16,6 +16,7 @@ import type { PrivyTokenVerifier } from "@/lib/privy-server";
 import { readySchema, type CommanderChoice } from "@/lib/battle-protocol";
 import { BattleSession, type SeatPlayer, type SessionRandom, type TrustedLoadout } from "@/server/battle/session";
 import { productionEntitlementDeps, resolveCommander, type EntitlementDeps } from "@/server/battle/entitlement";
+import type { MatchCoordinator } from "@/server/battle/matchmaking";
 
 export interface BattleRoomDeps {
   /** Test-only injection points; production passes none and uses Privy + Neon. */
@@ -29,17 +30,48 @@ export interface BattleRoomDeps {
   replayDir?: string | null;
   /** Grace period before a finished/aborted room closes. */
   closeAfterMs?: number;
+  /** Deadline for a matched lobby to start; the room aborts past it. */
+  matchLobbyMs?: number;
+  /** Queue ticket expiry, consumed by the MatchCoordinator. */
+  queueMaxWaitMs?: number;
 }
 
 type BattleClient = Client & { auth: SeatPlayer };
+
+const MATCH_LOBBY_MS = 90_000;
 
 let productionDeps: EntitlementDeps | null = null;
 function entitlement(): EntitlementDeps {
   return BattleRoom.deps.entitlement ?? (productionDeps ??= productionEntitlementDeps());
 }
 
+/** Shared seat authentication for every battle-path room (battle + queue). */
+export async function authenticateSeat(token: string | undefined, deps: Pick<BattleRoomDeps, "verifier" | "loader">): Promise<SeatPlayer> {
+  if (!token) throw new ServerError(401, "Authentication required");
+  try {
+    const req = new Request("http://battle.internal/auth", { headers: { authorization: `Bearer ${token}` } });
+    const ctx = await requireOnboardedPlayer(req, deps.verifier, deps.loader);
+    return { playerId: ctx.player.id, username: ctx.player.username ?? ctx.player.displayName ?? "player" };
+  } catch (err) {
+    if (err instanceof AppError) throw new ServerError(err.status, err.message);
+    logger.error("battle auth failure");
+    throw new ServerError(500, "Authentication unavailable");
+  }
+}
+
+interface MatchedContext {
+  /** The two playerIds the coordinator reserved this room for. */
+  playerIds: Set<string>;
+  /** playerId -> username, known before either client connects. */
+  usernames: Record<string, string>;
+  /** Epoch ms by which the match must start, else the room aborts. */
+  deadlineAt: number;
+}
+
 export class BattleRoom extends Room {
   static deps: BattleRoomDeps = {};
+  /** Set by startBattleServer; required only for matchmaking-created rooms. */
+  static coordinator: MatchCoordinator | null = null;
   maxClients = 2;
   maxMessagesPerSecond = 30;
   private session!: BattleSession;
@@ -47,21 +79,29 @@ export class BattleRoom extends Room {
   private readonly choices = new Map<string, CommanderChoice>();
   /** Clients with an entitlement check in flight (double-submit guard). */
   private readonly checking = new Set<string>();
+  /** Non-null when this room was created by the matchmaker with a matchKey. */
+  private matched: MatchedContext | null = null;
+  private earlyAbort = false;
 
   static async onAuth(token: string | undefined): Promise<SeatPlayer> {
-    if (!token) throw new ServerError(401, "Authentication required");
-    try {
-      const req = new Request("http://battle.internal/auth", { headers: { authorization: `Bearer ${token}` } });
-      const ctx = await requireOnboardedPlayer(req, BattleRoom.deps.verifier, BattleRoom.deps.loader);
-      return { playerId: ctx.player.id, username: ctx.player.username ?? ctx.player.displayName ?? "player" };
-    } catch (err) {
-      if (err instanceof AppError) throw new ServerError(err.status, err.message);
-      logger.error("battle auth failure");
-      throw new ServerError(500, "Authentication unavailable");
-    }
+    return authenticateSeat(token, BattleRoom.deps);
   }
 
-  onCreate() {
+  onCreate(options?: { matchKey?: unknown }) {
+    const matchKey = typeof options?.matchKey === "string" ? options.matchKey : null;
+    if (matchKey) {
+      // The coordinator hands out one-shot keys; a forged or consumed key
+      // fails creation, so clients can never self-create a matched room.
+      const pending = BattleRoom.coordinator?.claimMatch(matchKey);
+      if (!pending) throw new ServerError(403, "Unknown or expired match");
+      this.matched = {
+        playerIds: new Set(pending.players),
+        usernames: pending.usernames,
+        deadlineAt: Date.now() + (BattleRoom.deps.matchLobbyMs ?? MATCH_LOBBY_MS),
+      };
+      void this.setPrivate(true);
+      this.clock.setTimeout(() => this.matchedLobbyTimeout(), this.matched.deadlineAt - Date.now());
+    }
     this.session = new BattleSession(BattleRoom.deps.rng);
     this.onMessage("ready", (client: BattleClient, msg: unknown) => void this.onReady(client, msg));
     this.onMessage("unready", (client: BattleClient) => {
@@ -102,6 +142,9 @@ export class BattleRoom extends Room {
   }
 
   onJoin(client: BattleClient) {
+    if (this.matched && !this.matched.playerIds.has(client.auth.playerId)) {
+      throw new ServerError(409, "Not a player in this match");
+    }
     try {
       this.session.join(client.auth);
     } catch (e) {
@@ -111,13 +154,24 @@ export class BattleRoom extends Room {
   }
 
   onLeave(client: BattleClient) {
+    const playerId = client.auth?.playerId;
     const wasActive = this.session.phase === "active";
-    this.session.leave(client.auth.playerId);
-    this.choices.delete(client.auth.playerId);
+    const wasSeated = playerId ? this.session.slotOf(playerId) >= 0 : false;
+    if (playerId) {
+      this.session.leave(playerId);
+      this.choices.delete(playerId);
+    }
     if (wasActive && this.session.phase === "aborted") {
       this.setSimulationInterval();
       this.broadcast("aborted", { reason: this.session.abortReason });
+      this.releaseMatch();
       this.closeSoon();
+    } else if (this.matched && wasSeated && this.session.phase === "waiting" && !this.earlyAbort) {
+      // Matched rooms never free a seat: a leave before start ends it.
+      this.earlyAbort = true;
+      this.broadcast("aborted", { reason: "Opponent left before the match started" });
+      this.releaseMatch();
+      void this.disconnect();
     } else if (this.session.phase === "waiting") this.sendLobby();
   }
 
@@ -127,7 +181,30 @@ export class BattleRoom extends Room {
   }
 
   private sendLobby() {
-    this.session.slots.forEach((_, slot) => this.clientFor(slot)?.send("lobby", this.session.lobby(slot)));
+    this.session.slots.forEach((_, slot) => {
+      const c = this.clientFor(slot);
+      if (!c) return;
+      const msg = this.session.lobby(slot);
+      if (this.matched) {
+        const me = this.session.slots[slot]?.playerId;
+        const oppId = [...this.matched.playerIds].find((id) => id !== me);
+        msg.match = { opponent: (oppId && this.matched.usernames[oppId]) ?? null, deadlineAt: this.matched.deadlineAt };
+      }
+      c.send("lobby", msg);
+    });
+  }
+
+  private releaseMatch() {
+    if (this.matched) BattleRoom.coordinator?.release(this.roomId);
+  }
+
+  /** Fires when a matched lobby never reaches start before the deadline. */
+  private matchedLobbyTimeout() {
+    if (!this.matched || this.earlyAbort || this.session.phase !== "waiting") return;
+    this.earlyAbort = true;
+    this.broadcast("aborted", { reason: "Match timed out before start" });
+    this.releaseMatch();
+    void this.disconnect();
   }
 
   /**
@@ -159,7 +236,7 @@ export class BattleRoom extends Room {
         return;
       }
     }
-    if (this.session.lockEpoch !== epoch || this.session.phase !== "waiting") return;
+    if (this.earlyAbort || this.session.lockEpoch !== epoch || this.session.phase !== "waiting") return;
     try {
       this.session.start(epoch, loadouts as [TrustedLoadout, TrustedLoadout]);
     } catch {
@@ -188,6 +265,7 @@ export class BattleRoom extends Room {
     if (out.end) {
       this.setSimulationInterval();
       this.saveReplay();
+      this.releaseMatch();
       this.closeSoon();
     }
   }
@@ -203,5 +281,9 @@ export class BattleRoom extends Room {
 
   private closeSoon() {
     this.clock.setTimeout(() => void this.disconnect(), BattleRoom.deps.closeAfterMs ?? 30_000);
+  }
+
+  onDispose() {
+    this.releaseMatch();
   }
 }
