@@ -74,6 +74,21 @@ export async function ensureLegacyAchievements() {
   }
 }
 
+// A replayed achievement event still guarantees its award row: a crash
+// between the event insert and the award insert previously orphaned it.
+async function ensureAwardFor(event: NftLegacyEvent): Promise<NftAchievementAward | null> {
+  if (event.category !== "achievement") return null;
+  const code = (event.payload as { code?: string } | null)?.code;
+  if (!code) return null;
+  const db = getDb();
+  const rows = await db
+    .insert(nftAchievementAwards)
+    .values({ nftId: event.nftId, tokenId: event.tokenId, achievementCode: code, evidence: { authorityKey: event.authorityKey } })
+    .onConflictDoNothing({ target: [nftAchievementAwards.nftId, nftAchievementAwards.achievementCode] })
+    .returning();
+  return rows[0] ?? null;
+}
+
 export async function recordVerifiedNftLegacyEvent(
   input: RecordLegacyEventInput
 ): Promise<{ event: NftLegacyEvent; created: boolean; award: NftAchievementAward | null }> {
@@ -95,7 +110,7 @@ export async function recordVerifiedNftLegacyEvent(
     .from(nftLegacyEvents)
     .where(eq(nftLegacyEvents.authorityKey, input.authorityKey))
     .limit(1);
-  if (replayed[0]) return { event: replayed[0], created: false, award: null };
+  if (replayed[0]) return { event: replayed[0], created: false, award: await ensureAwardFor(replayed[0]) };
 
   const nft = await getNftByTokenId(tokenId);
   if (!nft || nft.token.contractAddress.toLowerCase() !== CHOG_GENESIS_ADDRESS.toLowerCase()) {
@@ -164,7 +179,7 @@ export async function recordVerifiedNftLegacyEvent(
       .where(eq(nftLegacyEvents.authorityKey, input.authorityKey))
       .limit(1);
     if (!winner[0]) throw new Error("Legacy event insert failed");
-    return { event: winner[0], created: false, award: null };
+    return { event: winner[0], created: false, award: await ensureAwardFor(winner[0]) };
   }
   if (supersedesEventId) {
     await db

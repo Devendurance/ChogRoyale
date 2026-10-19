@@ -29,6 +29,7 @@ import { getDb } from "@/db/client";
 import { matchEvidence, matchParticipants, matches } from "@/db/schema";
 import { logger } from "@/lib/logger";
 import type { ReplayRecord, SeatPlayer } from "@/server/battle/session";
+import type { LegacyProcessor } from "@/server/battle/legacy";
 
 type Db = ReturnType<typeof getDb>;
 
@@ -58,6 +59,8 @@ export interface SettlementRecord {
   decks: [string[], string[]];
   /** Locked commander identity snapshots indexed by seat. */
   commanders: [CommanderIdentity, CommanderIdentity];
+  /** Verified owner wallets (lowercase) per seat; null for free commanders. Not part of the evidence hash. */
+  owners: [string | null, string | null];
   evidence: { formatVersion: 1; config: CombatConfig; commands: CombatCommand[] };
   evidenceSha256: string;
 }
@@ -108,6 +111,7 @@ export function recordFromReplay(
     players: replay.players,
     decks: [replay.config.decks[0], replay.config.decks[1]],
     commanders: replay.commanders,
+    owners: replay.owners,
     evidence,
     evidenceSha256: evidenceDigest(evidence),
   };
@@ -132,6 +136,26 @@ export function verifySettlement(record: SettlementRecord): void {
     const cfg = record.evidence.config.decks?.[seat];
     if (!Array.isArray(deck) || !Array.isArray(cfg) || deck.length !== cfg.length || deck.some((c, i) => c !== cfg[i])) {
       fail(`deck for seat ${seat} does not match evidence config`);
+    }
+  }
+  for (const seat of [0, 1] as const) {
+    const identity = record.commanders[seat];
+    const slotRaw = record.evidence.config.commanders?.[seat] ?? null;
+    const owner = record.owners[seat];
+    if (slotRaw === null) fail(`missing commander slot for seat ${seat}`);
+    const slot = slotRaw!;
+    if (identity.commanderId !== slot.commanderId) fail(`commander for seat ${seat} does not match evidence config`);
+    if (identity.kind === "nft") {
+      if (!identity.tokenId || slot.commanderId !== `nft-${identity.tokenId}`) {
+        fail(`nft commander token for seat ${seat} does not match evidence slot`);
+      }
+      if (identity.basis !== "direct-owner" || !identity.verifiedAt || !owner) {
+        fail(`nft commander for seat ${seat} lacks direct-owner provenance`);
+      }
+    } else {
+      if (identity.kind !== "free" || identity.basis !== "free" || owner !== null) {
+        fail(`free commander provenance for seat ${seat} is malformed`);
+      }
     }
   }
   if (evidenceDigest(record.evidence) !== record.evidenceSha256) fail("evidence hash mismatch");
@@ -198,6 +222,7 @@ export async function settleMatch(record: SettlementRecord, db: Db): Promise<"se
           commanderClass: record.commanders[seat].class,
           nftTokenId: record.commanders[seat].tokenId,
           commanderIdentity: record.commanders[seat] as unknown as Record<string, unknown>,
+          entitlementOwner: record.owners[seat],
         }))
       ),
       db.insert(matchEvidence).values({
@@ -231,6 +256,10 @@ export interface SettlementServiceDeps {
   /** DB resolver; defaults to the shared DAL connection. */
   db?: () => Db;
   sleep?: (ms: number) => Promise<void>;
+  /** Optional B3.3b NFT legacy pass. Runs after a durable settle and via
+   * reconciliation in every sweep; failures never change the settlement
+   * result already reported to clients. */
+  legacy?: LegacyProcessor | null;
 }
 
 export type SubmitStatus = "settled" | "already-settled" | "pending" | "conflict" | "failed" | "refused";
@@ -243,6 +272,7 @@ export class SettlementService {
   private readonly dbOf: () => Db;
   private readonly sleep: (ms: number) => Promise<void>;
   private readonly sweepMs: number;
+  private readonly legacy: LegacyProcessor | null;
   private sweeper: ReturnType<typeof setInterval> | null = null;
   private readonly inFlight = new Set<string>();
 
@@ -252,6 +282,18 @@ export class SettlementService {
     this.dbOf = deps.db ?? getDb;
     this.sleep = deps.sleep ?? ((ms) => new Promise((r) => setTimeout(r, ms)));
     this.sweepMs = deps.sweepMs ?? 60_000;
+    this.legacy = deps.legacy ?? null;
+  }
+
+  /** Legacy writes are decoupled: settlement is already durable, and a
+   * failed pass leaves no marker so reconcile can retry later. */
+  private async runLegacy(matchId: string): Promise<void> {
+    if (!this.legacy) return;
+    try {
+      await this.legacy.processMatch(matchId);
+    } catch (err) {
+      logger.error("legacy processing failed", { matchId, reason: err instanceof Error ? err.message : String(err) });
+    }
   }
 
   private pendingPath(matchId: string): string {
@@ -291,6 +333,7 @@ export class SettlementService {
             /* file already moved */
           }
           logger.info("match settled", { matchId: record.matchId, status });
+          await this.runLegacy(record.matchId);
           return status;
         } catch (err) {
           if (err instanceof SettlementConflictError) {
@@ -352,6 +395,14 @@ export class SettlementService {
         continue;
       }
       await this.attempt(record, file);
+    }
+    // Picks up settled matches that have no legacy run marker yet.
+    if (this.legacy) {
+      try {
+        await this.legacy.reconcile();
+      } catch (err) {
+        logger.error("legacy reconcile failed", { reason: err instanceof Error ? err.message : String(err) });
+      }
     }
   }
 

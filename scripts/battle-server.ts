@@ -22,6 +22,7 @@ const port = Number(process.env.BATTLE_SERVER_PORT ?? 2567);
 async function settlementService() {
   if (process.env.BATTLE_SETTLEMENT !== "1") {
     console.log("settlement disabled");
+    if (process.env.BATTLE_LEGACY === "1") console.log("legacy disabled");
     return null;
   }
   const { neon } = await import("@neondatabase/serverless");
@@ -32,8 +33,23 @@ async function settlementService() {
     return null;
   }
   const { SettlementService } = await import("@/server/battle/settlement");
+  // B3.3b NFT legacy is opt-in via BATTLE_LEGACY=1 and requires both
+  // settlement and the match_legacy_runs migration on the same database.
+  let legacy = null;
+  if (process.env.BATTLE_LEGACY === "1") {
+    const check = await sql`select to_regclass('public.match_legacy_runs') as t`;
+    if (!check[0]?.t) {
+      console.error("BATTLE_LEGACY=1 but public.match_legacy_runs is missing; apply the approved migration first. Legacy disabled.");
+    } else {
+      const { LegacyProcessor } = await import("@/server/battle/legacy");
+      legacy = new LegacyProcessor();
+      console.log("legacy enabled");
+    }
+  } else {
+    console.log("legacy disabled");
+  }
   console.log("settlement enabled");
-  return new SettlementService();
+  return new SettlementService({ legacy });
 }
 
 void settlementService()

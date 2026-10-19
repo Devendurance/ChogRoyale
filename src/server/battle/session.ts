@@ -100,6 +100,8 @@ export interface ReplayRecord {
   ticks: number;
   /** Commander identity per seat, from the grants locked at match start. */
   commanders: [CommanderIdentity, CommanderIdentity];
+  /** Seat-ordered verified owner wallets (lowercase) proven at match start. Null for free commanders. */
+  owners: [string | null, string | null];
 }
 
 interface Pending {
@@ -430,7 +432,8 @@ export class BattleSession {
     const liveHash = stateHash(state);
     const players = [this.slots[this.seatOfSlot.indexOf(0)]!, this.slots[this.seatOfSlot.indexOf(1)]!] as [SeatPlayer, SeatPlayer];
     const commanders = [this.loadouts[this.seatOfSlot.indexOf(0)]!.grant.identity, this.loadouts[this.seatOfSlot.indexOf(1)]!.grant.identity] as [CommanderIdentity, CommanderIdentity];
-    this.replay = { config: this.config!, commands: [...this.commands], players, liveHash, replayHash: replay.result.stateHash, replayIdentical: replay.result.stateHash === liveHash, winner: state.winner, endReason: state.endReason, ticks: state.tick, commanders };
+    const owners = [this.loadouts[this.seatOfSlot.indexOf(0)]!.grant.owner, this.loadouts[this.seatOfSlot.indexOf(1)]!.grant.owner] as [string | null, string | null];
+    this.replay = { config: this.config!, commands: [...this.commands], players, liveHash, replayHash: replay.result.stateHash, replayIdentical: replay.result.stateHash === liveHash, winner: state.winner, endReason: state.endReason, ticks: state.tick, commanders, owners };
     const msg = (seat: PlayerIndex): EndMessage => ({
       result: state.winner === "draw" || state.winner === null ? "draw" : state.winner === seat ? "win" : "loss",
       reason: state.endReason,

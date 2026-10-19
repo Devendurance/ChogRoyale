@@ -64,6 +64,13 @@
       "when": 1792383769302,
       "tag": "0008_good_siren",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792399338662,
+      "tag": "0009_groovy_outlaw_kid",
+      "breakpoints": true
     }
   ]
 }

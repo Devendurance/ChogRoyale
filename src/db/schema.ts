@@ -520,6 +520,10 @@ export const matchParticipants = pgTable(
     nftTokenId: text("nft_token_id"),
     // Locked CommanderIdentity snapshot at match start, immutable history.
     commanderIdentity: jsonb("commander_identity").notNull(),
+    // Lowercase verified wallet that proved ownership at match start. Null
+    // for free commanders and for rows settled before provenance tracking;
+    // B3.3b requires it non-null for NFT legacy eligibility.
+    entitlementOwner: text("entitlement_owner"),
   },
   (t) => [
     primaryKey({ name: "match_participants_pk", columns: [t.matchId, t.seat] }),
@@ -529,6 +533,7 @@ export const matchParticipants = pgTable(
     check("match_participants_result_check", sql`${t.result} in ('win','loss','draw')`),
     check("match_participants_deck_check", sql`cardinality(${t.deck}) = 8`),
     check("match_participants_commander_kind_check", sql`${t.commanderKind} in ('free','nft')`),
+    check("match_participants_owner_check", sql`${t.entitlementOwner} is null or ${t.entitlementOwner} ~ '^0x[0-9a-f]{40}$'`),
   ]
 );
 
@@ -547,6 +552,24 @@ export const matchEvidence = pgTable(
   (t) => [check("match_evidence_format_check", sql`${t.formatVersion} = 1`)]
 );
 
+// B3.3b legacy processing marker. One row per settled match once the NFT
+// legacy pass ran; absence means the match is due for (re)processing.
+// details carries counts/skip reasons only, never wallets or seeds.
+export const matchLegacyRuns = pgTable(
+  "match_legacy_runs",
+  {
+    matchId: uuid("match_id")
+      .primaryKey()
+      .references(() => matches.id, { onDelete: "restrict" }),
+    status: text("status").notNull(),
+    processedAt: timestamp("processed_at", { withTimezone: true }).notNull().defaultNow(),
+    eventsCreated: integer("events_created").notNull(),
+    details: jsonb("details").notNull().default({}),
+  },
+  (t) => [check("match_legacy_runs_status_check", sql`${t.status} in ('done','no-eligible')`)]
+);
+
 export type Match = typeof matches.$inferSelect;
 export type MatchParticipant = typeof matchParticipants.$inferSelect;
 export type MatchEvidence = typeof matchEvidence.$inferSelect;
+export type MatchLegacyRun = typeof matchLegacyRuns.$inferSelect;

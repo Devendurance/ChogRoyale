@@ -10,7 +10,7 @@ import { matchEvidence, matchParticipants, matches, players, type Player } from 
 import { runMatch } from "@/lib/combat";
 import { BATTLE_PROTOCOL_VERSION } from "@/lib/battle-protocol";
 import { BattleSession, PRESETS, type SessionRandom, type TrustedLoadout } from "@/server/battle/session";
-import { makeLoadout } from "@/server/battle/test-helpers";
+import { makeLoadout, makeLoadoutWithGrant, nftGrant } from "@/server/battle/test-helpers";
 import {
   SettlementService,
   recordFromReplay,
@@ -127,6 +127,32 @@ describe("settlement service", () => {
     expect(await svc.submit({ ...rec, replayHash: rec.liveHash.slice(0, -1) + "0" })).toBe("refused");
     expect((await counts(rec.matchId)).match).toBe(0);
   }, 120_000);
+
+  it("verifySettlement enforces per-seat commander kind/token/basis/owner provenance", async () => {
+    const [a, b] = [await mkPlayer("pv1a"), await mkPlayer("pv1b")];
+    const s = new BattleSession(rng());
+    s.join({ playerId: a.id, username: "a" });
+    s.join({ playerId: b.id, username: "b" });
+    const d = preset("swarm");
+    s.setReady(a.id, makeLoadoutWithGrant(d.cards, nftGrant("91199", "0x" + "ab".repeat(20), "scout")));
+    s.setReady(b.id, preset("siege"));
+    const epoch = s.lock();
+    s.start(epoch, s.readyLoadouts() as [TrustedLoadout, TrustedLoadout]);
+    while (s.phase === "active") s.tick();
+    const matchId = randomUUID();
+    matchIds.push(matchId);
+    const rec = recordFromReplay(s.replay!, { matchId, roomId: "r", matchType: "private", startedAt: new Date(), crowns: [...s.state!.crowns] as [number, number] });
+    expect(() => verifySettlement(rec)).not.toThrow();
+    // NFT seat must keep a non-null owner.
+    expect(() => verifySettlement({ ...rec, owners: [null, rec.owners[1]] })).toThrow(/provenance/);
+    // NFT seat identity must keep direct-owner basis and verifiedAt.
+    expect(() => verifySettlement({ ...rec, commanders: [{ ...rec.commanders[0], basis: "free" }, rec.commanders[1]] })).toThrow();
+    expect(() => verifySettlement({ ...rec, commanders: [{ ...rec.commanders[0], verifiedAt: null }, rec.commanders[1]] })).toThrow();
+    // NFT token id must match the evidence slot.
+    expect(() => verifySettlement({ ...rec, commanders: [{ ...rec.commanders[0], tokenId: "99999" }, rec.commanders[1]] })).toThrow();
+    // Free seat must keep a null owner.
+    expect(() => verifySettlement({ ...rec, owners: [rec.owners[0], "0x" + "cd".repeat(20)] })).toThrow();
+  }, 240_000);
 
   it("refuses a record with the same player on both seats", async () => {
     const [a, b] = [await mkPlayer("d1a"), await mkPlayer("d1b")];
