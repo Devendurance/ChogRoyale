@@ -355,4 +355,63 @@ describe("B3.1 Colyseus battle room", () => {
     expect(existsSync(replayDir)).toBe(true);
     await Promise.all([ra.leave().catch(() => {}), rb.leave().catch(() => {})]);
   }, 120_000);
+
+  it("plays a match with the Chog Burrow spawner and both clients see the building and scrappers identically", async () => {
+    const ra = await client("tok-alice").create(BATTLE_ROOM);
+    const rb = await client("tok-bob").joinById(ra.roomId);
+    const a = watch(ra);
+    const b = watch(rb);
+    const burrowDeck = { cards: ["chog_burrow", "choglings", "chaos_archer", "sparkcaster", "hexwing", "rift_snare", "chaos_bolt"], commander: { kind: "free", class: "warden" } satisfies CommanderChoice };
+    ra.send("ready", burrowDeck);
+    rb.send("ready", ready("antiSwarm"));
+    await until(() => !!a.start && !!b.start);
+    // The spawner is an ordinary selectable card; the scrapper is display-only.
+    expect(a.start!.catalog.chog_burrow?.kind).toBe("building");
+    expect(a.start!.catalog.burrow_scrapper?.name).toBe("Burrow Scrapper");
+    expect(a.start!.deck).toContain("chog_burrow");
+    expect(a.start!.deck).not.toContain("burrow_scrapper");
+    let n = 0;
+    const drive = (room: Room, s: Seen) => {
+      const f = s.frames.at(-1);
+      if (!f || s.end) return;
+      const readyA = f.abilities.find((x) => x.ready && !x.blockedBy);
+      if (readyA && n % 3 === 0) room.send("cmd", { type: "ability", cid: `ab${n++}`, abilityId: readyA.abilityId });
+      const y = s.start!.seat === 0 ? 60 : 100;
+      // Prioritize the burrow so the test always exercises the spawner.
+      const pick = f.hand.find((c) => c === "chog_burrow" && f.energy >= 4)
+        ?? f.hand.find((c) => {
+          const k = s.start!.catalog[c]!;
+          return (k.kind === "troop" || k.kind === "commander" || k.kind === "building") && k.cost <= f.energy;
+        });
+      if (pick && f.tick % 15 === 0) room.send("cmd", { type: "deploy", cid: `d${n++}`, cardId: pick, x: n % 2 ? 30 : 70, y });
+    };
+    const lastTick = { a: -1, b: -1 };
+    await until(() => {
+      const fa = a.frames.at(-1);
+      const fb = b.frames.at(-1);
+      if (fa && fa.tick !== lastTick.a) { lastTick.a = fa.tick; drive(ra, a); }
+      if (fb && fb.tick !== lastTick.b) { lastTick.b = fb.tick; drive(rb, b); }
+      return !!a.end && !!b.end;
+    }, 90_000);
+    // A burrow was placed and scrappers appeared as ordinary troop views.
+    expect(a.frames.some((f) => f.buildings.some((x) => x.cardId === "chog_burrow"))).toBe(true);
+    expect(a.frames.some((f) => f.troops.some((t) => t.cardId === "burrow_scrapper"))).toBe(true);
+    const spawnEvents = a.frames.flatMap((f) => f.events).filter((e) => e.type === "unit_spawned" || e.type === "spawn_skipped");
+    expect(spawnEvents.length).toBeGreaterThan(0);
+    // Shared ticks render identically on both screens, scrappers included.
+    const byTick = new Map(b.frames.map((f) => [f.tick, f]));
+    const shared = a.frames.filter((f) => byTick.has(f.tick)).slice(-10);
+    expect(shared.length).toBeGreaterThan(0);
+    for (const f of shared) {
+      const g = byTick.get(f.tick)!;
+      expect(f.troops).toEqual(g.troops);
+      expect(f.buildings).toEqual(g.buildings);
+    }
+    // Spawner buildings expose the wave countdown on both views.
+    const withTimer = a.frames.flatMap((f) => f.buildings).find((x) => x.cardId === "chog_burrow" && x.nextSpawnAt !== undefined);
+    expect(withTimer?.spawnsLeft).toBeGreaterThanOrEqual(0);
+    expect(a.end!.stateHash).toBe(b.end!.stateHash);
+    expect(a.end!.replayIdentical).toBe(true);
+    await Promise.all([ra.leave().catch(() => {}), rb.leave().catch(() => {})]);
+  }, 120_000);
 });

@@ -31,7 +31,7 @@ function hpTrail(cfg: CombatConfig, cmds: DeployCommand[], upto: number, pick: (
 
 describe("B2.7c1 card registry and deck economy", () => {
   it("registers Gale Netter and Riftbreaker as versioned troops", () => {
-    expect(COMBAT_RULESET_VERSION).toBe("v14");
+    expect(COMBAT_RULESET_VERSION).toBe("v15");
     const n = TROOP_CARDS_V1.gale_netter!;
     const b = TROOP_CARDS_V1.riftbreaker!;
     expect([n.cost, n.hp, n.damage, n.range, n.speed, n.attackIntervalTicks, n.moveType, n.hitsAir, n.hitsGround, n.targetPriority, n.vsGroundPct]).toEqual([3, 120, 40, 16, 2, 10, "ground", true, true, "air", 30]);
@@ -40,8 +40,8 @@ describe("B2.7c1 card registry and deck economy", () => {
     expect(n.range).toBeGreaterThan(TROOP_CARDS_V1.hexwing!.range);
     expect(b.speed).toBeLessThan(TROOP_CARDS_V1.rift_runner!.speed);
     expect(b.hp).toBeGreaterThan(TROOP_CARDS_V1.rift_runner!.hp * 3);
-    // 15 earlier ordinary cards + 2 (B2.7c1) + Ember Mauler (B2.7c2).
-    expect(Object.keys(CARDS_V1)).toHaveLength(18);
+    // 15 earlier ordinary cards + 2 (B2.7c1) + Ember Mauler (B2.7c2) + Chog Burrow (B2.7c6).
+    expect(Object.keys(CARDS_V1)).toHaveLength(19);
   });
 
   it("accepts the new cards in 7+1 decks and rejects unknown or duplicate cards", () => {

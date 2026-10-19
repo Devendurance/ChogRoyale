@@ -11,11 +11,13 @@ import {
   ARENA_V2,
   ARENA_VERSION,
   BUILDING_CARDS_V1,
+  CARDS_V1,
   COMBAT_RULESET_VERSION,
   COMBAT_TIMELINE_V1,
   COMMANDER_COMBAT_PROFILE_V1,
   ENERGY_V1,
   SPELL_CARDS_V1,
+  SPAWNED_TROOPS_V1,
   TICKS_PER_SECOND,
   TROOP_CARDS_V1,
   commanderAbilityStatus,
@@ -23,6 +25,7 @@ import {
   initMatch,
   rankedChaosZones,
   runMatch,
+  spawnWavesFor,
   stateHash,
   stepMatch,
   type CombatCommand,
@@ -119,6 +122,7 @@ export interface TickOutput {
 const PUBLIC_EVENTS = new Set([
   "deploy", "death", "shockwave", "structure_destroyed", "match_end", "spell_cast", "commander_deployed", "ability_fired", "ability_expired",
   "pulse_warning", "pulse_active", "pulse_expired", "rift_crossing", "building_spawned", "building_removed", "spell_impact",
+  "unit_spawned", "spawn_skipped",
 ]);
 const OWN_EVENTS = new Set(["command_rejected", "ability_ready"]);
 
@@ -128,7 +132,10 @@ function describe(card: TroopCardDef | SpellCardDef | BuildingCardDef): string {
   if ("lifetimeTicks" in card) {
     const b = card;
     const attack = b.damage > 0 ? `, ${b.damage} damage every ${b.attackIntervalTicks / 10}s, range ${b.range}${b.hitsAir ? ", hits air" : ""}` : ", no attack";
-    return `Building with ${b.hp} hp${attack}. Lasts ${b.lifetimeTicks / 10}s, footprint ${b.footprint}.`;
+    const spawn = b.spawnCardId
+      ? ` Spawns ${b.spawnCount ?? 1} ${SPAWNED_TROOPS_V1[b.spawnCardId]?.name ?? b.spawnCardId} every ${(b.spawnIntervalTicks ?? 0) / 10}s, first after ${b.deployTicks / 10}s, up to ${spawnWavesFor(b)}, lasts ${b.lifetimeTicks / 10}s.`
+      : "";
+    return `Building with ${b.hp} hp${attack}. Lasts ${b.lifetimeTicks / 10}s, footprint ${b.footprint}.${spawn}`;
   }
   if ("count" in card) {
     const t = card;
@@ -167,6 +174,8 @@ export function cardCatalog(): Record<string, CardInfo> {
   for (const t of Object.values(TROOP_CARDS_V1)) out[t.id] = { id: t.id, name: t.name, cost: t.cost, kind: "troop", air: t.moveType === "air", radius: 0, description: describe(t) };
   for (const s of Object.values(SPELL_CARDS_V1)) out[s.id] = { id: s.id, name: s.name, cost: s.cost, kind: "spell", air: false, radius: s.radius, description: describe(s) };
   for (const b of Object.values(BUILDING_CARDS_V1)) out[b.id] = { id: b.id, name: b.name, cost: b.cost, kind: "building", air: false, radius: b.footprint, description: describe(b) };
+  // Display-only entries for spawned units: shown by id in frames, never deckable.
+  for (const t of Object.values(SPAWNED_TROOPS_V1)) out[t.id] = { id: t.id, name: t.name, cost: 0, kind: "troop", air: t.moveType === "air", radius: 0, description: describe(t) };
   for (const [cls, p] of Object.entries(COMMANDER_COMBAT_PROFILE_V1)) {
     const id = `cmdr:free-${cls}`;
     out[id] = { id, name: `${cls[0]!.toUpperCase()}${cls.slice(1)} Commander`, cost: p.cost, kind: "commander", air: false, radius: 0, description: commanderDescription(cls) };
@@ -174,11 +183,12 @@ export function cardCatalog(): Record<string, CardInfo> {
   return out;
 }
 
-/** The 18 ordinary (non-commander) cards the loadout picker offers. */
+/** The ordinary (non-commander, deckable) cards the loadout picker offers.
+ * Spawned units like burrow_scrapper stay display-only. */
 const cap = (s: string) => `${s[0]!.toUpperCase()}${s.slice(1)}`;
 
 export function ordinaryCatalog(): CardInfo[] {
-  return Object.values(cardCatalog()).filter((c) => c.kind !== "commander");
+  return Object.values(cardCatalog()).filter((c) => c.kind !== "commander" && CARDS_V1[c.id] !== undefined);
 }
 
 export class BattleSession {
@@ -473,7 +483,7 @@ export class BattleSession {
       troops: s.troops.filter((t) => t.hp > 0).map((t) => ({ id: t.id, owner: t.owner, cardId: t.cardId, x: t.x, y: t.y, hp: t.hp, maxHp: t.maxHp, air: t.moveType === "air", shield: shield(t) })),
       commanders: s.commanders.filter((c) => c.hp > 0).map((c) => ({ id: c.id, owner: c.owner, cardId: `cmdr:${c.commanderId}`, cls: c.class, x: c.x, y: c.y, hp: c.hp, maxHp: c.maxHp, air: false, shield: shield(c) })),
       structures: s.structures.map((x) => ({ id: x.id, owner: x.owner, kind: x.structure, x: x.x, y: x.y, hp: x.hp, maxHp: x.maxHp, alive: x.alive })),
-      buildings: s.buildings.filter((b) => b.alive).map((b) => ({ id: b.id, owner: b.owner, cardId: b.cardId, x: b.x, y: b.y, hp: b.hp, maxHp: b.maxHp, footprint: b.footprint, expiresAt: b.expiresAt })),
+      buildings: s.buildings.filter((b) => b.alive).map((b) => ({ id: b.id, owner: b.owner, cardId: b.cardId, x: b.x, y: b.y, hp: b.hp, maxHp: b.maxHp, footprint: b.footprint, expiresAt: b.expiresAt, ...(b.nextSpawnAt !== undefined ? { nextSpawnAt: b.nextSpawnAt, spawnsLeft: b.spawnsLeft ?? 0 } : {}) })),
       projectiles: s.projectiles.map((p) => ({ id: p.id, owner: p.owner, x: p.snapX, y: p.snapY, targetId: p.targetId })),
       impacts: s.pendingImpacts.map((i) => ({ id: i.id, owner: i.owner, cardId: i.cardId, x: i.x, y: i.y, impactTick: i.impactTick })),
       chaos,

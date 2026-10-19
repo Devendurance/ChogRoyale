@@ -34,7 +34,12 @@ import type { ChaosSchedule, ChaosEffect } from "@/lib/chaos";
 // v8 (B2.7a): deployable building cards (Rift Sentry, Decoy Totem) with
 // solid footprints, finite lifetimes, building-aware targeting and
 // placement rules that keep every river crossing mouth clear.
-export const COMBAT_RULESET_VERSION = "v14" as const;
+export const COMBAT_RULESET_VERSION = "v15" as const;
+/** Rulesets initMatch accepts. v14 replays keep their exact v14 hashes. */
+export const SUPPORTED_COMBAT_RULESETS = ["v14", "v15"] as const;
+export type CombatRuleset = (typeof SUPPORTED_COMBAT_RULESETS)[number];
+/** v15-only cards rejected from v14 configs (burrow + its spawn rules are v15). */
+const V15_ONLY_CARDS = new Set(["chog_burrow"]);
 export const TICKS_PER_SECOND = 10;
 // Standard ranked timeline (v2): 180s regulation, up to 120s sudden-death overtime.
 // Energy phases: 1x ticks 0-1199, 2x ticks 1200-2399, 3x ticks 2400-2999.
@@ -225,6 +230,10 @@ export interface BuildingCardDef {
   /** Ticks after placement before the first attack. */
   deployTicks: number;
   lifetimeTicks: number;
+  /** v15 spawner buildings: troop def spawned each wave (never deckable). */
+  spawnCardId?: string;
+  spawnIntervalTicks?: number;
+  spawnCount?: number;
 }
 
 // Authored v1 buildings (original Chog Royale cards, no earlier spec exists).
@@ -236,7 +245,27 @@ export interface BuildingCardDef {
 export const BUILDING_CARDS_V1: Record<string, BuildingCardDef> = {
   rift_sentry: { id: "rift_sentry", name: "Rift Sentry", cost: 4, kind: "building", hp: 320, damage: 16, attackIntervalTicks: 8, range: 16, hitsAir: false, hitsGround: true, footprint: 2, deployTicks: 10, lifetimeTicks: 300 },
   decoy_totem: { id: "decoy_totem", name: "Decoy Totem", cost: 2, kind: "building", hp: 260, damage: 0, attackIntervalTicks: 0, range: 0, hitsAir: false, hitsGround: false, footprint: 1, deployTicks: 0, lifetimeTicks: 200 },
+  // v15 spawner: a dug-in burrow that sends out small scrappers. First spawn
+  // at placement + deployTicks (20), then every spawnIntervalTicks (50):
+  // ticks +20/+70/+120/+170/+220, five scrappers while it lives (260 ticks).
+  chog_burrow: { id: "chog_burrow", name: "Chog Burrow", cost: 4, kind: "building", hp: 300, damage: 0, attackIntervalTicks: 0, range: 0, hitsAir: false, hitsGround: false, footprint: 1, deployTicks: 20, lifetimeTicks: 260, spawnCardId: "burrow_scrapper", spawnIntervalTicks: 50, spawnCount: 1 },
 };
+
+/** v15 spawned units: real troops under engine rules, never deckable. */
+export const SPAWNED_TROOPS_V1: Record<string, TroopCardDef> = {
+  burrow_scrapper: { id: "burrow_scrapper", name: "Burrow Scrapper", cost: 0, count: 1, hp: 45, damage: 10, range: 2, speed: 2, sight: 25, attackIntervalTicks: 8, moveType: "ground", hitsAir: false, hitsGround: true, structPriority: false, splashRadius: 0, projectileTicks: 0, slowPct: 0, slowDurationTicks: 0 },
+};
+export const MAX_SPAWNED_ALIVE_PER_PLAYER = 8;
+
+/** Number of spawn waves a spawner building fires within its lifetime:
+ * at placement + deployTicks, then every spawnIntervalTicks; a wave due
+ * at or after expiry never happens. */
+export function spawnWavesFor(def: BuildingCardDef): number {
+  if (!def.spawnCardId || !def.spawnIntervalTicks || !def.spawnCount) return 0;
+  let n = 0;
+  for (let t = def.deployTicks; t < def.lifetimeTicks; t += def.spawnIntervalTicks) n += 1;
+  return n;
+}
 
 // Placement rules: clearance = free cells left between a building footprint
 // and any live structure/building footprint (enforced by the shared
@@ -437,6 +466,8 @@ export interface TroopEntity {
   guardPct: number;
   armor: number;
   moveCarry: number;
+  /** v15: building id that spawned this troop; absent on deployed troops. */
+  spawnedBy?: string;
 }
 
 // Commanders reuse troop combat mechanics plus armor, shields, reflect,
@@ -533,6 +564,9 @@ export interface BuildingEntity {
   targetId: string | null;
   spawnTick: number;
   expiresAt: number;
+  /** v15 spawner buildings only: next due wave tick and waves remaining. */
+  nextSpawnAt?: number;
+  spawnsLeft?: number;
 }
 
 export type CombatEvent =
@@ -568,7 +602,9 @@ export type CombatEvent =
   | { type: "rift_crossing"; tick: number; open: boolean; until: number }
   | { type: "building_spawned"; tick: number; player: PlayerIndex; buildingId: string; cardId: string; x: number; y: number; activeAt: number; expiresAt: number }
   | { type: "building_removed"; tick: number; buildingId: string; owner: PlayerIndex; cardId: string; reason: "destroyed" | "expired" }
-  | { type: "spell_impact"; tick: number; player: PlayerIndex; cardId: string; impactId: string; x: number; y: number; units: number; buildings: number; structures: number };
+  | { type: "spell_impact"; tick: number; player: PlayerIndex; cardId: string; impactId: string; x: number; y: number; units: number; buildings: number; structures: number }
+  | { type: "unit_spawned"; tick: number; buildingId: string; troopId: string; x: number; y: number }
+  | { type: "spawn_skipped"; tick: number; buildingId: string; reason: "blocked" | "cap" };
 
 /** v9 queued impact spell, resolved in the damage pass of `impactTick`. */
 export interface PendingImpact {
@@ -587,7 +623,7 @@ export interface CommanderSlotInput {
 }
 
 export interface CombatConfig {
-  rulesetVersion: typeof COMBAT_RULESET_VERSION;
+  rulesetVersion: CombatRuleset;
   seed: string;
   decks: [string[], string[]];
   commanderIds?: [string | null, string | null];
@@ -597,6 +633,8 @@ export interface CombatConfig {
 }
 
 export interface CombatState {
+  /** The config's ruleset; drives the hash domain so v14 replays stay v14. */
+  ruleset: CombatRuleset;
   tick: number;
   phase: "active" | "overtime" | "final";
   energy: [number, number];
@@ -705,7 +743,7 @@ export function validateDeck(deck: string[], slot: CommanderSlotInput | null = n
 }
 
 export function initMatch(config: CombatConfig): CombatState {
-  if (config.rulesetVersion !== COMBAT_RULESET_VERSION) {
+  if (!(SUPPORTED_COMBAT_RULESETS as readonly string[]).includes(config.rulesetVersion)) {
     throw new AppError("BAD_REQUEST", `Unsupported combat ruleset: ${config.rulesetVersion}`);
   }
   if (!config.seed || config.seed.trim().length === 0) throw new AppError("BAD_REQUEST", "Match requires a seed");
@@ -713,6 +751,13 @@ export function initMatch(config: CombatConfig): CombatState {
   const slots = config.commanders ?? [null, null];
   validateDeck(config.decks[0], slots[0]);
   validateDeck(config.decks[1], slots[1]);
+  if (config.rulesetVersion === "v14") {
+    for (const deck of config.decks) {
+      for (const id of deck) {
+        if (V15_ONLY_CARDS.has(id)) throw new AppError("BAD_REQUEST", `Card requires ruleset v15: ${id}`);
+      }
+    }
+  }
   if (config.commanderIds) {
     for (const c of config.commanderIds) {
       if (c !== null && (typeof c !== "string" || c.length === 0 || c.length > 120)) {
@@ -731,6 +776,7 @@ export function initMatch(config: CombatConfig): CombatState {
     structures.push({ id: `s-p${c.owner}-${c.kind}`, kind: "structure", owner: c.owner as PlayerIndex, structure: "core", x: c.x, y: c.y, hp: def.hp, maxHp: def.hp, alive: true });
   }
   const state: CombatState = {
+    ruleset: config.rulesetVersion,
     tick: 0,
     phase: "active",
     energy: [ENERGY_V1.start, ENERGY_V1.start],
@@ -1503,6 +1549,9 @@ function applyDeploy(state: CombatState, cmd: DeployCommand, counter: { n: numbe
       targetId: null,
       spawnTick: state.tick,
       expiresAt: state.tick + bdef.lifetimeTicks,
+      ...(bdef.spawnCardId
+        ? { nextSpawnAt: state.tick + bdef.deployTicks, spawnsLeft: spawnWavesFor(bdef) }
+        : {}),
     };
     state.buildings.push(b);
     state.events.push({ type: "deploy", tick: state.tick, player: cmd.player, cardId: cmd.cardId, entityIds: [b.id] });
@@ -2216,6 +2265,58 @@ function advanceOneTick(state: CombatState, due: CombatCommand[], counter: { n: 
   }
   // Destroyed buildings leave no rubble: entity and footprint are removed now.
   state.buildings = state.buildings.filter((b) => b.alive);
+  // v15 spawner phase: runs after this tick's damage pass and building
+  // death/expiry handling, so a burrow killed or expired this tick never
+  // spawns. Buildings iterate in their existing array order.
+  for (const b of state.buildings) {
+    if (!b.alive || b.nextSpawnAt === undefined || b.spawnsLeft === undefined || b.spawnsLeft <= 0) continue;
+    if (state.tick < b.nextSpawnAt || state.tick >= b.expiresAt) continue;
+    const def = BUILDING_CARDS_V1[b.cardId]!;
+    const tdef = SPAWNED_TROOPS_V1[def.spawnCardId!]!;
+    const spawnCount = def.spawnCount ?? 1;
+    b.nextSpawnAt += def.spawnIntervalTicks!;
+    b.spawnsLeft -= 1;
+    const aliveSpawned = state.troops.filter((t) => t.owner === b.owner && t.spawnedBy !== undefined && t.hp > 0).length;
+    if (aliveSpawned + spawnCount > MAX_SPAWNED_ALIVE_PER_PLAYER) {
+      state.events.push({ type: "spawn_skipped", tick: state.tick, buildingId: b.id, reason: "cap" });
+      continue;
+    }
+    // Origin candidates in a fixed order around the burrow, enemy side
+    // first. dir is the owner's forward direction; x offsets are mirror-exact
+    // for P1 (same left/right set, same order).
+    const dir = b.owner === 0 ? 1 : -1;
+    const g = b.footprint + 2;
+    const candidates: Array<[number, number]> = [
+      [0, g], [-g, g], [g, g], [-g, 0], [g, 0], [-g, -g], [g, -g], [0, -g],
+    ];
+    const solids = [...solidsOf(state.structures), ...buildingSolids(state.buildings)];
+    let placed = 0;
+    for (const [dx, dy] of candidates) {
+      if (placed >= spawnCount) break;
+      const x = b.x + dx;
+      const y = b.y + dir * dy;
+      if (!isWalkable(x, y, open, solids)) continue;
+      counter.n += 1;
+      const id = `t${counter.n}`;
+      state.troops.push({
+        id, kind: "troop", owner: b.owner, cardId: tdef.id, x, y,
+        hp: tdef.hp, maxHp: tdef.hp, damage: tdef.damage, range: tdef.range,
+        speed: tdef.speed, sight: tdef.sight, interval: tdef.attackIntervalTicks,
+        cooldownUntil: state.tick, targetId: null, moveType: tdef.moveType,
+        hitsAir: tdef.hitsAir, hitsGround: tdef.hitsGround,
+        structPriority: tdef.structPriority, splashRadius: tdef.splashRadius,
+        projectileTicks: tdef.projectileTicks, slowPct: tdef.slowPct,
+        slowDurationTicks: tdef.slowDurationTicks, slowUntil: 0, activeSlowPct: 0,
+        buffUntil: 0, buffPct: 0, hasteUntil: 0, hastePct: 0, stunUntil: 0,
+        shieldHp: 0, shieldUntil: 0, reflectUntil: 0, reflectFracNumer: 0,
+        reflectFracDenom: 1, guardUntil: 0, guardPct: 0, armor: 0, moveCarry: 0,
+        spawnedBy: b.id,
+      });
+      state.events.push({ type: "unit_spawned", tick: state.tick, buildingId: b.id, troopId: id, x, y });
+      placed += 1;
+    }
+    if (placed === 0) state.events.push({ type: "spawn_skipped", tick: state.tick, buildingId: b.id, reason: "blocked" });
+  }
   const deadTroops = state.troops.filter((t) => t.hp <= 0);
   state.troops = state.troops.filter((t) => t.hp > 0);
   for (const d of deadTroops) state.events.push({ type: "death", tick: state.tick, entityId: d.id, owner: d.owner });
@@ -2303,7 +2404,7 @@ function advanceOneTick(state: CombatState, due: CombatCommand[], counter: { n: 
 export function stateHash(state: CombatState): string {
   return createHash("sha256")
     .update(
-      `combat:${COMBAT_RULESET_VERSION}:${stableStringify({
+      `combat:${state.ruleset}:${stableStringify({
         tick: state.tick,
         phase: state.phase,
         energy: state.energy,
@@ -2463,6 +2564,6 @@ export function combatRulesetSummary() {
       buff: "override on recast, fully reverts on expiry, troops only",
     },
     deferred: [],
-    compatibility: "v14 changes only footprint-detour corner ties for P1 (owner-relative y order, mirror of P0); P0 movement and all untied detours are identical to v13. v13 changes only Chaos zone interpretation (ranked mirror closure): v12 and v13 replay identically for schedules whose Ember/Rift Shift zones are already mirror-invariant, otherwise v12 applied raw absolute zones. Chaos ruleset v1 schedules and their hashes are unchanged. v8 adds building cards, state.buildings (hashed) and building events; decks without buildings simulate as in v7 apart from the version in the hash domain; v7 configs are rejected by validation. v7 differs from v6 only in commander actives (command-driven, energy-costed) and ability events; v6 configs are rejected by validation. v6 configs differ from v5 (decks require a commander card; commanders spawn only by deploy; ids c<player>-<n>); v5 configs are rejected by validation. No persisted replays of earlier versions exist (pre-release, headless fixtures only)",
+    compatibility: "v15 adds the Chog Burrow spawner building (chog_burrow, building card) and its Burrow Scrapper unit (burrow_scrapper, spawned only, never deckable), unit_spawned/spawn_skipped events, and spawner fields on building entities; v14 configs replay identically (hash domain uses the config's ruleset, new fields absent on non-spawner entities) and v14 decks containing v15-only cards are rejected. v14 changes only footprint-detour corner ties for P1 (owner-relative y order, mirror of P0); P0 movement and all untied detours are identical to v13. v13 changes only Chaos zone interpretation (ranked mirror closure): v12 and v13 replay identically for schedules whose Ember/Rift Shift zones are already mirror-invariant, otherwise v12 applied raw absolute zones. Chaos ruleset v1 schedules and their hashes are unchanged. v8 adds building cards, state.buildings (hashed) and building events; decks without buildings simulate as in v7 apart from the version in the hash domain; v7 configs are rejected by validation. v7 differs from v6 only in commander actives (command-driven, energy-costed) and ability events; v6 configs are rejected by validation. v6 configs differ from v5 (decks require a commander card; commanders spawn only by deploy; ids c<player>-<n>); v5 configs are rejected by validation. No persisted replays of earlier versions exist (pre-release, headless fixtures only)",
   };
 }

@@ -103,7 +103,7 @@ export interface LobbyMessage {
   locked: boolean;
   /** Ready flags only. Opponent deck and commander are never exposed. */
   players: Array<{ username: string; ready: boolean }>;
-  /** The 18 ordinary (non-commander) cards. */
+  /** The ordinary (non-commander, deckable) cards. */
   catalog: CardInfo[];
   /** Suggested loadouts, convenience only. */
   presets: Record<string, { cards: string[]; commanderClass: string }>;
@@ -196,6 +196,9 @@ export interface BuildingView {
   maxHp: number;
   footprint: number;
   expiresAt: number;
+  /** Spawner buildings only: next due wave tick and waves remaining. */
+  nextSpawnAt?: number;
+  spawnsLeft?: number;
 }
 export interface AbilityView {
   abilityId: string;

@@ -157,9 +157,13 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover }:
             const x = sx(b.x);
             const y = sy(b.y);
             g.fillStyle(col(b.owner), 0.6).fillRect(x - r, y - r, r * 2, r * 2);
-            g.lineStyle(2, b.cardId === "rift_sentry" ? 0xfbbf24 : 0xd1d5db, 1).strokeRect(x - r, y - r, r * 2, r * 2);
+            g.lineStyle(2, b.cardId === "rift_sentry" ? 0xfbbf24 : b.cardId === "chog_burrow" ? 0xa78bfa : 0xd1d5db, 1).strokeRect(x - r, y - r, r * 2, r * 2);
             hpBar(x, y - r - 6, r * 2, b.hp, b.maxHp);
-            label(b.id, b.cardId === "rift_sentry" ? "SEN" : "TOT", x, y);
+            label(b.id, b.cardId === "rift_sentry" ? "SEN" : b.cardId === "chog_burrow" ? "BUR" : "TOT", x, y);
+            if (b.nextSpawnAt !== undefined && b.spawnsLeft && b.spawnsLeft > 0) {
+              const frac = 1 - Math.max(0, Math.min(1, (b.nextSpawnAt - frame.tick) / 50));
+              g.lineStyle(2, 0xa78bfa, 0.9).beginPath().arc(x, y - r - 10, 4, -Math.PI / 2, -Math.PI / 2 + frac * Math.PI * 2).strokePath();
+            }
           }
           for (const i of frame.impacts) {
             const r = (start.catalog[i.cardId]?.radius ?? 6) * S;

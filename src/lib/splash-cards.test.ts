@@ -10,7 +10,7 @@ const M = TROOP_CARDS_V1.ember_mauler!;
 
 describe("B2.7c2 Ember Mauler registration and deck economy", () => {
   it("is a versioned ground melee shockwave troop, distinct from Sparkcaster", () => {
-    expect(COMBAT_RULESET_VERSION).toBe("v14");
+    expect(COMBAT_RULESET_VERSION).toBe("v15");
     expect([M.cost, M.count, M.hp, M.damage, M.range, M.speed, M.sight, M.attackIntervalTicks, M.moveType, M.hitsAir, M.hitsGround, M.shockwaveRadius]).toEqual([4, 1, 220, 24, 2, 1, 22, 12, "ground", false, true, 4]);
     // No projectile and no target-centred splash: the shockwave is centred on the Mauler.
     expect([M.projectileTicks, M.splashRadius, M.structPriority, M.targetPriority]).toEqual([0, 0, false, undefined]);
@@ -18,7 +18,7 @@ describe("B2.7c2 Ember Mauler registration and deck economy", () => {
     expect(spark.projectileTicks).toBeGreaterThan(0);
     expect(spark.hitsAir).toBe(true);
     expect(M.damage / M.attackIntervalTicks).toBeLessThan(TROOP_CARDS_V1.chog_guardian!.damage / TROOP_CARDS_V1.chog_guardian!.attackIntervalTicks);
-    expect(Object.keys(CARDS_V1)).toHaveLength(18);
+    expect(Object.keys(CARDS_V1)).toHaveLength(19);
     expect(combatRulesetSummary().troopRoles.ember_mauler).toMatch(/radius 4/);
   });
 

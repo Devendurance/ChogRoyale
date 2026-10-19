@@ -8,7 +8,7 @@ import { smartMove } from "@/lib/smart-bot";
 const live = () => ({ scout: COMMANDER_COMBAT_PROFILE_V1.scout.cost, cost: TROOP_CARDS_V1.choglings!.cost, hp: TROOP_CARDS_V1.choglings!.hp });
 
 describe("B2.7c5 balance calibration harness", () => {
-  it("applies each candidate only inside its scope and restores v14 values", () => {
+  it("applies each candidate only inside its scope and restores live values", () => {
     const before = live();
     expect(before).toEqual({ scout: 4, cost: 2, hp: 60 });
     expect(withBalanceCandidate("scoutCost5", live)).toEqual({ ...before, scout: 5 });
