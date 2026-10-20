@@ -63,3 +63,7 @@ Durable facts, conventions, and gotchas that should survive across sessions.
 - @colyseus/ws-transport imports `express` statically despite listing it as optional; express 5.2.1 is a direct dep.
 - `npm run battle:server` takes about 20s to start (Privy server-auth import graph). Killing the npm shell can leave the tsx child listening on 2567.
 - npm installs need `--legacy-peer-deps` because of the pre-existing @types/node ^20 vs vitest peer conflict.
+
+## Sprite kit inventory
+
+- v001 external kit uses current runtime tables, including Burrow Scrapper, Chog Burrow and Rift Mortar. Keep 28 primary entries, 25 card derivatives and 6 auxiliary VFX primitives mapped to 26 mechanics as separate counts. Commander class templates are authored interpretations, never exact NFT artwork. Static export validation does not establish runtime or production approval.

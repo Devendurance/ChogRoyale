@@ -125,3 +125,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 - Battle identity comes only from a server-verified Privy token in the matchmaking Authorization header. Never put tokens in URLs, room options, logs or replicated state. Seats, seeds, decks and Chaos are server-chosen; clients send intents only.
 - The dev battle alpha writes nothing to the database. Settlement, legacy and leaderboard updates belong to later B3 slices.
+
+## SPRITE KIT INVENTORY
+
+- Derive asset scope from current implemented code, including spawned nondeckable units. Count primary entries, card-art derivatives and auxiliary VFX separately, and distinguish commander class templates from exact NFT artwork.

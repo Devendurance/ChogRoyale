@@ -60,3 +60,8 @@ Last updated: 2026-10-19
 - Human E2E at `/dev/onboarding` still unverified (Privy login, wallet sync, claim flow).
 - Public-gateway throttling returns if ingestion is ever re-run hard; use single-stream path.
 - `commanders/[tokenId]` for 1969 returns pending-404 style response only if metadata missing; all resolved now, but handler behavior unchanged.
+
+## Latest asset checkpoint (2026-10-20)
+
+- Doing: external static gameplay sprite kit v001 at `C:/Users/USER/Documents/ChogRoyale-Assets/gameplay-sprite-kit/v001/`. Done: 28 primary entries, 25 cards, 6 VFX primitives for 26 mechanics, five unchanged NFT originals, 121 validated RGBA exports, gallery/contact sheet/battle scene. Status: 2 READY_STATIC, 26 PROVISIONAL, 0 MISSING.
+- Next: review `gallery.html`, `REPORT.md` and `REMAINING-WORK.md`, then wire a static Phaser prototype. No runtime validation or production approval, atlas or new animation. No 3D, Tripo, gameplay or DB work. Earlier frozen asset experiments remain preserved.
