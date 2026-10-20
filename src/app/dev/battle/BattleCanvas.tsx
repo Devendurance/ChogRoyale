@@ -53,6 +53,8 @@ interface Props {
   mapRef: React.RefObject<BoardMapper | null>;
   onBoardTap: (at: ArenaPoint) => void;
   onBoardHover: (at: ArenaPoint | null) => void;
+  /** Optional overrides for the host div (e.g. HUD sizes by height). */
+  hostStyle?: React.CSSProperties;
 }
 
 const hashPhase = (id: string) => {
@@ -61,7 +63,7 @@ const hashPhase = (id: string) => {
   return h / 1000;
 };
 
-export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover }: Props) {
+export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, hostStyle }: Props) {
   const host = useRef<HTMLDivElement>(null);
   const press = useRef<{ id: number; x: number; y: number } | null>(null);
 
@@ -706,7 +708,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover }:
     <div
       ref={host}
       data-testid="battle-board"
-      style={{ width: "100%", maxWidth: 500, aspectRatio: "100 / 160", touchAction: "none" }}
+      style={{ width: "100%", maxWidth: 500, aspectRatio: "100 / 160", touchAction: "none", ...hostStyle }}
       onPointerDown={(e) => {
         if (e.button === 0) press.current = { id: e.pointerId, x: e.clientX, y: e.clientY };
       }}

@@ -15,6 +15,9 @@ import {
   type LobbyMessage,
 } from "@/lib/battle-protocol";
 import { chooseInitialLoadout, LOADOUT_SCHEMA_VERSION, type SavedLoadout } from "@/lib/loadout";
+import { Portrait } from "./portrait";
+import { useSpriteManifest } from "./use-sprite-manifest";
+import { portraitForCard, portraitForCommanderClass } from "./sprite-registry";
 
 interface NftCandidate {
   tokenId: string;
@@ -69,6 +72,7 @@ export default function LoadoutPicker(props: {
 }) {
   const { lobby, mine } = props;
   const ordinary = lobby.catalog;
+  const kit = useSpriteManifest();
   // Convenience only: the last confirmed loadout is remembered locally and is
   // used as the draft when the account has no saved deck. The server copy wins.
   const [saved] = useState(() => (typeof window === "undefined" ? null : loadSaved()));
@@ -238,12 +242,15 @@ export default function LoadoutPicker(props: {
         {ordinary.map((c) => {
           const on = cards.includes(c.id);
           return (
-            <button key={c.id} onClick={() => toggle(c.id)} title={c.description} style={{ padding: 4, fontSize: 11, textAlign: "left", border: on ? "2px solid #fbbf24" : "1px solid #4b5563" }}>
-              <div>
-                {c.name} · {c.cost}e {c.kind}
-                {c.air ? " (air)" : ""}
-              </div>
-              <div style={{ fontSize: 10, color: "#9ca3af" }}>{c.description}</div>
+            <button key={c.id} onClick={() => toggle(c.id)} title={c.description} style={{ display: "flex", gap: 6, alignItems: "flex-start", padding: 4, fontSize: 11, textAlign: "left", border: on ? "2px solid #fbbf24" : "1px solid #4b5563" }}>
+              <Portrait src={kit ? portraitForCard(kit, c.id) : null} name={c.name} style={{ width: 34, height: 34, borderRadius: 4, flex: "none" }} />
+              <span>
+                <div>
+                  {c.name} · {c.cost}e {c.kind}
+                  {c.air ? " (air)" : ""}
+                </div>
+                <div style={{ fontSize: 10, color: "#9ca3af" }}>{c.description}</div>
+              </span>
             </button>
           );
         })}
@@ -255,7 +262,8 @@ export default function LoadoutPicker(props: {
       <div style={{ fontSize: 13 }}>Commander</div>
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
         {COMMANDER_CLASS_CHOICES.map((cls) => (
-          <button key={cls} onClick={() => (markDirty(), setCommander({ kind: "free", class: cls }))} style={{ fontSize: 11, border: commander.kind === "free" && commander.class === cls ? "2px solid #fbbf24" : "1px solid #4b5563" }}>
+          <button key={cls} onClick={() => (markDirty(), setCommander({ kind: "free", class: cls }))} style={{ display: "flex", gap: 4, alignItems: "center", padding: 3, fontSize: 11, border: commander.kind === "free" && commander.class === cls ? "2px solid #fbbf24" : "1px solid #4b5563" }}>
+            <Portrait src={kit ? portraitForCommanderClass(kit, cls) : null} name={cls} style={{ width: 30, height: 30, borderRadius: 4 }} />
             Free {cls}
           </button>
         ))}

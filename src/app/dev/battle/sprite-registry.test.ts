@@ -11,6 +11,8 @@ import {
   displayScale,
   effectForAbility,
   effectForRequirement,
+  portraitForCard,
+  portraitForCommanderClass,
   resolveCommanderAsset,
   resolveEntityAsset,
   type SpriteManifest,
@@ -56,12 +58,33 @@ describe("sprite registry", () => {
     expect(resolveCommanderAsset(manifest, "91250")).toBeNull();
   });
 
-  it("excludes card art derivatives and NFT portraits", () => {
+  it("excludes exact NFT portraits", () => {
     for (const a of manifest.assets) {
-      expect(a.category).not.toBe("card_art_derivative");
       expect(a.category).not.toBe("exact_nft_portrait");
+      expect(a.stableAssetId.startsWith("nft-portrait:")).toBe(false);
     }
-    expect(manifest.assets).toHaveLength(34);
+    expect(manifest.assets).toHaveLength(59);
+  });
+
+  it("resolves a portrait for every ordinary card and commander class", () => {
+    const ordinary = [
+      "choglings", "chaos_archer", "boulderback", "frostshell", "rift_runner", "sparkcaster",
+      "chog_guardian", "hexwing", "rift_sprites", "gale_netter", "riftbreaker", "ember_mauler",
+      "rift_sentry", "decoy_totem", "chog_burrow", "rift_mortar",
+      "chaos_bolt", "rally_horn", "chaos_comet", "rift_snare",
+    ];
+    for (const id of ordinary) expect(portraitForCard(manifest, id), id).toMatch(/^\/assets\/chog-kit\/v001\/cards\//);
+    for (const cls of ["bulwark", "reaver", "deadeye", "scout", "warden"]) {
+      expect(portraitForCommanderClass(manifest, cls), cls).toMatch(/commander_/);
+      expect(portraitForCard(manifest, `cmdr:free-${cls}`), cls).toMatch(/commander_/);
+    }
+  });
+
+  it("never returns an NFT portrait or resolves unknown ids", () => {
+    expect(portraitForCard(manifest, "not_a_card")).toBeNull();
+    expect(portraitForCard(manifest, "cmdr:nft-91250")).toBeNull();
+    expect(portraitForCommanderClass(manifest, "not_a_class")).toBeNull();
+    for (const a of manifest.assets) expect(portraitForCard(manifest, a.stableAssetId)).toBeNull();
   });
 
   it("imports files that exist and match their recorded sha256", () => {

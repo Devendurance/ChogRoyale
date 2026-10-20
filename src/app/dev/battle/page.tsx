@@ -3,7 +3,6 @@
 // B3.1 dev battle surface. Real Privy login, authoritative Colyseus server,
 // Phaser view. Gated to development unless explicitly enabled.
 
-import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PrivyProvider, usePrivy, useLogin } from "@privy-io/react-auth";
 import { Client, type Room } from "@colyseus/sdk";
@@ -12,7 +11,6 @@ import {
   BATTLE_ROOM,
   type AckMessage,
   type BattleFrame,
-  type CardInfo,
   type CommanderChoice,
   type EndMessage,
   type LobbyMessage,
@@ -25,8 +23,7 @@ import {
 import { aimPoint, endGesture, moveGesture, placementHint, startGesture, type ArenaPoint, type Gesture } from "@/lib/battle-input";
 import type { BoardMapper, CanvasFeed } from "./BattleCanvas";
 import LoadoutPicker from "./LoadoutPicker";
-
-const BattleCanvas = dynamic(() => import("./BattleCanvas"), { ssr: false });
+import BattleHud from "./BattleHud";
 const APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID ?? "";
 const SERVER = process.env.NEXT_PUBLIC_BATTLE_SERVER_URL ?? "http://127.0.0.1:2567";
 const ENABLED = process.env.NODE_ENV !== "production" || process.env.NEXT_PUBLIC_ENABLE_DEV_BATTLE === "1";
@@ -379,10 +376,7 @@ function BattlePanel() {
   if (!ready) return <p>Loading Privy…</p>;
   if (!authenticated) return <button onClick={() => login()}>Log in with Privy</button>;
 
-  const card = (id: string): CardInfo | undefined => start?.catalog[id];
-  const secs = (ticks: number) => `${Math.floor(ticks / 600)}:${String(Math.floor((ticks % 600) / 10)).padStart(2, "0")}`;
   const me = start?.seat ?? 0;
-  const towers = (owner: number) => frame?.structures.filter((s) => s.owner === owner).map((s) => `${s.kind === "core" ? "Core" : "T"} ${s.alive ? s.hp : "x"}`).join(" · ");
 
   return (
     <div style={{ display: "grid", gap: 10, maxWidth: 520 }}>
@@ -454,147 +448,33 @@ function BattlePanel() {
       )}
 
       {start && (stage === "active" || stage === "reconnecting" || stage === "ended" || stage === "aborted") && (
-        <section style={{ display: "grid", gap: 8 }}>
-          {presence && (
-            <div style={{ fontSize: 12, color: presence.opponentConnected ? "#86efac" : "#fbbf24" }}>
-              {presence.opponentConnected
-                ? "Opponent reconnected"
-                : `Opponent disconnected, ${Math.max(0, Math.ceil(((presence.reconnectDeadlineAt ?? 0) - now) / 1000))}s to reconnect`}
-            </div>
-          )}
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
-            <span>vs {start.opponent}</span>
-            <span>Patron: {start.patron.name ?? `CHOG #${start.patron.tokenId}`} ({start.patron.tier ?? "Unranked"}, {start.patron.theme})</span>
-            <span>
-              {frame ? `${frame.phase === "overtime" ? "OT " : ""}${secs(frame.clockTicks)}` : "--"} · crowns you {frame?.crowns[me] ?? 0} - {frame?.crowns[1 - me] ?? 0} them
-            </span>
-          </div>
-          <div style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 11 }}>
-            {start.commander.imageOriginal && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={start.commander.imageOriginal.startsWith("ipfs://") ? `https://ipfs.filebase.io/ipfs/${start.commander.imageOriginal.slice(7)}` : start.commander.imageOriginal} alt={start.commander.name} width={28} height={28} />
-            )}
-            <span>
-              your commander: {start.commander.name} ({start.commander.class} · {start.commander.variant} · {start.commander.prestige})
-              {start.commander.kind === "nft" ? ` · token ${start.commander.tokenId}` : " · free"}
-            </span>
-          </div>
-          <div style={{ fontSize: 11 }}>them: {towers(1 - me)}</div>
-          <div style={{ position: "relative" }}>
-            <BattleCanvas feed={feed} mapRef={mapRef} onBoardTap={onBoardTap} onBoardHover={onBoardHover} />
-            {frame?.chaos.map((c) => (
-              <div key={c.id} style={{ position: "absolute", top: 4, left: 4, fontSize: 12, background: "#000a", padding: "2px 6px" }}>
-                {c.state === "warning" ? `Chaos incoming: ${c.name} in ${Math.max(0, Math.ceil((c.activationTick - frame.tick) / 10))}s` : `${c.name} active`}
-              </div>
-            ))}
-            {(end || abort) && (
-              <div style={{ position: "absolute", inset: 0, background: "#000c", display: "grid", placeContent: "center", textAlign: "center", gap: 6 }}>
-                {end ? (
-                  <>
-                    <div style={{ fontSize: 28 }}>{end.result === "win" ? "Victory" : end.result === "loss" ? "Defeat" : "Draw"}</div>
-                    <div>
-                      crowns {end.crowns[me]} - {end.crowns[1 - me]} · {end.reason} · {secs(end.ticks)}
-                    </div>
-                    <div style={{ fontSize: 11 }}>
-                      server replay {end.replayIdentical ? "identical" : "MISMATCH"} · {end.commands} commands · {end.stateHash.slice(0, 12)}
-                    </div>
-                    <div style={{ fontSize: 11 }}>
-                      {settlement
-                        ? settlement.status === "settled" || settlement.status === "already-settled"
-                          ? `Result recorded (${settlement.status})${settlement.matchId ? ` · ${settlement.matchId.slice(0, 8)}` : ""}`
-                          : settlement.status === "pending"
-                            ? "Result pending, retrying in background"
-                            : settlement.status === "disabled"
-                              ? "Settlement disabled on this server"
-                              : "Result refused by settlement verification"
-                        : "Settlement status pending…"}
-                    </div>
-                  </>
-                ) : (
-                  <div>{abort}</div>
-                )}
-              </div>
-            )}
-          </div>
-          <div style={{ fontSize: 11 }}>you: {towers(me)}</div>
-          {frame && (
-            <>
-              <div>
-                <div style={{ height: 14, background: "#1f2937", position: "relative" }}>
-                  <div style={{ width: `${((frame.energy + frame.energyProgress) / 10) * 100}%`, height: "100%", background: "#d946ef" }} />
-                </div>
-                <div style={{ fontSize: 12 }}>
-                  energy {frame.energy}/10 · regen x{frame.regenMult.toFixed(2)} · next: {card(frame.next ?? "")?.name ?? "-"}
-                </div>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6 }}>
-                {frame.hand.map((id) => {
-                  const c = card(id);
-                  const afford = (c?.cost ?? 99) <= frame.energy;
-                  return (
-                    <button
-                      key={id}
-                      data-card={id}
-                      aria-pressed={selected === id}
-                      onPointerDown={onCardPointerDown(id)}
-                      onPointerMove={onCardPointerMove}
-                      onPointerUp={onCardPointerEnd(false)}
-                      onPointerCancel={onCardPointerEnd(true)}
-                      onLostPointerCapture={onCardPointerEnd(true)}
-                      onContextMenu={(e) => e.preventDefault()}
-                      onClick={() => performance.now() >= suppressClickUntil.current && setSelected(selected === id ? null : id)}
-                      style={{
-                        padding: 6,
-                        border: selected === id ? "2px solid #fbbf24" : "1px solid #4b5563",
-                        opacity: dragging === id ? 0.3 : afford ? 1 : 0.5,
-                        fontSize: 12,
-                        touchAction: "none",
-                        userSelect: "none",
-                        WebkitUserSelect: "none",
-                        WebkitTouchCallout: "none",
-                      }}
-                    >
-                      <div>{c?.name ?? id}</div>
-                      <div>
-                        {c?.cost}e {c?.kind}
-                        {c?.air ? " (air)" : ""}
-                      </div>
-                      {!afford && <div style={{ fontSize: 10, color: "#fca5a5" }}>need {(c?.cost ?? 0) - frame.energy}</div>}
-                    </button>
-                  );
-                })}
-              </div>
-              {dragging && (
-                <div
-                  ref={(el) => {
-                    preview.current = el;
-                    placePreview(el, lastAim.current.x, lastAim.current.y);
-                  }}
-                  style={{ position: "fixed", left: 0, top: 0, pointerEvents: "none", zIndex: 50, padding: "4px 8px", fontSize: 12, background: "#111827e6", border: "2px solid #fbbf24", borderRadius: 4 }}>
-                  {card(dragging)?.name} {card(dragging)?.cost}e
-                </div>
-              )}
-              <div style={{ fontSize: 12 }} data-testid="placement-hint">
-                {hint ?? (selected ? `Tap the board to play ${card(selected)?.name}, or drag a card onto it.` : "Drag a card onto the board, or select it then tap the board.")}
-              </div>
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                {frame.abilities.length === 0 && <span style={{ fontSize: 12 }}>Commander ability: deploy your commander first.</span>}
-                {frame.abilities.map((a) => (
-                  <button key={a.abilityId} disabled={!a.ready} title={a.blockedBy ?? "ready"} onClick={() => send({ type: "ability", abilityId: a.abilityId }, `ability ${a.abilityId}`)} style={{ padding: 6, fontSize: 12 }}>
-                    {a.abilityId} ({a.cost}e) {a.ready ? (a.blockedBy ? `· ${a.blockedBy}` : "· READY") : `· ${Math.ceil((a.readyAt - frame.tick) / 10)}s`}
-                  </button>
-                ))}
-              </div>
-              <ul style={{ fontSize: 11, margin: 0 }}>
-                {acks.map((a) => (
-                  <li key={a.cid + a.tick} style={{ color: a.ok ? "#86efac" : "#fca5a5" }}>
-                    t{a.tick} {a.label} {a.ok ? "accepted" : `rejected: ${a.reason}`}
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
-        </section>
+        <BattleHud
+          start={start}
+          frame={frame}
+          me={me}
+          end={end}
+          abort={abort}
+          settlement={settlement}
+          presence={presence}
+          now={now}
+          acks={acks}
+          selected={selected}
+          dragging={dragging}
+          hint={hint}
+          feed={feed}
+          mapRef={mapRef}
+          onBoardTap={onBoardTap}
+          onBoardHover={onBoardHover}
+          onCardPointerDown={onCardPointerDown}
+          onCardPointerMove={onCardPointerMove}
+          onCardPointerEnd={onCardPointerEnd}
+          suppressClickUntil={suppressClickUntil}
+          onSelectCard={setSelected}
+          send={send}
+          previewRef={preview}
+          lastAim={lastAim}
+          placePreview={placePreview}
+        />
       )}
       {stage === "closed" && <div>Disconnected from the battle server.</div>}
       {stage === "failed" && <div>Could not restore the match.</div>}
