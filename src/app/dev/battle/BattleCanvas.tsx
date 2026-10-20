@@ -21,17 +21,17 @@ import {
 } from "./sprite-registry";
 import {
   ARENA_URL,
-  attributeProjectile,
   defenderPose,
+  fireFresh,
+  fireKey,
   layerVisible,
   mountRoleFor,
   newDefenderState,
   placementFor,
   updateDefender,
-  weaponArena,
+  weaponScreen,
   type ArenaManifest,
   type DefenderState,
-  type WeaponCandidate,
 } from "./arena-registry";
 
 const S = 5; // pixels per arena unit
@@ -160,7 +160,19 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
       const envLayers = new Map<string, import("phaser").GameObjects.Image>();
       const mountPool = new Map<string, MountEnt>();
       const defenderStates = new Map<string, DefenderState>();
-      const projAttr = new Map<string, string | null>();
+      // Instant tower-fire feedback: muzzle flash at the measured weapon
+      // anchor plus a tracer to the authoritative target point, ~120 ms.
+      interface TowerFx {
+        /** Flash origin in screen px (weapon anchor of the drawn pose). */
+        fx: number;
+        fy: number;
+        /** Authoritative target point, arena coords (drawn via sx/sy). */
+        tx: number;
+        ty: number;
+        born: number;
+        dur: number;
+      }
+      const towerFx: TowerFx[] = [];
       let lastActiveAt = -1;
 
       class Arena extends Phaser.Scene {
@@ -447,30 +459,14 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             }
           };
 
-          // Projectile attribution for defender poses: a projectile is
-          // credited to the same-owner structure whose authored weapon
-          // origin sits within 1.5 arena units of its first-seen position.
-          const firedThisFrame = new Set<string>();
-          if (arenaOk && arena) {
-            for (const pr of frame.projectiles) {
-              if (projAttr.has(pr.id)) continue;
-              const cands: WeaponCandidate[] = [];
-              for (const s of frame.structures) {
-                if (!s.alive) continue;
-                const p = placementFor(arena, s.kind, s.x, s.y);
-                if (!p) continue;
-                const pose = arena.mounts[p.mountRole]?.poses[`aim-${p.directionRequested}`];
-                if (!pose) continue;
-                const [wx, wy] = weaponArena(p.groundAnchorPixels, pose.weaponAnchorLocalBoardPixels);
-                cands.push({ id: s.id, owner: s.owner, weaponX: wx, weaponY: wy });
-              }
-              const sid = attributeProjectile(pr, cands);
-              projAttr.set(pr.id, sid);
-              if (sid) firedThisFrame.add(sid);
-            }
-            for (const [id] of projAttr) {
-              if (!frame.projectiles.some((p) => p.id === id)) projAttr.delete(id);
-            }
+          // Authoritative tower fire signals for this frame. tower_fired
+          // events are the source of truth for the defender fire pose and
+          // the flash/tracer (first event per structure wins within a frame).
+          const towerFires = new Map<string, { tick: number; x: number; y: number }>();
+          for (const e of frame.events as FrameEvent[]) {
+            if (e.type !== "tower_fired") continue;
+            const sid = String(e.structureId);
+            if (!towerFires.has(sid)) towerFires.set(sid, { tick: Number(e.tick), x: Number(e.x), y: Number(e.y) });
           }
 
           for (const s of frame.structures) {
@@ -500,9 +496,12 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                 mountPool.set(s.id, me);
               }
               me.root.setPosition(x, y).setDepth(y);
+              const fire = towerFires.get(s.id) ?? null;
+              const prevDef = defenderStates.get(s.id) ?? newDefenderState();
+              const accepted = s.alive && fire !== null && fireFresh({ structureId: s.id, tick: fire.tick }, frame.tick) && !prevDef.firedKeys.includes(fireKey({ structureId: s.id, tick: fire.tick }));
               const st = updateDefender(
-                defenderStates.get(s.id) ?? newDefenderState(),
-                { hp: s.hp, fired: firedThisFrame.has(s.id) },
+                prevDef,
+                { hp: s.hp, fire: accepted && fire ? { structureId: s.id, tick: fire.tick } : null },
                 now
               );
               defenderStates.set(s.id, st);
@@ -514,15 +513,27 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                   me.defender.setVisible(true);
                   me.rim.setVisible(true);
                 }
-                const aiming = frame.projectiles.some((p) => projAttr.get(p.id) === s.id);
                 const placement = arena ? placementFor(arena, s.kind, s.x, s.y) : null;
-                const dir = placement?.directionRequested ?? (y > H / 2 ? "north" : "south");
-                let pose = defenderPose(st, aiming, y, now);
+                // Defender art stays upright, so the directional stance is
+                // chosen by screen hemisphere, not the authored placement
+                // direction (which is fixed per P0/P1 side).
+                const dir = y > H / 2 ? "north" : "south";
+                let pose = defenderPose(st, true, y, now, s.alive);
                 // The authored static stance for this board is the directional
                 // aim (placements encode directionRequested), so idle falls
                 // back to the hemisphere aim when that pose exists.
                 if (pose === "idle" && mrole.poses[`aim-${dir}`]) pose = `aim-${dir}`;
+                if (missing.has(`${role}:defender-${pose}`)) pose = mrole.poses[`aim-${dir}`] ? `aim-${dir}` : "idle";
                 me.defender.setTexture(`${role}:defender-${pose}`);
+                // Muzzle flash + instant tracer from the measured weapon
+                // anchor of the firing pose to the authoritative target.
+                if (accepted && fire && placement) {
+                  const poseDef = mrole.poses[pose];
+                  if (poseDef && poseDef.firingAllowed) {
+                    const [wx, wy] = weaponScreen(placement.groundAnchorPixels, poseDef.weaponAnchorLocalBoardPixels, seat);
+                    towerFx.push({ fx: wx, fy: wy, tx: fire.x, ty: fire.y, born: now, dur: 120 });
+                  }
+                }
                 // HP bar from the authored mount rectangle (master px -> board px).
                 const hb = mrole.healthBarLocalBoardRectangle;
                 hpBar(x + (hb[0] + hb[2] / 2) / 2, y + hb[1] / 2, hb[2] / 2, s.hp, s.maxHp);
@@ -809,6 +820,21 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             else if (e.kind === "boom") og.fillStyle(e.color, 0.5).fillCircle(x, y, e.r * S);
             else og.lineStyle(2, e.color, 0.9).lineBetween(x - 5, y - 5, x + 5, y + 5).lineBetween(x - 5, y + 5, x + 5, y - 5);
           }
+          // Tower fire feedback: flash at the weapon anchor plus an instant
+          // tracer to the authoritative target. Fades over ~120 ms; under
+          // reduced motion both hold at constant alpha (no fade animation).
+          for (let i = towerFx.length - 1; i >= 0; i--) {
+            const e = towerFx[i]!;
+            const p = (now - e.born) / e.dur;
+            if (p >= 1) {
+              towerFx.splice(i, 1);
+              continue;
+            }
+            const a = reduced ? 0.9 : 0.9 * (1 - p);
+            og.fillStyle(0xfde047, a).fillCircle(e.fx, e.fy, 7);
+            og.lineStyle(2, 0xfef08a, a).lineBetween(e.fx, e.fy, sx(e.tx), sy(e.ty));
+            og.fillStyle(0xffffff, a).fillCircle(sx(e.tx), sy(e.ty), 3);
+          }
           for (let i = fxImgs.length - 1; i >= 0; i--) {
             const e = fxImgs[i]!;
             const p = (now - e.born) / e.dur;
@@ -866,6 +892,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
       // mounted structure art lands on the authoritative board points.
       if (process.env.NODE_ENV !== "production") {
         (window as unknown as { __battleGame?: import("phaser").Game }).__battleGame = game;
+        (window as unknown as { __towerFx?: unknown[] }).__towerFx = towerFx;
       }
     });
     return () => {

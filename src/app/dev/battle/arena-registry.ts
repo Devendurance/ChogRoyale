@@ -107,6 +107,20 @@ export const anchorScreenOffset = (local: [number, number]): [number, number] =>
 export const weaponArena = (groundAnchor: [number, number], anchorLocal: [number, number]): [number, number] =>
   masterToArena(groundAnchor[0] + anchorLocal[0], groundAnchor[1] + anchorLocal[1]);
 
+// Weapon origin in screen pixels: the structure's seat-mapped ground point
+// plus the local anchor converted straight to screen px. Defender art is
+// upright for both seats, so the offset is never mirrored: master +x maps to
+// screen +x and master +y (down) maps to screen +y (down).
+export const weaponScreen = (
+  groundAnchor: [number, number],
+  anchorLocal: [number, number],
+  seat: Seat
+): [number, number] => {
+  const [gx, gy] = masterToScreen(groundAnchor[0], groundAnchor[1], seat);
+  const [ox, oy] = anchorScreenOffset(anchorLocal);
+  return [gx + ox, gy + oy];
+};
+
 export type StructureKind = "tower" | "core";
 
 export const mountRoleFor = (kind: StructureKind): string => (kind === "core" ? "core-keeper" : "sentinel");
@@ -176,33 +190,59 @@ export interface DefenderState {
   lastHp: number;
   fireUntil: number;
   hitUntil: number;
+  /** Bounded ring of consumed `${structureId}:${tick}` fire keys. */
+  firedKeys: string[];
 }
 
-export const newDefenderState = (): DefenderState => ({ lastHp: -1, fireUntil: 0, hitUntil: 0 });
+export const newDefenderState = (): DefenderState => ({ lastHp: -1, fireUntil: 0, hitUntil: 0, firedKeys: [] });
 
 export const FIRE_MS = 150;
 export const HIT_MS = 200;
+/** A fire event older than frameTick - STALE_TICKS is ignored (reconnect, throttled tabs). */
+export const STALE_TICKS = 2;
+
+/** Authoritative `tower_fired` signal for one structure. */
+export interface TowerFire {
+  structureId: string;
+  tick: number;
+}
+
+export const fireKey = (f: TowerFire): string => `${f.structureId}:${f.tick}`;
+
+/** Stale guard: the event must belong to the current frame window. */
+export const fireFresh = (f: TowerFire, frameTick: number): boolean => f.tick >= frameTick - STALE_TICKS;
 
 // Advance the visual pose state from authoritative signals only: an hp drop
-// shows hit for HIT_MS, a newly attributed projectile shows fire for FIRE_MS.
+// shows hit for HIT_MS, a fresh tower_fired event shows fire for FIRE_MS.
+// Duplicate fire keys are ignored; a new key restarts the timer (no stacking).
 export const updateDefender = (
   s: DefenderState,
-  signal: { hp: number; fired: boolean },
+  signal: { hp: number; fire?: TowerFire | null },
   now: number
 ): DefenderState => {
   const out = { ...s };
   if (out.lastHp >= 0 && signal.hp < out.lastHp) out.hitUntil = now + HIT_MS;
-  if (signal.fired) out.fireUntil = now + FIRE_MS;
+  if (signal.fire) {
+    const k = fireKey(signal.fire);
+    if (!out.firedKeys.includes(k)) {
+      out.firedKeys = [...out.firedKeys, k].slice(-8);
+      out.fireUntil = now + FIRE_MS;
+    }
+  }
   out.lastHp = signal.hp;
   return out;
 };
 
+// Priority: destroyed > hit > fire > aim. The renderer only draws a defender
+// for live structures; "destroyed" maps to the rubble path (no pose art).
 export const defenderPose = (
   s: DefenderState,
   aiming: boolean,
   screenY: number,
-  now: number
+  now: number,
+  alive = true
 ): string => {
+  if (!alive) return "destroyed";
   if (now < s.hitUntil) return "hit";
   if (now < s.fireUntil) return "fire";
   if (aiming) return directionalAim(screenY);

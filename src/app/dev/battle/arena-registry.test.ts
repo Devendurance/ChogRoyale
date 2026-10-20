@@ -9,13 +9,16 @@ import {
   boardPoint,
   defenderPose,
   directionalAim,
+  fireFresh,
   layerVisible,
+  masterToArena,
   masterToScreen,
   mountRoleFor,
   newDefenderState,
   placementFor,
   updateDefender,
   weaponArena,
+  weaponScreen,
   type ArenaManifest,
   type ArenaLayer,
 } from "./arena-registry";
@@ -130,25 +133,116 @@ describe("hemisphere pose selection", () => {
     expect(directionalAim(boardPoint(30, 120, 0)[1])).toBe("aim-south");
     expect(directionalAim(boardPoint(30, 40, 1)[1])).toBe("aim-south");
   });
+
+  it("every structure picks hemisphere art by screen position, not directionRequested", () => {
+    // placements carry a fixed authored direction per P0/P1 side; the renderer
+    // must instead use screen hemisphere so seat 1 keeps defenders upright.
+    for (const p of manifest.placements) {
+      const arena = masterToArena(p.groundAnchorPixels[0], p.groundAnchorPixels[1]);
+      for (const seat of [0, 1] as const) {
+        const screenY = boardPoint(arena[0], arena[1], seat)[1];
+        const hem = screenY > 400 ? "aim-north" : "aim-south";
+        const requested = `aim-${p.directionRequested}`;
+        expect(directionalAim(screenY)).toBe(hem);
+        if (seat === 1 && requested !== hem) {
+          // Seat-1 mirror flips which authored direction is correct.
+          expect(directionalAim(screenY)).not.toBe(requested);
+        }
+      }
+    }
+  });
 });
 
 describe("defender pose state machine", () => {
+  const sid = "s-p0-tower-30";
+
   it("idle -> fire -> aim -> idle", () => {
     let s = newDefenderState();
-    s = updateDefender(s, { hp: 1000, fired: false }, 0);
+    s = updateDefender(s, { hp: 1000 }, 0);
     expect(defenderPose(s, false, 600, 0)).toBe("idle");
-    s = updateDefender(s, { hp: 1000, fired: true }, 10);
+    s = updateDefender(s, { hp: 1000, fire: { structureId: sid, tick: 30 } }, 10);
     expect(defenderPose(s, true, 600, 10)).toBe("fire");
     expect(defenderPose(s, true, 600, 200)).toBe("aim-north");
     expect(defenderPose(s, false, 600, 200)).toBe("idle");
   });
 
+  it("fire pose holds for FIRE_MS then returns to aim", () => {
+    let s = newDefenderState();
+    s = updateDefender(s, { hp: 1000, fire: { structureId: sid, tick: 30 } }, 1000);
+    expect(defenderPose(s, true, 600, 1000)).toBe("fire");
+    expect(defenderPose(s, true, 600, 1149)).toBe("fire");
+    expect(defenderPose(s, true, 600, 1150)).toBe("aim-north");
+  });
+
   it("hit shows on hp drop and beats aim", () => {
     let s = newDefenderState();
-    s = updateDefender(s, { hp: 1000, fired: false }, 0);
-    s = updateDefender(s, { hp: 900, fired: false }, 50);
+    s = updateDefender(s, { hp: 1000 }, 0);
+    s = updateDefender(s, { hp: 900 }, 50);
     expect(defenderPose(s, true, 600, 60)).toBe("hit");
     expect(defenderPose(s, true, 600, 300)).toBe("aim-north");
+  });
+
+  it("hit overrides fire", () => {
+    let s = newDefenderState();
+    s = updateDefender(s, { hp: 1000, fire: { structureId: sid, tick: 30 } }, 50);
+    s = updateDefender(s, { hp: 800 }, 60);
+    expect(defenderPose(s, true, 600, 60)).toBe("hit");
+    expect(defenderPose(s, true, 600, 260)).toBe("aim-north");
+  });
+
+  it("destroyed overrides hit and fire", () => {
+    let s = newDefenderState();
+    s = updateDefender(s, { hp: 1000, fire: { structureId: sid, tick: 30 } }, 50);
+    s = updateDefender(s, { hp: 0 }, 60);
+    expect(defenderPose(s, true, 600, 60, false)).toBe("destroyed");
+    expect(defenderPose(s, true, 600, 60, true)).toBe("hit");
+  });
+
+  it("stale fire events are ignored via fireFresh", () => {
+    const ev = { structureId: sid, tick: 28 };
+    expect(fireFresh(ev, 30)).toBe(true);
+    expect(fireFresh(ev, 31)).toBe(false);
+    expect(fireFresh(ev, 100)).toBe(false);
+  });
+
+  it("duplicate fire keys do not restart the timer; new keys do", () => {
+    let s = newDefenderState();
+    s = updateDefender(s, { hp: 1000, fire: { structureId: sid, tick: 30 } }, 0);
+    expect(s.fireUntil).toBe(150);
+    // Same event re-presented (e.g. repeated frame): no restart.
+    s = updateDefender(s, { hp: 1000, fire: { structureId: sid, tick: 30 } }, 100);
+    expect(s.fireUntil).toBe(150);
+    // A later real fire restarts without stacking.
+    s = updateDefender(s, { hp: 1000, fire: { structureId: sid, tick: 60 } }, 140);
+    expect(s.fireUntil).toBe(290);
+  });
+
+  it("weapon anchor sits above the ground point in screen px for both seats", () => {
+    // Defender art is upright for both seats, so the weapon tip must be above
+    // the mapped ground point with the same offset magnitude in seat 0 and
+    // seat 1. Sentinel = tower, keeper = core.
+    const sentinel = manifest.mounts["sentinel"];
+    const keeper = manifest.mounts["core-keeper"];
+    for (const seat of [0, 1] as const) {
+      for (const p of manifest.placements) {
+        const role = p.mountRole === "core-keeper" ? keeper : sentinel;
+        const pose = role.poses["fire"] ?? role.poses[`aim-${p.directionRequested}`];
+        expect(pose).toBeTruthy();
+        const [ax, ay] = weaponScreen(p.groundAnchorPixels, pose.weaponAnchorLocalBoardPixels, seat);
+        const [gx, gy] = masterToScreen(p.groundAnchorPixels[0], p.groundAnchorPixels[1], seat);
+        // Above the ground point (screen -y) and within the mount silhouette.
+        expect(ay).toBeLessThan(gy);
+        expect(Math.hypot(ax - gx, ay - gy)).toBeLessThan(60);
+        expect(Math.abs(ax - gx)).toBeLessThan(30);
+        // Same upright offset magnitude in both seats.
+        const [ax0, ay0] = weaponScreen(p.groundAnchorPixels, pose.weaponAnchorLocalBoardPixels, 0);
+        const [gx0, gy0] = masterToScreen(p.groundAnchorPixels[0], p.groundAnchorPixels[1], 0);
+        const [ax1, ay1] = weaponScreen(p.groundAnchorPixels, pose.weaponAnchorLocalBoardPixels, 1);
+        const [gx1, gy1] = masterToScreen(p.groundAnchorPixels[0], p.groundAnchorPixels[1], 1);
+        expect(ax1 - gx1).toBeCloseTo(ax0 - gx0, 6);
+        expect(ay1 - gy1).toBeCloseTo(ay0 - gy0, 6);
+      }
+    }
   });
 });
 

@@ -14,8 +14,11 @@ import {
   TROOP_CARDS_V1,
   COMBAT_TIMELINE_V1,
   COMBAT_RULESET_VERSION,
+  STRUCTURE_V1,
   type CombatConfig,
   type DeployCommand,
+  type PlayerIndex,
+  type TroopEntity,
 } from "@/lib/combat";
 import { freeCommanderTemplates, type CommanderClass } from "@/lib/commanders";
 import { derivePatronConfig } from "@/lib/patrons";
@@ -639,5 +642,99 @@ describe("b2.4 match rules", () => {
     const summary = combatRulesetSummary();
     expect(summary.version).toBe("v16");
     expect(summary.timeline.overtimeTicks).toBe(1200);
+  });
+});
+
+describe("tower_fired events", () => {
+  const fakeTroop = (id: string, owner: PlayerIndex, x: number, y: number, hp = 200): TroopEntity => ({
+    id, kind: "troop", owner, cardId: "choglings", x, y, hp, maxHp: hp, damage: 0, range: 2, speed: 0, sight: 0,
+    interval: 99, cooldownUntil: 0, targetId: null, moveType: "ground", hitsAir: false, hitsGround: true,
+    structPriority: false, splashRadius: 0, projectileTicks: 0, slowPct: 0, slowDurationTicks: 0,
+    slowUntil: 0, activeSlowPct: 0, buffUntil: 0, buffPct: 0, hasteUntil: 0, hastePct: 0, stunUntil: 99999,
+    shieldHp: 0, shieldUntil: 0, reflectUntil: 0, reflectFracNumer: 0, reflectFracDenom: 1,
+    guardUntil: 0, guardPct: 0, armor: 0, moveCarry: 0,
+  });
+  const fires = (s: { events: { type: string }[] }) => s.events.filter((e) => e.type === "tower_fired") as Extract<import("@/lib/combat").CombatEvent, { type: "tower_fired" }>[];
+
+  it("a side tower emits exactly one tower_fired per attack tick with correct fields", () => {
+    const s = initMatch(config());
+    s.troops.push(fakeTroop("et", 1, 30, 55));
+    while (s.tick < STRUCTURE_V1.tower.intervalTicks) stepMatch(s);
+    const evs = fires(s);
+    expect(evs).toHaveLength(1);
+    const e = evs[0]!;
+    expect(e.structureId).toBe("s-p0-tower-30");
+    expect(e.owner).toBe(0);
+    expect(e.targetId).toBe("et");
+    expect(e.tick).toBe(STRUCTURE_V1.tower.intervalTicks);
+    // x,y are the target's position at fire time.
+    expect(e.x).toBe(30);
+    expect(e.y).toBe(55);
+    // Damage is unchanged: exactly def.damage on the fire tick.
+    expect(s.troops[0]!.hp).toBe(200 - STRUCTURE_V1.tower.damage);
+  });
+
+  it("a core emits exactly one tower_fired per attack tick", () => {
+    const s = initMatch(config());
+    // Near p1's core; also inside a tower's reach, which is fine: each
+    // structure emits its own single event.
+    s.troops.push(fakeTroop("et", 0, 50, 127));
+    while (s.tick < STRUCTURE_V1.core.intervalTicks) stepMatch(s);
+    const core = fires(s).filter((e) => e.structureId === "s-p1-core");
+    expect(core).toHaveLength(1);
+    expect(core[0]!.owner).toBe(1);
+    expect(core[0]!.targetId).toBe("et");
+    expect(core[0]!.tick).toBe(STRUCTURE_V1.core.intervalTicks);
+    expect(core[0]!.x).toBe(50);
+    expect(core[0]!.y).toBe(127);
+    for (const e of fires(s)) {
+      const st = s.structures.find((x) => x.id === e.structureId)!;
+      expect(e.owner).toBe(st.owner);
+      expect(st.alive).toBe(true);
+    }
+  });
+
+  it("emits nothing with no enemy in range, for dead structures, or off-interval", () => {
+    // Empty board: no fires at all.
+    const quiet = initMatch(config());
+    for (let i = 0; i < 30; i++) stepMatch(quiet);
+    expect(fires(quiet)).toHaveLength(0);
+
+    // Dead structure never fires even with a target in range.
+    const s = initMatch(config());
+    const tower = s.structures.find((t) => t.id === "s-p0-tower-30")!;
+    tower.alive = false;
+    tower.hp = 0;
+    s.troops.push(fakeTroop("et", 1, 30, 55));
+    while (s.tick < 12) stepMatch(s);
+    expect(fires(s).filter((e) => e.structureId === "s-p0-tower-30")).toHaveLength(0);
+
+    // Non-interval ticks stay silent; each interval tick fires once.
+    const t2 = initMatch(config());
+    t2.troops.push(fakeTroop("et", 1, 30, 55));
+    let expected = 0;
+    for (let i = 0; i < 25; i++) {
+      stepMatch(t2);
+      const here = fires(t2).filter((e) => e.tick === t2.tick);
+      const inRange = t2.troops[0] && t2.troops[0]!.hp > 0;
+      const interval = t2.tick % STRUCTURE_V1.tower.intervalTicks === 0;
+      const alive = t2.structures.find((x) => x.id === "s-p0-tower-30")!.alive;
+      if (inRange && interval && alive) expected += 1;
+      expect(here).toHaveLength(inRange && interval && alive ? 1 : 0);
+    }
+    expect(expected).toBeGreaterThan(0);
+    expect(fires(t2)).toHaveLength(expected);
+  });
+
+  it("event count equals the number of structure attacks over a scripted run", () => {
+    // One tanky target holds the west p0 tower in range for 45 ticks.
+    const s = initMatch(config());
+    s.troops.push(fakeTroop("et", 1, 30, 55, 5000));
+    for (let i = 0; i < 45; i++) stepMatch(s);
+    // Ticks 10,20,30,40 are the tower's interval ticks; the target survives.
+    expect(fires(s)).toHaveLength(4);
+    expect(s.troops[0]!.hp).toBe(5000 - 4 * STRUCTURE_V1.tower.damage);
+    // Every fire event lines up with the tick the damage was applied.
+    for (const e of fires(s)) expect(e.tick % STRUCTURE_V1.tower.intervalTicks).toBe(0);
   });
 });

@@ -615,7 +615,8 @@ export type CombatEvent =
   | { type: "spell_impact"; tick: number; player: PlayerIndex; cardId: string; impactId: string; x: number; y: number; units: number; buildings: number; structures: number }
   | { type: "unit_spawned"; tick: number; buildingId: string; troopId: string; x: number; y: number }
   | { type: "spawn_skipped"; tick: number; buildingId: string; reason: "blocked" | "cap" }
-  | { type: "siege_fired"; tick: number; buildingId: string; owner: PlayerIndex; targetId: string; impactId: string; x: number; y: number; impactTick: number };
+  | { type: "siege_fired"; tick: number; buildingId: string; owner: PlayerIndex; targetId: string; impactId: string; x: number; y: number; impactTick: number }
+  | { type: "tower_fired"; tick: number; structureId: string; owner: PlayerIndex; targetId: string; x: number; y: number };
 
 /** v9 queued impact spell, resolved in the damage pass of `impactTick`. */
 export interface PendingImpact {
@@ -2207,7 +2208,18 @@ function advanceOneTick(state: CombatState, due: CombatCommand[], counter: { n: 
         best = t;
       }
     }
-    if (best) hit(best.id, def.damage);
+    if (best) {
+      hit(best.id, def.damage);
+      state.events.push({
+        type: "tower_fired",
+        tick: state.tick,
+        structureId: s.id,
+        owner: s.owner,
+        targetId: best.id,
+        x: best.x,
+        y: best.y,
+      });
+    }
   }
   // v8 Rift Sentry fire: per-building cooldown (first shot at activeAt),
   // keeps its current target while it stays hittable and in range, else the

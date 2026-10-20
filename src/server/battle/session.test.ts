@@ -264,3 +264,41 @@ describe("B2.8c authentic Arena Patrons", () => {
     expect(s.patron!.tokenId).toBe("42");
   });
 });
+
+describe("tower_fired delivery", () => {
+  it("reaches both seats identically once and never appears in a resume snapshot", () => {
+    const s = new BattleSession(rng());
+    s.join(A);
+    s.join(B);
+    const deck = ["rift_runner", "choglings", "hexwing", "chaos_archer", "frostshell", "sparkcaster", "boulderback"];
+    s.setReady("pa", makeLoadout([...deck], "scout"));
+    s.setReady("pb", makeLoadout([...deck], "scout"));
+    const epoch = s.lock();
+    s.start(epoch, s.readyLoadouts() as [TrustedLoadout, TrustedLoadout], testLockedPatron());
+    // Rush both lanes so each side's towers acquire a target quickly.
+    s.submit(idOf(s, 0), { type: "deploy", cid: "r0", cardId: "rift_runner", x: 30, y: 70 });
+    s.submit(idOf(s, 1), { type: "deploy", cid: "r1", cardId: "rift_runner", x: 30, y: 90 });
+    let total = 0;
+    const seen = new Set<string>();
+    const owners = new Set<number>();
+    for (let i = 0; i < 90 && s.phase === "active"; i++) {
+      const out = s.tick();
+      if (!out) break;
+      const e0 = out.frames[0].events.filter((e) => e.type === "tower_fired");
+      const e1 = out.frames[1].events.filter((e) => e.type === "tower_fired");
+      // Public event: both seats get the identical list.
+      expect(e0).toEqual(e1);
+      for (const e of e0) {
+        total += 1;
+        seen.add(`${e.structureId}:${e.tick}`);
+        owners.add(Number(e.owner));
+      }
+    }
+    expect(total).toBeGreaterThan(0);
+    // Exactly once: no event repeats for a structure on a tick.
+    expect(total).toBe(seen.size);
+    // Resume sends a fresh snapshot with no replayed events.
+    expect(s.frame(0).events.filter((e) => e.type === "tower_fired")).toHaveLength(0);
+    expect(s.frame(1).events.filter((e) => e.type === "tower_fired")).toHaveLength(0);
+  });
+});

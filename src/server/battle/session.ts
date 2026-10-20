@@ -125,7 +125,7 @@ export interface TickOutput {
 const PUBLIC_EVENTS = new Set([
   "deploy", "death", "shockwave", "structure_destroyed", "match_end", "spell_cast", "commander_deployed", "ability_fired", "ability_expired",
   "pulse_warning", "pulse_active", "pulse_expired", "rift_crossing", "building_spawned", "building_removed", "spell_impact",
-  "unit_spawned", "spawn_skipped", "siege_fired",
+  "unit_spawned", "spawn_skipped", "siege_fired", "tower_fired",
 ]);
 const OWN_EVENTS = new Set(["command_rejected", "ability_ready"]);
 
