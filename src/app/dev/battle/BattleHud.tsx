@@ -23,6 +23,7 @@ const BattleCanvas = dynamic(() => import("./BattleCanvas"), { ssr: false });
 import { Portrait } from "./portrait";
 import { useSpriteManifest } from "./use-sprite-manifest";
 import { portraitForCard, portraitForCommanderClass, type SpriteManifest } from "./sprite-registry";
+import { abilityView, scoreView, timerView } from "./hud-view";
 
 // Display-only copy of energyPhaseMult (src/lib/combat.ts). combat.ts imports
 // node crypto so it cannot ship to the client; keep thresholds in sync.
@@ -182,21 +183,12 @@ function EnergyMeter({ frame }: { frame: BattleFrame }) {
   );
 }
 
-function TowerPills({ frame, owner, me }: { frame: BattleFrame | null; owner: number; me: number }) {
-  const list = (frame?.structures ?? []).filter((s) => s.owner === owner);
-  const order = (s: { kind: string; x: number }) => (s.kind === "core" ? 1 : 0);
-  return (
-    <span className="chud-towers">
-      {list
-        .sort((a, b) => order(a) - order(b) || a.x - b.x)
-        .map((s) => (
-          <span key={s.id} className="chud-pill" data-owner={owner === me ? "you" : "foe"} data-dead={!s.alive}>
-            {s.kind === "core" ? "Core" : "T"} {s.alive ? s.hp : "x"}
-          </span>
-        ))}
-    </span>
-  );
-}
+/** Original crown mark (not Clash Royale art). */
+const CrownIcon = ({ color }: { color: string }) => (
+  <svg width="11" height="9" viewBox="0 0 12 10" aria-hidden="true" style={{ verticalAlign: "-1px" }}>
+    <path d="M1 8.5h10l-.6-5L8 5.5 6 2 4 5.5 1.6 3.5z" fill={color} />
+  </svg>
+);
 
 function AbilityButton({
   a,
@@ -224,29 +216,48 @@ function AbilityButton({
       return () => clearTimeout(t);
     }
   }, [acks, a.abilityId]);
-  const cd = Math.max(0, Math.ceil((a.readyAt - frame.tick) / 10));
+  const v = abilityView(a, frame.tick);
+  const sub =
+    v.label === "READY" ? "READY" : v.label === "ACTIVE" ? "active" : v.label === "BLOCKED" ? (v.blockedBy ?? "blocked") : `${v.cooldownSecs}s`;
   return (
     <button
       className="chud-ability"
-      disabled={!a.ready}
-      title={`${a.abilityId} · ${a.blockedBy ?? "ready"}`}
+      data-ability={a.abilityId}
+      data-state={v.label}
+      disabled={v.disabled}
+      title={`${abilityLabel(a.abilityId, start.commander.class)} · ${a.cost}e${a.blockedBy ? ` · ${a.blockedBy}` : ""}`}
       onClick={() => send({ type: "ability", abilityId: a.abilityId }, `ability ${a.abilityId}`)}
-      style={{ boxShadow: flash ? "0 0 0 2px #4ade80" : "none" }}
+      style={{ boxShadow: flash ? "0 0 0 2px #4ade80" : undefined }}
     >
-      <Portrait src={manifest ? portraitForCommanderClass(manifest, start.commander.class) : null} name={start.commander.class} style={{ width: 34, height: 34, borderRadius: 4 }} />
+      <Portrait src={manifest ? portraitForCommanderClass(manifest, start.commander.class) : null} name={start.commander.class} style={{ width: 38, height: 38, borderRadius: 5, flex: "none" }} />
       <span className="chud-ability-info">
-        <span>{abilityLabel(a.abilityId, start.commander.class)}</span>
-        <span style={{ fontSize: 10, color: "#a5b4fc" }}>
-          {a.cost}e {a.ready ? (a.blockedBy ? `· ${a.blockedBy}` : "· READY") : `· ${cd}s`}
+        <span className="chud-ability-name">{abilityLabel(a.abilityId, start.commander.class)}</span>
+        <span className="chud-ability-sub" data-ready={v.label === "READY"}>
+          {sub}
         </span>
+      </span>
+      <span className="chud-cost chud-ability-cost">{a.cost}</span>
+      <span className="chud-ability-cd">
+        <span className="chud-ability-cd-fill" style={{ width: `${(1 - v.cooldownFrac) * 100}%` }} />
       </span>
     </button>
   );
 }
 
-function DevPanel({ end, acks, start }: { end: EndMessage | null; acks: Array<AckMessage & { label: string }>; start: StartMessage }) {
+function DevPanel({ end, acks, start, frame, me }: { end: EndMessage | null; acks: Array<AckMessage & { label: string }>; start: StartMessage; frame: BattleFrame | null; me: number }) {
+  const order = (s: { kind: string; x: number }) => (s.kind === "core" ? 1 : 0);
   return (
     <div className="chud-dev">
+      <div className="chud-dev-towers">
+        {(frame?.structures ?? [])
+          .slice()
+          .sort((a, b) => a.owner - b.owner || order(a) - order(b) || a.x - b.x)
+          .map((s) => (
+            <span key={s.id} className="chud-pill" data-owner={s.owner === me ? "you" : "foe"} data-dead={!s.alive}>
+              {s.kind === "core" ? "Core" : "T"} {s.alive ? s.hp : "x"}
+            </span>
+          ))}
+      </div>
       {end && (
         <div>
           replay {end.replayIdentical ? "identical" : "MISMATCH"} · {end.commands} commands · hash {end.stateHash.slice(0, 12)}
@@ -286,6 +297,20 @@ export default function BattleHud(props: BattleHudProps) {
   const [devOpen, setDevOpen] = useState(false);
   const [banner, setBanner] = useState<number | null>(null);
   const prevMult = useRef(0);
+  const score = scoreView(frame, end, me as 0 | 1);
+  const prevCrowns = useRef<[number, number]>([score.mine, score.theirs]);
+  const [crownPulse, setCrownPulse] = useState<"mine" | "theirs" | null>(null);
+  const tv = timerView(frame, end);
+
+  // Short restrained pulse on the side whose crown count just increased.
+  useEffect(() => {
+    const [pm, pt] = prevCrowns.current;
+    prevCrowns.current = [score.mine, score.theirs];
+    if (score.mine <= pm && score.theirs <= pt) return;
+    setCrownPulse(score.mine > pm ? "mine" : "theirs");
+    const t = setTimeout(() => setCrownPulse(null), 900);
+    return () => clearTimeout(t);
+  }, [score.mine, score.theirs]);
 
   // 2s non-blocking banner when the energy phase steps up.
   useEffect(() => {
@@ -332,7 +357,7 @@ export default function BattleHud(props: BattleHudProps) {
     </div>
   ));
 
-  const dev = <DevPanel end={end} acks={acks} start={start} />;
+  const dev = <DevPanel end={end} acks={acks} start={start} frame={frame} me={me} />;
 
   const commanderIdentity = (
     <div className="chud-identity">
@@ -358,29 +383,69 @@ export default function BattleHud(props: BattleHudProps) {
     </span>
   );
 
+  const abilityControls = frame && (
+    <>
+      {frame.abilities.length === 0 && <span style={{ fontSize: 11, color: "#9ca3af" }}>Commander ability: deploy your commander first.</span>}
+      {frame.abilities.map((a) => (
+        <AbilityButton key={a.abilityId} a={a} frame={frame} start={start} manifest={manifest} acks={acks} send={send} />
+      ))}
+    </>
+  );
+
   return (
     <div className="chud" data-testid="battle-hud">
       <style>{HUD_CSS}</style>
+      <aside className="chud-side chud-side-left">
+        <div className="chud-side-block">
+          <div className="chud-side-title">Arena Patron</div>
+          <div style={{ fontSize: 12 }}>
+            {start.patron.name ?? `CHOG #${start.patron.tokenId}`}
+            <div style={{ color: "#9ca3af" }}>
+              {start.patron.tier ?? "Unranked"} · {start.patron.theme} · token {start.patron.tokenId}
+            </div>
+          </div>
+        </div>
+        <div className="chud-side-block">
+          <div className="chud-side-title">Your commander</div>
+          {commanderIdentity}
+        </div>
+        <div className="chud-side-block">
+          <div className="chud-side-title">Abilities</div>
+          <div className="chud-abilities">{abilityControls}</div>
+        </div>
+      </aside>
       <div className="chud-col">
         <header className="chud-top">
-          <span className="chud-pill chud-opp">vs {start.opponent}</span>
-          <TowerPills frame={frame} owner={1 - me} me={me} />
-          <span className="chud-pill chud-clock">
-            {frame?.phase === "overtime" && <b className="chud-ot">OT </b>}
-            {frame ? secs(frame.clockTicks) : "--"}
-          </span>
-          <span className="chud-pill chud-crowns">
-            {frame?.crowns[me] ?? 0}–{frame?.crowns[1 - me] ?? 0}
-          </span>
-          {patronChip}
-          {presence && (
-            <span className="chud-pill" style={{ color: presence.opponentConnected ? "#86efac" : "#fbbf24" }}>
-              {presence.opponentConnected ? "Opponent back" : `Opp. offline ${Math.max(0, Math.ceil(((presence.reconnectDeadlineAt ?? 0) - now) / 1000))}s`}
+          <div className="chud-score">
+            <span className="chud-side-tag" data-side="foe">
+              <span className={`chud-crown-num${crownPulse === "theirs" ? " chud-pulse" : ""}`}>
+                <CrownIcon color="#c084fc" /> {score.theirs}
+              </span>
+              <span className="chud-player">{start.opponent}</span>
             </span>
-          )}
-          <button className="chud-devbtn" onClick={() => setDevOpen(!devOpen)} aria-pressed={devOpen}>
-            Dev
-          </button>
+            <span className="chud-clock2">
+              {tv.badge && <b className="chud-ot">{tv.badge} </b>}
+              {tv.text}
+              {tv.mult > 1 && <span className="chud-mult chud-clock-mult">{tv.mult}x</span>}
+            </span>
+            <span className="chud-side-tag" data-side="you">
+              <span className="chud-player">You</span>
+              <span className={`chud-crown-num${crownPulse === "mine" ? " chud-pulse" : ""}`}>
+                {score.mine} <CrownIcon color="#67e8f9" />
+              </span>
+            </span>
+            <button className="chud-devbtn" onClick={() => setDevOpen(!devOpen)} aria-pressed={devOpen} title="Dev diagnostics">
+              Dev
+            </button>
+          </div>
+          <div className="chud-subrow">
+            {patronChip}
+            {presence && (
+              <span className="chud-pill" style={{ color: presence.opponentConnected ? "#86efac" : "#fbbf24" }}>
+                {presence.opponentConnected ? "Opponent back" : `Opp. offline ${Math.max(0, Math.ceil(((presence.reconnectDeadlineAt ?? 0) - now) / 1000))}s`}
+              </span>
+            )}
+          </div>
         </header>
         {devOpen && <div className="chud-dev-inline">{dev}</div>}
         <div className="chud-arena">
@@ -410,9 +475,6 @@ export default function BattleHud(props: BattleHudProps) {
           )}
         </div>
         <div className="chud-tray">
-          <div className="chud-tray-top">
-            <TowerPills frame={frame} owner={me} me={me} />
-          </div>
           {frame && (
             <>
               <div className="chud-cards">
@@ -435,12 +497,7 @@ export default function BattleHud(props: BattleHudProps) {
                     onSelect={select}
                   />
                 ))}
-                <div className="chud-abilities">
-                  {frame.abilities.length === 0 && <span style={{ fontSize: 11, color: "#9ca3af" }}>Commander ability: deploy your commander first.</span>}
-                  {frame.abilities.map((a) => (
-                    <AbilityButton key={a.abilityId} a={a} frame={frame} start={start} manifest={manifest} acks={acks} send={send} />
-                  ))}
-                </div>
+                <div className="chud-abilities chud-abilities-tray">{abilityControls}</div>
               </div>
               <EnergyMeter frame={frame} />
               <div className="chud-hint" data-testid="placement-hint">
@@ -450,20 +507,7 @@ export default function BattleHud(props: BattleHudProps) {
           )}
         </div>
       </div>
-      <aside className="chud-side">
-        <div className="chud-side-block">
-          <div className="chud-side-title">Arena Patron</div>
-          <div style={{ fontSize: 12 }}>
-            {start.patron.name ?? `CHOG #${start.patron.tokenId}`}
-            <div style={{ color: "#9ca3af" }}>
-              {start.patron.tier ?? "Unranked"} · {start.patron.theme} · token {start.patron.tokenId}
-            </div>
-          </div>
-        </div>
-        <div className="chud-side-block">
-          <div className="chud-side-title">Your commander</div>
-          {commanderIdentity}
-        </div>
+      <aside className="chud-side chud-side-right">
         <div className="chud-side-block chud-side-dev">
           <div className="chud-side-title">Dev</div>
           {dev}
@@ -490,17 +534,25 @@ const HUD_CSS = `
   padding:calc(6px + env(safe-area-inset-top)) calc(8px + env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) calc(8px + env(safe-area-inset-left));
   background:#0b1210;color:#e5e7eb;font-size:13px;z-index:10}
 .chud-col{display:flex;flex-direction:column;width:100%;max-width:560px;min-height:0;height:100%}
-.chud-top{display:flex;gap:5px;align-items:center;flex-wrap:wrap;padding:2px 0;min-height:26px}
-.chud-pill{background:#1f2937;border:1px solid #374151;border-radius:999px;padding:2px 8px;font-size:11px;white-space:nowrap;max-width:190px;overflow:hidden;text-overflow:ellipsis}
+.chud-top{display:flex;flex-direction:column;gap:2px;padding:1px 0}
+.chud-score{display:flex;align-items:center;gap:8px;min-height:30px}
+.chud-side-tag{display:flex;align-items:center;gap:6px;flex:1;min-width:0;font-size:12px}
+.chud-side-tag[data-side="foe"]{color:#c084fc;justify-content:flex-start}
+.chud-side-tag[data-side="you"]{color:#67e8f9;justify-content:flex-end}
+.chud-player{font-weight:700;color:#e5e7eb;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chud-crown-num{font-variant-numeric:tabular-nums;font-weight:800;font-size:14px;display:inline-flex;align-items:center;gap:3px}
+.chud-pulse{animation:chud-crown-pulse .9s ease-out}
+@keyframes chud-crown-pulse{0%{transform:scale(1)}25%{transform:scale(1.35);color:#fde68a}100%{transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){.chud-pulse{animation:none}}
+.chud-clock2{font-variant-numeric:tabular-nums;font-size:18px;font-weight:800;text-align:center;min-width:74px}
+.chud-clock-mult{margin-left:5px;vertical-align:2px}
+.chud-ot{color:#fbbf24}
+.chud-subrow{display:flex;gap:4px;align-items:center;flex-wrap:wrap;opacity:.85}
+.chud-pill{background:#1f2937;border:1px solid #374151;border-radius:999px;padding:1px 7px;font-size:10px;white-space:nowrap;max-width:190px;overflow:hidden;text-overflow:ellipsis}
 .chud-pill[data-dead="true"]{opacity:.55;text-decoration:line-through}
 .chud-pill[data-owner="you"]{border-color:#3b82f6}
 .chud-pill[data-owner="foe"]{border-color:#ef4444}
-.chud-towers{display:flex;gap:3px}
-.chud-opp{font-weight:600}
-.chud-clock{font-variant-numeric:tabular-nums}
-.chud-ot{color:#fbbf24}
-.chud-crowns{font-weight:700}
-.chud-devbtn{margin-left:auto;flex:none;font-size:11px;padding:2px 8px;background:#1f2937;border:1px solid #4b5563;border-radius:4px;color:#e5e7eb}
+.chud-devbtn{margin-left:6px;flex:none;align-self:flex-start;font-size:10px;padding:3px 8px;background:#1f2937;border:1px solid #4b5563;border-radius:5px;color:#e5e7eb}
 .chud-dev-inline{font-size:11px;background:#111827;border:1px solid #374151;border-radius:6px;padding:4px 8px;margin-bottom:4px;max-height:120px;overflow-y:auto}
 .chud-dev{font-size:11px;color:#9ca3af}
 .chud-arena{position:relative;flex:1;min-height:0;display:flex;container-type:size}
@@ -515,7 +567,7 @@ const HUD_CSS = `
 @media(prefers-reduced-motion:reduce){.chud-phase-banner{animation:none;opacity:.95}}
 .chud-result{position:absolute;inset:0;background:#000c;display:grid;place-content:center;text-align:center;gap:6px;z-index:5}
 .chud-tray{display:flex;flex-direction:column;gap:4px;padding-top:4px}
-.chud-tray-top{display:flex;justify-content:center}
+
 .chud-cards{display:grid;grid-template-columns:auto repeat(4,1fr) auto;gap:6px;align-items:stretch}
 @media(max-width:640px){.chud-cards{grid-template-columns:auto repeat(4,1fr)}.chud-abilities{grid-column:1/-1;flex-direction:row;flex-wrap:wrap;min-width:0;max-width:none}}
 .chud-next{position:relative;width:46px;aspect-ratio:3/4;align-self:center;border:1px dashed #4b5563;border-radius:6px;overflow:hidden;opacity:.85}
@@ -525,31 +577,47 @@ const HUD_CSS = `
 .chud-card:active{transform:translateY(0)}
 .chud-name{position:absolute;bottom:0;left:0;right:0;font-size:9px;line-height:1.2;padding:2px 3px;background:linear-gradient(transparent,#000e 40%);color:#f3f4f6;text-align:center}
 .chud-abilities{display:flex;flex-direction:column;gap:4px;min-width:96px;max-width:150px;justify-content:center}
-.chud-ability{display:flex;gap:5px;align-items:center;font-size:10px;padding:3px 5px;background:#1f2937;border:1px solid #4b5563;border-radius:6px;color:#e5e7eb;text-align:left}
-.chud-ability:disabled{opacity:.55}
-.chud-ability-info{display:flex;flex-direction:column;min-width:0}
-.chud-energy{display:flex;align-items:center;gap:6px}
-.chud-energy-cells{flex:1;display:grid;grid-template-columns:repeat(10,1fr);gap:2px;height:12px}
-.chud-cell{background:#1f2937;border:1px solid #374151;border-radius:2px;overflow:hidden}
-.chud-cell-fill{height:100%;background:#d946ef;transition:width .15s linear}
-.chud-energy-num{font-size:11px;font-variant-numeric:tabular-nums}
-.chud-mult{font-size:10px;font-weight:700;background:#7c3aed;border-radius:999px;padding:2px 7px}
+.chud-ability{position:relative;display:flex;gap:6px;align-items:center;font-size:10px;padding:4px 5px;background:#1f2937;border:1px solid #4b5563;border-radius:6px;color:#e5e7eb;text-align:left;overflow:hidden;touch-action:manipulation}
+.chud-ability[data-state="READY"]{border-color:#4ade80;box-shadow:0 0 8px #22c55e66}
+.chud-ability:disabled{opacity:.6;cursor:default}
+.chud-ability-info{display:flex;flex-direction:column;min-width:0;flex:1}
+.chud-ability-name{font-weight:700;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chud-ability-sub{font-size:9px;color:#a5b4fc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chud-ability-sub[data-ready="true"]{color:#4ade80;font-weight:800}
+.chud-ability-cost{position:absolute;top:2px;right:2px;font-size:9px;font-weight:700;background:#7c3aed;color:#fff;border-radius:999px;line-height:1;padding:2px 5px}
+.chud-ability-cd{position:absolute;left:0;right:0;bottom:0;height:3px;background:#0008}
+.chud-ability-cd-fill{display:block;height:100%;background:#4ade80}
+.chud-ability:disabled .chud-ability-cd-fill{background:#7c3aed}
+.chud-energy{display:flex;align-items:center;gap:8px}
+.chud-energy-cells{flex:1;display:grid;grid-template-columns:repeat(10,1fr);gap:2px;height:16px}
+.chud-cell{background:#111827;border:1px solid #4b5563;border-radius:3px;overflow:hidden}
+.chud-cell-fill{height:100%;background:linear-gradient(90deg,#c026d3,#e879f9);transition:width .15s linear}
+.chud-energy-num{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;min-width:34px;text-align:right}
+.chud-mult{font-size:12px;font-weight:800;background:#7c3aed;border-radius:999px;padding:3px 9px}
 .chud-chaos-mod{background:#0e7490}
 .chud-hint{font-size:11px;min-height:15px;color:#cbd5e1;text-align:center}
-.chud-side{display:none;flex-direction:column;gap:10px;width:260px;flex:none;padding-top:2px;overflow-y:auto}
+.chud-side{display:none;flex-direction:column;gap:10px;width:230px;min-width:220px;flex:none;padding-top:2px;overflow-y:auto;overflow-x:hidden}
+.chud-dev-towers{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:4px}
+.chud-dev{overflow-wrap:anywhere}
 .chud-side-block{background:#111827;border:1px solid #374151;border-radius:8px;padding:8px}
 .chud-side-title{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;margin-bottom:4px}
 .chud-identity{display:flex;gap:8px;align-items:center}
 .chud-drag-preview{position:fixed;left:0;top:0;pointer-events:none;z-index:50;display:flex;gap:6px;align-items:center;
   padding:4px 8px;background:#111827e6;border:2px solid #fbbf24;border-radius:6px}
-@media(min-width:1100px){.chud-side{display:flex}.chud-col{max-width:520px}}
+@media(min-width:1100px){
+  .chud-side{display:flex}
+  .chud-col{max-width:520px}
+  .chud-abilities-tray{display:none}
+  .chud-side .chud-abilities{min-width:0;max-width:none}
+  .chud-energy-cells{height:18px}
+}
 @media(max-height:520px) and (orientation:landscape){
   .chud-col{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto 1fr;max-width:none}
-  .chud-top{grid-column:2;grid-row:1;flex-direction:row;flex-wrap:wrap;width:auto;min-width:0;padding-left:6px}
+  .chud-top{grid-column:2;grid-row:1;width:auto;min-width:0;padding-left:6px}
   .chud-arena{grid-column:1;grid-row:1/3;flex:none;height:100%;aspect-ratio:100/160}
   .chud-tray{grid-column:2;grid-row:2;overflow-y:auto;padding-top:0;padding-left:6px;justify-content:center}
   .chud-cards{grid-template-columns:auto repeat(4,1fr)}
   .chud-abilities{grid-column:1/-1;flex-direction:row;flex-wrap:wrap;min-width:0;max-width:none}
-  .chud-dev-inline{position:absolute;top:30px;left:8px;z-index:6;max-width:300px}
+  .chud-dev-inline{position:absolute;top:34px;left:8px;z-index:6;max-width:300px}
 }
 `;

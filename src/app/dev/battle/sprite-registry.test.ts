@@ -7,6 +7,8 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
+  ACTOR_BOOST,
+  actorBoost,
   CATEGORY_MULT,
   displayScale,
   effectForAbility,
@@ -110,6 +112,49 @@ describe("sprite registry", () => {
     expect(displayScale(tower)).toBeGreaterThan(displayScale(guardian));
     expect(visible("structure", "tower")).toBeGreaterThan(visible("troop", "chog_guardian"));
     expect(CATEGORY_MULT.commander_class_template).toBeGreaterThan(CATEGORY_MULT.troop);
+  });
+
+  it("actorBoost applies only to troops, spawned troops and commanders", () => {
+    const cats: Record<string, number> = {};
+    for (const a of manifest.assets) cats[a.category] = Math.max(cats[a.category] ?? 0, actorBoost(a));
+    expect(cats.troop).toBeGreaterThan(1);
+    expect(cats.spawned_troop).toBeGreaterThan(1);
+    expect(cats.commander_class_template).toBeGreaterThan(0);
+    for (const c of ["building", "fixed_structure", "spell", "effect_primitive", "card_art_derivative"]) {
+      expect(cats[c] ?? 1, c).toBe(1);
+    }
+    // Chosen per-class factors after 1.15/1.25/1.35 evaluation.
+    expect(ACTOR_BOOST).toEqual({ small_swarm: 1.35, regular: 1.15, heavy: 1.15, flying: 1.35, commander: 1 });
+  });
+
+  it("keeps the ground anchor identical before and after the boost", () => {
+    // The boost scales the image child only: the entity root still sits at the
+    // authoritative point and the authored pivot is untouched.
+    for (const a of manifest.assets.filter((x) => ["troop", "spawned_troop", "commander_class_template"].includes(x.category))) {
+      const base = a.proposedDisplaySize.uniformScale * 0.32 * (CATEGORY_MULT[a.category] ?? 1);
+      expect(displayScale(a)).toBeCloseTo(base * actorBoost(a), 8);
+      // Ground units anchor at the authored ground point; fliers keep their
+      // authored hover pivot and the air offset is applied on top.
+      expect(a.groundPositionAnchor).toBe(a.scaleClass !== "flying");
+      expect(a.pivotNormalized[1]).toBeGreaterThan(0.6);
+    }
+    // Structures/buildings keep their unboosted scale.
+    const tower = resolveEntityAsset(manifest, "structure", "tower")!;
+    expect(actorBoost(tower)).toBe(1);
+    const mortar = resolveEntityAsset(manifest, "building", "rift_mortar")!;
+    expect(actorBoost(mortar)).toBe(1);
+  });
+
+  it("keeps tanks visibly larger than swarms after the boost", () => {
+    const h = (id: string) => {
+      const r = resolveEntityAsset(manifest, "troop", id)!;
+      return r.proposedDisplaySize.visibleHeight * 0.32 * actorBoost(r);
+    };
+    expect(h("boulderback")).toBeGreaterThan(h("chog_guardian"));
+    expect(h("chog_guardian")).toBeGreaterThan(h("choglings"));
+    const warden = resolveCommanderAsset(manifest, "warden")!;
+    const wardenH = warden.proposedDisplaySize.visibleHeight * 0.32 * CATEGORY_MULT.commander_class_template * actorBoost(warden);
+    expect(wardenH).toBeGreaterThan(h("chog_guardian"));
   });
 
   it("binds spell impacts, abilities and chaos families to effect primitives", () => {

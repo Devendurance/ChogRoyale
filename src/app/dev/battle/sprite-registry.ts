@@ -47,8 +47,30 @@ export const CATEGORY_MULT: Record<SpriteRecord["category"], number> = {
   card_art_derivative: 1,
 };
 
+// B2.8f.1 readability boost for actor art only. Keyed by manifest scaleClass;
+// buildings, fixed structures, spells, effects and v002 mounts are untouched.
+const ACTOR_CATEGORIES = new Set<SpriteRecord["category"]>(["troop", "spawned_troop", "commander_class_template"]);
+
+// Chosen per class after evaluating 1.15 / 1.25 / 1.35 on real frames at
+// 390x844 and 1366x768: regular and commander already hit the 24 CSS px
+// visible-height target at their current scale, heavy keeps tanks visibly
+// larger, and swarm/flying take the largest evaluated factor since they fall
+// short of 24 px even at 1.35 (measured heights in sprite-registry.test.ts).
+export const ACTOR_BOOST: Record<string, number> = {
+  small_swarm: 1.35,
+  regular: 1.15,
+  heavy: 1.15,
+  flying: 1.35,
+  commander: 1,
+};
+
+export function actorBoost(record: SpriteRecord): number {
+  if (!ACTOR_CATEGORIES.has(record.category)) return 1;
+  return ACTOR_BOOST[(record.scaleClass as string | undefined) ?? ""] ?? 1;
+}
+
 export function displayScale(record: SpriteRecord): number {
-  return record.proposedDisplaySize.uniformScale * BOARD_K * (CATEGORY_MULT[record.category] ?? 1);
+  return record.proposedDisplaySize.uniformScale * BOARD_K * (CATEGORY_MULT[record.category] ?? 1) * actorBoost(record);
 }
 
 export function byId(manifest: SpriteManifest, stableAssetId: string): SpriteRecord | null {
