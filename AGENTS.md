@@ -129,3 +129,4 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 ## SPRITE KIT INVENTORY
 
 - Derive asset scope from current implemented code, including spawned nondeckable units. Count primary entries, card-art derivatives and auxiliary VFX separately, and distinguish commander class templates from exact NFT artwork.
+- For approved static sprite handoffs, reserve READY_ANIMATED for verified frame animation. Procedural transform proposals, static contact sheets and export checks do not establish Phaser runtime or real-device readiness. Keep canonical code bindings and measured alpha-bound scale/pivots separate from preserved NFT sources.
