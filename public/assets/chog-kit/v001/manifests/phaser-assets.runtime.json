@@ -1,0 +1,4754 @@
+{
+  "kitVersion": "v001",
+  "sourceManifestSha256": "aef096b4c22f83c92d4ccf10cfacd00917387bd35f478d58305e018b30e09f88",
+  "approvalBasis": "user-v001-static-direction-approved-20261020",
+  "assets": [
+    {
+      "stableAssetId": "troop:choglings",
+      "entityIds": [
+        "choglings"
+      ],
+      "cardIds": [
+        "choglings"
+      ],
+      "abilityIds": [],
+      "commanderClassId": null,
+      "name": "Choglings",
+      "category": "troop",
+      "path": "troops/choglings/sprite.png",
+      "width": 192,
+      "height": 256,
+      "pivotPixels": [
+        96,
+        236
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.921875
+      ],
+      "anchorKind": "bottom_center_art_ground_contact_proposal",
+      "groundPositionAnchor": true,
+      "hoverOffsetPixels": null,
+      "hoverOffsetStatus": null,
+      "scaleClass": "small_swarm",
+      "proposedDisplaySize": {
+        "width": 96,
+        "height": 128,
+        "visibleWidth": 42,
+        "visibleHeight": 64,
+        "uniformScale": 0.5,
+        "status": "PROPOSED_UNTESTED",
+        "runtimeTested": false,
+        "detailAdded": false,
+        "aspectRatioPreserved": true
+      },
+      "originalSourceDimensions": [
+        417,
+        584
+      ],
+      "sourceCropDimensions": [
+        371,
+        563
+      ],
+      "exportDimensions": [
+        192,
+        256
+      ],
+      "actualAlpha": {
+        "channelPresent": true,
+        "extrema": [
+          0,
+          255
+        ],
+        "transparentPixels": 41760,
+        "partialAlphaPixels": 1431,
+        "visiblePixels": 7392,
+        "bounds": [
+          54,
+          108,
+          138,
+          236
+        ],
+        "cornerAlphaValues": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cornerAlphaMaximum": 0,
+        "paddingPixels": [
+          54,
+          108,
+          54,
+          20
+        ],
+        "opaqueNearBlackPixels": 909,
+        "opaqueExactBlackPixels": 282
+      },
+      "orientation": {
+        "facing": "right",
+        "mirroredFromSource": false,
+        "oppositeFacingAuthored": false
+      },
+      "animationCapability": {
+        "kind": "static_single_image",
+        "frameCount": 1,
+        "frameAnimated": false,
+        "proceduralPresentationPossible": true,
+        "proceduralPresentationExamples": [
+          "translation",
+          "uniform scale",
+          "rotation",
+          "alpha tween"
+        ],
+        "verifiedInRuntime": false
+      },
+      "sha256": "9aa92e5bcd1c3c3209226e8deab345608442368c1a958fd36dd157835eba7e49",
+      "provenance": {
+        "sourcePath": "sources/reused/choglings/m001/rgba/three-quarter-front.png",
+        "sourceSha256": "b907a52f810665bb3b4e8d406cca6785c5b8d82f5ae0718119fa066cd9fe27fa",
+        "generatedSourcePath": null,
+        "generatedSourceSha256": null,
+        "sourceCell": [
+          0,
+          0,
+          417,
+          584
+        ],
+        "transforms": [
+          "crop",
+          "uniform LANCZOS scale",
+          "no mirror"
+        ],
+        "blackKeyingUsed": false,
+        "sourcePixelsPreserved": true,
+        "identityScope": "original_game_art",
+        "preservationStatus": "ORIGINAL_SOURCE_UNCHANGED",
+        "historicalStatus": "READY_STATIC",
+        "notes": []
+      },
+      "approval": {
+        "basisId": "user-v001-static-direction-approved-20261020",
+        "status": "APPROVED_STATIC_DIRECTION",
+        "runtimeApproval": false
+      },
+      "status": "READY_STATIC",
+      "technicalExceptions": []
+    },
+    {
+      "stableAssetId": "troop:chaos_archer",
+      "entityIds": [
+        "chaos_archer"
+      ],
+      "cardIds": [
+        "chaos_archer"
+      ],
+      "abilityIds": [],
+      "commanderClassId": null,
+      "name": "Chaos Archer",
+      "category": "troop",
+      "path": "troops/chaos_archer/sprite.png",
+      "width": 192,
+      "height": 256,
+      "pivotPixels": [
+        96,
+        236
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.921875
+      ],
+      "anchorKind": "bottom_center_art_ground_contact_proposal",
+      "groundPositionAnchor": true,
+      "hoverOffsetPixels": null,
+      "hoverOffsetStatus": null,
+      "scaleClass": "regular",
+      "proposedDisplaySize": {
+        "width": 96,
+        "height": 128,
+        "visibleWidth": 86,
+        "visibleHeight": 96,
+        "uniformScale": 0.5,
+        "status": "PROPOSED_UNTESTED",
+        "runtimeTested": false,
+        "detailAdded": false,
+        "aspectRatioPreserved": true
+      },
+      "originalSourceDimensions": [
+        334,
+        373
+      ],
+      "sourceCropDimensions": [
+        330,
+        369
+      ],
+      "exportDimensions": [
+        192,
+        256
+      ],
+      "actualAlpha": {
+        "channelPresent": true,
+        "extrema": [
+          0,
+          255
+        ],
+        "transparentPixels": 28980,
+        "partialAlphaPixels": 19678,
+        "visiblePixels": 20172,
+        "bounds": [
+          10,
+          44,
+          182,
+          236
+        ],
+        "cornerAlphaValues": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cornerAlphaMaximum": 0,
+        "paddingPixels": [
+          10,
+          44,
+          10,
+          20
+        ],
+        "opaqueNearBlackPixels": 4593,
+        "opaqueExactBlackPixels": 1157
+      },
+      "orientation": {
+        "facing": "right",
+        "mirroredFromSource": false,
+        "oppositeFacingAuthored": false
+      },
+      "animationCapability": {
+        "kind": "static_single_image",
+        "frameCount": 1,
+        "frameAnimated": false,
+        "proceduralPresentationPossible": true,
+        "proceduralPresentationExamples": [
+          "translation",
+          "uniform scale",
+          "rotation",
+          "alpha tween"
+        ],
+        "verifiedInRuntime": false
+      },
+      "sha256": "2a93796e9d5217104e1586ca4a01668d3f0f96c18a616d393af03f7cb08c2d3b",
+      "provenance": {
+        "sourcePath": "sources/extracted/chaos_archer.png",
+        "sourceSha256": "534afb0441e209fd392b4019534b846c4bdc3bb1449dd6b2ed32c3f42e843298",
+        "generatedSourcePath": "sources/generated/troops.png",
+        "generatedSourceSha256": "2fc4061bcb62b0108443c225432efa3f48e9c8bde42424a3e3ca4a016d1853a5",
+        "sourceCell": [
+          0,
+          0,
+          334,
+          373
+        ],
+        "transforms": [
+          "crop",
+          "uniform LANCZOS scale",
+          "no mirror"
+        ],
+        "blackKeyingUsed": false,
+        "sourcePixelsPreserved": true,
+        "identityScope": "original_game_art",
+        "preservationStatus": "ORIGINAL_SOURCE_UNCHANGED",
+        "historicalStatus": "PROVISIONAL",
+        "notes": [
+          "principal connected island at alpha > 128, expanded 3 pixels to retain original edge alpha; source RGB unchanged; detached fragments and faint glow may be omitted",
+          "Original generated sheet: sources/generated/troops.png, crop [6, 89, 340, 462]."
+        ]
+      },
+      "approval": {
+        "basisId": "user-v001-static-direction-approved-20261020",
+        "status": "APPROVED_STATIC_DIRECTION",
+        "runtimeApproval": false
+      },
+      "status": "READY_STATIC",
+      "technicalExceptions": []
+    },
+    {
+      "stableAssetId": "troop:boulderback",
+      "entityIds": [
+        "boulderback"
+      ],
+      "cardIds": [
+        "boulderback"
+      ],
+      "abilityIds": [],
+      "commanderClassId": null,
+      "name": "Boulderback",
+      "category": "troop",
+      "path": "troops/boulderback/sprite.png",
+      "width": 192,
+      "height": 256,
+      "pivotPixels": [
+        96,
+        236
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.921875
+      ],
+      "anchorKind": "bottom_center_art_ground_contact_proposal",
+      "groundPositionAnchor": true,
+      "hoverOffsetPixels": null,
+      "hoverOffsetStatus": null,
+      "scaleClass": "heavy",
+      "proposedDisplaySize": {
+        "width": 96,
+        "height": 128,
+        "visibleWidth": 79.5,
+        "visibleHeight": 112,
+        "uniformScale": 0.5,
+        "status": "PROPOSED_UNTESTED",
+        "runtimeTested": false,
+        "detailAdded": false,
+        "aspectRatioPreserved": true
+      },
+      "originalSourceDimensions": [
+        445,
+        793
+      ],
+      "sourceCropDimensions": [
+        374,
+        526
+      ],
+      "exportDimensions": [
+        192,
+        256
+      ],
+      "actualAlpha": {
+        "channelPresent": true,
+        "extrema": [
+          0,
+          255
+        ],
+        "transparentPixels": 21569,
+        "partialAlphaPixels": 2646,
+        "visiblePixels": 27583,
+        "bounds": [
+          17,
+          12,
+          176,
+          236
+        ],
+        "cornerAlphaValues": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cornerAlphaMaximum": 0,
+        "paddingPixels": [
+          17,
+          12,
+          16,
+          20
+        ],
+        "opaqueNearBlackPixels": 4982,
+        "opaqueExactBlackPixels": 761
+      },
+      "orientation": {
+        "facing": "right",
+        "mirroredFromSource": true,
+        "oppositeFacingAuthored": false
+      },
+      "animationCapability": {
+        "kind": "static_single_image",
+        "frameCount": 1,
+        "frameAnimated": false,
+        "proceduralPresentationPossible": true,
+        "proceduralPresentationExamples": [
+          "translation",
+          "uniform scale",
+          "rotation",
+          "alpha tween"
+        ],
+        "verifiedInRuntime": false
+      },
+      "sha256": "97a7828c75ce5e6af8c6a42d060bcd536a5eed74754b5e516b29a774058b57c6",
+      "provenance": {
+        "sourcePath": "sources/reused/boulderback/m001/rgba/three-quarter-front.png",
+        "sourceSha256": "ebb69b477fe39095c7bc37b8fbcd07a94cb9c480c141166deb8565e40583bd23",
+        "generatedSourcePath": null,
+        "generatedSourceSha256": null,
+        "sourceCell": [
+          0,
+          0,
+          445,
+          793
+        ],
+        "transforms": [
+          "crop",
+          "uniform LANCZOS scale",
+          "mirror"
+        ],
+        "blackKeyingUsed": false,
+        "sourcePixelsPreserved": true,
+        "identityScope": "original_game_art",
+        "preservationStatus": "ORIGINAL_SOURCE_UNCHANGED",
+        "historicalStatus": "READY_STATIC",
+        "notes": [
+          "Source crop preserved in native left-facing orientation. Sprite and card derivative mirrored to face right."
+        ]
+      },
+      "approval": {
+        "basisId": "user-v001-static-direction-approved-20261020",
+        "status": "APPROVED_STATIC_DIRECTION",
+        "runtimeApproval": false
+      },
+      "status": "READY_STATIC",
+      "technicalExceptions": []
+    },
+    {
+      "stableAssetId": "troop:frostshell",
+      "entityIds": [
+        "frostshell"
+      ],
+      "cardIds": [
+        "frostshell"
+      ],
+      "abilityIds": [],
+      "commanderClassId": null,
+      "name": "Frostshell",
+      "category": "troop",
+      "path": "troops/frostshell/sprite.png",
+      "width": 192,
+      "height": 256,
+      "pivotPixels": [
+        96,
+        236
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.921875
+      ],
+      "anchorKind": "bottom_center_art_ground_contact_proposal",
+      "groundPositionAnchor": true,
+      "hoverOffsetPixels": null,
+      "hoverOffsetStatus": null,
+      "scaleClass": "regular",
+      "proposedDisplaySize": {
+        "width": 96,
+        "height": 128,
+        "visibleWidth": 78,
+        "visibleHeight": 96,
+        "uniformScale": 0.5,
+        "status": "PROPOSED_UNTESTED",
+        "runtimeTested": false,
+        "detailAdded": false,
+        "aspectRatioPreserved": true
+      },
+      "originalSourceDimensions": [
+        353,
+        433
+      ],
+      "sourceCropDimensions": [
+        349,
+        429
+      ],
+      "exportDimensions": [
+        192,
+        256
+      ],
+      "actualAlpha": {
+        "channelPresent": true,
+        "extrema": [
+          0,
+          255
+        ],
+        "transparentPixels": 27846,
+        "partialAlphaPixels": 20898,
+        "visiblePixels": 21306,
+        "bounds": [
+          18,
+          44,
+          174,
+          236
+        ],
+        "cornerAlphaValues": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cornerAlphaMaximum": 0,
+        "paddingPixels": [
+          18,
+          44,
+          18,
+          20
+        ],
+        "opaqueNearBlackPixels": 3625,
+        "opaqueExactBlackPixels": 1090
+      },
+      "orientation": {
+        "facing": "right",
+        "mirroredFromSource": false,
+        "oppositeFacingAuthored": false
+      },
+      "animationCapability": {
+        "kind": "static_single_image",
+        "frameCount": 1,
+        "frameAnimated": false,
+        "proceduralPresentationPossible": true,
+        "proceduralPresentationExamples": [
+          "translation",
+          "uniform scale",
+          "rotation",
+          "alpha tween"
+        ],
+        "verifiedInRuntime": false
+      },
+      "sha256": "e2d65e4efa24421ffaec0454a1740820d9d5a67e360864e246387c5a87c17d20",
+      "provenance": {
+        "sourcePath": "sources/extracted/frostshell.png",
+        "sourceSha256": "a781b1842dd2b67fdc7dc2674bf196a1f2fe1ba76a1989ea64a42ec835d080d4",
+        "generatedSourcePath": "sources/generated/troops.png",
+        "generatedSourceSha256": "2fc4061bcb62b0108443c225432efa3f48e9c8bde42424a3e3ca4a016d1853a5",
+        "sourceCell": [
+          0,
+          0,
+          353,
+          433
+        ],
+        "transforms": [
+          "crop",
+          "uniform LANCZOS scale",
+          "no mirror"
+        ],
+        "blackKeyingUsed": false,
+        "sourcePixelsPreserved": true,
+        "identityScope": "original_game_art",
+        "preservationStatus": "ORIGINAL_SOURCE_UNCHANGED",
+        "historicalStatus": "PROVISIONAL",
+        "notes": [
+          "principal connected island at alpha > 128, expanded 3 pixels to retain original edge alpha; source RGB unchanged; detached fragments and faint glow may be omitted",
+          "Original generated sheet: sources/generated/troops.png, crop [327, 30, 680, 463]."
+        ]
+      },
+      "approval": {
+        "basisId": "user-v001-static-direction-approved-20261020",
+        "status": "APPROVED_STATIC_DIRECTION",
+        "runtimeApproval": false
+      },
+      "status": "READY_STATIC",
+      "technicalExceptions": []
+    },
+    {
+      "stableAssetId": "troop:rift_runner",
+      "entityIds": [
+        "rift_runner"
+      ],
+      "cardIds": [
+        "rift_runner"
+      ],
+      "abilityIds": [],
+      "commanderClassId": null,
+      "name": "Rift Runner",
+      "category": "troop",
+      "path": "troops/rift_runner/sprite.png",
+      "width": 192,
+      "height": 256,
+      "pivotPixels": [
+        96,
+        236
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.921875
+      ],
+      "anchorKind": "bottom_center_art_ground_contact_proposal",
+      "groundPositionAnchor": true,
+      "hoverOffsetPixels": null,
+      "hoverOffsetStatus": null,
+      "scaleClass": "regular",
+      "proposedDisplaySize": {
+        "width": 96,
+        "height": 128,
+        "visibleWidth": 72.5,
+        "visibleHeight": 96,
+        "uniformScale": 0.5,
+        "status": "PROPOSED_UNTESTED",
+        "runtimeTested": false,
+        "detailAdded": false,
+        "aspectRatioPreserved": true
+      },
+      "originalSourceDimensions": [
+        282,
+        373
+      ],
+      "sourceCropDimensions": [
+        278,
+        369
+      ],
+      "exportDimensions": [
+        192,
+        256
+      ],
+      "actualAlpha": {
+        "channelPresent": true,
+        "extrema": [
+          0,
+          255
+        ],
+        "transparentPixels": 31087,
+        "partialAlphaPixels": 17675,
+        "visiblePixels": 18065,
+        "bounds": [
+          24,
+          44,
+          169,
+          236
+        ],
+        "cornerAlphaValues": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cornerAlphaMaximum": 0,
+        "paddingPixels": [
+          24,
+          44,
+          23,
+          20
+        ],
+        "opaqueNearBlackPixels": 3884,
+        "opaqueExactBlackPixels": 947
+      },
+      "orientation": {
+        "facing": "right",
+        "mirroredFromSource": false,
+        "oppositeFacingAuthored": false
+      },
+      "animationCapability": {
+        "kind": "static_single_image",
+        "frameCount": 1,
+        "frameAnimated": false,
+        "proceduralPresentationPossible": true,
+        "proceduralPresentationExamples": [
+          "translation",
+          "uniform scale",
+          "rotation",
+          "alpha tween"
+        ],
+        "verifiedInRuntime": false
+      },
+      "sha256": "d25c5e2305c706a7fef1bd54ba6bb4fdb8b901c56103fd79c7fb8884908c6f78",
+      "provenance": {
+        "sourcePath": "sources/extracted/rift_runner.png",
+        "sourceSha256": "9979fcecbb606354ef2f65b67fe186368466051b4c57d7aa86b5ef3b68164967",
+        "generatedSourcePath": "sources/generated/troops.png",
+        "generatedSourceSha256": "2fc4061bcb62b0108443c225432efa3f48e9c8bde42424a3e3ca4a016d1853a5",
+        "sourceCell": [
+          0,
+          0,
+          282,
+          373
+        ],
+        "transforms": [
+          "crop",
+          "uniform LANCZOS scale",
+          "no mirror"
+        ],
+        "blackKeyingUsed": false,
+        "sourcePixelsPreserved": true,
+        "identityScope": "original_game_art",
+        "preservationStatus": "ORIGINAL_SOURCE_UNCHANGED",
+        "historicalStatus": "PROVISIONAL",
+        "notes": [
+          "principal connected island at alpha > 128, expanded 3 pixels to retain original edge alpha; source RGB unchanged; detached fragments and faint glow may be omitted",
+          "Original generated sheet: sources/generated/troops.png, crop [663, 92, 945, 465]."
+        ]
+      },
+      "approval": {
+        "basisId": "user-v001-static-direction-approved-20261020",
+        "status": "APPROVED_STATIC_DIRECTION",
+        "runtimeApproval": false
+      },
+      "status": "READY_STATIC",
+      "technicalExceptions": []
+    },
+    {
+      "stableAssetId": "troop:sparkcaster",
+      "entityIds": [
+        "sparkcaster"
+      ],
+      "cardIds": [
+        "sparkcaster"
+      ],
+      "abilityIds": [],
+      "commanderClassId": null,
+      "name": "Sparkcaster",
+      "category": "troop",
+      "path": "troops/sparkcaster/sprite.png",
+      "width": 192,
+      "height": 256,
+      "pivotPixels": [
+        96,
+        236
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.921875
+      ],
+      "anchorKind": "bottom_center_art_ground_contact_proposal",
+      "groundPositionAnchor": true,
+      "hoverOffsetPixels": null,
+      "hoverOffsetStatus": null,
+      "scaleClass": "regular",
+      "proposedDisplaySize": {
+        "width": 96,
+        "height": 128,
+        "visibleWidth": 77.5,
+        "visibleHeight": 96,
+        "uniformScale": 0.5,
+        "status": "PROPOSED_UNTESTED",
+        "runtimeTested": false,
+        "detailAdded": false,
+        "aspectRatioPreserved": true
+      },
+      "originalSourceDimensions": [
+        304,
+        376
+      ],
+      "sourceCropDimensions": [
+        300,
+        372
+      ],
+      "exportDimensions": [
+        192,
+        256
+      ],
+      "actualAlpha": {
+        "channelPresent": true,
+        "extrema": [
+          0,
+          255
+        ],
+        "transparentPixels": 28719,
+        "partialAlphaPixels": 20076,
+        "visiblePixels": 20433,
+        "bounds": [
+          19,
+          44,
+          174,
+          236
+        ],
+        "cornerAlphaValues": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cornerAlphaMaximum": 0,
+        "paddingPixels": [
+          19,
+          44,
+          18,
+          20
+        ],
+        "opaqueNearBlackPixels": 4211,
+        "opaqueExactBlackPixels": 1056
+      },
+      "orientation": {
+        "facing": "right",
+        "mirroredFromSource": false,
+        "oppositeFacingAuthored": false
+      },
+      "animationCapability": {
+        "kind": "static_single_image",
+        "frameCount": 1,
+        "frameAnimated": false,
+        "proceduralPresentationPossible": true,
+        "proceduralPresentationExamples": [
+          "translation",
+          "uniform scale",
+          "rotation",
+          "alpha tween"
+        ],
+        "verifiedInRuntime": false
+      },
+      "sha256": "e84d0ee4d918847ec725a88f5dfa83479555be21b1e0a0058cca76968837c19b",
+      "provenance": {
+        "sourcePath": "sources/extracted/sparkcaster.png",
+        "sourceSha256": "3a84f3fe463264697b574148590a022073cfe0dadd8b32b87d97ae7bc5f83b81",
+        "generatedSourcePath": "sources/generated/troops.png",
+        "generatedSourceSha256": "2fc4061bcb62b0108443c225432efa3f48e9c8bde42424a3e3ca4a016d1853a5",
+        "sourceCell": [
+          0,
+          0,
+          304,
+          376
+        ],
+        "transforms": [
+          "crop",
+          "uniform LANCZOS scale",
+          "no mirror"
+        ],
+        "blackKeyingUsed": false,
+        "sourcePixelsPreserved": true,
+        "identityScope": "original_game_art",
+        "preservationStatus": "ORIGINAL_SOURCE_UNCHANGED",
+        "historicalStatus": "PROVISIONAL",
+        "notes": [
+          "principal connected island at alpha > 128, expanded 3 pixels to retain original edge alpha; source RGB unchanged; detached fragments and faint glow may be omitted",
+          "Original generated sheet: sources/generated/troops.png, crop [944, 89, 1248, 465]."
+        ]
+      },
+      "approval": {
+        "basisId": "user-v001-static-direction-approved-20261020",
+        "status": "APPROVED_STATIC_DIRECTION",
+        "runtimeApproval": false
+      },
+      "status": "READY_STATIC",
+      "technicalExceptions": []
+    },
+    {
+      "stableAssetId": "troop:chog_guardian",
+      "entityIds": [
+        "chog_guardian"
+      ],
+      "cardIds": [
+        "chog_guardian"
+      ],
+      "abilityIds": [],
+      "commanderClassId": null,
+      "name": "Chog Guardian",
+      "category": "troop",
+      "path": "troops/chog_guardian/sprite.png",
+      "width": 192,
+      "height": 256,
+      "pivotPixels": [
+        96,
+        236
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.921875
+      ],
+      "anchorKind": "bottom_center_art_ground_contact_proposal",
+      "groundPositionAnchor": true,
+      "hoverOffsetPixels": null,
+      "hoverOffsetStatus": null,
+      "scaleClass": "regular",
+      "proposedDisplaySize": {
+        "width": 96,
+        "height": 128,
+        "visibleWidth": 89,
+        "visibleHeight": 96,
+        "uniformScale": 0.5,
+        "status": "PROPOSED_UNTESTED",
+        "runtimeTested": false,
+        "detailAdded": false,
+        "aspectRatioPreserved": true
+      },
+      "originalSourceDimensions": [
+        370,
+        399
+      ],
+      "sourceCropDimensions": [
+        366,
+        395
+      ],
+      "exportDimensions": [
+        192,
+        256
+      ],
+      "actualAlpha": {
+        "channelPresent": true,
+        "extrema": [
+          0,
+          255
+        ],
+        "transparentPixels": 25203,
+        "partialAlphaPixels": 23532,
+        "visiblePixels": 23949,
+        "bounds": [
+          7,
+          44,
+          185,
+          236
+        ],
+        "cornerAlphaValues": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cornerAlphaMaximum": 0,
+        "paddingPixels": [
+          7,
+          44,
+          7,
+          20
+        ],
+        "opaqueNearBlackPixels": 4983,
+        "opaqueExactBlackPixels": 1262
+      },
+      "orientation": {
+        "facing": "right",
+        "mirroredFromSource": false,
+        "oppositeFacingAuthored": false
+      },
+      "animationCapability": {
+        "kind": "static_single_image",
+        "frameCount": 1,
+        "frameAnimated": false,
+        "proceduralPresentationPossible": true,
+        "proceduralPresentationExamples": [
+          "translation",
+          "uniform scale",
+          "rotation",
+          "alpha tween"
+        ],
+        "verifiedInRuntime": false
+      },
+      "sha256": "967df7c9c4faf482abceae181126ea9689f1423b8c1f5c91a37038b526a379a4",
+      "provenance": {
+        "sourcePath": "sources/extracted/chog_guardian.png",
+        "sourceSha256": "7809d3adb04edaee6fc9d0f80f54c5b42dba47c9c8334c9cce19a9823783104a",
+        "generatedSourcePath": "sources/generated/troops.png",
+        "generatedSourceSha256": "2fc4061bcb62b0108443c225432efa3f48e9c8bde42424a3e3ca4a016d1853a5",
+        "sourceCell": [
+          0,
+          0,
+          370,
+          399
+        ],
+        "transforms": [
+          "crop",
+          "uniform LANCZOS scale",
+          "no mirror"
+        ],
+        "blackKeyingUsed": false,
+        "sourcePixelsPreserved": true,
+        "identityScope": "original_game_art",
+        "preservationStatus": "ORIGINAL_SOURCE_UNCHANGED",
+        "historicalStatus": "PROVISIONAL",
+        "notes": [
+          "principal connected island at alpha > 128, expanded 3 pixels to retain original edge alpha; source RGB unchanged; detached fragments and faint glow may be omitted",
+          "Original generated sheet: sources/generated/troops.png, crop [8, 456, 378, 855]."
+        ]
+      },
+      "approval": {
+        "basisId": "user-v001-static-direction-approved-20261020",
+        "status": "APPROVED_STATIC_DIRECTION",
+        "runtimeApproval": false
+      },
+      "status": "READY_STATIC",
+      "technicalExceptions": []
+    },
+    {
+      "stableAssetId": "troop:hexwing",
+      "entityIds": [
+        "hexwing"
+      ],
+      "cardIds": [
+        "hexwing"
+      ],
+      "abilityIds": [],
+      "commanderClassId": null,
+      "name": "Hexwing",
+      "category": "troop",
+      "path": "troops/hexwing/sprite.png",
+      "width": 192,
+      "height": 256,
+      "pivotPixels": [
+        96,
+        172
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.671875
+      ],
+      "anchorKind": "visual_center_hover_anchor",
+      "groundPositionAnchor": false,
+      "hoverOffsetPixels": 16,
+      "hoverOffsetStatus": "PROPOSED_UNTESTED",
+      "scaleClass": "flying",
+      "proposedDisplaySize": {
+        "width": 96,
+        "height": 128,
+        "visibleWidth": 78,
+        "visibleHeight": 64,
+        "uniformScale": 0.5,
+        "status": "PROPOSED_UNTESTED",
+        "runtimeTested": false,
+        "detailAdded": false,
+        "aspectRatioPreserved": true
+      },
+      "originalSourceDimensions": [
+        405,
+        333
+      ],
+      "sourceCropDimensions": [
+        401,
+        329
+      ],
+      "exportDimensions": [
+        192,
+        256
+      ],
+      "actualAlpha": {
+        "channelPresent": true,
+        "extrema": [
+          0,
+          255
+        ],
+        "transparentPixels": 38108,
+        "partialAlphaPixels": 10665,
+        "visiblePixels": 11044,
+        "bounds": [
+          18,
+          108,
+          174,
+          236
+        ],
+        "cornerAlphaValues": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cornerAlphaMaximum": 0,
+        "paddingPixels": [
+          18,
+          108,
+          18,
+          20
+        ],
+        "opaqueNearBlackPixels": 1977,
+        "opaqueExactBlackPixels": 571
+      },
+      "orientation": {
+        "facing": "right",
+        "mirroredFromSource": false,
+        "oppositeFacingAuthored": false
+      },
+      "animationCapability": {
+        "kind": "static_single_image",
+        "frameCount": 1,
+        "frameAnimated": false,
+        "proceduralPresentationPossible": true,
+        "proceduralPresentationExamples": [
+          "translation",
+          "uniform scale",
+          "rotation",
+          "alpha tween"
+        ],
+        "verifiedInRuntime": false
+      },
+      "sha256": "15e745c9901988c0cd88aa88ac629e1b457362dee19afdfeb433f997a0c84ab3",
+      "provenance": {
+        "sourcePath": "sources/extracted/hexwing.png",
+        "sourceSha256": "340bfccbfa56113d4af7bad5f0d920a5f3bf61fcb3e8de071cbefbb6fbe395e8",
+        "generatedSourcePath": "sources/generated/troops.png",
+        "generatedSourceSha256": "2fc4061bcb62b0108443c225432efa3f48e9c8bde42424a3e3ca4a016d1853a5",
+        "sourceCell": [
+          0,
+          0,
+          405,
+          333
+        ],
+        "transforms": [
+          "crop",
+          "uniform LANCZOS scale",
+          "no mirror"
+        ],
+        "blackKeyingUsed": false,
+        "sourcePixelsPreserved": true,
+        "identityScope": "original_game_art",
+        "preservationStatus": "ORIGINAL_SOURCE_UNCHANGED",
+        "historicalStatus": "PROVISIONAL",
+        "notes": [
+          "principal connected island at alpha > 128, expanded 3 pixels to retain original edge alpha; source RGB unchanged; detached fragments and faint glow may be omitted",
+          "Original generated sheet: sources/generated/troops.png, crop [326, 474, 731, 807]."
+        ]
+      },
+      "approval": {
+        "basisId": "user-v001-static-direction-approved-20261020",
+        "status": "APPROVED_STATIC_DIRECTION",
+        "runtimeApproval": false
+      },
+      "status": "READY_STATIC",
+      "technicalExceptions": []
+    },
+    {
+      "stableAssetId": "troop:rift_sprites",
+      "entityIds": [
+        "rift_sprites"
+      ],
+      "cardIds": [
+        "rift_sprites"
+      ],
+      "abilityIds": [],
+      "commanderClassId": null,
+      "name": "Rift Sprites",
+      "category": "troop",
+      "path": "troops/rift_sprites/sprite.png",
+      "width": 192,
+      "height": 256,
+      "pivotPixels": [
+        96,
+        172
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.671875
+      ],
+      "anchorKind": "visual_center_hover_anchor",
+      "groundPositionAnchor": false,
+      "hoverOffsetPixels": 16,
+      "hoverOffsetStatus": "PROPOSED_UNTESTED",
+      "scaleClass": "flying",
+      "proposedDisplaySize": {
+        "width": 96,
+        "height": 128,
+        "visibleWidth": 64,
+        "visibleHeight": 64,
+        "uniformScale": 0.5,
+        "status": "PROPOSED_UNTESTED",
+        "runtimeTested": false,
+        "detailAdded": false,
+        "aspectRatioPreserved": true
+      },
+      "originalSourceDimensions": [
+        224,
+        224
+      ],
+      "sourceCropDimensions": [
+        220,
+        220
+      ],
+      "exportDimensions": [
+        192,
+        256
+      ],
+      "actualAlpha": {
+        "channelPresent": true,
+        "extrema": [
+          0,
+          255
+        ],
+        "transparentPixels": 37147,
+        "partialAlphaPixels": 11941,
+        "visiblePixels": 12005,
+        "bounds": [
+          32,
+          108,
+          160,
+          236
+        ],
+        "cornerAlphaValues": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cornerAlphaMaximum": 0,
+        "paddingPixels": [
+          32,
+          108,
+          32,
+          20
+        ],
+        "opaqueNearBlackPixels": 1384,
+        "opaqueExactBlackPixels": 319
+      },
+      "orientation": {
+        "facing": "right",
+        "mirroredFromSource": false,
+        "oppositeFacingAuthored": false
+      },
+      "animationCapability": {
+        "kind": "static_single_image",
+        "frameCount": 1,
+        "frameAnimated": false,
+        "proceduralPresentationPossible": true,
+        "proceduralPresentationExamples": [
+          "translation",
+          "uniform scale",
+          "rotation",
+          "alpha tween"
+        ],
+        "verifiedInRuntime": false
+      },
+      "sha256": "0ef51d1b1bf726806f30b541bc2f4b382679a6019fd07de476b0c41dd300117a",
+      "provenance": {
+        "sourcePath": "sources/extracted/rift_sprites.png",
+        "sourceSha256": "cb98fbce7a109ffee9a5c8304fa5b81e724819ed1abffb2f8f828d56bc8d785b",
+        "generatedSourcePath": "sources/generated/troops.png",
+        "generatedSourceSha256": "2fc4061bcb62b0108443c225432efa3f48e9c8bde42424a3e3ca4a016d1853a5",
+        "sourceCell": [
+          0,
+          0,
+          224,
+          224
+        ],
+        "transforms": [
+          "crop",
+          "uniform LANCZOS scale",
+          "no mirror"
+        ],
+        "blackKeyingUsed": false,
+        "sourcePixelsPreserved": true,
+        "identityScope": "original_game_art",
+        "preservationStatus": "ORIGINAL_SOURCE_UNCHANGED",
+        "historicalStatus": "PROVISIONAL",
+        "notes": [
+          "principal connected island at alpha > 128, expanded 3 pixels to retain original edge alpha; source RGB unchanged; detached fragments and faint glow may be omitted",
+          "Original generated sheet: sources/generated/troops.png, crop [688, 587, 912, 811]."
+        ]
+      },
+      "approval": {
+        "basisId": "user-v001-static-direction-approved-20261020",
+        "status": "APPROVED_STATIC_DIRECTION",
+        "runtimeApproval": false
+      },
+      "status": "READY_STATIC",
+      "technicalExceptions": []
+    },
+    {
+      "stableAssetId": "troop:gale_netter",
+      "entityIds": [
+        "gale_netter"
+      ],
+      "cardIds": [
+        "gale_netter"
+      ],
+      "abilityIds": [],
+      "commanderClassId": null,
+      "name": "Gale Netter",
+      "category": "troop",
+      "path": "troops/gale_netter/sprite.png",
+      "width": 192,
+      "height": 256,
+      "pivotPixels": [
+        96,
+        236
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.921875
+      ],
+      "anchorKind": "bottom_center_art_ground_contact_proposal",
+      "groundPositionAnchor": true,
+      "hoverOffsetPixels": null,
+      "hoverOffsetStatus": null,
+      "scaleClass": "regular",
+      "proposedDisplaySize": {
+        "width": 96,
+        "height": 128,
+        "visibleWidth": 87.5,
+        "visibleHeight": 96,
+        "uniformScale": 0.5,
+        "status": "PROPOSED_UNTESTED",
+        "runtimeTested": false,
+        "detailAdded": false,
+        "aspectRatioPreserved": true
+      },
+      "originalSourceDimensions": [
+        326,
+        358
+      ],
+      "sourceCropDimensions": [
+        322,
+        354
+      ],
+      "exportDimensions": [
+        192,
+        256
+      ],
+      "actualAlpha": {
+        "channelPresent": true,
+        "extrema": [
+          0,
+          255
+        ],
+        "transparentPixels": 26563,
+        "partialAlphaPixels": 22115,
+        "visiblePixels": 22589,
+        "bounds": [
+          9,
+          44,
+          184,
+          236
+        ],
+        "cornerAlphaValues": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cornerAlphaMaximum": 0,
+        "paddingPixels": [
+          9,
+          44,
+          8,
+          20
+        ],
+        "opaqueNearBlackPixels": 5235,
+        "opaqueExactBlackPixels": 1251
+      },
+      "orientation": {
+        "facing": "right",
+        "mirroredFromSource": false,
+        "oppositeFacingAuthored": false
+      },
+      "animationCapability": {
+        "kind": "static_single_image",
+        "frameCount": 1,
+        "frameAnimated": false,
+        "proceduralPresentationPossible": true,
+        "proceduralPresentationExamples": [
+          "translation",
+          "uniform scale",
+          "rotation",
+          "alpha tween"
+        ],
+        "verifiedInRuntime": false
+      },
+      "sha256": "54da1750c12159c0e3013c3e3e3c5e2933040f6d185754691e170b200c2d5f4d",
+      "provenance": {
+        "sourcePath": "sources/extracted/gale_netter.png",
+        "sourceSha256": "59e8c2fd79dbb32ce0db8e69e2f468d9c8f7bebfe5c2c246fcb35df230a33efa",
+        "generatedSourcePath": "sources/generated/troops.png",
+        "generatedSourceSha256": "2fc4061bcb62b0108443c225432efa3f48e9c8bde42424a3e3ca4a016d1853a5",
+        "sourceCell": [
+          0,
+          0,
+          326,
+          358
+        ],
+        "transforms": [
+          "crop",
+          "uniform LANCZOS scale",
+          "no mirror"
+        ],
+        "blackKeyingUsed": false,
+        "sourcePixelsPreserved": true,
+        "identityScope": "original_game_art",
+        "preservationStatus": "ORIGINAL_SOURCE_UNCHANGED",
+        "historicalStatus": "PROVISIONAL",
+        "notes": [
+          "principal connected island at alpha > 128, expanded 3 pixels to retain original edge alpha; source RGB unchanged; detached fragments and faint glow may be omitted",
+          "Original generated sheet: sources/generated/troops.png, crop [923, 493, 1249, 851]."
+        ]
+      },
+      "approval": {
+        "basisId": "user-v001-static-direction-approved-20261020",
+        "status": "APPROVED_STATIC_DIRECTION",
+        "runtimeApproval": false
+      },
+      "status": "READY_STATIC",
+      "technicalExceptions": []
+    },
+    {
+      "stableAssetId": "troop:riftbreaker",
+      "entityIds": [
+        "riftbreaker"
+      ],
+      "cardIds": [
+        "riftbreaker"
+      ],
+      "abilityIds": [],
+      "commanderClassId": null,
+      "name": "Riftbreaker",
+      "category": "troop",
+      "path": "troops/riftbreaker/sprite.png",
+      "width": 192,
+      "height": 256,
+      "pivotPixels": [
+        96,
+        236
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.921875
+      ],
+      "anchorKind": "bottom_center_art_ground_contact_proposal",
+      "groundPositionAnchor": true,
+      "hoverOffsetPixels": null,
+      "hoverOffsetStatus": null,
+      "scaleClass": "heavy",
+      "proposedDisplaySize": {
+        "width": 96,
+        "height": 128,
+        "visibleWidth": 90,
+        "visibleHeight": 95,
+        "uniformScale": 0.5,
+        "status": "PROPOSED_UNTESTED",
+        "runtimeTested": false,
+        "detailAdded": false,
+        "aspectRatioPreserved": true
+      },
+      "originalSourceDimensions": [
+        352,
+        372
+      ],
+      "sourceCropDimensions": [
+        348,
+        368
+      ],
+      "exportDimensions": [
+        192,
+        256
+      ],
+      "actualAlpha": {
+        "channelPresent": true,
+        "extrema": [
+          0,
+          255
+        ],
+        "transparentPixels": 25606,
+        "partialAlphaPixels": 23101,
+        "visiblePixels": 23546,
+        "bounds": [
+          6,
+          46,
+          186,
+          236
+        ],
+        "cornerAlphaValues": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cornerAlphaMaximum": 0,
+        "paddingPixels": [
+          6,
+          46,
+          6,
+          20
+        ],
+        "opaqueNearBlackPixels": 5201,
+        "opaqueExactBlackPixels": 1274
+      },
+      "orientation": {
+        "facing": "right",
+        "mirroredFromSource": false,
+        "oppositeFacingAuthored": false
+      },
+      "animationCapability": {
+        "kind": "static_single_image",
+        "frameCount": 1,
+        "frameAnimated": false,
+        "proceduralPresentationPossible": true,
+        "proceduralPresentationExamples": [
+          "translation",
+          "uniform scale",
+          "rotation",
+          "alpha tween"
+        ],
+        "verifiedInRuntime": false
+      },
+      "sha256": "cfab98861f78dd563f664e9454b744012ec8090b63c321735b5a128b139e8cfe",
+      "provenance": {
+        "sourcePath": "sources/extracted/riftbreaker.png",
+        "sourceSha256": "f753849dbbdef9546a9181a76c5065720127c65517a933280c1add9833dfbb6e",
+        "generatedSourcePath": "sources/generated/troops.png",
+        "generatedSourceSha256": "2fc4061bcb62b0108443c225432efa3f48e9c8bde42424a3e3ca4a016d1853a5",
+        "sourceCell": [
+          0,
+          0,
+          352,
+          372
+        ],
+        "transforms": [
+          "crop",
+          "uniform LANCZOS scale",
+          "no mirror"
+        ],
+        "blackKeyingUsed": false,
+        "sourcePixelsPreserved": true,
+        "identityScope": "original_game_art",
+        "preservationStatus": "ORIGINAL_SOURCE_UNCHANGED",
+        "historicalStatus": "PROVISIONAL",
+        "notes": [
+          "principal connected island at alpha > 128, expanded 3 pixels to retain original edge alpha; source RGB unchanged; detached fragments and faint glow may be omitted",
+          "Original generated sheet: sources/generated/troops.png, crop [6, 857, 358, 1229]."
+        ]
+      },
+      "approval": {
+        "basisId": "user-v001-static-direction-approved-20261020",
+        "status": "APPROVED_STATIC_DIRECTION",
+        "runtimeApproval": false
+      },
+      "status": "READY_STATIC",
+      "technicalExceptions": []
+    },
+    {
+      "stableAssetId": "troop:ember_mauler",
+      "entityIds": [
+        "ember_mauler"
+      ],
+      "cardIds": [
+        "ember_mauler"
+      ],
+      "abilityIds": [],
+      "commanderClassId": null,
+      "name": "Ember Mauler",
+      "category": "troop",
+      "path": "troops/ember_mauler/sprite.png",
+      "width": 192,
+      "height": 256,
+      "pivotPixels": [
+        96,
+        236
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.921875
+      ],
+      "anchorKind": "bottom_center_art_ground_contact_proposal",
+      "groundPositionAnchor": true,
+      "hoverOffsetPixels": null,
+      "hoverOffsetStatus": null,
+      "scaleClass": "heavy",
+      "proposedDisplaySize": {
+        "width": 96,
+        "height": 128,
+        "visibleWidth": 87,
+        "visibleHeight": 96,
+        "uniformScale": 0.5,
+        "status": "PROPOSED_UNTESTED",
+        "runtimeTested": false,
+        "detailAdded": false,
+        "aspectRatioPreserved": true
+      },
+      "originalSourceDimensions": [
+        365,
+        402
+      ],
+      "sourceCropDimensions": [
+        361,
+        398
+      ],
+      "exportDimensions": [
+        192,
+        256
+      ],
+      "actualAlpha": {
+        "channelPresent": true,
+        "extrema": [
+          0,
+          255
+        ],
+        "transparentPixels": 25831,
+        "partialAlphaPixels": 22855,
+        "visiblePixels": 23321,
+        "bounds": [
+          9,
+          44,
+          183,
+          236
+        ],
+        "cornerAlphaValues": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cornerAlphaMaximum": 0,
+        "paddingPixels": [
+          9,
+          44,
+          9,
+          20
+        ],
+        "opaqueNearBlackPixels": 4497,
+        "opaqueExactBlackPixels": 1163
+      },
+      "orientation": {
+        "facing": "right",
+        "mirroredFromSource": false,
+        "oppositeFacingAuthored": false
+      },
+      "animationCapability": {
+        "kind": "static_single_image",
+        "frameCount": 1,
+        "frameAnimated": false,
+        "proceduralPresentationPossible": true,
+        "proceduralPresentationExamples": [
+          "translation",
+          "uniform scale",
+          "rotation",
+          "alpha tween"
+        ],
+        "verifiedInRuntime": false
+      },
+      "sha256": "6216ccea7ab03d8634e3f11ee47da528abbdb567f3ef39b6e15af561ca47ab88",
+      "provenance": {
+        "sourcePath": "sources/extracted/ember_mauler.png",
+        "sourceSha256": "82604bec1afcd5c11990999a0f920e7320229fb9b57c319bd226c44f59b211a4",
+        "generatedSourcePath": "sources/generated/troops.png",
+        "generatedSourceSha256": "2fc4061bcb62b0108443c225432efa3f48e9c8bde42424a3e3ca4a016d1853a5",
+        "sourceCell": [
+          0,
+          0,
+          365,
+          402
+        ],
+        "transforms": [
+          "crop",
+          "uniform LANCZOS scale",
+          "no mirror"
+        ],
+        "blackKeyingUsed": false,
+        "sourcePixelsPreserved": true,
+        "identityScope": "original_game_art",
+        "preservationStatus": "ORIGINAL_SOURCE_UNCHANGED",
+        "historicalStatus": "PROVISIONAL",
+        "notes": [
+          "principal connected island at alpha > 128, expanded 3 pixels to retain original edge alpha; source RGB unchanged; detached fragments and faint glow may be omitted",
+          "Original generated sheet: sources/generated/troops.png, crop [353, 822, 718, 1224]."
+        ]
+      },
+      "approval": {
+        "basisId": "user-v001-static-direction-approved-20261020",
+        "status": "APPROVED_STATIC_DIRECTION",
+        "runtimeApproval": false
+      },
+      "status": "READY_STATIC",
+      "technicalExceptions": []
+    },
+    {
+      "stableAssetId": "spawned:burrow_scrapper",
+      "entityIds": [
+        "burrow_scrapper"
+      ],
+      "cardIds": [],
+      "abilityIds": [],
+      "commanderClassId": null,
+      "name": "Burrow Scrapper",
+      "category": "spawned_troop",
+      "path": "troops/burrow_scrapper/sprite.png",
+      "width": 192,
+      "height": 256,
+      "pivotPixels": [
+        96,
+        236
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.921875
+      ],
+      "anchorKind": "bottom_center_art_ground_contact_proposal",
+      "groundPositionAnchor": true,
+      "hoverOffsetPixels": null,
+      "hoverOffsetStatus": null,
+      "scaleClass": "small_swarm",
+      "proposedDisplaySize": {
+        "width": 96,
+        "height": 128,
+        "visibleWidth": 58,
+        "visibleHeight": 64,
+        "uniformScale": 0.5,
+        "status": "PROPOSED_UNTESTED",
+        "runtimeTested": false,
+        "detailAdded": false,
+        "aspectRatioPreserved": true
+      },
+      "originalSourceDimensions": [
+        294,
+        325
+      ],
+      "sourceCropDimensions": [
+        290,
+        321
+      ],
+      "exportDimensions": [
+        192,
+        256
+      ],
+      "actualAlpha": {
+        "channelPresent": true,
+        "extrema": [
+          0,
+          255
+        ],
+        "transparentPixels": 39217,
+        "partialAlphaPixels": 9562,
+        "visiblePixels": 9935,
+        "bounds": [
+          38,
+          108,
+          154,
+          236
+        ],
+        "cornerAlphaValues": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cornerAlphaMaximum": 0,
+        "paddingPixels": [
+          38,
+          108,
+          38,
+          20
+        ],
+        "opaqueNearBlackPixels": 2119,
+        "opaqueExactBlackPixels": 570
+      },
+      "orientation": {
+        "facing": "right",
+        "mirroredFromSource": false,
+        "oppositeFacingAuthored": false
+      },
+      "animationCapability": {
+        "kind": "static_single_image",
+        "frameCount": 1,
+        "frameAnimated": false,
+        "proceduralPresentationPossible": true,
+        "proceduralPresentationExamples": [
+          "translation",
+          "uniform scale",
+          "rotation",
+          "alpha tween"
+        ],
+        "verifiedInRuntime": false
+      },
+      "sha256": "0d7b3ede8b55f357e06d5ea5723854459993757c859e1f46aff3813cbb5591ed",
+      "provenance": {
+        "sourcePath": "sources/extracted/burrow_scrapper.png",
+        "sourceSha256": "abcd1eb136ef7f1b9ac34f1d75bcee8683f3237b40f399507dd05436f1cb8bcc",
+        "generatedSourcePath": "sources/generated/troops.png",
+        "generatedSourceSha256": "2fc4061bcb62b0108443c225432efa3f48e9c8bde42424a3e3ca4a016d1853a5",
+        "sourceCell": [
+          0,
+          0,
+          294,
+          325
+        ],
+        "transforms": [
+          "crop",
+          "uniform LANCZOS scale",
+          "no mirror"
+        ],
+        "blackKeyingUsed": false,
+        "sourcePixelsPreserved": true,
+        "identityScope": "original_game_art",
+        "preservationStatus": "ORIGINAL_SOURCE_UNCHANGED",
+        "historicalStatus": "PROVISIONAL",
+        "notes": [
+          "principal connected island at alpha > 128, expanded 3 pixels to retain original edge alpha; source RGB unchanged; detached fragments and faint glow may be omitted",
+          "Original generated sheet: sources/generated/troops.png, crop [716, 898, 1010, 1223]."
+        ]
+      },
+      "approval": {
+        "basisId": "user-v001-static-direction-approved-20261020",
+        "status": "APPROVED_STATIC_DIRECTION",
+        "runtimeApproval": false
+      },
+      "status": "READY_STATIC",
+      "technicalExceptions": []
+    },
+    {
+      "stableAssetId": "building:rift_sentry",
+      "entityIds": [
+        "rift_sentry"
+      ],
+      "cardIds": [
+        "rift_sentry"
+      ],
+      "abilityIds": [],
+      "commanderClassId": null,
+      "name": "Rift Sentry",
+      "category": "building",
+      "path": "structures/rift_sentry/sprite.png",
+      "width": 256,
+      "height": 256,
+      "pivotPixels": [
+        128,
+        236
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.921875
+      ],
+      "anchorKind": "bottom_center_art_ground_contact_proposal",
+      "groundPositionAnchor": true,
+      "hoverOffsetPixels": null,
+      "hoverOffsetStatus": null,
+      "scaleClass": "building_structure",
+      "proposedDisplaySize": {
+        "width": 128,
+        "height": 128,
+        "visibleWidth": 104.5,
+        "visibleHeight": 108,
+        "uniformScale": 0.5,
+        "status": "PROPOSED_UNTESTED",
+        "runtimeTested": false,
+        "detailAdded": false,
+        "aspectRatioPreserved": true
+      },
+      "originalSourceDimensions": [
+        291,
+        301
+      ],
+      "sourceCropDimensions": [
+        287,
+        297
+      ],
+      "exportDimensions": [
+        256,
+        256
+      ],
+      "actualAlpha": {
+        "channelPresent": true,
+        "extrema": [
+          0,
+          255
+        ],
+        "transparentPixels": 35461,
+        "partialAlphaPixels": 29757,
+        "visiblePixels": 30075,
+        "bounds": [
+          24,
+          20,
+          233,
+          236
+        ],
+        "cornerAlphaValues": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cornerAlphaMaximum": 0,
+        "paddingPixels": [
+          24,
+          20,
+          23,
+          20
+        ],
+        "opaqueNearBlackPixels": 6871,
+        "opaqueExactBlackPixels": 1304
+      },
+      "orientation": {
+        "facing": "right",
+        "mirroredFromSource": false,
+        "oppositeFacingAuthored": false
+      },
+      "animationCapability": {
+        "kind": "static_single_image",
+        "frameCount": 1,
+        "frameAnimated": false,
+        "proceduralPresentationPossible": true,
+        "proceduralPresentationExamples": [
+          "translation",
+          "uniform scale",
+          "rotation",
+          "alpha tween"
+        ],
+        "verifiedInRuntime": false
+      },
+      "sha256": "7e83053e43f301a1d3d03ec5963083804c375bc7cd9cce6f23e89ecb83597c99",
+      "provenance": {
+        "sourcePath": "sources/extracted/rift_sentry.png",
+        "sourceSha256": "bfe786817c1e6ab8d788f6caf3b754254cd4ce1aed26128813e2329cd8678787",
+        "generatedSourcePath": "sources/generated/world.png",
+        "generatedSourceSha256": "cfa87dae6a3a461ee8788e2f2cc46d71c3dbe6dc44679fd5538b30a5cbcf3a2f",
+        "sourceCell": [
+          0,
+          0,
+          291,
+          301
+        ],
+        "transforms": [
+          "crop",
+          "uniform LANCZOS scale",
+          "no mirror"
+        ],
+        "blackKeyingUsed": false,
+        "sourcePixelsPreserved": true,
+        "identityScope": "original_game_art",
+        "preservationStatus": "ORIGINAL_SOURCE_UNCHANGED",
+        "historicalStatus": "PROVISIONAL",
+        "notes": [
+          "principal connected island at alpha > 128, expanded 3 pixels to retain original edge alpha; source RGB unchanged; detached fragments and faint glow may be omitted",
+          "Original generated sheet: sources/generated/world.png, crop [20, 20, 311, 321]."
+        ]
+      },
+      "approval": {
+        "basisId": "user-v001-static-direction-approved-20261020",
+        "status": "APPROVED_STATIC_DIRECTION",
+        "runtimeApproval": false
+      },
+      "status": "READY_STATIC",
+      "technicalExceptions": []
+    },
+    {
+      "stableAssetId": "building:decoy_totem",
+      "entityIds": [
+        "decoy_totem"
+      ],
+      "cardIds": [
+        "decoy_totem"
+      ],
+      "abilityIds": [],
+      "commanderClassId": null,
+      "name": "Decoy Totem",
+      "category": "building",
+      "path": "structures/decoy_totem/sprite.png",
+      "width": 256,
+      "height": 256,
+      "pivotPixels": [
+        128,
+        236
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.921875
+      ],
+      "anchorKind": "bottom_center_art_ground_contact_proposal",
+      "groundPositionAnchor": true,
+      "hoverOffsetPixels": null,
+      "hoverOffsetStatus": null,
+      "scaleClass": "building_structure",
+      "proposedDisplaySize": {
+        "width": 128,
+        "height": 128,
+        "visibleWidth": 76.5,
+        "visibleHeight": 108,
+        "uniformScale": 0.5,
+        "status": "PROPOSED_UNTESTED",
+        "runtimeTested": false,
+        "detailAdded": false,
+        "aspectRatioPreserved": true
+      },
+      "originalSourceDimensions": [
+        222,
+        311
+      ],
+      "sourceCropDimensions": [
+        218,
+        307
+      ],
+      "exportDimensions": [
+        256,
+        256
+      ],
+      "actualAlpha": {
+        "channelPresent": true,
+        "extrema": [
+          0,
+          255
+        ],
+        "transparentPixels": 43240,
+        "partialAlphaPixels": 21977,
+        "visiblePixels": 22296,
+        "bounds": [
+          52,
+          20,
+          205,
+          236
+        ],
+        "cornerAlphaValues": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cornerAlphaMaximum": 0,
+        "paddingPixels": [
+          52,
+          20,
+          51,
+          20
+        ],
+        "opaqueNearBlackPixels": 5964,
+        "opaqueExactBlackPixels": 1056
+      },
+      "orientation": {
+        "facing": "right",
+        "mirroredFromSource": false,
+        "oppositeFacingAuthored": false
+      },
+      "animationCapability": {
+        "kind": "static_single_image",
+        "frameCount": 1,
+        "frameAnimated": false,
+        "proceduralPresentationPossible": true,
+        "proceduralPresentationExamples": [
+          "translation",
+          "uniform scale",
+          "rotation",
+          "alpha tween"
+        ],
+        "verifiedInRuntime": false
+      },
+      "sha256": "c3fce9e42deda0890756297c12f2cb035c68154ea24a60c793358ade3d09b232",
+      "provenance": {
+        "sourcePath": "sources/extracted/decoy_totem.png",
+        "sourceSha256": "cf111cc0b0abaeeffd70edb01a3510c1502c5658b09c7212b6580d3af4201e9a",
+        "generatedSourcePath": "sources/generated/world.png",
+        "generatedSourceSha256": "cfa87dae6a3a461ee8788e2f2cc46d71c3dbe6dc44679fd5538b30a5cbcf3a2f",
+        "sourceCell": [
+          0,
+          0,
+          222,
+          311
+        ],
+        "transforms": [
+          "crop",
+          "uniform LANCZOS scale",
+          "no mirror"
+        ],
+        "blackKeyingUsed": false,
+        "sourcePixelsPreserved": true,
+        "identityScope": "original_game_art",
+        "preservationStatus": "ORIGINAL_SOURCE_UNCHANGED",
+        "historicalStatus": "PROVISIONAL",
+        "notes": [
+          "principal connected island at alpha > 128, expanded 3 pixels to retain original edge alpha; source RGB unchanged; detached fragments and faint glow may be omitted",
+          "Original generated sheet: sources/generated/world.png, crop [351, 11, 573, 322]."
+        ]
+      },
+      "approval": {
+        "basisId": "user-v001-static-direction-approved-20261020",
+        "status": "APPROVED_STATIC_DIRECTION",
+        "runtimeApproval": false
+      },
+      "status": "READY_STATIC",
+      "technicalExceptions": []
+    },
+    {
+      "stableAssetId": "building:chog_burrow",
+      "entityIds": [
+        "chog_burrow"
+      ],
+      "cardIds": [
+        "chog_burrow"
+      ],
+      "abilityIds": [],
+      "commanderClassId": null,
+      "name": "Chog Burrow",
+      "category": "building",
+      "path": "structures/chog_burrow/sprite.png",
+      "width": 256,
+      "height": 256,
+      "pivotPixels": [
+        128,
+        236
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.921875
+      ],
+      "anchorKind": "bottom_center_art_ground_contact_proposal",
+      "groundPositionAnchor": true,
+      "hoverOffsetPixels": null,
+      "hoverOffsetStatus": null,
+      "scaleClass": "building_structure",
+      "proposedDisplaySize": {
+        "width": 128,
+        "height": 128,
+        "visibleWidth": 122,
+        "visibleHeight": 102.5,
+        "uniformScale": 0.5,
+        "status": "PROPOSED_UNTESTED",
+        "runtimeTested": false,
+        "detailAdded": false,
+        "aspectRatioPreserved": true
+      },
+      "originalSourceDimensions": [
+        339,
+        285
+      ],
+      "sourceCropDimensions": [
+        335,
+        281
+      ],
+      "exportDimensions": [
+        256,
+        256
+      ],
+      "actualAlpha": {
+        "channelPresent": true,
+        "extrema": [
+          0,
+          255
+        ],
+        "transparentPixels": 33507,
+        "partialAlphaPixels": 31833,
+        "visiblePixels": 32029,
+        "bounds": [
+          6,
+          31,
+          250,
+          236
+        ],
+        "cornerAlphaValues": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cornerAlphaMaximum": 0,
+        "paddingPixels": [
+          6,
+          31,
+          6,
+          20
+        ],
+        "opaqueNearBlackPixels": 7900,
+        "opaqueExactBlackPixels": 1082
+      },
+      "orientation": {
+        "facing": "right",
+        "mirroredFromSource": false,
+        "oppositeFacingAuthored": false
+      },
+      "animationCapability": {
+        "kind": "static_single_image",
+        "frameCount": 1,
+        "frameAnimated": false,
+        "proceduralPresentationPossible": true,
+        "proceduralPresentationExamples": [
+          "translation",
+          "uniform scale",
+          "rotation",
+          "alpha tween"
+        ],
+        "verifiedInRuntime": false
+      },
+      "sha256": "ebfd7a44d617e08968bd56fa350a9a9be04a4288dfbb47e88ee40a53ae8f1eb0",
+      "provenance": {
+        "sourcePath": "sources/extracted/chog_burrow.png",
+        "sourceSha256": "f21ad49720bd99ebd88dfec864160e118239c0bad4819f08ed1227a771b1ae49",
+        "generatedSourcePath": "sources/generated/world.png",
+        "generatedSourceSha256": "cfa87dae6a3a461ee8788e2f2cc46d71c3dbe6dc44679fd5538b30a5cbcf3a2f",
+        "sourceCell": [
+          0,
+          0,
+          339,
+          285
+        ],
+        "transforms": [
+          "crop",
+          "uniform LANCZOS scale",
+          "no mirror"
+        ],
+        "blackKeyingUsed": false,
+        "sourcePixelsPreserved": true,
+        "identityScope": "original_game_art",
+        "preservationStatus": "ORIGINAL_SOURCE_UNCHANGED",
+        "historicalStatus": "PROVISIONAL",
+        "notes": [
+          "principal connected island at alpha > 128, expanded 3 pixels to retain original edge alpha; source RGB unchanged; detached fragments and faint glow may be omitted",
+          "Original generated sheet: sources/generated/world.png, crop [617, 37, 956, 322]."
+        ]
+      },
+      "approval": {
+        "basisId": "user-v001-static-direction-approved-20261020",
+        "status": "APPROVED_STATIC_DIRECTION",
+        "runtimeApproval": false
+      },
+      "status": "READY_STATIC",
+      "technicalExceptions": []
+    },
+    {
+      "stableAssetId": "building:rift_mortar",
+      "entityIds": [
+        "rift_mortar"
+      ],
+      "cardIds": [
+        "rift_mortar"
+      ],
+      "abilityIds": [],
+      "commanderClassId": null,
+      "name": "Rift Mortar",
+      "category": "building",
+      "path": "structures/rift_mortar/sprite.png",
+      "width": 256,
+      "height": 256,
+      "pivotPixels": [
+        128,
+        236
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.921875
+      ],
+      "anchorKind": "bottom_center_art_ground_contact_proposal",
+      "groundPositionAnchor": true,
+      "hoverOffsetPixels": null,
+      "hoverOffsetStatus": null,
+      "scaleClass": "building_structure",
+      "proposedDisplaySize": {
+        "width": 128,
+        "height": 128,
+        "visibleWidth": 105.5,
+        "visibleHeight": 108,
+        "uniformScale": 0.5,
+        "status": "PROPOSED_UNTESTED",
+        "runtimeTested": false,
+        "detailAdded": false,
+        "aspectRatioPreserved": true
+      },
+      "originalSourceDimensions": [
+        275,
+        281
+      ],
+      "sourceCropDimensions": [
+        271,
+        277
+      ],
+      "exportDimensions": [
+        256,
+        256
+      ],
+      "actualAlpha": {
+        "channelPresent": true,
+        "extrema": [
+          0,
+          255
+        ],
+        "transparentPixels": 33300,
+        "partialAlphaPixels": 31985,
+        "visiblePixels": 32236,
+        "bounds": [
+          23,
+          20,
+          234,
+          236
+        ],
+        "cornerAlphaValues": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cornerAlphaMaximum": 0,
+        "paddingPixels": [
+          23,
+          20,
+          22,
+          20
+        ],
+        "opaqueNearBlackPixels": 6192,
+        "opaqueExactBlackPixels": 1048
+      },
+      "orientation": {
+        "facing": "right",
+        "mirroredFromSource": false,
+        "oppositeFacingAuthored": false
+      },
+      "animationCapability": {
+        "kind": "static_single_image",
+        "frameCount": 1,
+        "frameAnimated": false,
+        "proceduralPresentationPossible": true,
+        "proceduralPresentationExamples": [
+          "translation",
+          "uniform scale",
+          "rotation",
+          "alpha tween"
+        ],
+        "verifiedInRuntime": false
+      },
+      "sha256": "586b4d5494cb220ccda8697f0dc3a9942bf5a53cc8051c8211a8a677a62dbda3",
+      "provenance": {
+        "sourcePath": "sources/extracted/rift_mortar.png",
+        "sourceSha256": "4f234c90d36d0de284ec7e52ce2c21f096c429ab8cf4999b8c13cd9cba7ce2e1",
+        "generatedSourcePath": "sources/generated/world.png",
+        "generatedSourceSha256": "cfa87dae6a3a461ee8788e2f2cc46d71c3dbe6dc44679fd5538b30a5cbcf3a2f",
+        "sourceCell": [
+          0,
+          0,
+          275,
+          281
+        ],
+        "transforms": [
+          "crop",
+          "uniform LANCZOS scale",
+          "no mirror"
+        ],
+        "blackKeyingUsed": false,
+        "sourcePixelsPreserved": true,
+        "identityScope": "original_game_art",
+        "preservationStatus": "ORIGINAL_SOURCE_UNCHANGED",
+        "historicalStatus": "PROVISIONAL",
+        "notes": [
+          "principal connected island at alpha > 128, expanded 3 pixels to retain original edge alpha; source RGB unchanged; detached fragments and faint glow may be omitted",
+          "Original generated sheet: sources/generated/world.png, crop [967, 40, 1242, 321]."
+        ]
+      },
+      "approval": {
+        "basisId": "user-v001-static-direction-approved-20261020",
+        "status": "APPROVED_STATIC_DIRECTION",
+        "runtimeApproval": false
+      },
+      "status": "READY_STATIC",
+      "technicalExceptions": []
+    },
+    {
+      "stableAssetId": "spell:chaos_bolt",
+      "entityIds": [
+        "chaos_bolt"
+      ],
+      "cardIds": [
+        "chaos_bolt"
+      ],
+      "abilityIds": [],
+      "commanderClassId": null,
+      "name": "Chaos Bolt",
+      "category": "spell",
+      "path": "spells/chaos_bolt/sprite.png",
+      "width": 256,
+      "height": 256,
+      "pivotPixels": [
+        128,
+        128
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.5
+      ],
+      "anchorKind": "image_center",
+      "groundPositionAnchor": false,
+      "hoverOffsetPixels": null,
+      "hoverOffsetStatus": null,
+      "scaleClass": "projectile",
+      "proposedDisplaySize": {
+        "width": 128,
+        "height": 128,
+        "visibleWidth": 64,
+        "visibleHeight": 90,
+        "uniformScale": 0.5,
+        "status": "PROPOSED_UNTESTED",
+        "runtimeTested": false,
+        "detailAdded": false,
+        "aspectRatioPreserved": true
+      },
+      "originalSourceDimensions": [
+        220,
+        308
+      ],
+      "sourceCropDimensions": [
+        216,
+        304
+      ],
+      "exportDimensions": [
+        256,
+        256
+      ],
+      "actualAlpha": {
+        "channelPresent": true,
+        "extrema": [
+          0,
+          255
+        ],
+        "transparentPixels": 56169,
+        "partialAlphaPixels": 9229,
+        "visiblePixels": 9367,
+        "bounds": [
+          64,
+          56,
+          192,
+          236
+        ],
+        "cornerAlphaValues": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cornerAlphaMaximum": 0,
+        "paddingPixels": [
+          64,
+          56,
+          64,
+          20
+        ],
+        "opaqueNearBlackPixels": 0,
+        "opaqueExactBlackPixels": 0
+      },
+      "orientation": {
+        "facing": "not_applicable",
+        "mirroredFromSource": false,
+        "oppositeFacingAuthored": false
+      },
+      "animationCapability": {
+        "kind": "static_single_image",
+        "frameCount": 1,
+        "frameAnimated": false,
+        "proceduralPresentationPossible": true,
+        "proceduralPresentationExamples": [
+          "translation",
+          "uniform scale",
+          "rotation",
+          "alpha tween"
+        ],
+        "verifiedInRuntime": false
+      },
+      "sha256": "441a2c8223ce0342df2dba826ca5f3e52f0d48206108769937df69c26a85ab20",
+      "provenance": {
+        "sourcePath": "sources/extracted/chaos_bolt.png",
+        "sourceSha256": "1a1461726c749bd568ffb67a8142dc6c2ffee12e875d9a018e517ad68195fddd",
+        "generatedSourcePath": "sources/generated/world.png",
+        "generatedSourceSha256": "cfa87dae6a3a461ee8788e2f2cc46d71c3dbe6dc44679fd5538b30a5cbcf3a2f",
+        "sourceCell": [
+          0,
+          0,
+          220,
+          308
+        ],
+        "transforms": [
+          "crop",
+          "uniform LANCZOS scale",
+          "no mirror"
+        ],
+        "blackKeyingUsed": false,
+        "sourcePixelsPreserved": true,
+        "identityScope": "original_game_art",
+        "preservationStatus": "ORIGINAL_SOURCE_UNCHANGED",
+        "historicalStatus": "PROVISIONAL",
+        "notes": [
+          "principal connected island at alpha > 128, expanded 3 pixels to retain original edge alpha; source RGB unchanged; detached fragments and faint glow may be omitted",
+          "Original generated sheet: sources/generated/world.png, crop [699, 370, 919, 678]."
+        ]
+      },
+      "approval": {
+        "basisId": "user-v001-static-direction-approved-20261020",
+        "status": "APPROVED_STATIC_DIRECTION",
+        "runtimeApproval": false
+      },
+      "status": "READY_STATIC",
+      "technicalExceptions": []
+    },
+    {
+      "stableAssetId": "spell:rally_horn",
+      "entityIds": [
+        "rally_horn"
+      ],
+      "cardIds": [
+        "rally_horn"
+      ],
+      "abilityIds": [],
+      "commanderClassId": null,
+      "name": "Rally Horn",
+      "category": "spell",
+      "path": "spells/rally_horn/sprite.png",
+      "width": 256,
+      "height": 256,
+      "pivotPixels": [
+        128,
+        128
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.5
+      ],
+      "anchorKind": "image_center",
+      "groundPositionAnchor": false,
+      "hoverOffsetPixels": null,
+      "hoverOffsetStatus": null,
+      "scaleClass": "area_effect",
+      "proposedDisplaySize": {
+        "width": 128,
+        "height": 128,
+        "visibleWidth": 90,
+        "visibleHeight": 90,
+        "uniformScale": 0.5,
+        "status": "PROPOSED_UNTESTED",
+        "runtimeTested": false,
+        "detailAdded": false,
+        "aspectRatioPreserved": true
+      },
+      "originalSourceDimensions": [
+        248,
+        248
+      ],
+      "sourceCropDimensions": [
+        244,
+        244
+      ],
+      "exportDimensions": [
+        256,
+        256
+      ],
+      "actualAlpha": {
+        "channelPresent": true,
+        "extrema": [
+          0,
+          255
+        ],
+        "transparentPixels": 48106,
+        "partialAlphaPixels": 17192,
+        "visiblePixels": 17430,
+        "bounds": [
+          38,
+          56,
+          218,
+          236
+        ],
+        "cornerAlphaValues": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cornerAlphaMaximum": 0,
+        "paddingPixels": [
+          38,
+          56,
+          38,
+          20
+        ],
+        "opaqueNearBlackPixels": 3485,
+        "opaqueExactBlackPixels": 525
+      },
+      "orientation": {
+        "facing": "not_applicable",
+        "mirroredFromSource": false,
+        "oppositeFacingAuthored": false
+      },
+      "animationCapability": {
+        "kind": "static_single_image",
+        "frameCount": 1,
+        "frameAnimated": false,
+        "proceduralPresentationPossible": true,
+        "proceduralPresentationExamples": [
+          "translation",
+          "uniform scale",
+          "rotation",
+          "alpha tween"
+        ],
+        "verifiedInRuntime": false
+      },
+      "sha256": "2914c69f250c12349f76cab8c570681cd4be0e41d09378b86311c3368ce99fb7",
+      "provenance": {
+        "sourcePath": "sources/extracted/rally_horn.png",
+        "sourceSha256": "eb31f02bc732b86878dce8dd6dea18bd70b6031e74e0520d74666627be0cc8e3",
+        "generatedSourcePath": "sources/generated/world.png",
+        "generatedSourceSha256": "cfa87dae6a3a461ee8788e2f2cc46d71c3dbe6dc44679fd5538b30a5cbcf3a2f",
+        "sourceCell": [
+          0,
+          0,
+          248,
+          248
+        ],
+        "transforms": [
+          "crop",
+          "uniform LANCZOS scale",
+          "no mirror"
+        ],
+        "blackKeyingUsed": false,
+        "sourcePixelsPreserved": true,
+        "identityScope": "original_game_art",
+        "preservationStatus": "ORIGINAL_SOURCE_UNCHANGED",
+        "historicalStatus": "PROVISIONAL",
+        "notes": [
+          "principal connected island at alpha > 128, expanded 3 pixels to retain original edge alpha; source RGB unchanged; detached fragments and faint glow may be omitted",
+          "Original generated sheet: sources/generated/world.png, crop [960, 408, 1208, 656]."
+        ]
+      },
+      "approval": {
+        "basisId": "user-v001-static-direction-approved-20261020",
+        "status": "APPROVED_STATIC_DIRECTION",
+        "runtimeApproval": false
+      },
+      "status": "READY_STATIC",
+      "technicalExceptions": []
+    },
+    {
+      "stableAssetId": "spell:chaos_comet",
+      "entityIds": [
+        "chaos_comet"
+      ],
+      "cardIds": [
+        "chaos_comet"
+      ],
+      "abilityIds": [],
+      "commanderClassId": null,
+      "name": "Chaos Comet",
+      "category": "spell",
+      "path": "spells/chaos_comet/sprite.png",
+      "width": 256,
+      "height": 256,
+      "pivotPixels": [
+        128,
+        128
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.5
+      ],
+      "anchorKind": "image_center",
+      "groundPositionAnchor": false,
+      "hoverOffsetPixels": null,
+      "hoverOffsetStatus": null,
+      "scaleClass": "projectile",
+      "proposedDisplaySize": {
+        "width": 128,
+        "height": 128,
+        "visibleWidth": 99.5,
+        "visibleHeight": 90,
+        "uniformScale": 0.5,
+        "status": "PROPOSED_UNTESTED",
+        "runtimeTested": false,
+        "detailAdded": false,
+        "aspectRatioPreserved": true
+      },
+      "originalSourceDimensions": [
+        284,
+        257
+      ],
+      "sourceCropDimensions": [
+        280,
+        253
+      ],
+      "exportDimensions": [
+        256,
+        256
+      ],
+      "actualAlpha": {
+        "channelPresent": true,
+        "extrema": [
+          0,
+          255
+        ],
+        "transparentPixels": 44335,
+        "partialAlphaPixels": 21175,
+        "visiblePixels": 21201,
+        "bounds": [
+          29,
+          56,
+          228,
+          236
+        ],
+        "cornerAlphaValues": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cornerAlphaMaximum": 0,
+        "paddingPixels": [
+          29,
+          56,
+          28,
+          20
+        ],
+        "opaqueNearBlackPixels": 137,
+        "opaqueExactBlackPixels": 2
+      },
+      "orientation": {
+        "facing": "not_applicable",
+        "mirroredFromSource": false,
+        "oppositeFacingAuthored": false
+      },
+      "animationCapability": {
+        "kind": "static_single_image",
+        "frameCount": 1,
+        "frameAnimated": false,
+        "proceduralPresentationPossible": true,
+        "proceduralPresentationExamples": [
+          "translation",
+          "uniform scale",
+          "rotation",
+          "alpha tween"
+        ],
+        "verifiedInRuntime": false
+      },
+      "sha256": "9ed8ae0180c5f2f8c89bd53cb23791e326b05ddfd700c8e401e54d00258333d4",
+      "provenance": {
+        "sourcePath": "sources/extracted/chaos_comet.png",
+        "sourceSha256": "00c93c3f7cb8999826b56bcbc037e08211eaeff025f506392311a248542e1e3e",
+        "generatedSourcePath": "sources/generated/world.png",
+        "generatedSourceSha256": "cfa87dae6a3a461ee8788e2f2cc46d71c3dbe6dc44679fd5538b30a5cbcf3a2f",
+        "sourceCell": [
+          0,
+          0,
+          284,
+          257
+        ],
+        "transforms": [
+          "crop",
+          "uniform LANCZOS scale",
+          "no mirror"
+        ],
+        "blackKeyingUsed": false,
+        "sourcePixelsPreserved": true,
+        "identityScope": "original_game_art",
+        "preservationStatus": "ORIGINAL_SOURCE_UNCHANGED",
+        "historicalStatus": "PROVISIONAL",
+        "notes": [
+          "principal connected island at alpha > 128, expanded 3 pixels to retain original edge alpha; source RGB unchanged; detached fragments and faint glow may be omitted",
+          "Original generated sheet: sources/generated/world.png, crop [19, 690, 303, 947]."
+        ]
+      },
+      "approval": {
+        "basisId": "user-v001-static-direction-approved-20261020",
+        "status": "APPROVED_STATIC_DIRECTION",
+        "runtimeApproval": false
+      },
+      "status": "READY_STATIC",
+      "technicalExceptions": []
+    },
+    {
+      "stableAssetId": "spell:rift_snare",
+      "entityIds": [
+        "rift_snare"
+      ],
+      "cardIds": [
+        "rift_snare"
+      ],
+      "abilityIds": [],
+      "commanderClassId": null,
+      "name": "Rift Snare",
+      "category": "spell",
+      "path": "spells/rift_snare/sprite.png",
+      "width": 256,
+      "height": 256,
+      "pivotPixels": [
+        128,
+        128
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.5
+      ],
+      "anchorKind": "image_center",
+      "groundPositionAnchor": false,
+      "hoverOffsetPixels": null,
+      "hoverOffsetStatus": null,
+      "scaleClass": "area_effect",
+      "proposedDisplaySize": {
+        "width": 128,
+        "height": 128,
+        "visibleWidth": 122,
+        "visibleHeight": 87.5,
+        "uniformScale": 0.5,
+        "status": "PROPOSED_UNTESTED",
+        "runtimeTested": false,
+        "detailAdded": false,
+        "aspectRatioPreserved": true
+      },
+      "originalSourceDimensions": [
+        319,
+        230
+      ],
+      "sourceCropDimensions": [
+        315,
+        226
+      ],
+      "exportDimensions": [
+        256,
+        256
+      ],
+      "actualAlpha": {
+        "channelPresent": true,
+        "extrema": [
+          0,
+          255
+        ],
+        "transparentPixels": 38992,
+        "partialAlphaPixels": 26473,
+        "visiblePixels": 26544,
+        "bounds": [
+          6,
+          61,
+          250,
+          236
+        ],
+        "cornerAlphaValues": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cornerAlphaMaximum": 0,
+        "paddingPixels": [
+          6,
+          61,
+          6,
+          20
+        ],
+        "opaqueNearBlackPixels": 0,
+        "opaqueExactBlackPixels": 0
+      },
+      "orientation": {
+        "facing": "not_applicable",
+        "mirroredFromSource": false,
+        "oppositeFacingAuthored": false
+      },
+      "animationCapability": {
+        "kind": "static_single_image",
+        "frameCount": 1,
+        "frameAnimated": false,
+        "proceduralPresentationPossible": true,
+        "proceduralPresentationExamples": [
+          "translation",
+          "uniform scale",
+          "rotation",
+          "alpha tween"
+        ],
+        "verifiedInRuntime": false
+      },
+      "sha256": "795779714a6c41e155b93bf955f922526cd3e0b9d0ec9e3793555861acb31ff9",
+      "provenance": {
+        "sourcePath": "sources/extracted/rift_snare.png",
+        "sourceSha256": "ff9f37e95b631c57111c35da93a28fb783ed4f762b2374a09f79824abfeec5f5",
+        "generatedSourcePath": "sources/generated/world.png",
+        "generatedSourceSha256": "cfa87dae6a3a461ee8788e2f2cc46d71c3dbe6dc44679fd5538b30a5cbcf3a2f",
+        "sourceCell": [
+          0,
+          0,
+          319,
+          230
+        ],
+        "transforms": [
+          "crop",
+          "uniform LANCZOS scale",
+          "no mirror"
+        ],
+        "blackKeyingUsed": false,
+        "sourcePixelsPreserved": true,
+        "identityScope": "original_game_art",
+        "preservationStatus": "ORIGINAL_SOURCE_UNCHANGED",
+        "historicalStatus": "PROVISIONAL",
+        "notes": [
+          "principal connected island at alpha > 128, expanded 3 pixels to retain original edge alpha; source RGB unchanged; detached fragments and faint glow may be omitted",
+          "Original generated sheet: sources/generated/world.png, crop [329, 717, 648, 947]."
+        ]
+      },
+      "approval": {
+        "basisId": "user-v001-static-direction-approved-20261020",
+        "status": "APPROVED_STATIC_DIRECTION",
+        "runtimeApproval": false
+      },
+      "status": "READY_STATIC",
+      "technicalExceptions": []
+    },
+    {
+      "stableAssetId": "commander:bulwark",
+      "entityIds": [
+        "commander_bulwark"
+      ],
+      "cardIds": [
+        "commander_bulwark"
+      ],
+      "abilityIds": [
+        "bulwark-aegis-wall",
+        "bulwark-bedrock"
+      ],
+      "commanderClassId": "bulwark",
+      "name": "Bulwark",
+      "category": "commander_class_template",
+      "path": "commanders/commander_bulwark/sprite.png",
+      "width": 192,
+      "height": 256,
+      "pivotPixels": [
+        96,
+        236
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.921875
+      ],
+      "anchorKind": "bottom_center_art_ground_contact_proposal",
+      "groundPositionAnchor": true,
+      "hoverOffsetPixels": null,
+      "hoverOffsetStatus": null,
+      "scaleClass": "commander",
+      "proposedDisplaySize": {
+        "width": 96,
+        "height": 128,
+        "visibleWidth": 80,
+        "visibleHeight": 104,
+        "uniformScale": 0.5,
+        "status": "PROPOSED_UNTESTED",
+        "runtimeTested": false,
+        "detailAdded": false,
+        "aspectRatioPreserved": true
+      },
+      "originalSourceDimensions": [
+        535,
+        695
+      ],
+      "sourceCropDimensions": [
+        531,
+        690
+      ],
+      "exportDimensions": [
+        192,
+        256
+      ],
+      "actualAlpha": {
+        "channelPresent": true,
+        "extrema": [
+          0,
+          255
+        ],
+        "transparentPixels": 24160,
+        "partialAlphaPixels": 24432,
+        "visiblePixels": 24992,
+        "bounds": [
+          16,
+          28,
+          176,
+          236
+        ],
+        "cornerAlphaValues": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cornerAlphaMaximum": 0,
+        "paddingPixels": [
+          16,
+          28,
+          16,
+          20
+        ],
+        "opaqueNearBlackPixels": 6113,
+        "opaqueExactBlackPixels": 1912
+      },
+      "orientation": {
+        "facing": "right",
+        "mirroredFromSource": false,
+        "oppositeFacingAuthored": false
+      },
+      "animationCapability": {
+        "kind": "static_single_image",
+        "frameCount": 1,
+        "frameAnimated": false,
+        "proceduralPresentationPossible": true,
+        "proceduralPresentationExamples": [
+          "translation",
+          "uniform scale",
+          "rotation",
+          "alpha tween"
+        ],
+        "verifiedInRuntime": false
+      },
+      "sha256": "029166837653cc636f6bf725ff9cccc8ae06aeed806d0072f0759699274d2bb1",
+      "provenance": {
+        "sourcePath": "sources/extracted/commander_bulwark.png",
+        "sourceSha256": "e005175581d0b28e12661c33254e52510d3050ad1486b1bdb506f1bc03108b70",
+        "generatedSourcePath": "sources/generated/commanders.png",
+        "generatedSourceSha256": "e8e81752c6fa1a7a347067ffbc47b532db7b25fa5546815637042cf60517e4fb",
+        "sourceCell": [
+          0,
+          0,
+          535,
+          695
+        ],
+        "transforms": [
+          "crop",
+          "uniform LANCZOS scale",
+          "no mirror"
+        ],
+        "blackKeyingUsed": false,
+        "sourcePixelsPreserved": true,
+        "identityScope": "class_battle_template",
+        "preservationStatus": "ORIGINAL_SOURCE_UNCHANGED",
+        "historicalStatus": "PROVISIONAL",
+        "notes": [
+          "principal connected island at alpha > 128, expanded 3 pixels to retain original edge alpha; source RGB unchanged; detached fragments and faint glow may be omitted",
+          "Original generated sheet: sources/generated/commanders.png, crop [17, 9, 552, 704]."
+        ]
+      },
+      "approval": {
+        "basisId": "user-v001-static-direction-approved-20261020",
+        "status": "APPROVED_STATIC_DIRECTION",
+        "runtimeApproval": false
+      },
+      "status": "READY_STATIC",
+      "technicalExceptions": []
+    },
+    {
+      "stableAssetId": "commander:reaver",
+      "entityIds": [
+        "commander_reaver"
+      ],
+      "cardIds": [
+        "commander_reaver"
+      ],
+      "abilityIds": [
+        "reaver-frenzy-rush",
+        "reaver-bloodlust"
+      ],
+      "commanderClassId": "reaver",
+      "name": "Reaver",
+      "category": "commander_class_template",
+      "path": "commanders/commander_reaver/sprite.png",
+      "width": 192,
+      "height": 256,
+      "pivotPixels": [
+        96,
+        236
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.921875
+      ],
+      "anchorKind": "bottom_center_art_ground_contact_proposal",
+      "groundPositionAnchor": true,
+      "hoverOffsetPixels": null,
+      "hoverOffsetStatus": null,
+      "scaleClass": "commander",
+      "proposedDisplaySize": {
+        "width": 96,
+        "height": 128,
+        "visibleWidth": 89.5,
+        "visibleHeight": 104,
+        "uniformScale": 0.5,
+        "status": "PROPOSED_UNTESTED",
+        "runtimeTested": false,
+        "detailAdded": false,
+        "aspectRatioPreserved": true
+      },
+      "originalSourceDimensions": [
+        551,
+        638
+      ],
+      "sourceCropDimensions": [
+        547,
+        634
+      ],
+      "exportDimensions": [
+        192,
+        256
+      ],
+      "actualAlpha": {
+        "channelPresent": true,
+        "extrema": [
+          0,
+          255
+        ],
+        "transparentPixels": 21964,
+        "partialAlphaPixels": 26515,
+        "visiblePixels": 27188,
+        "bounds": [
+          7,
+          28,
+          186,
+          236
+        ],
+        "cornerAlphaValues": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cornerAlphaMaximum": 0,
+        "paddingPixels": [
+          7,
+          28,
+          6,
+          20
+        ],
+        "opaqueNearBlackPixels": 9419,
+        "opaqueExactBlackPixels": 2707
+      },
+      "orientation": {
+        "facing": "right",
+        "mirroredFromSource": false,
+        "oppositeFacingAuthored": false
+      },
+      "animationCapability": {
+        "kind": "static_single_image",
+        "frameCount": 1,
+        "frameAnimated": false,
+        "proceduralPresentationPossible": true,
+        "proceduralPresentationExamples": [
+          "translation",
+          "uniform scale",
+          "rotation",
+          "alpha tween"
+        ],
+        "verifiedInRuntime": false
+      },
+      "sha256": "13aa94a51c35b2f1d8d53555d5b587f6cce2c99c9554867fb885509db3e8573f",
+      "provenance": {
+        "sourcePath": "sources/extracted/commander_reaver.png",
+        "sourceSha256": "2074e8a3a13e7a896e0b56b6b7390cc5e7491ec5c39f7a6413cd0d24f26f4a80",
+        "generatedSourcePath": "sources/generated/commanders.png",
+        "generatedSourceSha256": "e8e81752c6fa1a7a347067ffbc47b532db7b25fa5546815637042cf60517e4fb",
+        "sourceCell": [
+          0,
+          0,
+          551,
+          638
+        ],
+        "transforms": [
+          "crop",
+          "uniform LANCZOS scale",
+          "no mirror"
+        ],
+        "blackKeyingUsed": false,
+        "sourcePixelsPreserved": true,
+        "identityScope": "class_battle_template",
+        "preservationStatus": "ORIGINAL_SOURCE_UNCHANGED",
+        "historicalStatus": "PROVISIONAL",
+        "notes": [
+          "principal connected island at alpha > 128, expanded 3 pixels to retain original edge alpha; source RGB unchanged; detached fragments and faint glow may be omitted",
+          "Original generated sheet: sources/generated/commanders.png, crop [567, 67, 1118, 705]."
+        ]
+      },
+      "approval": {
+        "basisId": "user-v001-static-direction-approved-20261020",
+        "status": "APPROVED_STATIC_DIRECTION",
+        "runtimeApproval": false
+      },
+      "status": "READY_STATIC",
+      "technicalExceptions": []
+    },
+    {
+      "stableAssetId": "commander:deadeye",
+      "entityIds": [
+        "commander_deadeye"
+      ],
+      "cardIds": [
+        "commander_deadeye"
+      ],
+      "abilityIds": [
+        "deadeye-piercing-volley",
+        "deadeye-overwatch"
+      ],
+      "commanderClassId": "deadeye",
+      "name": "Deadeye",
+      "category": "commander_class_template",
+      "path": "commanders/commander_deadeye/sprite.png",
+      "width": 192,
+      "height": 256,
+      "pivotPixels": [
+        96,
+        236
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.921875
+      ],
+      "anchorKind": "bottom_center_art_ground_contact_proposal",
+      "groundPositionAnchor": true,
+      "hoverOffsetPixels": null,
+      "hoverOffsetStatus": null,
+      "scaleClass": "commander",
+      "proposedDisplaySize": {
+        "width": 96,
+        "height": 128,
+        "visibleWidth": 90,
+        "visibleHeight": 99.5,
+        "uniformScale": 0.5,
+        "status": "PROPOSED_UNTESTED",
+        "runtimeTested": false,
+        "detailAdded": false,
+        "aspectRatioPreserved": true
+      },
+      "originalSourceDimensions": [
+        573,
+        632
+      ],
+      "sourceCropDimensions": [
+        569,
+        628
+      ],
+      "exportDimensions": [
+        192,
+        256
+      ],
+      "actualAlpha": {
+        "channelPresent": true,
+        "extrema": [
+          0,
+          255
+        ],
+        "transparentPixels": 26472,
+        "partialAlphaPixels": 22044,
+        "visiblePixels": 22680,
+        "bounds": [
+          6,
+          37,
+          186,
+          236
+        ],
+        "cornerAlphaValues": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cornerAlphaMaximum": 0,
+        "paddingPixels": [
+          6,
+          37,
+          6,
+          20
+        ],
+        "opaqueNearBlackPixels": 5701,
+        "opaqueExactBlackPixels": 1667
+      },
+      "orientation": {
+        "facing": "right",
+        "mirroredFromSource": false,
+        "oppositeFacingAuthored": false
+      },
+      "animationCapability": {
+        "kind": "static_single_image",
+        "frameCount": 1,
+        "frameAnimated": false,
+        "proceduralPresentationPossible": true,
+        "proceduralPresentationExamples": [
+          "translation",
+          "uniform scale",
+          "rotation",
+          "alpha tween"
+        ],
+        "verifiedInRuntime": false
+      },
+      "sha256": "786e1b994edff69145c5088eab903ae205d2da2b15bc2084de4d892f08cf0bec",
+      "provenance": {
+        "sourcePath": "sources/extracted/commander_deadeye.png",
+        "sourceSha256": "25a046318f2f590155711e338f7c45e36cee99cc0431e1705601104943ada65c",
+        "generatedSourcePath": "sources/generated/commanders.png",
+        "generatedSourceSha256": "e8e81752c6fa1a7a347067ffbc47b532db7b25fa5546815637042cf60517e4fb",
+        "sourceCell": [
+          0,
+          0,
+          573,
+          632
+        ],
+        "transforms": [
+          "crop",
+          "uniform LANCZOS scale",
+          "no mirror"
+        ],
+        "blackKeyingUsed": false,
+        "sourcePixelsPreserved": true,
+        "identityScope": "class_battle_template",
+        "preservationStatus": "ORIGINAL_SOURCE_UNCHANGED",
+        "historicalStatus": "PROVISIONAL",
+        "notes": [
+          "principal connected island at alpha > 128, expanded 3 pixels to retain original edge alpha; source RGB unchanged; detached fragments and faint glow may be omitted",
+          "Original generated sheet: sources/generated/commanders.png, crop [1092, 72, 1665, 704]."
+        ]
+      },
+      "approval": {
+        "basisId": "user-v001-static-direction-approved-20261020",
+        "status": "APPROVED_STATIC_DIRECTION",
+        "runtimeApproval": false
+      },
+      "status": "READY_STATIC",
+      "technicalExceptions": []
+    },
+    {
+      "stableAssetId": "commander:scout",
+      "entityIds": [
+        "commander_scout"
+      ],
+      "cardIds": [
+        "commander_scout"
+      ],
+      "abilityIds": [
+        "scout-shadow-step",
+        "scout-pathfinder"
+      ],
+      "commanderClassId": "scout",
+      "name": "Scout",
+      "category": "commander_class_template",
+      "path": "commanders/commander_scout/sprite.png",
+      "width": 192,
+      "height": 256,
+      "pivotPixels": [
+        96,
+        236
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.921875
+      ],
+      "anchorKind": "bottom_center_art_ground_contact_proposal",
+      "groundPositionAnchor": true,
+      "hoverOffsetPixels": null,
+      "hoverOffsetStatus": null,
+      "scaleClass": "commander",
+      "proposedDisplaySize": {
+        "width": 96,
+        "height": 128,
+        "visibleWidth": 74,
+        "visibleHeight": 104,
+        "uniformScale": 0.5,
+        "status": "PROPOSED_UNTESTED",
+        "runtimeTested": false,
+        "detailAdded": false,
+        "aspectRatioPreserved": true
+      },
+      "originalSourceDimensions": [
+        525,
+        705
+      ],
+      "sourceCropDimensions": [
+        472,
+        665
+      ],
+      "exportDimensions": [
+        192,
+        256
+      ],
+      "actualAlpha": {
+        "channelPresent": true,
+        "extrema": [
+          0,
+          255
+        ],
+        "transparentPixels": 28954,
+        "partialAlphaPixels": 2246,
+        "visiblePixels": 20198,
+        "bounds": [
+          22,
+          28,
+          170,
+          236
+        ],
+        "cornerAlphaValues": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cornerAlphaMaximum": 0,
+        "paddingPixels": [
+          22,
+          28,
+          22,
+          20
+        ],
+        "opaqueNearBlackPixels": 4180,
+        "opaqueExactBlackPixels": 332
+      },
+      "orientation": {
+        "facing": "right",
+        "mirroredFromSource": true,
+        "oppositeFacingAuthored": false
+      },
+      "animationCapability": {
+        "kind": "static_single_image",
+        "frameCount": 1,
+        "frameAnimated": false,
+        "proceduralPresentationPossible": true,
+        "proceduralPresentationExamples": [
+          "translation",
+          "uniform scale",
+          "rotation",
+          "alpha tween"
+        ],
+        "verifiedInRuntime": false
+      },
+      "sha256": "4ea49c7e1f30d0b092c07a2364c195c26a32464f9c3a421293a346cb349389a4",
+      "provenance": {
+        "sourcePath": "sources/reused/commander-existing-interpretations/scout/scout-class-template-rgba.png",
+        "sourceSha256": "5cbd1c6c96e89d364c26cb44c510d78a05d67206f445842a80f29b325224e969",
+        "generatedSourcePath": null,
+        "generatedSourceSha256": null,
+        "sourceCell": [
+          0,
+          0,
+          525,
+          705
+        ],
+        "transforms": [
+          "crop",
+          "uniform LANCZOS scale",
+          "mirror"
+        ],
+        "blackKeyingUsed": false,
+        "sourcePixelsPreserved": true,
+        "identityScope": "class_battle_template",
+        "preservationStatus": "ORIGINAL_SOURCE_UNCHANGED",
+        "historicalStatus": "PROVISIONAL",
+        "notes": [
+          "This is a class template, not an exact NFT identity.",
+          "Native left-facing source retained. Gameplay and portrait derivatives mirrored right.",
+          "Alpha-only extraction retains source RGB. Hard fringe may remain."
+        ]
+      },
+      "approval": {
+        "basisId": "user-v001-static-direction-approved-20261020",
+        "status": "APPROVED_STATIC_DIRECTION",
+        "runtimeApproval": false
+      },
+      "status": "READY_STATIC",
+      "technicalExceptions": []
+    },
+    {
+      "stableAssetId": "commander:warden",
+      "entityIds": [
+        "commander_warden"
+      ],
+      "cardIds": [
+        "commander_warden"
+      ],
+      "abilityIds": [
+        "warden-null-field",
+        "warden-mend"
+      ],
+      "commanderClassId": "warden",
+      "name": "Warden",
+      "category": "commander_class_template",
+      "path": "commanders/commander_warden/sprite.png",
+      "width": 192,
+      "height": 256,
+      "pivotPixels": [
+        96,
+        236
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.921875
+      ],
+      "anchorKind": "bottom_center_art_ground_contact_proposal",
+      "groundPositionAnchor": true,
+      "hoverOffsetPixels": null,
+      "hoverOffsetStatus": null,
+      "scaleClass": "commander",
+      "proposedDisplaySize": {
+        "width": 96,
+        "height": 128,
+        "visibleWidth": 80.5,
+        "visibleHeight": 104,
+        "uniformScale": 0.5,
+        "status": "PROPOSED_UNTESTED",
+        "runtimeTested": false,
+        "detailAdded": false,
+        "aspectRatioPreserved": true
+      },
+      "originalSourceDimensions": [
+        538,
+        694
+      ],
+      "sourceCropDimensions": [
+        533,
+        690
+      ],
+      "exportDimensions": [
+        192,
+        256
+      ],
+      "actualAlpha": {
+        "channelPresent": true,
+        "extrema": [
+          0,
+          255
+        ],
+        "transparentPixels": 26107,
+        "partialAlphaPixels": 22527,
+        "visiblePixels": 23045,
+        "bounds": [
+          16,
+          28,
+          177,
+          236
+        ],
+        "cornerAlphaValues": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cornerAlphaMaximum": 0,
+        "paddingPixels": [
+          16,
+          28,
+          15,
+          20
+        ],
+        "opaqueNearBlackPixels": 5999,
+        "opaqueExactBlackPixels": 1679
+      },
+      "orientation": {
+        "facing": "right",
+        "mirroredFromSource": false,
+        "oppositeFacingAuthored": false
+      },
+      "animationCapability": {
+        "kind": "static_single_image",
+        "frameCount": 1,
+        "frameAnimated": false,
+        "proceduralPresentationPossible": true,
+        "proceduralPresentationExamples": [
+          "translation",
+          "uniform scale",
+          "rotation",
+          "alpha tween"
+        ],
+        "verifiedInRuntime": false
+      },
+      "sha256": "ce15789b33f9671fe2c7708de58c7536654c4010fd60ba489c0d71c60d7d2fbb",
+      "provenance": {
+        "sourcePath": "sources/extracted/commander_warden.png",
+        "sourceSha256": "c545247158123451f238e5e8d5647874a649113dd11ba6130da98d59027af81a",
+        "generatedSourcePath": "sources/generated/commanders.png",
+        "generatedSourceSha256": "e8e81752c6fa1a7a347067ffbc47b532db7b25fa5546815637042cf60517e4fb",
+        "sourceCell": [
+          0,
+          0,
+          538,
+          694
+        ],
+        "transforms": [
+          "crop",
+          "uniform LANCZOS scale",
+          "no mirror"
+        ],
+        "blackKeyingUsed": false,
+        "sourcePixelsPreserved": true,
+        "identityScope": "class_battle_template",
+        "preservationStatus": "ORIGINAL_SOURCE_UNCHANGED",
+        "historicalStatus": "PROVISIONAL",
+        "notes": [
+          "principal connected island at alpha > 128, expanded 3 pixels to retain original edge alpha; source RGB unchanged; detached fragments and faint glow may be omitted",
+          "Original generated sheet: sources/generated/commanders.png, crop [1619, 13, 2157, 707]."
+        ]
+      },
+      "approval": {
+        "basisId": "user-v001-static-direction-approved-20261020",
+        "status": "APPROVED_STATIC_DIRECTION",
+        "runtimeApproval": false
+      },
+      "status": "READY_STATIC",
+      "technicalExceptions": []
+    },
+    {
+      "stableAssetId": "structure:tower",
+      "entityIds": [
+        "tower"
+      ],
+      "cardIds": [],
+      "abilityIds": [],
+      "commanderClassId": null,
+      "name": "Side Tower",
+      "category": "fixed_structure",
+      "path": "structures/tower/sprite.png",
+      "width": 256,
+      "height": 256,
+      "pivotPixels": [
+        128,
+        236
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.921875
+      ],
+      "anchorKind": "bottom_center_art_ground_contact_proposal",
+      "groundPositionAnchor": true,
+      "hoverOffsetPixels": null,
+      "hoverOffsetStatus": null,
+      "scaleClass": "building_structure",
+      "proposedDisplaySize": {
+        "width": 128,
+        "height": 128,
+        "visibleWidth": 77.5,
+        "visibleHeight": 112,
+        "uniformScale": 0.5,
+        "status": "PROPOSED_UNTESTED",
+        "runtimeTested": false,
+        "detailAdded": false,
+        "aspectRatioPreserved": true
+      },
+      "originalSourceDimensions": [
+        246,
+        353
+      ],
+      "sourceCropDimensions": [
+        242,
+        349
+      ],
+      "exportDimensions": [
+        256,
+        256
+      ],
+      "actualAlpha": {
+        "channelPresent": true,
+        "extrema": [
+          0,
+          255
+        ],
+        "transparentPixels": 41294,
+        "partialAlphaPixels": 23926,
+        "visiblePixels": 24242,
+        "bounds": [
+          51,
+          12,
+          206,
+          236
+        ],
+        "cornerAlphaValues": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cornerAlphaMaximum": 0,
+        "paddingPixels": [
+          51,
+          12,
+          50,
+          20
+        ],
+        "opaqueNearBlackPixels": 5032,
+        "opaqueExactBlackPixels": 1171
+      },
+      "orientation": {
+        "facing": "right",
+        "mirroredFromSource": false,
+        "oppositeFacingAuthored": false
+      },
+      "animationCapability": {
+        "kind": "static_single_image",
+        "frameCount": 1,
+        "frameAnimated": false,
+        "proceduralPresentationPossible": true,
+        "proceduralPresentationExamples": [
+          "translation",
+          "uniform scale",
+          "rotation",
+          "alpha tween"
+        ],
+        "verifiedInRuntime": false
+      },
+      "sha256": "32feab8d34e7e7a9e0cb296d306cc2e9252f98627d43fb1213c70b4ba0e14947",
+      "provenance": {
+        "sourcePath": "sources/extracted/tower.png",
+        "sourceSha256": "34406102d43c492c66efde3f76e825321ebc2a2c10fe34265c8f26cc86581441",
+        "generatedSourcePath": "sources/generated/world.png",
+        "generatedSourceSha256": "cfa87dae6a3a461ee8788e2f2cc46d71c3dbe6dc44679fd5538b30a5cbcf3a2f",
+        "sourceCell": [
+          0,
+          0,
+          246,
+          353
+        ],
+        "transforms": [
+          "crop",
+          "uniform LANCZOS scale",
+          "no mirror"
+        ],
+        "blackKeyingUsed": false,
+        "sourcePixelsPreserved": true,
+        "identityScope": "original_game_art",
+        "preservationStatus": "ORIGINAL_SOURCE_UNCHANGED",
+        "historicalStatus": "PROVISIONAL",
+        "notes": [
+          "principal connected island at alpha > 128, expanded 3 pixels to retain original edge alpha; source RGB unchanged; detached fragments and faint glow may be omitted",
+          "Original generated sheet: sources/generated/world.png, crop [28, 320, 274, 673]."
+        ]
+      },
+      "approval": {
+        "basisId": "user-v001-static-direction-approved-20261020",
+        "status": "APPROVED_STATIC_DIRECTION",
+        "runtimeApproval": false
+      },
+      "status": "READY_STATIC",
+      "technicalExceptions": []
+    },
+    {
+      "stableAssetId": "structure:core",
+      "entityIds": [
+        "core"
+      ],
+      "cardIds": [],
+      "abilityIds": [],
+      "commanderClassId": null,
+      "name": "Core",
+      "category": "fixed_structure",
+      "path": "structures/core/sprite.png",
+      "width": 256,
+      "height": 256,
+      "pivotPixels": [
+        128,
+        236
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.921875
+      ],
+      "anchorKind": "bottom_center_art_ground_contact_proposal",
+      "groundPositionAnchor": true,
+      "hoverOffsetPixels": null,
+      "hoverOffsetStatus": null,
+      "scaleClass": "building_structure",
+      "proposedDisplaySize": {
+        "width": 128,
+        "height": 128,
+        "visibleWidth": 114.5,
+        "visibleHeight": 112,
+        "uniformScale": 0.5,
+        "status": "PROPOSED_UNTESTED",
+        "runtimeTested": false,
+        "detailAdded": false,
+        "aspectRatioPreserved": true
+      },
+      "originalSourceDimensions": [
+        364,
+        356
+      ],
+      "sourceCropDimensions": [
+        360,
+        352
+      ],
+      "exportDimensions": [
+        256,
+        256
+      ],
+      "actualAlpha": {
+        "channelPresent": true,
+        "extrema": [
+          0,
+          255
+        ],
+        "transparentPixels": 32107,
+        "partialAlphaPixels": 33087,
+        "visiblePixels": 33429,
+        "bounds": [
+          14,
+          12,
+          243,
+          236
+        ],
+        "cornerAlphaValues": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cornerAlphaMaximum": 0,
+        "paddingPixels": [
+          14,
+          12,
+          13,
+          20
+        ],
+        "opaqueNearBlackPixels": 7546,
+        "opaqueExactBlackPixels": 1620
+      },
+      "orientation": {
+        "facing": "right",
+        "mirroredFromSource": false,
+        "oppositeFacingAuthored": false
+      },
+      "animationCapability": {
+        "kind": "static_single_image",
+        "frameCount": 1,
+        "frameAnimated": false,
+        "proceduralPresentationPossible": true,
+        "proceduralPresentationExamples": [
+          "translation",
+          "uniform scale",
+          "rotation",
+          "alpha tween"
+        ],
+        "verifiedInRuntime": false
+      },
+      "sha256": "3608e365b7db09f62444eb2dc848fccf25114b0b6d374d7c48f3f7e8f4b9ef13",
+      "provenance": {
+        "sourcePath": "sources/extracted/core.png",
+        "sourceSha256": "b0d68a0e8f46683a3387fc16feb366a13a78ac70c6b8c07c36bb96ca22b30077",
+        "generatedSourcePath": "sources/generated/world.png",
+        "generatedSourceSha256": "cfa87dae6a3a461ee8788e2f2cc46d71c3dbe6dc44679fd5538b30a5cbcf3a2f",
+        "sourceCell": [
+          0,
+          0,
+          364,
+          356
+        ],
+        "transforms": [
+          "crop",
+          "uniform LANCZOS scale",
+          "no mirror"
+        ],
+        "blackKeyingUsed": false,
+        "sourcePixelsPreserved": true,
+        "identityScope": "original_game_art",
+        "preservationStatus": "ORIGINAL_SOURCE_UNCHANGED",
+        "historicalStatus": "PROVISIONAL",
+        "notes": [
+          "principal connected island at alpha > 128, expanded 3 pixels to retain original edge alpha; source RGB unchanged; detached fragments and faint glow may be omitted",
+          "Original generated sheet: sources/generated/world.png, crop [288, 317, 652, 673]."
+        ]
+      },
+      "approval": {
+        "basisId": "user-v001-static-direction-approved-20261020",
+        "status": "APPROVED_STATIC_DIRECTION",
+        "runtimeApproval": false
+      },
+      "status": "READY_STATIC",
+      "technicalExceptions": []
+    },
+    {
+      "stableAssetId": "effect:projectile",
+      "entityIds": [],
+      "cardIds": [],
+      "abilityIds": [
+        "deadeye-piercing-volley"
+      ],
+      "commanderClassId": null,
+      "name": "projectile",
+      "category": "effect_primitive",
+      "path": "effects/primitives/projectile/sprite.png",
+      "width": 256,
+      "height": 256,
+      "pivotPixels": [
+        128,
+        128
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.5
+      ],
+      "anchorKind": "image_center",
+      "groundPositionAnchor": false,
+      "hoverOffsetPixels": null,
+      "hoverOffsetStatus": null,
+      "scaleClass": "projectile",
+      "proposedDisplaySize": {
+        "width": 128,
+        "height": 128,
+        "visibleWidth": 122,
+        "visibleHeight": 76.5,
+        "uniformScale": 0.5,
+        "status": "PROPOSED_UNTESTED",
+        "runtimeTested": false,
+        "detailAdded": false,
+        "aspectRatioPreserved": true
+      },
+      "originalSourceDimensions": [
+        273,
+        173
+      ],
+      "sourceCropDimensions": [
+        269,
+        169
+      ],
+      "exportDimensions": [
+        256,
+        256
+      ],
+      "actualAlpha": {
+        "channelPresent": true,
+        "extrema": [
+          0,
+          255
+        ],
+        "transparentPixels": 43545,
+        "partialAlphaPixels": 21904,
+        "visiblePixels": 21991,
+        "bounds": [
+          6,
+          83,
+          250,
+          236
+        ],
+        "cornerAlphaValues": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cornerAlphaMaximum": 0,
+        "paddingPixels": [
+          6,
+          83,
+          6,
+          20
+        ],
+        "opaqueNearBlackPixels": 0,
+        "opaqueExactBlackPixels": 0
+      },
+      "orientation": {
+        "facing": "not_applicable",
+        "mirroredFromSource": false,
+        "oppositeFacingAuthored": false
+      },
+      "animationCapability": {
+        "kind": "static_single_image",
+        "frameCount": 1,
+        "frameAnimated": false,
+        "proceduralPresentationPossible": true,
+        "proceduralPresentationExamples": [
+          "translation",
+          "uniform scale",
+          "rotation",
+          "alpha tween"
+        ],
+        "verifiedInRuntime": false
+      },
+      "sha256": "3b4f5e98f232c90de2da5e4f81a37f85ff54ef99e33dcfc70bdecf3416d76a0c",
+      "provenance": {
+        "sourcePath": "sources/extracted/projectile.png",
+        "sourceSha256": "a7548113ccfad7aeb93132eb6d689e709ac8e4e2635de2c75cf51198caba7efb",
+        "generatedSourcePath": "sources/generated/world.png",
+        "generatedSourceSha256": "cfa87dae6a3a461ee8788e2f2cc46d71c3dbe6dc44679fd5538b30a5cbcf3a2f",
+        "sourceCell": [
+          0,
+          0,
+          273,
+          173
+        ],
+        "transforms": [
+          "crop",
+          "uniform LANCZOS scale",
+          "no mirror"
+        ],
+        "blackKeyingUsed": false,
+        "sourcePixelsPreserved": true,
+        "identityScope": "original_game_art",
+        "preservationStatus": "ORIGINAL_SOURCE_UNCHANGED",
+        "historicalStatus": "PROVISIONAL",
+        "notes": [
+          "principal connected island at alpha > 128, expanded 3 pixels to retain original edge alpha; source RGB unchanged; detached fragments and faint glow may be omitted",
+          "Original generated sheet: sources/generated/world.png, crop [671, 756, 944, 929]."
+        ]
+      },
+      "approval": {
+        "basisId": "user-v001-static-direction-approved-20261020",
+        "status": "APPROVED_STATIC_DIRECTION",
+        "runtimeApproval": false
+      },
+      "status": "READY_STATIC",
+      "technicalExceptions": []
+    },
+    {
+      "stableAssetId": "effect:impact",
+      "entityIds": [],
+      "cardIds": [],
+      "abilityIds": [
+        "reaver-bloodlust"
+      ],
+      "commanderClassId": null,
+      "name": "impact",
+      "category": "effect_primitive",
+      "path": "effects/primitives/impact/sprite.png",
+      "width": 256,
+      "height": 256,
+      "pivotPixels": [
+        128,
+        128
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.5
+      ],
+      "anchorKind": "image_center",
+      "groundPositionAnchor": false,
+      "hoverOffsetPixels": null,
+      "hoverOffsetStatus": null,
+      "scaleClass": "area_effect",
+      "proposedDisplaySize": {
+        "width": 128,
+        "height": 128,
+        "visibleWidth": 107,
+        "visibleHeight": 108,
+        "uniformScale": 0.5,
+        "status": "PROPOSED_UNTESTED",
+        "runtimeTested": false,
+        "detailAdded": false,
+        "aspectRatioPreserved": true
+      },
+      "originalSourceDimensions": [
+        257,
+        259
+      ],
+      "sourceCropDimensions": [
+        253,
+        255
+      ],
+      "exportDimensions": [
+        256,
+        256
+      ],
+      "actualAlpha": {
+        "channelPresent": true,
+        "extrema": [
+          0,
+          255
+        ],
+        "transparentPixels": 49255,
+        "partialAlphaPixels": 16224,
+        "visiblePixels": 16281,
+        "bounds": [
+          21,
+          20,
+          235,
+          236
+        ],
+        "cornerAlphaValues": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cornerAlphaMaximum": 0,
+        "paddingPixels": [
+          21,
+          20,
+          21,
+          20
+        ],
+        "opaqueNearBlackPixels": 0,
+        "opaqueExactBlackPixels": 0
+      },
+      "orientation": {
+        "facing": "not_applicable",
+        "mirroredFromSource": false,
+        "oppositeFacingAuthored": false
+      },
+      "animationCapability": {
+        "kind": "static_single_image",
+        "frameCount": 1,
+        "frameAnimated": false,
+        "proceduralPresentationPossible": true,
+        "proceduralPresentationExamples": [
+          "translation",
+          "uniform scale",
+          "rotation",
+          "alpha tween"
+        ],
+        "verifiedInRuntime": false
+      },
+      "sha256": "187d99d970a091a34ab23cdb46e526f1d186f41bac8beb164a33740d2a0ab397",
+      "provenance": {
+        "sourcePath": "sources/extracted/impact.png",
+        "sourceSha256": "9e0c87fe3e89ac391be72b2720ca7d9289f7781ee84f29df4c6f73d0c5adb22c",
+        "generatedSourcePath": "sources/generated/world.png",
+        "generatedSourceSha256": "cfa87dae6a3a461ee8788e2f2cc46d71c3dbe6dc44679fd5538b30a5cbcf3a2f",
+        "sourceCell": [
+          0,
+          0,
+          257,
+          259
+        ],
+        "transforms": [
+          "crop",
+          "uniform LANCZOS scale",
+          "no mirror"
+        ],
+        "blackKeyingUsed": false,
+        "sourcePixelsPreserved": true,
+        "identityScope": "original_game_art",
+        "preservationStatus": "ORIGINAL_SOURCE_UNCHANGED",
+        "historicalStatus": "PROVISIONAL",
+        "notes": [
+          "principal connected island at alpha > 128, expanded 3 pixels to retain original edge alpha; source RGB unchanged; detached fragments and faint glow may be omitted",
+          "Original generated sheet: sources/generated/world.png, crop [978, 695, 1235, 954]."
+        ]
+      },
+      "approval": {
+        "basisId": "user-v001-static-direction-approved-20261020",
+        "status": "APPROVED_STATIC_DIRECTION",
+        "runtimeApproval": false
+      },
+      "status": "READY_STATIC",
+      "technicalExceptions": []
+    },
+    {
+      "stableAssetId": "effect:shield",
+      "entityIds": [],
+      "cardIds": [],
+      "abilityIds": [
+        "bulwark-aegis-wall",
+        "bulwark-bedrock",
+        "warden-null-field"
+      ],
+      "commanderClassId": null,
+      "name": "shield",
+      "category": "effect_primitive",
+      "path": "effects/primitives/shield/sprite.png",
+      "width": 256,
+      "height": 256,
+      "pivotPixels": [
+        128,
+        128
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.5
+      ],
+      "anchorKind": "image_center",
+      "groundPositionAnchor": false,
+      "hoverOffsetPixels": null,
+      "hoverOffsetStatus": null,
+      "scaleClass": "area_effect",
+      "proposedDisplaySize": {
+        "width": 128,
+        "height": 128,
+        "visibleWidth": 122,
+        "visibleHeight": 96.5,
+        "uniformScale": 0.5,
+        "status": "PROPOSED_UNTESTED",
+        "runtimeTested": false,
+        "detailAdded": false,
+        "aspectRatioPreserved": true
+      },
+      "originalSourceDimensions": [
+        305,
+        242
+      ],
+      "sourceCropDimensions": [
+        301,
+        238
+      ],
+      "exportDimensions": [
+        256,
+        256
+      ],
+      "actualAlpha": {
+        "channelPresent": true,
+        "extrema": [
+          0,
+          255
+        ],
+        "transparentPixels": 35845,
+        "partialAlphaPixels": 29543,
+        "visiblePixels": 29691,
+        "bounds": [
+          6,
+          43,
+          250,
+          236
+        ],
+        "cornerAlphaValues": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cornerAlphaMaximum": 0,
+        "paddingPixels": [
+          6,
+          43,
+          6,
+          20
+        ],
+        "opaqueNearBlackPixels": 0,
+        "opaqueExactBlackPixels": 0
+      },
+      "orientation": {
+        "facing": "not_applicable",
+        "mirroredFromSource": false,
+        "oppositeFacingAuthored": false
+      },
+      "animationCapability": {
+        "kind": "static_single_image",
+        "frameCount": 1,
+        "frameAnimated": false,
+        "proceduralPresentationPossible": true,
+        "proceduralPresentationExamples": [
+          "translation",
+          "uniform scale",
+          "rotation",
+          "alpha tween"
+        ],
+        "verifiedInRuntime": false
+      },
+      "sha256": "b419ea59ba02a87d888858dd1a710df2b52aa1932080743693deaa1413889c45",
+      "provenance": {
+        "sourcePath": "sources/extracted/shield.png",
+        "sourceSha256": "48789c972b382051b1fd58f66707d5a5800431103f437c16fe331637c00191f5",
+        "generatedSourcePath": "sources/generated/world.png",
+        "generatedSourceSha256": "cfa87dae6a3a461ee8788e2f2cc46d71c3dbe6dc44679fd5538b30a5cbcf3a2f",
+        "sourceCell": [
+          0,
+          0,
+          305,
+          242
+        ],
+        "transforms": [
+          "crop",
+          "uniform LANCZOS scale",
+          "no mirror"
+        ],
+        "blackKeyingUsed": false,
+        "sourcePixelsPreserved": true,
+        "identityScope": "original_game_art",
+        "preservationStatus": "ORIGINAL_SOURCE_UNCHANGED",
+        "historicalStatus": "PROVISIONAL",
+        "notes": [
+          "principal connected island at alpha > 128, expanded 3 pixels to retain original edge alpha; source RGB unchanged; detached fragments and faint glow may be omitted",
+          "Original generated sheet: sources/generated/world.png, crop [14, 980, 319, 1222]."
+        ]
+      },
+      "approval": {
+        "basisId": "user-v001-static-direction-approved-20261020",
+        "status": "APPROVED_STATIC_DIRECTION",
+        "runtimeApproval": false
+      },
+      "status": "READY_STATIC",
+      "technicalExceptions": []
+    },
+    {
+      "stableAssetId": "effect:frost",
+      "entityIds": [],
+      "cardIds": [],
+      "abilityIds": [
+        "warden-null-field"
+      ],
+      "commanderClassId": null,
+      "name": "frost",
+      "category": "effect_primitive",
+      "path": "effects/primitives/frost/sprite.png",
+      "width": 256,
+      "height": 256,
+      "pivotPixels": [
+        128,
+        128
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.5
+      ],
+      "anchorKind": "image_center",
+      "groundPositionAnchor": false,
+      "hoverOffsetPixels": null,
+      "hoverOffsetStatus": null,
+      "scaleClass": "area_effect",
+      "proposedDisplaySize": {
+        "width": 128,
+        "height": 128,
+        "visibleWidth": 122,
+        "visibleHeight": 96,
+        "uniformScale": 0.5,
+        "status": "PROPOSED_UNTESTED",
+        "runtimeTested": false,
+        "detailAdded": false,
+        "aspectRatioPreserved": true
+      },
+      "originalSourceDimensions": [
+        289,
+        228
+      ],
+      "sourceCropDimensions": [
+        285,
+        224
+      ],
+      "exportDimensions": [
+        256,
+        256
+      ],
+      "actualAlpha": {
+        "channelPresent": true,
+        "extrema": [
+          0,
+          255
+        ],
+        "transparentPixels": 39649,
+        "partialAlphaPixels": 25796,
+        "visiblePixels": 25887,
+        "bounds": [
+          6,
+          44,
+          250,
+          236
+        ],
+        "cornerAlphaValues": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cornerAlphaMaximum": 0,
+        "paddingPixels": [
+          6,
+          44,
+          6,
+          20
+        ],
+        "opaqueNearBlackPixels": 0,
+        "opaqueExactBlackPixels": 0
+      },
+      "orientation": {
+        "facing": "not_applicable",
+        "mirroredFromSource": false,
+        "oppositeFacingAuthored": false
+      },
+      "animationCapability": {
+        "kind": "static_single_image",
+        "frameCount": 1,
+        "frameAnimated": false,
+        "proceduralPresentationPossible": true,
+        "proceduralPresentationExamples": [
+          "translation",
+          "uniform scale",
+          "rotation",
+          "alpha tween"
+        ],
+        "verifiedInRuntime": false
+      },
+      "sha256": "8974e74022bbb2cf2c68667527063a2aa8fad2553cccae13c374e5bb4add5466",
+      "provenance": {
+        "sourcePath": "sources/extracted/frost.png",
+        "sourceSha256": "644d8c2318214a67572e4f3b0a556d83ed568bf24b37317f4095764495f3e87d",
+        "generatedSourcePath": "sources/generated/world.png",
+        "generatedSourceSha256": "cfa87dae6a3a461ee8788e2f2cc46d71c3dbe6dc44679fd5538b30a5cbcf3a2f",
+        "sourceCell": [
+          0,
+          0,
+          289,
+          228
+        ],
+        "transforms": [
+          "crop",
+          "uniform LANCZOS scale",
+          "no mirror"
+        ],
+        "blackKeyingUsed": false,
+        "sourcePixelsPreserved": true,
+        "identityScope": "original_game_art",
+        "preservationStatus": "ORIGINAL_SOURCE_UNCHANGED",
+        "historicalStatus": "PROVISIONAL",
+        "notes": [
+          "principal connected island at alpha > 128, expanded 3 pixels to retain original edge alpha; source RGB unchanged; detached fragments and faint glow may be omitted",
+          "Original generated sheet: sources/generated/world.png, crop [343, 990, 632, 1218]."
+        ]
+      },
+      "approval": {
+        "basisId": "user-v001-static-direction-approved-20261020",
+        "status": "APPROVED_STATIC_DIRECTION",
+        "runtimeApproval": false
+      },
+      "status": "READY_STATIC",
+      "technicalExceptions": []
+    },
+    {
+      "stableAssetId": "effect:aura",
+      "entityIds": [],
+      "cardIds": [],
+      "abilityIds": [
+        "reaver-frenzy-rush",
+        "deadeye-overwatch",
+        "scout-shadow-step",
+        "scout-pathfinder"
+      ],
+      "commanderClassId": null,
+      "name": "aura",
+      "category": "effect_primitive",
+      "path": "effects/primitives/aura/sprite.png",
+      "width": 256,
+      "height": 256,
+      "pivotPixels": [
+        128,
+        128
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.5
+      ],
+      "anchorKind": "image_center",
+      "groundPositionAnchor": false,
+      "hoverOffsetPixels": null,
+      "hoverOffsetStatus": null,
+      "scaleClass": "area_effect",
+      "proposedDisplaySize": {
+        "width": 128,
+        "height": 128,
+        "visibleWidth": 122,
+        "visibleHeight": 77,
+        "uniformScale": 0.5,
+        "status": "PROPOSED_UNTESTED",
+        "runtimeTested": false,
+        "detailAdded": false,
+        "aspectRatioPreserved": true
+      },
+      "originalSourceDimensions": [
+        323,
+        205
+      ],
+      "sourceCropDimensions": [
+        319,
+        201
+      ],
+      "exportDimensions": [
+        256,
+        256
+      ],
+      "actualAlpha": {
+        "channelPresent": true,
+        "extrema": [
+          0,
+          255
+        ],
+        "transparentPixels": 47933,
+        "partialAlphaPixels": 17514,
+        "visiblePixels": 17603,
+        "bounds": [
+          6,
+          82,
+          250,
+          236
+        ],
+        "cornerAlphaValues": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cornerAlphaMaximum": 0,
+        "paddingPixels": [
+          6,
+          82,
+          6,
+          20
+        ],
+        "opaqueNearBlackPixels": 0,
+        "opaqueExactBlackPixels": 0
+      },
+      "orientation": {
+        "facing": "not_applicable",
+        "mirroredFromSource": false,
+        "oppositeFacingAuthored": false
+      },
+      "animationCapability": {
+        "kind": "static_single_image",
+        "frameCount": 1,
+        "frameAnimated": false,
+        "proceduralPresentationPossible": true,
+        "proceduralPresentationExamples": [
+          "translation",
+          "uniform scale",
+          "rotation",
+          "alpha tween"
+        ],
+        "verifiedInRuntime": false
+      },
+      "sha256": "050303a6711310957b11da38ac78c7472140bdc77d224144fe2290c666c3c1f2",
+      "provenance": {
+        "sourcePath": "sources/extracted/aura.png",
+        "sourceSha256": "9d7d0e2e0436aefad9c6c18316924de3c10b26aa306c0103eac43bcbbf5b47d6",
+        "generatedSourcePath": "sources/generated/world.png",
+        "generatedSourceSha256": "cfa87dae6a3a461ee8788e2f2cc46d71c3dbe6dc44679fd5538b30a5cbcf3a2f",
+        "sourceCell": [
+          0,
+          0,
+          323,
+          205
+        ],
+        "transforms": [
+          "crop",
+          "uniform LANCZOS scale",
+          "no mirror"
+        ],
+        "blackKeyingUsed": false,
+        "sourcePixelsPreserved": true,
+        "identityScope": "original_game_art",
+        "preservationStatus": "ORIGINAL_SOURCE_UNCHANGED",
+        "historicalStatus": "PROVISIONAL",
+        "notes": [
+          "principal connected island at alpha > 128, expanded 3 pixels to retain original edge alpha; source RGB unchanged; detached fragments and faint glow may be omitted",
+          "Original generated sheet: sources/generated/world.png, crop [649, 995, 972, 1200]."
+        ]
+      },
+      "approval": {
+        "basisId": "user-v001-static-direction-approved-20261020",
+        "status": "APPROVED_STATIC_DIRECTION",
+        "runtimeApproval": false
+      },
+      "status": "READY_STATIC",
+      "technicalExceptions": []
+    },
+    {
+      "stableAssetId": "effect:heal",
+      "entityIds": [],
+      "cardIds": [],
+      "abilityIds": [
+        "warden-mend"
+      ],
+      "commanderClassId": null,
+      "name": "heal",
+      "category": "effect_primitive",
+      "path": "effects/primitives/heal/sprite.png",
+      "width": 256,
+      "height": 256,
+      "pivotPixels": [
+        128,
+        128
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.5
+      ],
+      "anchorKind": "image_center",
+      "groundPositionAnchor": false,
+      "hoverOffsetPixels": null,
+      "hoverOffsetStatus": null,
+      "scaleClass": "area_effect",
+      "proposedDisplaySize": {
+        "width": 128,
+        "height": 128,
+        "visibleWidth": 85.5,
+        "visibleHeight": 108,
+        "uniformScale": 0.5,
+        "status": "PROPOSED_UNTESTED",
+        "runtimeTested": false,
+        "detailAdded": false,
+        "aspectRatioPreserved": true
+      },
+      "originalSourceDimensions": [
+        190,
+        239
+      ],
+      "sourceCropDimensions": [
+        186,
+        235
+      ],
+      "exportDimensions": [
+        256,
+        256
+      ],
+      "actualAlpha": {
+        "channelPresent": true,
+        "extrema": [
+          0,
+          255
+        ],
+        "transparentPixels": 45368,
+        "partialAlphaPixels": 19951,
+        "visiblePixels": 20168,
+        "bounds": [
+          43,
+          20,
+          214,
+          236
+        ],
+        "cornerAlphaValues": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cornerAlphaMaximum": 0,
+        "paddingPixels": [
+          43,
+          20,
+          42,
+          20
+        ],
+        "opaqueNearBlackPixels": 0,
+        "opaqueExactBlackPixels": 0
+      },
+      "orientation": {
+        "facing": "not_applicable",
+        "mirroredFromSource": false,
+        "oppositeFacingAuthored": false
+      },
+      "animationCapability": {
+        "kind": "static_single_image",
+        "frameCount": 1,
+        "frameAnimated": false,
+        "proceduralPresentationPossible": true,
+        "proceduralPresentationExamples": [
+          "translation",
+          "uniform scale",
+          "rotation",
+          "alpha tween"
+        ],
+        "verifiedInRuntime": false
+      },
+      "sha256": "a72accef0598bb17a1213ee7cc071170190a3791fc02842808b86eb28781da78",
+      "provenance": {
+        "sourcePath": "sources/extracted/heal.png",
+        "sourceSha256": "7724811eab9b6e521e9ceb6ebe2d7eed6899f1d8be3e228e828e6ad26b4b554d",
+        "generatedSourcePath": "sources/generated/world.png",
+        "generatedSourceSha256": "cfa87dae6a3a461ee8788e2f2cc46d71c3dbe6dc44679fd5538b30a5cbcf3a2f",
+        "sourceCell": [
+          0,
+          0,
+          190,
+          239
+        ],
+        "transforms": [
+          "crop",
+          "uniform LANCZOS scale",
+          "no mirror"
+        ],
+        "blackKeyingUsed": false,
+        "sourcePixelsPreserved": true,
+        "identityScope": "original_game_art",
+        "preservationStatus": "ORIGINAL_SOURCE_UNCHANGED",
+        "historicalStatus": "PROVISIONAL",
+        "notes": [
+          "principal connected island at alpha > 128, expanded 3 pixels to retain original edge alpha; source RGB unchanged; detached fragments and faint glow may be omitted",
+          "Original generated sheet: sources/generated/world.png, crop [1033, 983, 1223, 1222]."
+        ]
+      },
+      "approval": {
+        "basisId": "user-v001-static-direction-approved-20261020",
+        "status": "APPROVED_STATIC_DIRECTION",
+        "runtimeApproval": false
+      },
+      "status": "READY_STATIC",
+      "technicalExceptions": []
+    }
+  ],
+  "bindings": {
+    "entityIds": {
+      "choglings": "troop:choglings",
+      "chaos_archer": "troop:chaos_archer",
+      "boulderback": "troop:boulderback",
+      "frostshell": "troop:frostshell",
+      "rift_runner": "troop:rift_runner",
+      "sparkcaster": "troop:sparkcaster",
+      "chog_guardian": "troop:chog_guardian",
+      "hexwing": "troop:hexwing",
+      "rift_sprites": "troop:rift_sprites",
+      "gale_netter": "troop:gale_netter",
+      "riftbreaker": "troop:riftbreaker",
+      "ember_mauler": "troop:ember_mauler",
+      "burrow_scrapper": "spawned:burrow_scrapper",
+      "rift_sentry": "building:rift_sentry",
+      "decoy_totem": "building:decoy_totem",
+      "chog_burrow": "building:chog_burrow",
+      "rift_mortar": "building:rift_mortar",
+      "chaos_bolt": "spell:chaos_bolt",
+      "rally_horn": "spell:rally_horn",
+      "chaos_comet": "spell:chaos_comet",
+      "rift_snare": "spell:rift_snare",
+      "commander_bulwark": "commander:bulwark",
+      "commander_reaver": "commander:reaver",
+      "commander_deadeye": "commander:deadeye",
+      "commander_scout": "commander:scout",
+      "commander_warden": "commander:warden",
+      "tower": "structure:tower",
+      "core": "structure:core"
+    },
+    "commanderClassIds": {
+      "bulwark": "commander:bulwark",
+      "reaver": "commander:reaver",
+      "deadeye": "commander:deadeye",
+      "scout": "commander:scout",
+      "warden": "commander:warden"
+    },
+    "effectRequirementIds": {
+      "frostshell_slow": [
+        "effect:frost"
+      ],
+      "sparkcaster_projectile": [
+        "effect:projectile",
+        "effect:impact"
+      ],
+      "hexwing_projectile": [
+        "effect:projectile"
+      ],
+      "gale_netter_projectile": [
+        "effect:projectile",
+        "effect:frost"
+      ],
+      "ember_mauler_shockwave": [
+        "effect:impact"
+      ],
+      "chaos_bolt_effect": [
+        "effect:projectile",
+        "effect:impact"
+      ],
+      "rally_horn_effect": [
+        "effect:aura"
+      ],
+      "chaos_comet_effect": [
+        "effect:projectile",
+        "effect:impact"
+      ],
+      "rift_snare_effect": [
+        "effect:frost"
+      ],
+      "rift_mortar_shell": [
+        "effect:projectile",
+        "effect:impact"
+      ],
+      "chog_burrow_spawn": [
+        "effect:aura"
+      ],
+      "bulwark-aegis-wall": [
+        "effect:shield"
+      ],
+      "bulwark-bedrock": [
+        "effect:shield"
+      ],
+      "reaver-frenzy-rush": [
+        "effect:aura"
+      ],
+      "reaver-bloodlust": [
+        "effect:impact"
+      ],
+      "deadeye-piercing-volley": [
+        "effect:projectile"
+      ],
+      "deadeye-overwatch": [
+        "effect:aura"
+      ],
+      "scout-shadow-step": [
+        "effect:aura"
+      ],
+      "scout-pathfinder": [
+        "effect:aura"
+      ],
+      "warden-null-field": [
+        "effect:shield",
+        "effect:frost"
+      ],
+      "warden-mend": [
+        "effect:heal"
+      ],
+      "ember_rift": [
+        "effect:impact"
+      ],
+      "frost_crossing": [
+        "effect:frost"
+      ],
+      "energy_surge": [
+        "effect:aura"
+      ],
+      "rift_shift": [
+        "effect:aura"
+      ],
+      "chaos_rally": [
+        "effect:aura"
+      ]
+    },
+    "abilityIds": {
+      "bulwark-aegis-wall": [
+        "effect:shield"
+      ],
+      "bulwark-bedrock": [
+        "effect:shield"
+      ],
+      "reaver-frenzy-rush": [
+        "effect:aura"
+      ],
+      "reaver-bloodlust": [
+        "effect:impact"
+      ],
+      "deadeye-piercing-volley": [
+        "effect:projectile"
+      ],
+      "deadeye-overwatch": [
+        "effect:aura"
+      ],
+      "scout-shadow-step": [
+        "effect:aura"
+      ],
+      "scout-pathfinder": [
+        "effect:aura"
+      ],
+      "warden-null-field": [
+        "effect:shield",
+        "effect:frost"
+      ],
+      "warden-mend": [
+        "effect:heal"
+      ]
+    }
+  }
+}

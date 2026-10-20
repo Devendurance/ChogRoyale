@@ -2,15 +2,28 @@
 
 // Phaser view/controller only. Draws the latest authoritative frame (with
 // visual-only interpolation) and reports board clicks in arena coordinates.
-// It never computes damage, energy, targeting or outcomes.
+// It never computes damage, energy, targeting or outcomes. Entities render as
+// v001 kit sprites when the imported runtime manifest is available, with the
+// original vector placeholders as fallback for unknown/missing assets.
 
 import { useEffect, useRef } from "react";
 import type { BattleFrame, CardInfo, FrameEvent, StartMessage } from "@/lib/battle-protocol";
 import { deployZones, screenToArena, type ArenaPoint } from "@/lib/battle-input";
+import {
+  byId,
+  displayScale,
+  effectForAbility,
+  effectForRequirement,
+  resolveCommanderAsset,
+  resolveEntityAsset,
+  type SpriteManifest,
+  type SpriteRecord,
+} from "./sprite-registry";
 
 const S = 5; // pixels per arena unit
 const OWN = 0x3b82f6;
 const FOE = 0xef4444;
+const KIT_URL = "/assets/chog-kit/v001";
 const FAMILY_COLOR: Record<string, number> = { ember_rift: 0xf97316, frost_crossing: 0x67e8f9, energy_surge: 0xfacc15, rift_shift: 0xa855f7, chaos_rally: 0x22c55e };
 
 export interface CanvasFeed {
@@ -42,6 +55,12 @@ interface Props {
   onBoardHover: (at: ArenaPoint | null) => void;
 }
 
+const hashPhase = (id: string) => {
+  let h = 0;
+  for (const c of id) h = (h * 31 + c.charCodeAt(0)) % 6283;
+  return h / 1000;
+};
+
 export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover }: Props) {
   const host = useRef<HTMLDivElement>(null);
   const press = useRef<{ id: number; x: number; y: number } | null>(null);
@@ -62,30 +81,80 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover }:
   useEffect(() => {
     let game: import("phaser").Game | null = null;
     let cancelled = false;
-    void import("phaser").then((Phaser) => {
+    void Promise.all([
+      import("phaser"),
+      fetch(`${KIT_URL}/manifests/phaser-assets.runtime.json`)
+        .then((r) => (r.ok ? (r.json() as Promise<SpriteManifest>) : null))
+        .catch(() => null),
+    ]).then(([Phaser, manifest]) => {
       if (cancelled || !host.current) return;
+      if (!manifest) console.warn("battle sprites: kit manifest unavailable; vector placeholders only");
+      const reduced = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
       const W = 100 * S;
       const H = 160 * S;
       const fx: Fx[] = [];
       let lastEventTick = -1;
       const labels = new Map<string, import("phaser").GameObjects.Text>();
+      const missing = new Set<string>();
+      const rec = (id: string): SpriteRecord | null => (manifest && !missing.has(id) ? byId(manifest, id) : null);
+
+      interface PoolEnt {
+        root: import("phaser").GameObjects.Container;
+        img: import("phaser").GameObjects.Image;
+        rec: SpriteRecord;
+        air: boolean;
+        born: number;
+        lastX: number;
+        lastY: number;
+        lastHp: number;
+        flashUntil: number;
+        lunge: { dx: number; dy: number; start: number } | null;
+        gone: number | null;
+        rubble: boolean;
+        baseScale: number;
+        phase: number;
+      }
+      interface FxImg {
+        img: import("phaser").GameObjects.Image;
+        born: number;
+        dur: number;
+        s0: number;
+        s1: number;
+      }
+      const pool = new Map<string, PoolEnt>();
+      const projPool = new Map<string, import("phaser").GameObjects.Image>();
+      const impactPool = new Map<string, import("phaser").GameObjects.Image[]>();
+      const zonePool = new Map<string, import("phaser").GameObjects.Image>();
+      const fxImgs: FxImg[] = [];
 
       class Arena extends Phaser.Scene {
         g!: import("phaser").GameObjects.Graphics;
+        og!: import("phaser").GameObjects.Graphics;
+        preload() {
+          if (!manifest) return;
+          this.load.on("loaderror", (file: { key: string }) => missing.add(file.key));
+          for (const a of manifest.assets) this.load.image(a.stableAssetId, `${KIT_URL}/${a.path}`);
+        }
         create() {
-          this.g = this.add.graphics();
+          // Two Graphics layers: board art under everything, HUD overlays
+          // (bars, telegraphs, ghost) above every sprite and effect image.
+          this.g = this.add.graphics().setDepth(-100);
+          this.og = this.add.graphics().setDepth(3000);
         }
         update() {
           const f = feed.current;
           const g = this.g;
+          const og = this.og;
           g.clear();
+          og.clear();
+          const now = performance.now();
           if (!f || !f.frame) return;
           const { start, frame, prev } = f;
           const seat = start.seat;
           const sx = (x: number) => x * S;
           const sy = (y: number) => (seat === 0 ? 160 - y : y) * S;
           const col = (owner: number) => (owner === seat ? OWN : FOE);
-          const t = Math.min(1, (performance.now() - f.receivedAt) / 100);
+          const t = Math.min(1, (now - f.receivedAt) / 100);
           const prevPos = new Map<string, { x: number; y: number }>();
           for (const u of [...(prev?.troops ?? []), ...(prev?.commanders ?? [])]) prevPos.set(u.id, u);
           const lerp = (id: string, x: number, y: number) => {
@@ -115,6 +184,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover }:
           if (frame.riftOpen) g.fillStyle(0xa855f7, 0.75).fillRect(sx(geo.ford.minX), river.y, (geo.ford.maxX - geo.ford.minX + 1) * S, river.h);
           g.lineStyle(1, 0xffffff, 0.15).lineBetween(W / 2, 0, W / 2, H);
           // Chaos regions: warning outlined, active filled. Board-wide pulses tint the border.
+          const activeZones = new Set<string>();
           for (const c of frame.chaos) {
             const color = FAMILY_COLOR[c.family] ?? 0xffffff;
             if (c.zones.length === 0) {
@@ -124,113 +194,437 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover }:
               const zr = geo.zones[z];
               if (!zr) continue;
               const b = bandY(zr.minY, zr.maxY);
-              if (c.state === "active") g.fillStyle(color, 0.22).fillRect(0, b.y, W, b.h);
+              if (c.state === "active") {
+                g.fillStyle(color, 0.22).fillRect(0, b.y, W, b.h);
+                activeZones.add(`${c.id}:${z}`);
+                // One low-alpha family primitive centered on each active zone.
+                if (manifest && !zonePool.has(`${c.id}:${z}`)) {
+                  const prim = effectForRequirement(manifest, c.family)[0];
+                  if (prim && rec(prim.stableAssetId)) {
+                    const img = this.add.image(W / 2, b.y + b.h / 2, prim.stableAssetId);
+                    img.setScale(displayScale(prim) * 2.2).setAlpha(0.3).setDepth(0.5);
+                    zonePool.set(`${c.id}:${z}`, img);
+                  }
+                }
+              }
               g.lineStyle(2, color, c.state === "active" ? 0.9 : 0.6).strokeRect(1, b.y + 1, W - 2, b.h - 2);
             }
           }
+          for (const [key, img] of zonePool) {
+            if (!activeZones.has(key)) {
+              img.destroy();
+              zonePool.delete(key);
+            }
+          }
           const hpBar = (x: number, y: number, w: number, hp: number, max: number, shield = 0) => {
-            g.fillStyle(0x000000, 0.6).fillRect(x - w / 2, y, w, 4);
-            g.fillStyle(hp / max > 0.5 ? 0x22c55e : hp / max > 0.25 ? 0xeab308 : 0xef4444, 1).fillRect(x - w / 2, y, (w * Math.max(0, hp)) / max, 4);
-            if (shield > 0) g.fillStyle(0xe5e7eb, 1).fillRect(x - w / 2, y - 3, Math.min(w, (w * shield) / max), 2);
+            og.fillStyle(0x000000, 0.6).fillRect(x - w / 2, y, w, 4);
+            og.fillStyle(hp / max > 0.5 ? 0x22c55e : hp / max > 0.25 ? 0xeab308 : 0xef4444, 1).fillRect(x - w / 2, y, (w * Math.max(0, hp)) / max, 4);
+            if (shield > 0) og.fillStyle(0xe5e7eb, 1).fillRect(x - w / 2, y - 3, Math.min(w, (w * shield) / max), 2);
           };
           const seen = new Set<string>();
           const label = (id: string, text: string, x: number, y: number) => {
             seen.add(id);
             let l = labels.get(id);
             if (!l) {
-              l = this.add.text(0, 0, text, { fontSize: "11px", color: "#ffffff", fontFamily: "monospace" }).setOrigin(0.5).setDepth(10);
+              l = this.add.text(0, 0, text, { fontSize: "11px", color: "#ffffff", fontFamily: "monospace" }).setOrigin(0.5).setDepth(2000);
               labels.set(id, l);
             }
             l.setText(text).setPosition(x, y);
           };
+          const all = new Map<string, { x: number; y: number }>();
+          for (const u of [...frame.troops, ...frame.commanders, ...frame.buildings, ...frame.structures]) all.set(u.id, u);
+          const ent = (kind: "troop" | "building" | "structure" | "spell", id: string): SpriteRecord | null => {
+            if (!manifest) return null;
+            const r = resolveEntityAsset(manifest, kind, id);
+            return r && !missing.has(r.stableAssetId) ? r : null;
+          };
+
+          // Pooled sprite entities. The container root sits at the interpolated
+          // ground point; shadow + owner ring hug the ground while the sprite
+          // image hangs from its authored pivot. Motion offsets only move the
+          // image, so hp bars and rings stay put.
+          const ensure = (id: string, r: SpriteRecord, air: boolean, owner: number): PoolEnt => {
+            let e = pool.get(id);
+            if (!e) {
+              const root = this.add.container(0, 0);
+              // Team marker: filled ellipse at the ground point in the owner's
+              // color with a brighter outline, sized to the sprite's visible
+              // footprint so structures read larger. The art itself is never
+              // tinted; the dark contact shadow sits on top of the marker.
+              const vis = r.proposedDisplaySize.visibleHeight * displayScale(r);
+              const ew = Math.max(16, vis * 0.85);
+              const marker = this.add.ellipse(0, 0, ew, ew * 0.45, col(owner), 0.35);
+              marker.setStrokeStyle(2, owner === seat ? 0x93c5fd : 0xfca5a5, 0.95);
+              const shadow = this.add.ellipse(0, 0, ew * 0.8, ew * 0.35, 0x000000, 0.28);
+              const img = this.add.image(0, air ? -10 : 0, r.stableAssetId);
+              img.setOrigin(r.pivotNormalized[0], r.pivotNormalized[1]).setScale(displayScale(r));
+              root.add([marker, shadow, img]);
+              e = {
+                root,
+                img,
+                rec: r,
+                air,
+                born: now,
+                lastX: 0,
+                lastY: 0,
+                lastHp: -1,
+                flashUntil: 0,
+                lunge: null,
+                gone: null,
+                rubble: false,
+                baseScale: displayScale(r),
+                phase: hashPhase(id),
+              };
+              pool.set(id, e);
+            }
+            return e;
+          };
+          const updateEnt = (
+            e: PoolEnt,
+            id: string,
+            px: number,
+            py: number,
+            hp: number,
+            moving: boolean
+          ) => {
+            const X = sx(px);
+            const Y = sy(py);
+            e.root.setPosition(X, Y);
+            e.root.setDepth(Y + (e.air ? 500 : 0));
+            if (e.lastHp >= 0 && hp < e.lastHp) e.flashUntil = now + 140;
+            e.lastHp = hp;
+            // Deploy pop: 0.88 -> 1.04 -> 1 with an alpha ramp, 180 ms.
+            const dp = Math.min(1, (now - e.born) / 180);
+            const pop = dp < 0.7 ? 0.88 + (dp / 0.7) * 0.16 : 1.04 - ((dp - 0.7) / 0.3) * 0.04;
+            e.img.setScale(e.baseScale * pop);
+            e.img.setAlpha(e.gone === null ? 0.55 + 0.45 * dp : e.img.alpha);
+            // Idle bob and move bounce/tilt, all timestamp-driven.
+            let ox = 0;
+            let oy = 0;
+            let rot = 0;
+            if (!reduced) {
+              oy -= Math.max(0, Math.sin((now / 1600) * Math.PI * 2 + e.phase)) * 1.5;
+              if (moving) {
+                const dx = px - e.lastX;
+                const dy = py - e.lastY;
+                const len = Math.hypot(dx, dy);
+                oy -= Math.abs(Math.sin((now / 360) * Math.PI * 2)) * 3;
+                if (len > 1e-6) rot = Math.max(-3, Math.min(3, ((dx / len) * 3) * (seat === 0 ? 1 : -1)));
+              }
+            }
+            // Lunge: 5 px toward the recorded target, out and back in ~160 ms.
+            if (e.lunge && !reduced) {
+              const lp = (now - e.lunge.start) / 160;
+              if (lp >= 1) e.lunge = null;
+              else {
+                const k = Math.sin(lp * Math.PI) * 5;
+                ox += e.lunge.dx * k;
+                oy += e.lunge.dy * k;
+              }
+            } else e.lunge = null;
+            // Death fade, 220 ms then destroy.
+            if (e.gone !== null) {
+              const gp = Math.min(1, (now - e.gone) / 220);
+              e.img.setAlpha(1 - gp);
+              e.img.setScale(e.baseScale * pop * (1 - 0.1 * gp));
+              e.root.setAlpha(1 - gp * 0.6);
+            }
+            e.img.setPosition(ox, oy + (e.air ? -10 : 0));
+            e.img.setRotation((rot * Math.PI) / 180);
+            if (e.flashUntil > now) e.img.setTint(0xff6666);
+            else if (!e.rubble) e.img.clearTint();
+            e.lastX = px;
+            e.lastY = py;
+          };
+          const spriteOrFallback = (
+            id: string,
+            r: SpriteRecord | null,
+            x: number,
+            y: number,
+            hp: number,
+            maxHp: number,
+            shield: number,
+            air: boolean,
+            owner: number,
+            drawPh: () => void,
+            name: string
+          ) => {
+            if (r) {
+              const e = ensure(id, r, air, owner);
+              const moving = Math.hypot(x - e.lastX, y - e.lastY) > 0.05;
+              updateEnt(e, id, x, y, hp, moving);
+              const hpx = sx(x);
+              const hpy = sy(y) - r.proposedDisplaySize.visibleHeight * displayScale(r) - (air ? 14 : 4);
+              hpBar(hpx, hpy, Math.max(16, r.proposedDisplaySize.visibleHeight * displayScale(r) * 0.6), hp, maxHp, shield);
+            } else {
+              drawPh();
+              label(id, name, sx(x), sy(y));
+            }
+          };
+
           for (const s of frame.structures) {
-            const r = (s.kind === "core" ? 4 : 3) * S + S / 2;
             const x = sx(s.x);
             const y = sy(s.y);
-            g.fillStyle(s.alive ? col(s.owner) : 0x4b5563, s.alive ? 0.9 : 0.5).fillRect(x - r, y - r, r * 2, r * 2);
-            g.lineStyle(2, 0x111827, 1).strokeRect(x - r, y - r, r * 2, r * 2);
-            if (s.alive) hpBar(x, y - r - 7, r * 2, s.hp, s.maxHp);
-            label(s.id, s.alive ? `${s.kind === "core" ? "CORE" : "T"} ${s.hp}` : "rubble", x, y);
-          }
-          for (const b of frame.buildings) {
-            const r = (b.footprint + 0.5) * S;
-            const x = sx(b.x);
-            const y = sy(b.y);
-            g.fillStyle(col(b.owner), 0.6).fillRect(x - r, y - r, r * 2, r * 2);
-            g.lineStyle(2, b.cardId === "rift_sentry" ? 0xfbbf24 : b.cardId === "chog_burrow" ? 0xa78bfa : b.cardId === "rift_mortar" ? 0xf97316 : 0xd1d5db, 1).strokeRect(x - r, y - r, r * 2, r * 2);
-            hpBar(x, y - r - 6, r * 2, b.hp, b.maxHp);
-            label(b.id, b.cardId === "rift_sentry" ? "SEN" : b.cardId === "chog_burrow" ? "BUR" : b.cardId === "rift_mortar" ? "MOR" : "TOT", x, y);
-            if (b.nextSpawnAt !== undefined && b.spawnsLeft && b.spawnsLeft > 0) {
-              const frac = 1 - Math.max(0, Math.min(1, (b.nextSpawnAt - frame.tick) / 50));
-              g.lineStyle(2, 0xa78bfa, 0.9).beginPath().arc(x, y - r - 10, 4, -Math.PI / 2, -Math.PI / 2 + frac * Math.PI * 2).strokePath();
+            const r0 = (s.kind === "core" ? 4 : 3) * S + S / 2;
+            const r = ent("structure", s.kind);
+            if (s.alive) {
+              if (r) {
+                const e = ensure(s.id, r, false, s.owner);
+                updateEnt(e, s.id, s.x, s.y, s.hp, false);
+                const top = y - r.proposedDisplaySize.visibleHeight * displayScale(r);
+                hpBar(x, top - 4, 36, s.hp, s.maxHp);
+                label(`hp:${s.id}`, `${s.hp}`, x, top - 14);
+              } else {
+                og.fillStyle(col(s.owner), 0.9).fillRect(x - r0, y - r0, r0 * 2, r0 * 2);
+                og.lineStyle(2, 0x111827, 1).strokeRect(x - r0, y - r0, r0 * 2, r0 * 2);
+                hpBar(x, y - r0 - 7, r0 * 2, s.hp, s.maxHp);
+                label(s.id, `${s.kind === "core" ? "CORE" : "T"} ${s.hp}`, x, y);
+              }
+            } else if (r) {
+              // Dead structures stay as dimmed rubble sprites.
+              const e = ensure(s.id, r, false, s.owner);
+              if (!e.rubble) {
+                e.rubble = true;
+                e.gone = null;
+                e.img.setScale(e.baseScale).setPosition(0, 0).setRotation(0).setAlpha(0.45);
+                e.img.setTint(0x4b5563);
+                e.root.setAlpha(1);
+                e.flashUntil = 0;
+              }
+              e.root.setPosition(x, y);
+              e.root.setDepth(y);
+            } else {
+              og.fillStyle(0x4b5563, 0.5).fillRect(x - r0, y - r0, r0 * 2, r0 * 2);
+              og.lineStyle(2, 0x111827, 1).strokeRect(x - r0, y - r0, r0 * 2, r0 * 2);
+              label(s.id, "rubble", x, y);
             }
           }
-          for (const i of frame.impacts) {
-            const r = (i.radius ?? start.catalog[i.cardId]?.radius ?? 6) * S;
-            g.lineStyle(2, i.cardId === "rift_mortar" ? 0xf97316 : 0xfde047, 0.9).strokeCircle(sx(i.x), sy(i.y), r);
-            if (i.cardId === "rift_mortar") {
-              const src = frame.buildings
-                .filter((b) => b.cardId === "rift_mortar" && b.owner === i.owner)
-                .sort((a, b) => (a.x - i.x) ** 2 + (a.y - i.y) ** 2 - ((b.x - i.x) ** 2 + (b.y - i.y) ** 2))[0];
-              if (src) g.lineStyle(1, 0xf97316, 0.5).moveTo(sx(src.x), sy(src.y)).lineTo(sx(i.x), sy(i.y)).strokePath();
+          for (const b of frame.buildings) {
+            const x = sx(b.x);
+            const y = sy(b.y);
+            const r = ent("building", b.cardId);
+            spriteOrFallback(
+              b.id,
+              r,
+              b.x,
+              b.y,
+              b.hp,
+              b.maxHp,
+              0,
+              false,
+              b.owner,
+              () => {
+                const pr = (b.footprint + 0.5) * S;
+                og.fillStyle(col(b.owner), 0.6).fillRect(x - pr, y - pr, pr * 2, pr * 2);
+                og.lineStyle(2, b.cardId === "rift_sentry" ? 0xfbbf24 : b.cardId === "chog_burrow" ? 0xa78bfa : b.cardId === "rift_mortar" ? 0xf97316 : 0xd1d5db, 1).strokeRect(x - pr, y - pr, pr * 2, pr * 2);
+                hpBar(x, y - pr - 6, pr * 2, b.hp, b.maxHp);
+              },
+              b.cardId === "rift_sentry" ? "SEN" : b.cardId === "chog_burrow" ? "BUR" : b.cardId === "rift_mortar" ? "MOR" : "TOT"
+            );
+            if (b.nextSpawnAt !== undefined && b.spawnsLeft && b.spawnsLeft > 0) {
+              const frac = 1 - Math.max(0, Math.min(1, (b.nextSpawnAt - frame.tick) / 50));
+              const rr = ent("building", b.cardId);
+              const top = rr ? y - rr.proposedDisplaySize.visibleHeight * displayScale(rr) - 10 : y - (b.footprint + 0.5) * S - 10;
+              og.lineStyle(2, 0xa78bfa, 0.9).beginPath().arc(x, top, 4, -Math.PI / 2, -Math.PI / 2 + frac * Math.PI * 2).strokePath();
             }
           }
           for (const u of frame.troops) {
             const p = lerp(u.id, u.x, u.y);
-            const x = sx(p.x);
-            const y = sy(p.y);
-            if (u.air) {
-              g.fillStyle(0x000000, 0.3).fillCircle(x, y + 6, 4);
-              g.fillStyle(col(u.owner), 1).fillTriangle(x, y - 9, x - 7, y + 3, x + 7, y + 3);
-            } else g.fillStyle(col(u.owner), 1).fillCircle(x, y, 6);
-            hpBar(x, y - 14, 14, u.hp, u.maxHp, u.shield);
-            label(u.id, (start.catalog[u.cardId]?.name ?? u.cardId).slice(0, 2), x, y);
+            const r = ent("troop", u.cardId);
+            spriteOrFallback(
+              u.id,
+              r,
+              p.x,
+              p.y,
+              u.hp,
+              u.maxHp,
+              u.shield,
+              u.air,
+              u.owner,
+              () => {
+                const x = sx(p.x);
+                const y = sy(p.y);
+                if (u.air) {
+                  og.fillStyle(0x000000, 0.3).fillCircle(x, y + 6, 4);
+                  og.fillStyle(col(u.owner), 1).fillTriangle(x, y - 9, x - 7, y + 3, x + 7, y + 3);
+                } else og.fillStyle(col(u.owner), 1).fillCircle(x, y, 6);
+                hpBar(x, y - 14, 14, u.hp, u.maxHp, u.shield);
+              },
+              (start.catalog[u.cardId]?.name ?? u.cardId).slice(0, 2)
+            );
           }
           for (const c of frame.commanders) {
             const p = lerp(c.id, c.x, c.y);
-            const x = sx(p.x);
-            const y = sy(p.y);
-            g.fillStyle(col(c.owner), 1).fillCircle(x, y, 10);
-            g.lineStyle(3, 0xfbbf24, 1).strokeCircle(x, y, 11);
-            hpBar(x, y - 19, 24, c.hp, c.maxHp, c.shield);
-            label(c.id, c.cls.slice(0, 2).toUpperCase(), x, y);
+            const r = manifest ? resolveCommanderAsset(manifest, c.cls) : null;
+            spriteOrFallback(
+              c.id,
+              r && !missing.has(r.stableAssetId!) ? r : null,
+              p.x,
+              p.y,
+              c.hp,
+              c.maxHp,
+              c.shield,
+              false,
+              c.owner,
+              () => {
+                const x = sx(p.x);
+                const y = sy(p.y);
+                og.fillStyle(col(c.owner), 1).fillCircle(x, y, 10);
+                og.lineStyle(3, 0xfbbf24, 1).strokeCircle(x, y, 11);
+                hpBar(x, y - 19, 24, c.hp, c.maxHp, c.shield);
+              },
+              c.cls.slice(0, 2).toUpperCase()
+            );
+          }
+          // Impact telegraphs and in-flight shells.
+          const seenImpacts = new Set<string>();
+          for (const i of frame.impacts) {
+            const r = (i.radius ?? start.catalog[i.cardId]?.radius ?? 6) * S;
+            og.lineStyle(2, i.cardId === "rift_mortar" ? 0xf97316 : 0xfde047, 0.9).strokeCircle(sx(i.x), sy(i.y), r);
+            seenImpacts.add(i.id);
+            let imgs = impactPool.get(i.id);
+            if (!imgs) {
+              imgs = [];
+              impactPool.set(i.id, imgs);
+            }
+            if (i.cardId === "rift_mortar") {
+              const src = frame.buildings
+                .filter((b) => b.cardId === "rift_mortar" && b.owner === i.owner)
+                .sort((a, b) => (a.x - i.x) ** 2 + (a.y - i.y) ** 2 - ((b.x - i.x) ** 2 + (b.y - i.y) ** 2))[0];
+              if (src) {
+                og.lineStyle(1, 0xf97316, 0.5).moveTo(sx(src.x), sy(src.y)).lineTo(sx(i.x), sy(i.y)).strokePath();
+                const shell = manifest && rec("effect:projectile");
+                if (shell) {
+                  let img = imgs.find((im) => im.name === "shell");
+                  if (!img) {
+                    img = this.add.image(0, 0, "effect:projectile").setName("shell").setDepth(1500);
+                    imgs.push(img);
+                  }
+                  const pr = Math.max(0, Math.min(1, 1 - (i.impactTick - frame.tick) / 15));
+                  const px = sx(src.x + (i.x - src.x) * pr);
+                  const py = sy(src.y) + (sy(i.y) - sy(src.y)) * pr - Math.sin(pr * Math.PI) * 22;
+                  img.setPosition(px, py).setScale(displayScale(shell) * 0.7);
+                  img.setRotation(Math.atan2(sy(i.y) - sy(src.y), sx(i.x) - sx(src.x)) + Math.PI / 2);
+                }
+              }
+            } else if (manifest) {
+              // Spell pending impact: the spell's own art pulses at the point.
+              const spellRec = ent("spell", i.cardId);
+              if (spellRec) {
+                let img = imgs.find((im) => im.name === "spell");
+                if (!img) {
+                  img = this.add.image(0, 0, spellRec.stableAssetId).setName("spell").setDepth(1500);
+                  imgs.push(img);
+                }
+                const pulse = 0.65 + 0.35 * Math.sin(now / 120);
+                img.setPosition(sx(i.x), sy(i.y) - 8).setScale(displayScale(spellRec) * pulse).setAlpha(0.85);
+              }
+            }
+          }
+          for (const [id, imgs] of impactPool) {
+            if (seenImpacts.has(id)) continue;
+            for (const im of imgs) im.destroy();
+            impactPool.delete(id);
           }
           // Structure no-go margins while placing a ground card.
           if (placing && placing.kind !== "spell") {
             for (const s of [...frame.structures.filter((s) => s.alive).map((s) => ({ x: s.x, y: s.y, r: s.kind === "core" ? 4 : 3 })), ...frame.buildings.map((b) => ({ x: b.x, y: b.y, r: b.footprint }))]) {
               const r = (s.r + 2.5) * S;
-              g.lineStyle(1, 0xef4444, 0.6).strokeRect(sx(s.x) - r, sy(s.y) - r, r * 2, r * 2);
+              og.lineStyle(1, 0xef4444, 0.6).strokeRect(sx(s.x) - r, sy(s.y) - r, r * 2, r * 2);
             }
           }
-          const all = new Map<string, { x: number; y: number }>();
-          for (const u of [...frame.troops, ...frame.commanders, ...frame.buildings, ...frame.structures]) all.set(u.id, u);
+          // Projectiles: primitive image rotated toward target when available.
+          const seenProj = new Set<string>();
+          const projRec = manifest ? rec("effect:projectile") : null;
           for (const pr of frame.projectiles) {
             const tgt = all.get(pr.targetId);
-            g.fillStyle(0xfef08a, 1).fillCircle(sx(pr.x), sy(pr.y), 3);
-            if (tgt) g.lineStyle(1, 0xfef08a, 0.4).lineBetween(sx(pr.x), sy(pr.y), sx(tgt.x), sy(tgt.y));
+            seenProj.add(pr.id);
+            if (projRec) {
+              let img = projPool.get(pr.id);
+              if (!img) {
+                img = this.add.image(0, 0, "effect:projectile").setDepth(1500);
+                projPool.set(pr.id, img);
+              }
+              img.setPosition(sx(pr.x), sy(pr.y)).setScale(displayScale(projRec) * 0.45);
+              if (tgt) img.setRotation(Math.atan2(sy(tgt.y) - sy(pr.y), sx(tgt.x) - sx(pr.x)));
+            } else {
+              og.fillStyle(0xfef08a, 1).fillCircle(sx(pr.x), sy(pr.y), 3);
+              if (tgt) og.lineStyle(1, 0xfef08a, 0.4).lineBetween(sx(pr.x), sy(pr.y), sx(tgt.x), sy(tgt.y));
+            }
+          }
+          for (const [id, img] of projPool) {
+            if (!seenProj.has(id)) {
+              img.destroy();
+              projPool.delete(id);
+            }
           }
           // Transient event effects, collected once per authoritative tick.
+          const spawnFx = (prim: SpriteRecord | undefined, ax: number, ay: number, size: number, dur: number) => {
+            if (!prim || missing.has(prim.stableAssetId)) return;
+            const img = this.add.image(sx(ax), sy(ay), prim.stableAssetId).setDepth(1600);
+            const s = displayScale(prim) * size;
+            img.setScale(s * 0.75).setAlpha(0.9);
+            fxImgs.push({ img, born: now, dur, s0: s * 0.75, s1: s * 1.1 });
+          };
+          const nonProjectile = (reqId: string): SpriteRecord[] => {
+            if (!manifest) return [];
+            return (manifest.bindings.effectRequirementIds[reqId] ?? [])
+              .filter((id) => id !== "effect:projectile")
+              .map((id) => byId(manifest, id))
+              .filter((r0): r0 is SpriteRecord => r0 !== null);
+          };
           if (frame.tick !== lastEventTick) {
             lastEventTick = frame.tick;
             const prevAll = new Map<string, { x: number; y: number }>();
             for (const u of [...(prev?.troops ?? []), ...(prev?.commanders ?? []), ...(prev?.buildings ?? [])]) prevAll.set(u.id, u);
+            const lungeTo = (entId: unknown, tx: number, ty: number) => {
+              const e = pool.get(String(entId));
+              const at = all.get(String(entId));
+              if (!e || !at) return;
+              const dx = tx - at.x;
+              const dy = ty - at.y;
+              const len = Math.hypot(dx, dy) || 1;
+              e.lunge = { dx: dx / len, dy: dy / len, start: now };
+            };
             for (const e of frame.events as FrameEvent[]) {
               const at = (id: unknown) => all.get(String(id)) ?? prevAll.get(String(id));
               const until = frame.tick + 6;
               if (e.type === "deploy") {
                 const p = at((e.entityIds as unknown[] | undefined)?.[0]);
                 if (p) fx.push({ kind: "ring", x: p.x, y: p.y, r: 5, color: Number(e.player) === seat ? 0x22c55e : 0xf87171, until: frame.tick + 6 });
-              } else if (e.type === "spell_cast" || e.type === "spell_impact") fx.push({ kind: "flash", x: Number(e.x), y: Number(e.y), r: start.catalog[String(e.cardId)]?.radius ?? 6, color: 0xfde047, until });
-              else if (e.type === "ability_fired") fx.push({ kind: "ring", x: Number(e.x), y: Number(e.y), r: Number(e.radius ?? 4), color: 0xfbbf24, until: frame.tick + 8 });
-              else if (e.type === "shockwave") {
+              } else if (e.type === "spell_cast" || e.type === "spell_impact") {
+                fx.push({ kind: "flash", x: Number(e.x), y: Number(e.y), r: start.catalog[String(e.cardId)]?.radius ?? 6, color: 0xfde047, until });
+                if (e.type === "spell_impact") {
+                  const req = String(e.cardId) === "rift_mortar" ? "rift_mortar_shell" : `${e.cardId}_effect`;
+                  for (const prim of nonProjectile(req)) spawnFx(prim, Number(e.x), Number(e.y), 1.4, 260);
+                }
+              } else if (e.type === "ability_fired") {
+                fx.push({ kind: "ring", x: Number(e.x), y: Number(e.y), r: Number(e.radius ?? 4), color: 0xfbbf24, until: frame.tick + 8 });
+                if (manifest) for (const prim of effectForAbility(manifest, String(e.abilityId))) spawnFx(prim, Number(e.x), Number(e.y), 1.2, 260);
+                lungeTo(e.commanderId, Number(e.x), Number(e.y));
+              } else if (e.type === "shockwave") {
                 const p = at(e.entityId);
-                if (p) fx.push({ kind: "ring", x: p.x, y: p.y, r: 4, color: 0xf97316, until: frame.tick + 3 });
+                if (p) {
+                  fx.push({ kind: "ring", x: p.x, y: p.y, r: 4, color: 0xf97316, until: frame.tick + 3 });
+                  for (const prim of nonProjectile("ember_mauler_shockwave")) spawnFx(prim, p.x, p.y, 1.2, 220);
+                  const tgt = at(e.primaryId);
+                  if (tgt) lungeTo(e.entityId, tgt.x, tgt.y);
+                }
+              } else if (e.type === "siege_fired") {
+                lungeTo(e.buildingId, Number(e.x), Number(e.y));
+              } else if (e.type === "unit_spawned") {
+                const prim = manifest ? byId(manifest, "effect:aura") : null;
+                if (prim) spawnFx(prim, Number(e.x), Number(e.y), 0.8, 200);
               } else if (e.type === "death") {
                 const p = at(e.entityId);
                 if (p) fx.push({ kind: "death", x: p.x, y: p.y, r: 2, color: 0xffffff, until: frame.tick + 5 });
               } else if (e.type === "structure_destroyed") {
                 const p = at(e.entityId);
-                if (p) fx.push({ kind: "boom", x: p.x, y: p.y, r: 8, color: 0xf97316, until: frame.tick + 12 });
+                if (p) {
+                  fx.push({ kind: "boom", x: p.x, y: p.y, r: 8, color: 0xf97316, until: frame.tick + 12 });
+                  const prim = manifest ? byId(manifest, "effect:impact") : null;
+                  if (prim) spawnFx(prim, p.x, p.y, 2.6, 300);
+                }
               }
             }
           }
@@ -242,10 +636,32 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover }:
             }
             const x = sx(e.x);
             const y = sy(e.y);
-            if (e.kind === "flash") g.fillStyle(e.color, 0.3).fillCircle(x, y, e.r * S);
-            else if (e.kind === "ring") g.lineStyle(3, e.color, 0.9).strokeCircle(x, y, e.r * S);
-            else if (e.kind === "boom") g.fillStyle(e.color, 0.5).fillCircle(x, y, e.r * S);
-            else g.lineStyle(2, e.color, 0.9).lineBetween(x - 5, y - 5, x + 5, y + 5).lineBetween(x - 5, y + 5, x + 5, y - 5);
+            if (e.kind === "flash") og.fillStyle(e.color, 0.3).fillCircle(x, y, e.r * S);
+            else if (e.kind === "ring") og.lineStyle(3, e.color, 0.9).strokeCircle(x, y, e.r * S);
+            else if (e.kind === "boom") og.fillStyle(e.color, 0.5).fillCircle(x, y, e.r * S);
+            else og.lineStyle(2, e.color, 0.9).lineBetween(x - 5, y - 5, x + 5, y + 5).lineBetween(x - 5, y + 5, x + 5, y - 5);
+          }
+          for (let i = fxImgs.length - 1; i >= 0; i--) {
+            const e = fxImgs[i]!;
+            const p = (now - e.born) / e.dur;
+            if (p >= 1) {
+              e.img.destroy();
+              fxImgs.splice(i, 1);
+              continue;
+            }
+            e.img.setScale(e.s0 + (e.s1 - e.s0) * p).setAlpha(0.9 * (1 - p));
+          }
+          // Entities absent from the frame begin their death fade.
+          for (const [id, e] of pool) {
+            if (all.has(id) || e.gone !== null || e.rubble) continue;
+            e.gone = now;
+          }
+          for (const [id, e] of pool) {
+            if (e.gone === null) continue;
+            if (now - e.gone >= 220) {
+              e.root.destroy(true);
+              pool.delete(id);
+            }
           }
           // Placement ghost: green when the advisory check passes, red otherwise.
           if (f.ghost) {
@@ -254,8 +670,8 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover }:
             const color = f.ghost.ok ? 0x22c55e : 0xef4444;
             const x = sx(f.ghost.x);
             const y = sy(f.ghost.y);
-            g.fillStyle(color, 0.3).fillCircle(x, y, r);
-            g.lineStyle(2, color, 1).strokeCircle(x, y, r).lineBetween(x - 6, y, x + 6, y).lineBetween(x, y - 6, x, y + 6);
+            og.fillStyle(color, 0.3).fillCircle(x, y, r);
+            og.lineStyle(2, color, 1).strokeCircle(x, y, r).lineBetween(x - 6, y, x + 6, y).lineBetween(x, y - 6, x, y + 6);
           }
           // Drop labels for entities that no longer exist (no stuck corpses).
           for (const [id, l] of labels) {
