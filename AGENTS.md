@@ -130,3 +130,5 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 - Derive asset scope from current implemented code, including spawned nondeckable units. Count primary entries, card-art derivatives and auxiliary VFX separately, and distinguish commander class templates from exact NFT artwork.
 - For approved static sprite handoffs, reserve READY_ANIMATED for verified frame animation. Procedural transform proposals, static contact sheets and export checks do not establish Phaser runtime or real-device readiness. Keep canonical code bindings and measured alpha-bound scale/pivots separate from preserved NFT sources.
+
+- Arena art must map to authoritative engine cell centers and inclusive cell envelopes explicitly. A warning or expiry overlay never opens the Rift Ford. Use authoritative frame.riftOpen for ford presentation and keep environment theme names separate from Chaos mechanics.
