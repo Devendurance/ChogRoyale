@@ -19,6 +19,20 @@ import {
   type SpriteManifest,
   type SpriteRecord,
 } from "./sprite-registry";
+import {
+  ARENA_URL,
+  attributeProjectile,
+  defenderPose,
+  layerVisible,
+  mountRoleFor,
+  newDefenderState,
+  placementFor,
+  updateDefender,
+  weaponArena,
+  type ArenaManifest,
+  type DefenderState,
+  type WeaponCandidate,
+} from "./arena-registry";
 
 const S = 5; // pixels per arena unit
 const OWN = 0x3b82f6;
@@ -88,7 +102,10 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
       fetch(`${KIT_URL}/manifests/phaser-assets.runtime.json`)
         .then((r) => (r.ok ? (r.json() as Promise<SpriteManifest>) : null))
         .catch(() => null),
-    ]).then(([Phaser, manifest]) => {
+      fetch(`${ARENA_URL}/manifests/arena.runtime.json`)
+        .then((r) => (r.ok ? (r.json() as Promise<ArenaManifest>) : null))
+        .catch(() => null),
+    ]).then(([Phaser, manifest, arena]) => {
       if (cancelled || !host.current) return;
       if (!manifest) console.warn("battle sprites: kit manifest unavailable; vector placeholders only");
       const reduced = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -129,17 +146,45 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
       const zonePool = new Map<string, import("phaser").GameObjects.Image>();
       const fxImgs: FxImg[] = [];
 
+      // Chaos Crossing v002 mounted-structure assemblies. One container per
+      // structure: base, socket, defender pose, front rim, all sharing the
+      // authored root pivot. Defender state is driven by authoritative data.
+      interface MountEnt {
+        root: import("phaser").GameObjects.Container;
+        base: import("phaser").GameObjects.Image;
+        socket: import("phaser").GameObjects.Image;
+        defender: import("phaser").GameObjects.Image;
+        rim: import("phaser").GameObjects.Image;
+        rubble: boolean;
+      }
+      const envLayers = new Map<string, import("phaser").GameObjects.Image>();
+      const mountPool = new Map<string, MountEnt>();
+      const defenderStates = new Map<string, DefenderState>();
+      const projAttr = new Map<string, string | null>();
+      let lastActiveAt = -1;
+
       class Arena extends Phaser.Scene {
         g!: import("phaser").GameObjects.Graphics;
         og!: import("phaser").GameObjects.Graphics;
         preload() {
-          if (!manifest) return;
           this.load.on("loaderror", (file: { key: string }) => missing.add(file.key));
-          for (const a of manifest.assets) this.load.image(a.stableAssetId, `${KIT_URL}/${a.path}`);
+          if (manifest) for (const a of manifest.assets) this.load.image(a.stableAssetId, `${KIT_URL}/${a.path}`);
+          if (arena) {
+            for (const l of arena.layers) this.load.image(`arena:layer:${l.id}`, `${ARENA_URL}/${l.path}`);
+            for (const [role, r] of Object.entries(arena.mounts)) {
+              for (const p of Object.values(r.parts)) if (p) this.load.image(`${role}:${p.split("/").pop()!.replace(".png", "")}`, `${ARENA_URL}/${p}`);
+              for (const [pose, p] of Object.entries(r.poses)) this.load.image(`${role}:defender-${pose}`, `${ARENA_URL}/${p.path}`);
+            }
+          }
         }
         create() {
           // Two Graphics layers: board art under everything, HUD overlays
           // (bars, telegraphs, ghost) above every sprite and effect image.
+          // v002 arena art sits below both as a textured underlay.
+          for (const l of arena?.layers ?? []) {
+            const img = this.add.image(-50, -60, `arena:layer:${l.id}`).setOrigin(0, 0).setDepth(-500 + l.zOrder);
+            envLayers.set(l.id, img);
+          }
           this.g = this.add.graphics().setDepth(-100);
           this.og = this.add.graphics().setDepth(3000);
         }
@@ -169,8 +214,44 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             const b = sy(maxY + 1);
             return { y: Math.min(a, b), h: Math.abs(a - b) };
           };
-          // Ground, own territory, river, bridges, ford.
-          g.fillStyle(0x1f3b2a, 1).fillRect(0, 0, W, H);
+          // v002 environment underlay. Every layer image shares the entity
+          // transform: placed at (-50,-60) half-size into the board, and for
+          // seat 1 only flipped vertically (the entity transform mirrors y).
+          const arenaOk =
+            !!arena &&
+            arena.layers.every((l) => !missing.has(`arena:layer:${l.id}`)) &&
+            arena.layers.every((l) => envLayers.has(l.id));
+          if (arenaOk && arena) {
+            const anyWarning = frame.chaos.some((c) => c.state === "warning");
+            const anyActive = frame.chaos.some((c) => c.state === "active");
+            if (anyActive) lastActiveAt = now;
+            const boardWide = (st: string) => frame.chaos.some((c) => c.state === st && c.zones.length === 0);
+            const rippleAlt = !reduced && Math.floor(now / 700) % 2 === 1;
+            for (const l of arena.layers) {
+              const img = envLayers.get(l.id);
+              if (!img) continue;
+              img.setFlipY(seat === 1);
+              const vis = layerVisible(l, {
+                riftOpen: frame.riftOpen,
+                anyWarning,
+                anyActive,
+                expiryUntil: lastActiveAt + 1000,
+                now,
+                rippleAlt,
+              });
+              img.setVisible(vis);
+              // The authored chaos overlays are board-centred illustrations.
+              // Zone-specific chaos keeps them at low alpha so they never
+              // contradict the authoritative per-zone bands drawn below.
+              if (l.state === "chaos-warning") img.setAlpha(boardWide("warning") ? 1 : 0.35);
+              else if (l.state === "chaos-active") img.setAlpha(boardWide("active") ? 1 : 0.35);
+              else if (l.state === "chaos-expiry") img.setAlpha(0.6);
+              else img.setAlpha(1);
+            }
+          }
+          // Ground, own territory, river, bridges, ford. When the v002
+          // underlay is live the art carries these; the rects are fallback.
+          if (!arenaOk) g.fillStyle(0x1f3b2a, 1).fillRect(0, 0, W, H);
           const placing = f.ghost ? start.catalog[f.ghost.cardId] : f.selected;
           if (placing && placing.kind !== "spell") {
             for (const z of deployZones(start, frame)) {
@@ -180,11 +261,13 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             }
           }
           const river = bandY(geo.river.minY, geo.river.maxY);
-          g.fillStyle(0x1e40af, 1).fillRect(0, river.y, W, river.h);
-          g.fillStyle(0x8b5a2b, 1);
-          for (const br of geo.bridges) g.fillRect(sx(br.minX), river.y, (br.maxX - br.minX + 1) * S, river.h);
-          if (frame.riftOpen) g.fillStyle(0xa855f7, 0.75).fillRect(sx(geo.ford.minX), river.y, (geo.ford.maxX - geo.ford.minX + 1) * S, river.h);
-          g.lineStyle(1, 0xffffff, 0.15).lineBetween(W / 2, 0, W / 2, H);
+          if (!arenaOk) {
+            g.fillStyle(0x1e40af, 1).fillRect(0, river.y, W, river.h);
+            g.fillStyle(0x8b5a2b, 1);
+            for (const br of geo.bridges) g.fillRect(sx(br.minX), river.y, (br.maxX - br.minX + 1) * S, river.h);
+            if (frame.riftOpen) g.fillStyle(0xa855f7, 0.75).fillRect(sx(geo.ford.minX), river.y, (geo.ford.maxX - geo.ford.minX + 1) * S, river.h);
+            g.lineStyle(1, 0xffffff, 0.15).lineBetween(W / 2, 0, W / 2, H);
+          }
           // Chaos regions: warning outlined, active filled. Board-wide pulses tint the border.
           const activeZones = new Set<string>();
           for (const c of frame.chaos) {
@@ -364,12 +447,95 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             }
           };
 
+          // Projectile attribution for defender poses: a projectile is
+          // credited to the same-owner structure whose authored weapon
+          // origin sits within 1.5 arena units of its first-seen position.
+          const firedThisFrame = new Set<string>();
+          if (arenaOk && arena) {
+            for (const pr of frame.projectiles) {
+              if (projAttr.has(pr.id)) continue;
+              const cands: WeaponCandidate[] = [];
+              for (const s of frame.structures) {
+                if (!s.alive) continue;
+                const p = placementFor(arena, s.kind, s.x, s.y);
+                if (!p) continue;
+                const pose = arena.mounts[p.mountRole]?.poses[`aim-${p.directionRequested}`];
+                if (!pose) continue;
+                const [wx, wy] = weaponArena(p.groundAnchorPixels, pose.weaponAnchorLocalBoardPixels);
+                cands.push({ id: s.id, owner: s.owner, weaponX: wx, weaponY: wy });
+              }
+              const sid = attributeProjectile(pr, cands);
+              projAttr.set(pr.id, sid);
+              if (sid) firedThisFrame.add(sid);
+            }
+            for (const [id] of projAttr) {
+              if (!frame.projectiles.some((p) => p.id === id)) projAttr.delete(id);
+            }
+          }
+
           for (const s of frame.structures) {
             const x = sx(s.x);
             const y = sy(s.y);
             const r0 = (s.kind === "core" ? 4 : 3) * S + S / 2;
             const r = ent("structure", s.kind);
-            if (s.alive) {
+            const role = mountRoleFor(s.kind);
+            const mrole = arenaOk && arena ? arena.mounts[role] : undefined;
+            const mounted =
+              !!mrole &&
+              !missing.has(`${role}:structure-base`) &&
+              !missing.has(`${role}:defender-idle`) &&
+              !missing.has(`${role}:defender-aim-north`) &&
+              !missing.has(`${role}:defender-aim-south`);
+            if (mounted && mrole) {
+              // v002 mounted assembly replaces the v001 structure sprite.
+              let me = mountPool.get(s.id);
+              if (!me) {
+                const mk = (key: string) => this.add.image(0, 0, key).setOrigin(0.5, 0.875).setScale(0.5);
+                const base = mk(`${role}:structure-base`);
+                const socket = mk(`${role}:socket-platform`);
+                const defender = mk(`${role}:defender-idle`);
+                const rim = mk(`${role}:front-rim`);
+                const root = this.add.container(x, y, [base, socket, defender, rim]);
+                me = { root, base, socket, defender, rim, rubble: false };
+                mountPool.set(s.id, me);
+              }
+              me.root.setPosition(x, y).setDepth(y);
+              const st = updateDefender(
+                defenderStates.get(s.id) ?? newDefenderState(),
+                { hp: s.hp, fired: firedThisFrame.has(s.id) },
+                now
+              );
+              defenderStates.set(s.id, st);
+              if (s.alive) {
+                if (me.rubble) {
+                  me.rubble = false;
+                  me.base.clearTint().setAlpha(1);
+                  me.socket.setVisible(true);
+                  me.defender.setVisible(true);
+                  me.rim.setVisible(true);
+                }
+                const aiming = frame.projectiles.some((p) => projAttr.get(p.id) === s.id);
+                const placement = arena ? placementFor(arena, s.kind, s.x, s.y) : null;
+                const dir = placement?.directionRequested ?? (y > H / 2 ? "north" : "south");
+                let pose = defenderPose(st, aiming, y, now);
+                // The authored static stance for this board is the directional
+                // aim (placements encode directionRequested), so idle falls
+                // back to the hemisphere aim when that pose exists.
+                if (pose === "idle" && mrole.poses[`aim-${dir}`]) pose = `aim-${dir}`;
+                me.defender.setTexture(`${role}:defender-${pose}`);
+                // HP bar from the authored mount rectangle (master px -> board px).
+                const hb = mrole.healthBarLocalBoardRectangle;
+                hpBar(x + (hb[0] + hb[2] / 2) / 2, y + hb[1] / 2, hb[2] / 2, s.hp, s.maxHp);
+                label(`hp:${s.id}`, `${s.hp}`, x, y + hb[1] / 2 - 10);
+              } else if (!me.rubble) {
+                // Destroyed: only the dimmed base remains, like rubble.
+                me.rubble = true;
+                me.socket.setVisible(false);
+                me.defender.setVisible(false);
+                me.rim.setVisible(false);
+                me.base.setTint(0x4b5563).setAlpha(0.45);
+              }
+            } else if (s.alive) {
               if (r) {
                 const e = ensure(s.id, r, false, s.owner);
                 updateEnt(e, s.id, s.x, s.y, s.hp, false);
@@ -696,6 +862,11 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
         input: { keyboard: false, mouse: false, touch: false, gamepad: false },
         scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_HORIZONTALLY },
       });
+      // Dev-surface debug handle: lets the temporary harness assert that the
+      // mounted structure art lands on the authoritative board points.
+      if (process.env.NODE_ENV !== "production") {
+        (window as unknown as { __battleGame?: import("phaser").Game }).__battleGame = game;
+      }
     });
     return () => {
       cancelled = true;

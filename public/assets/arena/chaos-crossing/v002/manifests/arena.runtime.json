@@ -1,0 +1,380 @@
+{
+  "arenaId": "chaos-crossing-v002",
+  "schemaVersion": 1,
+  "board": {
+    "artCanvas": [
+      600,
+      920
+    ],
+    "boardOffset": [
+      50,
+      60
+    ],
+    "boardSize": [
+      500,
+      800
+    ],
+    "pxPerUnit": 5,
+    "masterOrigin": [
+      100,
+      120
+    ],
+    "masterPxPerUnit": 10
+  },
+  "layers": [
+    {
+      "id": "background",
+      "path": "layers/background.png",
+      "zOrder": 0,
+      "defaultVisible": true,
+      "state": "static",
+      "stateRule": "static"
+    },
+    {
+      "id": "base-terrain",
+      "path": "layers/base-terrain.png",
+      "zOrder": 10,
+      "defaultVisible": true,
+      "state": "static",
+      "stateRule": "static"
+    },
+    {
+      "id": "river-water",
+      "path": "layers/river-water.png",
+      "zOrder": 20,
+      "defaultVisible": true,
+      "state": "static",
+      "stateRule": "static"
+    },
+    {
+      "id": "water-ripples-0",
+      "path": "layers/water-ripples-0.png",
+      "zOrder": 30,
+      "defaultVisible": true,
+      "state": "ripple-a",
+      "stateRule": "alternate existing ripple phase, optional slow crossfade proposal"
+    },
+    {
+      "id": "water-ripples-1",
+      "path": "layers/water-ripples-1.png",
+      "zOrder": 40,
+      "defaultVisible": false,
+      "state": "ripple-b",
+      "stateRule": "alternate existing ripple phase, optional slow crossfade proposal"
+    },
+    {
+      "id": "rift-ford-open",
+      "path": "layers/rift-ford-open.png",
+      "zOrder": 50,
+      "defaultVisible": false,
+      "state": "rift-open",
+      "stateRule": "authoritative frame.riftOpen === true only"
+    },
+    {
+      "id": "rift-ford-closing",
+      "path": "layers/rift-ford-closing.png",
+      "zOrder": 60,
+      "defaultVisible": false,
+      "state": "rift-closed",
+      "stateRule": "frame.riftOpen === false only; disconnected sparks never open ford"
+    },
+    {
+      "id": "banks-bridges",
+      "path": "layers/banks-bridges.png",
+      "zOrder": 70,
+      "defaultVisible": true,
+      "state": "static",
+      "stateRule": "static"
+    },
+    {
+      "id": "foundations",
+      "path": "layers/foundations.png",
+      "zOrder": 80,
+      "defaultVisible": true,
+      "state": "static",
+      "stateRule": "static"
+    },
+    {
+      "id": "border-scenery",
+      "path": "layers/border-scenery.png",
+      "zOrder": 90,
+      "defaultVisible": true,
+      "state": "static",
+      "stateRule": "static"
+    },
+    {
+      "id": "chaos-warning",
+      "path": "layers/chaos-warning.png",
+      "zOrder": 100,
+      "defaultVisible": false,
+      "state": "chaos-warning",
+      "stateRule": "explicit Chaos visual state; never opens ford"
+    },
+    {
+      "id": "chaos-active",
+      "path": "layers/chaos-active.png",
+      "zOrder": 110,
+      "defaultVisible": false,
+      "state": "chaos-active",
+      "stateRule": "explicit Chaos visual state; never opens ford"
+    },
+    {
+      "id": "chaos-expiry",
+      "path": "layers/chaos-expiry.png",
+      "zOrder": 120,
+      "defaultVisible": false,
+      "state": "chaos-expiry",
+      "stateRule": "explicit Chaos visual state; never opens ford"
+    },
+    {
+      "id": "ambient",
+      "path": "layers/ambient.png",
+      "zOrder": 130,
+      "defaultVisible": true,
+      "state": "static",
+      "stateRule": "static"
+    },
+    {
+      "id": "team-trim",
+      "path": "layers/team-trim.png",
+      "zOrder": 140,
+      "defaultVisible": true,
+      "state": "static",
+      "stateRule": "static"
+    },
+    {
+      "id": "foreground",
+      "path": "layers/foreground.png",
+      "zOrder": 150,
+      "defaultVisible": true,
+      "state": "static",
+      "stateRule": "static"
+    }
+  ],
+  "mounts": {
+    "sentinel": {
+      "pivotNormalized": [
+        0.5,
+        0.875
+      ],
+      "displayScale": 0.5,
+      "seatLocalBoardPixels": [
+        0,
+        -73
+      ],
+      "healthBarLocalBoardRectangle": [
+        -45,
+        -151,
+        90,
+        5
+      ],
+      "renderOrder": [
+        "structure-base",
+        "socket-platform",
+        "defender-pose",
+        "front-rim"
+      ],
+      "parts": {
+        "structure-base": "mounts/sentinel/structure-base.png",
+        "socket-platform": "mounts/sentinel/socket-platform.png",
+        "front-rim": "mounts/sentinel/front-rim.png"
+      },
+      "poses": {
+        "idle": {
+          "pose": "idle",
+          "path": "mounts/sentinel/defender-idle.png",
+          "weaponAnchorLocalBoardPixels": [
+            17.415,
+            -80.56
+          ],
+          "firingAllowed": false
+        },
+        "aim": {
+          "pose": "aim",
+          "path": "mounts/sentinel/defender-aim.png",
+          "weaponAnchorLocalBoardPixels": [
+            24.57,
+            -85.555
+          ],
+          "firingAllowed": false
+        },
+        "fire": {
+          "pose": "fire",
+          "path": "mounts/sentinel/defender-fire.png",
+          "weaponAnchorLocalBoardPixels": [
+            31.725,
+            -90.415
+          ],
+          "firingAllowed": true
+        },
+        "hit": {
+          "pose": "hit",
+          "path": "mounts/sentinel/defender-hit.png",
+          "weaponAnchorLocalBoardPixels": [
+            20.925,
+            -80.695
+          ],
+          "firingAllowed": false
+        },
+        "aim-south": {
+          "pose": "aim-south",
+          "path": "mounts/sentinel/defender-aim-south.png",
+          "weaponAnchorLocalBoardPixels": [
+            22.261,
+            -78.757
+          ],
+          "firingAllowed": true
+        },
+        "aim-north": {
+          "pose": "aim-north",
+          "path": "mounts/sentinel/defender-aim-north.png",
+          "weaponAnchorLocalBoardPixels": [
+            20.838,
+            -122.325
+          ],
+          "firingAllowed": true
+        }
+      }
+    },
+    "core-keeper": {
+      "pivotNormalized": [
+        0.5,
+        0.875
+      ],
+      "displayScale": 0.5,
+      "seatLocalBoardPixels": [
+        0,
+        -46
+      ],
+      "healthBarLocalBoardRectangle": [
+        -58,
+        -139,
+        116,
+        5
+      ],
+      "renderOrder": [
+        "structure-base",
+        "socket-platform",
+        "defender-pose",
+        "front-rim"
+      ],
+      "parts": {
+        "structure-base": "mounts/core-keeper/structure-base.png",
+        "socket-platform": "mounts/core-keeper/socket-platform.png",
+        "front-rim": "mounts/core-keeper/front-rim.png"
+      },
+      "poses": {
+        "idle": {
+          "pose": "idle",
+          "path": "mounts/core-keeper/defender-idle.png",
+          "weaponAnchorLocalBoardPixels": [
+            4.05,
+            -68.5
+          ],
+          "firingAllowed": false
+        },
+        "aim": {
+          "pose": "aim",
+          "path": "mounts/core-keeper/defender-aim.png",
+          "weaponAnchorLocalBoardPixels": [
+            31.05,
+            -86.35
+          ],
+          "firingAllowed": false
+        },
+        "fire": {
+          "pose": "fire",
+          "path": "mounts/core-keeper/defender-fire.png",
+          "weaponAnchorLocalBoardPixels": [
+            34.05,
+            -90.25
+          ],
+          "firingAllowed": true
+        },
+        "hit": {
+          "pose": "hit",
+          "path": "mounts/core-keeper/defender-hit.png",
+          "weaponAnchorLocalBoardPixels": [
+            10.65,
+            -94.3
+          ],
+          "firingAllowed": false
+        },
+        "aim-south": {
+          "pose": "aim-south",
+          "path": "mounts/core-keeper/defender-aim-south.png",
+          "weaponAnchorLocalBoardPixels": [
+            24.368,
+            -54.369
+          ],
+          "firingAllowed": true
+        },
+        "aim-north": {
+          "pose": "aim-north",
+          "path": "mounts/core-keeper/defender-aim-north.png",
+          "weaponAnchorLocalBoardPixels": [
+            19.594,
+            -100.648
+          ],
+          "firingAllowed": true
+        }
+      }
+    }
+  },
+  "placements": [
+    {
+      "id": "p1-core",
+      "mountRole": "core-keeper",
+      "groundAnchorPixels": [
+        600,
+        200
+      ],
+      "directionRequested": "south"
+    },
+    {
+      "id": "p1-west",
+      "mountRole": "sentinel",
+      "groundAnchorPixels": [
+        400,
+        520
+      ],
+      "directionRequested": "south"
+    },
+    {
+      "id": "p1-east",
+      "mountRole": "sentinel",
+      "groundAnchorPixels": [
+        800,
+        520
+      ],
+      "directionRequested": "south"
+    },
+    {
+      "id": "p0-west",
+      "mountRole": "sentinel",
+      "groundAnchorPixels": [
+        400,
+        1320
+      ],
+      "directionRequested": "north"
+    },
+    {
+      "id": "p0-east",
+      "mountRole": "sentinel",
+      "groundAnchorPixels": [
+        800,
+        1320
+      ],
+      "directionRequested": "north"
+    },
+    {
+      "id": "p0-core",
+      "mountRole": "core-keeper",
+      "groundAnchorPixels": [
+        600,
+        1640
+      ],
+      "directionRequested": "north"
+    }
+  ]
+}
