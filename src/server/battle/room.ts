@@ -25,6 +25,7 @@ import type { PrivyTokenVerifier } from "@/lib/privy-server";
 import { readySchema, type CommanderChoice } from "@/lib/battle-protocol";
 import { BattleSession, type SeatPlayer, type SessionRandom, type TrustedLoadout } from "@/server/battle/session";
 import { productionEntitlementDeps, resolveCommander, type EntitlementDeps } from "@/server/battle/entitlement";
+import { productionPatronSource, type PatronSource } from "@/server/battle/patron-source";
 import type { MatchCoordinator } from "@/server/battle/matchmaking";
 import { recordFromReplay, type SettlementService } from "@/server/battle/settlement";
 
@@ -48,6 +49,8 @@ export interface BattleRoomDeps {
   reconnectGraceMs?: number;
   /** Durable settlement service; absent or null disables DB writes. */
   settlement?: SettlementService | null;
+  /** Arena Patron source; defaults to the indexed Genesis pool. */
+  patrons?: PatronSource;
 }
 
 type BattleClient = Client & { auth: SeatPlayer };
@@ -58,6 +61,11 @@ const RECONNECT_GRACE_MS = 30_000;
 let productionDeps: EntitlementDeps | null = null;
 function entitlement(): EntitlementDeps {
   return BattleRoom.deps.entitlement ?? (productionDeps ??= productionEntitlementDeps());
+}
+
+let productionPatrons: PatronSource | null = null;
+function patronSource(): PatronSource {
+  return BattleRoom.deps.patrons ?? (productionPatrons ??= productionPatronSource());
 }
 
 /** Shared seat authentication for every battle-path room (battle + queue). */
@@ -333,9 +341,25 @@ export class BattleRoom extends Room {
         return;
       }
     }
+    // Lock one authentic indexed patron for the match. Fails closed: no
+    // synthetic fallback, and both players are un-readied and told why.
+    let patron;
+    try {
+      patron = await patronSource().lock(randomBytes(16).toString("hex"));
+    } catch (e) {
+      if (this.session.lockEpoch !== epoch || this.session.phase !== "waiting") return;
+      this.session.clearReady(0);
+      this.session.clearReady(1);
+      logger.info("arena patron unavailable", { roomId: this.roomId, reason: e instanceof Error ? e.message : String(e) });
+      for (const slot of [0, 1] as const) {
+        this.clientFor(slot)?.send("error", { reason: "No authentic Arena Patron available, match cannot start" });
+      }
+      this.sendLobby();
+      return;
+    }
     if (this.earlyAbort || this.session.lockEpoch !== epoch || this.session.phase !== "waiting") return;
     try {
-      this.session.start(epoch, loadouts as [TrustedLoadout, TrustedLoadout]);
+      this.session.start(epoch, loadouts as [TrustedLoadout, TrustedLoadout], patron);
     } catch {
       return;
     }

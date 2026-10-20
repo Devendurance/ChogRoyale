@@ -1,7 +1,11 @@
 // Shared test fixtures for the battle suite. Not a test file.
+import { createHash } from "crypto";
 import { freeStarterSlot, commanderCardId } from "@/lib/combat";
+import { CHOG_GENESIS_ADDRESS, MONAD_CHAIN_ID } from "@/lib/chain";
+import { derivePatronConfig, type PatronTraitInput } from "@/lib/patrons";
 import type { CommanderClass } from "@/lib/commanders";
 import type { CommanderGrant } from "@/server/battle/entitlement";
+import { PatronUnavailableError, type LockedPatron, type PatronSource } from "@/server/battle/patron-source";
 import type { TrustedLoadout } from "@/server/battle/session";
 
 const cap = (s: string) => `${s[0]!.toUpperCase()}${s.slice(1)}`;
@@ -60,4 +64,37 @@ export function makeLoadout(cards: string[], cls: CommanderClass = "scout"): Tru
 
 export function makeLoadoutWithGrant(cards: string[], grant: CommanderGrant): TrustedLoadout {
   return { cards, grant };
+}
+
+/**
+ * A LockedPatron built through the same derivation as the production source
+ * (real derivePatronConfig over plausible trait inputs, 64-hex content hash),
+ * without any DB. Distinct tokenIds/traits produce distinct schedules.
+ */
+export function testLockedPatron(tokenId = "42"): LockedPatron {
+  const attributes: PatronTraitInput[] = [
+    { trait_type: "Background", value: "Crimson Glow" },
+    { trait_type: "Aura", value: "Ember Glow" },
+    { trait_type: "Tier", value: "Rare" },
+  ];
+  const metadataContentHash = createHash("sha256").update(`test-metadata:${tokenId}`).digest("hex");
+  const name = `CHOG #${tokenId}`;
+  const config = derivePatronConfig({ tokenId, attributes, metadataContentHash, name });
+  return {
+    source: "indexed-genesis",
+    chainId: MONAD_CHAIN_ID,
+    contractAddress: CHOG_GENESIS_ADDRESS,
+    tokenId,
+    name,
+    attributes,
+    metadataContentHash,
+    config,
+  };
+}
+
+/** PatronSource stub returning a fixed locked patron (or rejecting). */
+export function testPatronSource(patron: LockedPatron | null = testLockedPatron()): PatronSource {
+  return {
+    lock: () => (patron ? Promise.resolve(JSON.parse(JSON.stringify(patron)) as LockedPatron) : Promise.reject(new PatronUnavailableError("No eligible indexed Chog Genesis patron"))),
+  };
 }

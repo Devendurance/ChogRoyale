@@ -7,9 +7,11 @@
 // events for each eligible NFT commander that actually deployed (the
 // replay's commander_deployed event marks the battle appearance). Free
 // commanders, undeployed NFTs, missing owner provenance and malformed
-// identities are skipped. Patron appearances are never emitted: battle
-// patrons are synthetic fairness data, not real NFTs, so paragon is never
-// issued. After all events succeed a match_legacy_runs marker is written;
+// identities are skipped. For formatVersion-2 evidence the locked authentic
+// Arena Patron is re-verified (snapshot and Chaos schedule re-derive) and
+// the patron token earns a patron_appearance, which can in turn award
+// paragon; formatVersion-1 (synthetic patron) evidence emits none. After
+// all events succeed a match_legacy_runs marker is written;
 // any failure before that leaves the match for a later reconcile pass.
 // Every write is idempotent by authorityKey, so retries and concurrent
 // passes cannot duplicate events or awards.
@@ -23,6 +25,9 @@ import { recordVerifiedNftLegacyEvent } from "@/db/legacy";
 import { evaluateAchievements, type StoredLegacyEvent } from "@/lib/legacy";
 import { ACHIEVEMENT_DEFINITIONS } from "@/lib/legacy";
 import { evidenceDigest, type SettlementRecord } from "@/server/battle/settlement";
+import { verifyPatronEvidence } from "@/server/battle/patron-source";
+import { PATRON_RULESET_VERSION } from "@/lib/patrons";
+import { CHOG_GENESIS_ADDRESS, MONAD_CHAIN_ID } from "@/lib/chain";
 import { logger } from "@/lib/logger";
 import type { CommanderIdentity } from "@/lib/battle-protocol";
 
@@ -32,9 +37,9 @@ export class LegacyVerificationError extends Error {}
 
 const LEGACY_SOURCE = "b3-settlement";
 const LEGACY_ACTOR = "battle-server";
-/** Battle-issued achievements only; paragon needs real patron history and
- * battle patrons are synthetic, so it is never emitted. */
-const BATTLE_ACHIEVEMENT_CODES = new Set(["first_blood", "first_victory", "veteran"]);
+/** Battle-issued achievements: paragon is emitted only for tokens whose
+ * patron_appearance came from authentic formatVersion-2 evidence. */
+const BATTLE_ACHIEVEMENT_CODES = new Set(["first_blood", "first_victory", "veteran", "paragon"]);
 
 interface EligibleSeat {
   seat: 0 | 1;
@@ -82,6 +87,31 @@ export class LegacyProcessor {
     if (replay.result.stateHash !== match.liveHash) refuse("stored evidence does not reproduce the live hash");
     if (replay.result.endReason !== match.endReason) refuse("stored evidence endReason differs");
 
+    // v2 evidence carries the locked authentic patron: its snapshot and the
+    // recorded schedule must re-derive, and the token must still be indexed.
+    // v1 evidence came from the synthetic fairness patrons and earns none.
+    const skips: string[] = [];
+    let patronTokenId: string | null = null;
+    if (evidence.formatVersion === 2) {
+      try {
+        verifyPatronEvidence(evidence.config, evidence.patron);
+      } catch (err) {
+        refuse(`patron evidence invalid: ${err instanceof Error ? err.message : String(err)}`);
+      }
+      const patronNft = await getNftByTokenId(evidence.patron.tokenId);
+      if (
+        !patronNft ||
+        patronNft.token.chainId !== MONAD_CHAIN_ID ||
+        patronNft.token.contractAddress.toLowerCase() !== CHOG_GENESIS_ADDRESS
+      ) {
+        skips.push("patron-unknown-token");
+      } else {
+        patronTokenId = evidence.patron.tokenId;
+      }
+    } else {
+      skips.push("synthetic-patron");
+    }
+
     // Deployment markers: the replay's commander_deployed event is the
     // authoritative battle appearance, seat-keyed by event.player.
     const deployed = new Map<number, string>();
@@ -100,7 +130,6 @@ export class LegacyProcessor {
       protocol: match.protocolVersion ?? "unknown",
       commander: "v1",
     };
-    const skips: string[] = [];
     const eligible: EligibleSeat[] = [];
     const outcomeBySeat = new Map<number, "victory" | "defeat">();
     if (match.outcome === "win" && match.winnerSeat !== null) {
@@ -155,6 +184,31 @@ export class LegacyProcessor {
     }
 
     let created = 0;
+    if (patronTokenId !== null) {
+      const patron = (evidence as Extract<SettlementRecord["evidence"], { formatVersion: 2 }>).patron;
+      const patronRefs = { ...rulesetRefs, patron: PATRON_RULESET_VERSION };
+      const appearance = await recordVerifiedNftLegacyEvent({
+        source: LEGACY_SOURCE,
+        actor: LEGACY_ACTOR,
+        authorityKey: `b3:${matchId}:${patronTokenId}:patron`,
+        category: "patron_appearance",
+        tokenId: patronTokenId,
+        matchId,
+        matchStatus: "finalized",
+        payload: {
+          matchType: match.matchType,
+          configHash: patron.config.configHash,
+          metadataContentHash: patron.metadataContentHash,
+          theme: patron.config.theme,
+          scheduleHash: evidence.config.chaos!.scheduleHash,
+          evidenceSha256: match.evidenceSha256,
+        },
+        rulesetRefs: patronRefs,
+        occurredAt: match.finishedAt,
+      });
+      if (appearance.created) created += 1;
+      created += await this.emitNewAchievements(matchId, patronTokenId, match.finishedAt, patronRefs);
+    }
     for (const e of eligible) {
       const tokenId = e.tokenId;
       const appearance = await recordVerifiedNftLegacyEvent({
@@ -206,7 +260,7 @@ export class LegacyProcessor {
       created += await this.emitNewAchievements(matchId, tokenId, match.finishedAt, rulesetRefs);
     }
 
-    const status = eligible.length > 0 ? "done" : "no-eligible";
+    const status = eligible.length > 0 || patronTokenId !== null ? "done" : "no-eligible";
     await db
       .insert(matchLegacyRuns)
       .values({

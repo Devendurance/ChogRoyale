@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ARENA_H, ARENA_W, DRAG_THRESHOLD_PX, TOUCH_LIFT_PX, aimPoint, endGesture, moveGesture, placementHint, screenToArena, startGesture, type Rect } from "@/lib/battle-input";
 import { BattleSession, PRESETS, type SessionRandom, type TrustedLoadout } from "@/server/battle/session";
-import { makeLoadout } from "@/server/battle/test-helpers";
+import { makeLoadout, testLockedPatron } from "@/server/battle/test-helpers";
 import { troopDeployCheck, type PlayerIndex } from "@/lib/combat";
 
 // Renderer's forward mapping (BattleCanvas sx/sy), expressed as a fraction of the rendered rect.
@@ -112,7 +112,7 @@ describe("B3.1 drag input: advisory placement hints", () => {
     s.setReady("pa", makeLoadout([...PRESETS.swarm!.cards], "scout"));
     s.setReady("pb", makeLoadout([...PRESETS.siege!.cards], "reaver"));
     const epoch = s.lock();
-    s.start(epoch, s.readyLoadouts() as [TrustedLoadout, TrustedLoadout]);
+    s.start(epoch, s.readyLoadouts() as [TrustedLoadout, TrustedLoadout], testLockedPatron());
     return s;
   }
   const slotFor = (s: BattleSession, seat: PlayerIndex) => s.slotOf(s.seatOf("pa") === seat ? "pa" : "pb");

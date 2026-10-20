@@ -27,6 +27,7 @@ import { freeCommanderTemplates, type CommanderClass } from "@/lib/commanders";
 import type { EntitlementDeps, NftCommanderRecord } from "@/server/battle/entitlement";
 import type { Commander } from "@/db/schema";
 import { startBattleServer } from "@/server/battle/server";
+import { testPatronSource } from "@/server/battle/test-helpers";
 
 const PORT = 29000 + Math.floor(Math.random() * 900);
 const URL_ = `http://127.0.0.1:${PORT}`;
@@ -88,6 +89,7 @@ beforeAll(async () => {
     },
     loader: async (did) => PLAYERS[did.replace("did:privy:", "")] ?? null,
     entitlement,
+    patrons: testPatronSource(),
     tickMs: 2,
     replayDir,
     closeAfterMs: 50,

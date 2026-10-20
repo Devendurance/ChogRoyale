@@ -25,6 +25,8 @@ import { freeCommanderTemplates, type CommanderClass } from "@/lib/commanders";
 import type { EntitlementDeps, NftCommanderRecord } from "@/server/battle/entitlement";
 import type { Commander } from "@/db/schema";
 import { startBattleServer } from "@/server/battle/server";
+import { testLockedPatron, testPatronSource } from "@/server/battle/test-helpers";
+import { BattleRoom } from "@/server/battle/room";
 
 const PORT = 28000 + Math.floor(Math.random() * 1000);
 const URL_ = `http://127.0.0.1:${PORT}`;
@@ -87,6 +89,7 @@ beforeAll(async () => {
     },
     loader: async (did) => PLAYERS[did.replace("did:privy:", "")] ?? null,
     entitlement,
+    patrons: testPatronSource(),
     tickMs: 2,
     replayDir,
     closeAfterMs: 50,
@@ -473,4 +476,61 @@ describe("B3.1 Colyseus battle room", () => {
     expect(a.end!.replayIdentical).toBe(true);
     await Promise.all([ra.leave().catch(() => {}), rb.leave().catch(() => {})]);
   }, 120_000);
+
+  it("locks an authentic patron, shows it in start, and plays identical chaos on both clients", async () => {
+    const ra = await client("tok-alice").create(BATTLE_ROOM);
+    const rb = await client("tok-bob").joinById(ra.roomId);
+    const a = watch(ra);
+    const b = watch(rb);
+    ra.send("ready", ready("swarm"));
+    rb.send("ready", ready("antiSwarm"));
+    await until(() => !!a.start && !!b.start);
+    expect(a.start!.patron.tokenId).toBe(testLockedPatron().tokenId);
+    expect(a.start!.patron.name).toBe(`CHOG #${testLockedPatron().tokenId}`);
+    expect(a.start!.patron).toEqual(b.start!.patron);
+    let n = 0;
+    const drive = (room: Room, s: Seen) => {
+      const f = s.frames.at(-1);
+      if (!f || s.end) return;
+      const pick = f.hand.find((c) => s.start!.catalog[c]!.cost <= f.energy);
+      if (pick && f.tick % 15 === 0) room.send("cmd", { type: "deploy", cid: `d${n++}`, cardId: pick, x: 50, y: s.start!.seat === 0 ? 60 : 100 });
+    };
+    const lastTick = { a: -1, b: -1 };
+    await until(() => {
+      const fa = a.frames.at(-1);
+      const fb = b.frames.at(-1);
+      if (fa && fa.tick !== lastTick.a) { lastTick.a = fa.tick; drive(ra, a); }
+      if (fb && fb.tick !== lastTick.b) { lastTick.b = fb.tick; drive(rb, b); }
+      return !!a.end && !!b.end;
+    }, 90_000);
+    // The locked patron drives identical Chaos views on both clients.
+    const byTick = new Map(b.frames.map((f) => [f.tick, f]));
+    const shared = a.frames.filter((f) => byTick.has(f.tick));
+    for (const f of shared) expect(f.chaos).toEqual(byTick.get(f.tick)!.chaos);
+    expect(a.frames.some((f) => f.chaos.length > 0)).toBe(true);
+    expect(a.end!.stateHash).toBe(b.end!.stateHash);
+    expect(a.end!.replayIdentical).toBe(true);
+    await Promise.all([ra.leave().catch(() => {}), rb.leave().catch(() => {})]);
+  }, 120_000);
+
+  it("does not start when no authentic patron is available", async () => {
+    const held = BattleRoom.deps.patrons;
+    BattleRoom.deps.patrons = testPatronSource(null);
+    try {
+      const ra = await client("tok-alice").create(BATTLE_ROOM);
+      const rb = await client("tok-bob").joinById(ra.roomId);
+      const a = watch(ra);
+      const b = watch(rb);
+      ra.send("ready", ready("swarm"));
+      rb.send("ready", ready("antiSwarm"));
+      await until(() => a.errors.length > 0 && b.errors.length > 0);
+      expect(a.errors).toContain("No authentic Arena Patron available, match cannot start");
+      expect(b.errors).toContain("No authentic Arena Patron available, match cannot start");
+      expect(a.start).toBeUndefined();
+      await until(() => !!a.lobby && a.lobby.players.every((p) => !p.ready));
+      await Promise.all([ra.leave().catch(() => {}), rb.leave().catch(() => {})]);
+    } finally {
+      BattleRoom.deps.patrons = held;
+    }
+  }, 60_000);
 });

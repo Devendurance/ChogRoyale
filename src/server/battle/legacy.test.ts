@@ -29,8 +29,8 @@ import { COMMANDER_COMBAT_PROFILE_V1, commanderCardId, freeStarterSlot, type Pla
 import { botAbility } from "@/lib/arena-scenarios";
 import { smartMove } from "@/lib/smart-bot";
 import { BattleSession, PRESETS, type SessionRandom, type TrustedLoadout } from "@/server/battle/session";
-import { freeGrant, makeLoadoutWithGrant, nftGrant } from "@/server/battle/test-helpers";
-import { SettlementService, recordFromReplay, settleMatch, type SettlementRecord } from "@/server/battle/settlement";
+import { freeGrant, makeLoadoutWithGrant, nftGrant, testLockedPatron } from "@/server/battle/test-helpers";
+import { SettlementService, evidenceDigest, recordFromReplay, settleMatch, type SettlementRecord } from "@/server/battle/settlement";
 import { LegacyProcessor, LegacyVerificationError } from "@/server/battle/legacy";
 import type { CommanderClass } from "@/lib/commanders";
 import { GET as legacyGet } from "@/app/api/nfts/[tokenId]/legacy/route";
@@ -121,8 +121,10 @@ async function settleMatch2(opts: {
   seed?: string;
   drive?: boolean;
   matchType?: "private" | "matchmaking";
+  /** Locked patron token; defaults to the unindexed test patron. */
+  patronTokenId?: string;
 }): Promise<{ record: SettlementRecord; session: BattleSession }> {
-  const { a, b, nftSeat, tokenId = "91001", owner = OWNER, decks = ["swarm", "antiSwarm"], seed = SEED, drive = true, matchType = "private" } = opts;
+  const { a, b, nftSeat, tokenId = "91001", owner = OWNER, decks = ["swarm", "antiSwarm"], seed = SEED, drive = true, matchType = "private", patronTokenId } = opts;
   const s = new BattleSession(rng(0, seed));
   s.join({ playerId: a.id, username: a.username ?? "a" });
   s.join({ playerId: b.id, username: b.username ?? "b" });
@@ -135,7 +137,7 @@ async function settleMatch2(opts: {
   s.setReady(a.id, loadouts[0]);
   s.setReady(b.id, loadouts[1]);
   const epoch = s.lock();
-  s.start(epoch, s.readyLoadouts() as [TrustedLoadout, TrustedLoadout]);
+  s.start(epoch, s.readyLoadouts() as [TrustedLoadout, TrustedLoadout], testLockedPatron(patronTokenId));
   const pidOf = (seat: PlayerIndex) => (s.seatOf(a.id) === seat ? a.id : b.id);
   let n = 0;
   let end = null;
@@ -331,7 +333,7 @@ describe("legacy processor", () => {
     s.setReady(a.id, makeLoadoutWithGrant(d0.cards, nftGrant("91109", OWNER, d0.cls)));
     s.setReady(b.id, makeLoadoutWithGrant(d1.cards, freeGrant(d1.cls)));
     const epoch = s.lock();
-    s.start(epoch, s.readyLoadouts() as [TrustedLoadout, TrustedLoadout]);
+    s.start(epoch, s.readyLoadouts() as [TrustedLoadout, TrustedLoadout], testLockedPatron());
     const pidOf = (seat: PlayerIndex) => (s.seatOf(a.id) === seat ? a.id : b.id);
     let n = 0;
     while (s.phase === "active") {
@@ -447,10 +449,80 @@ describe("legacy processor", () => {
     expect(await runRow(older.record.matchId)).toBeUndefined();
   }, 240_000);
 
-  it("patron appearances are never emitted and paragon is never awarded", async () => {
-    const all = await getDb().select().from(nftLegacyEvents).where(eq(nftLegacyEvents.category, "patron_appearance"));
-    expect(all.length).toBe(0);
-    const paragon = await getDb().select().from(nftAchievementAwards).where(eq(nftAchievementAwards.achievementCode, "paragon"));
-    expect(paragon.length).toBe(0);
-  });
+  it("v2 evidence emits exactly one patron_appearance for the indexed patron, with no owner fields", async () => {
+    const [a, b] = [await mkPlayer("pt1a"), await mkPlayer("pt1b")];
+    await makeToken("91250");
+    // Free commanders on both seats: the only eligible fact is the patron.
+    const { record } = await settleMatch2({ a, b, patronTokenId: "91250" });
+    const proc = new LegacyProcessor();
+    const res = await proc.processMatch(record.matchId);
+    expect(res.status).toBe("done");
+    const ev = await eventsFor("91250", record.matchId);
+    const apps = ev.filter((e) => e.category === "patron_appearance");
+    expect(apps.length).toBe(1);
+    const payload = apps[0]!.payload as Record<string, unknown>;
+    expect(payload.matchType).toBe("private");
+    expect(payload.evidenceSha256).toBe(record.evidenceSha256);
+    expect(payload.scheduleHash).toBe(record.evidence.formatVersion === 2 ? record.evidence.config.chaos!.scheduleHash : null);
+    expect(JSON.stringify(payload)).not.toContain(OWNER);
+    expect(Object.keys(payload)).not.toContain("owner");
+    // Reprocessing and concurrent passes cannot duplicate it.
+    await proc.processMatch(record.matchId);
+    await Promise.all([proc.processMatch(record.matchId), new LegacyProcessor().processMatch(record.matchId)]);
+    expect((await eventsFor("91250", record.matchId)).filter((e) => e.category === "patron_appearance").length).toBe(1);
+  }, 240_000);
+
+  it("formatVersion-1 (synthetic patron) evidence emits no patron event", async () => {
+    const [a, b] = [await mkPlayer("v1sa"), await mkPlayer("v1sb")];
+    await makeToken("91251");
+    const { record } = await settleMatch2({ a, b, patronTokenId: "91251" });
+    // Rewrite the stored evidence to the v1 shape so the v1 branch is
+    // exercised (new records are always v2); the digest must still recompute.
+    const db = getDb();
+    const [ev] = await db.select().from(matchEvidence).where(eq(matchEvidence.matchId, record.matchId));
+    const stored = ev!.evidence as Extract<SettlementRecord["evidence"], { formatVersion: 2 }>;
+    const v1 = { formatVersion: 1 as const, config: stored.config, commands: stored.commands };
+    await db.update(matchEvidence).set({ formatVersion: 1, evidence: v1 }).where(eq(matchEvidence.matchId, record.matchId));
+    await db.update(matches).set({ evidenceSha256: evidenceDigest(v1) }).where(eq(matches.id, record.matchId));
+    const res = await new LegacyProcessor().processMatch(record.matchId);
+    expect(res).toEqual({ status: "no-eligible", eventsCreated: 0 });
+    const run = await runRow(record.matchId);
+    expect(JSON.stringify(run?.details)).toContain("synthetic-patron");
+    expect((await eventsFor("91251", record.matchId)).length).toBe(0);
+  }, 240_000);
+
+  it("v2 evidence with a tampered patron refuses processing and emits nothing", async () => {
+    const [a, b] = [await mkPlayer("tp1a"), await mkPlayer("tp1b")];
+    await makeToken("91252");
+    const { record } = await settleMatch2({ a, b, patronTokenId: "91252" });
+    // Corrupt the locked snapshot and recompute the digest so the failure
+    // lands on the patron verification branch, not the hash check.
+    const db = getDb();
+    const [ev] = await db.select().from(matchEvidence).where(eq(matchEvidence.matchId, record.matchId));
+    const tampered = JSON.parse(JSON.stringify(ev!.evidence)) as { patron: { config: { configHash: string } } };
+    tampered.patron.config.configHash = "f".repeat(64);
+    await db.update(matchEvidence).set({ evidence: tampered }).where(eq(matchEvidence.matchId, record.matchId));
+    await db.update(matches).set({ evidenceSha256: evidenceDigest(tampered as never) }).where(eq(matches.id, record.matchId));
+    await expect(new LegacyProcessor().processMatch(record.matchId)).rejects.toThrow(/patron evidence invalid/);
+    expect((await eventsFor("91252", record.matchId)).length).toBe(0);
+    expect(await runRow(record.matchId)).toBeUndefined();
+  }, 240_000);
+
+  it("paragon is awarded exactly once at the 10th distinct patron_appearance match, not at 9", async () => {
+    const [a, b] = [await mkPlayer("pg1a"), await mkPlayer("pg1b")];
+    await makeToken("91253");
+    for (let i = 0; i < 9; i += 1) {
+      const { record } = await settleMatch2({ a, b, patronTokenId: "91253", seed: `${i.toString(16).padStart(2, "0")}bb00bb00bb00bb00bb00bb00bb00bb` });
+      await new LegacyProcessor().processMatch(record.matchId);
+    }
+    expect((await awardsFor("91253")).filter((x) => x.achievementCode === "paragon").length).toBe(0);
+    const { record } = await settleMatch2({ a, b, patronTokenId: "91253", seed: "09cc00cc00cc00cc00cc00cc00cc00cc" });
+    await new LegacyProcessor().processMatch(record.matchId);
+    const awards = (await awardsFor("91253")).filter((x) => x.achievementCode === "paragon");
+    expect(awards.length).toBe(1);
+    // Reprocessing every match cannot double-award.
+    const proc = new LegacyProcessor();
+    await proc.reconcile(50, matchIds);
+    expect((await awardsFor("91253")).filter((x) => x.achievementCode === "paragon").length).toBe(1);
+  }, 900_000);
 });

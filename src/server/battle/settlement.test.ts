@@ -10,9 +10,10 @@ import { matchEvidence, matchParticipants, matches, players, type Player } from 
 import { runMatch } from "@/lib/combat";
 import { BATTLE_PROTOCOL_VERSION } from "@/lib/battle-protocol";
 import { BattleSession, PRESETS, type SessionRandom, type TrustedLoadout } from "@/server/battle/session";
-import { makeLoadout, makeLoadoutWithGrant, nftGrant } from "@/server/battle/test-helpers";
+import { makeLoadout, makeLoadoutWithGrant, nftGrant, testLockedPatron } from "@/server/battle/test-helpers";
 import {
   SettlementService,
+  evidenceDigest,
   recordFromReplay,
   settleMatch,
   verifySettlement,
@@ -64,7 +65,7 @@ function finishedRecord(a: Player, b: Player, matchType: "private" | "matchmakin
   s.setReady(a.id, preset("swarm"));
   s.setReady(b.id, preset("siege"));
   const epoch = s.lock();
-  s.start(epoch, s.readyLoadouts() as [TrustedLoadout, TrustedLoadout]);
+  s.start(epoch, s.readyLoadouts() as [TrustedLoadout, TrustedLoadout], testLockedPatron());
   while (s.phase === "active") s.tick();
   const matchId = randomUUID();
   matchIds.push(matchId);
@@ -128,6 +129,35 @@ describe("settlement service", () => {
     expect((await counts(rec.matchId)).match).toBe(0);
   }, 120_000);
 
+  it("refuses v2 evidence whose locked patron or schedule was tampered", async () => {
+    const [a, b] = [await mkPlayer("p1a"), await mkPlayer("p1b")];
+    const rec = finishedRecord(a, b);
+    expect(rec.evidence.formatVersion).toBe(2);
+    expect(() => verifySettlement(rec)).not.toThrow();
+    // A tampered patron snapshot fails re-derivation even with a recomputed digest.
+    const badPatron = {
+      ...rec,
+      evidence: {
+        ...rec.evidence,
+        formatVersion: 2 as const,
+        patron: { ...(rec.evidence as Extract<SettlementRecord["evidence"], { formatVersion: 2 }>).patron, tokenId: "777" },
+      },
+    };
+    badPatron.evidenceSha256 = evidenceDigest(badPatron.evidence);
+    expect(() => verifySettlement(badPatron)).toThrow(/patron evidence invalid/);
+    const svc = new SettlementService({ dir: tmpDir(), retryDelaysMs: [], sleep: async () => {} });
+    expect(await svc.submit(badPatron)).toBe("refused");
+    expect((await counts(rec.matchId)).match).toBe(0);
+    // A foreign schedule (derived under a different match key) is refused too.
+    const badSched = JSON.parse(JSON.stringify(rec)) as SettlementRecord;
+    if (badSched.evidence.formatVersion === 2) badSched.evidence.config.chaos = { ...badSched.evidence.config.chaos!, scheduleHash: "f".repeat(64) };
+    badSched.evidenceSha256 = evidenceDigest(badSched.evidence);
+    badSched.matchId = randomUUID();
+    matchIds.push(badSched.matchId);
+    expect(await svc.submit(badSched)).toBe("refused");
+    expect((await counts(badSched.matchId)).match).toBe(0);
+  }, 120_000);
+
   it("verifySettlement enforces per-seat commander kind/token/basis/owner provenance", async () => {
     const [a, b] = [await mkPlayer("pv1a"), await mkPlayer("pv1b")];
     const s = new BattleSession(rng());
@@ -137,7 +167,7 @@ describe("settlement service", () => {
     s.setReady(a.id, makeLoadoutWithGrant(d.cards, nftGrant("91199", "0x" + "ab".repeat(20), "scout")));
     s.setReady(b.id, preset("siege"));
     const epoch = s.lock();
-    s.start(epoch, s.readyLoadouts() as [TrustedLoadout, TrustedLoadout]);
+    s.start(epoch, s.readyLoadouts() as [TrustedLoadout, TrustedLoadout], testLockedPatron());
     while (s.phase === "active") s.tick();
     const matchId = randomUUID();
     matchIds.push(matchId);

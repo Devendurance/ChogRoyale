@@ -4,7 +4,7 @@ import { commanderCardId, type PlayerIndex } from "@/lib/combat";
 import { botAbility } from "@/lib/arena-scenarios";
 import { smartMove } from "@/lib/smart-bot";
 import type { CommanderClass } from "@/lib/commanders";
-import { freeGrant, makeLoadout } from "@/server/battle/test-helpers";
+import { freeGrant, makeLoadout, testLockedPatron } from "@/server/battle/test-helpers";
 
 const SEED = "feedfacefeedfacefeedfacefeedface";
 const rng = (seatFlip = 0): SessionRandom => ({ seed: () => SEED, int: (n) => (n === 2 ? seatFlip : 0) });
@@ -20,7 +20,7 @@ function started(seatFlip = 0, decks: [string, string] = ["swarm", "siege"]) {
   expect(s.setReady("pa", presetLoadout(decks[0]))).toBe(false);
   expect(s.setReady("pb", presetLoadout(decks[1]))).toBe(true);
   const epoch = s.lock();
-  s.start(epoch, s.readyLoadouts() as [TrustedLoadout, TrustedLoadout]);
+  s.start(epoch, s.readyLoadouts() as [TrustedLoadout, TrustedLoadout], testLockedPatron());
   return s;
 }
 const idOf = (s: BattleSession, seat: PlayerIndex) => (s.seatOf("pa") === seat ? "pa" : "pb");
@@ -57,11 +57,11 @@ describe("B3.2a loadouts and locking", () => {
     const epoch = s.lock();
     expect(() => s.setReady("pa", presetLoadout("swarm"))).toThrow(/locked/);
     expect(() => s.unready("pa")).toThrow(/locked/);
-    expect(() => s.start(epoch + 1, s.readyLoadouts() as [TrustedLoadout, TrustedLoadout])).toThrow(/stale/);
+    expect(() => s.start(epoch + 1, s.readyLoadouts() as [TrustedLoadout, TrustedLoadout], testLockedPatron())).toThrow(/stale/);
     s.clearReady(0);
     s.setReady("pa", presetLoadout("control"));
     const epoch2 = s.lock();
-    s.start(epoch2, s.readyLoadouts() as [TrustedLoadout, TrustedLoadout]);
+    s.start(epoch2, s.readyLoadouts() as [TrustedLoadout, TrustedLoadout], testLockedPatron());
     expect(s.phase).toBe("active");
   });
 
@@ -74,7 +74,7 @@ describe("B3.2a loadouts and locking", () => {
     s.leave("pa");
     expect(s.locked).toBe(false);
     expect(s.lockEpoch).toBe(epoch + 1);
-    expect(() => s.start(epoch, s.readyLoadouts() as [TrustedLoadout, TrustedLoadout])).toThrow(/stale/);
+    expect(() => s.start(epoch, s.readyLoadouts() as [TrustedLoadout, TrustedLoadout], testLockedPatron())).toThrow(/stale/);
   });
 
   it("seats two different player-built decks on the right seats", () => {
@@ -86,7 +86,7 @@ describe("B3.2a loadouts and locking", () => {
     s.setReady("pa", a);
     s.setReady("pb", b);
     const epoch = s.lock();
-    s.start(epoch, s.readyLoadouts() as [TrustedLoadout, TrustedLoadout]);
+    s.start(epoch, s.readyLoadouts() as [TrustedLoadout, TrustedLoadout], testLockedPatron());
     const seatA = s.seatOf("pa")!;
     expect(s.config!.decks[seatA]).toEqual([...a.cards, commanderCardId("free-reaver")]);
     expect(s.config!.decks[1 - seatA]).toEqual([...b.cards, commanderCardId("free-warden")]);
@@ -224,5 +224,43 @@ describe("B3.1 battle session", () => {
     expect(s.abortReason).toMatch(/No result recorded/);
     expect(s.replay).toBeNull();
     expect(s.tick()).toBeNull();
+  });
+});
+
+describe("B2.8c authentic Arena Patrons", () => {
+  const ready = (s: BattleSession) => {
+    s.join(A);
+    s.join(B);
+    s.setReady("pa", presetLoadout("swarm"));
+    s.setReady("pb", presetLoadout("siege"));
+    return s.lock();
+  };
+
+  it("start rejects a tampered or synthetic LockedPatron", () => {
+    const s = new BattleSession(rng());
+    const epoch = ready(s);
+    const loadouts = s.readyLoadouts() as [TrustedLoadout, TrustedLoadout];
+    const tampered = testLockedPatron();
+    tampered.config = { ...tampered.config, tier: "Mythic" };
+    expect(() => s.start(epoch, loadouts, tampered)).toThrow();
+    const synthetic = { ...testLockedPatron(), source: "synthetic" } as never;
+    expect(() => s.start(epoch, loadouts, synthetic)).toThrow();
+    const epoch2 = s.lock();
+    s.start(epoch2, s.readyLoadouts() as [TrustedLoadout, TrustedLoadout], testLockedPatron());
+    expect(s.phase).toBe("active");
+    expect(s.config!.chaos!.patronTokenId).toBe("42");
+    expect(s.startMessage(0).patron.tokenId).toBe("42");
+  });
+
+  it("mutating the caller's patron object after start does not change the live schedule", () => {
+    const s = new BattleSession(rng());
+    const epoch = ready(s);
+    const patron = testLockedPatron();
+    s.start(epoch, s.readyLoadouts() as [TrustedLoadout, TrustedLoadout], patron);
+    const scheduleHash = s.config!.chaos!.scheduleHash;
+    patron.tokenId = "999";
+    patron.config.tier = "Mythic";
+    expect(s.config!.chaos!.scheduleHash).toBe(scheduleHash);
+    expect(s.patron!.tokenId).toBe("42");
   });
 });

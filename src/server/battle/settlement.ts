@@ -30,6 +30,7 @@ import { matchEvidence, matchParticipants, matches } from "@/db/schema";
 import { logger } from "@/lib/logger";
 import type { ReplayRecord, SeatPlayer } from "@/server/battle/session";
 import type { LegacyProcessor } from "@/server/battle/legacy";
+import { verifyPatronEvidence, type LockedPatron } from "@/server/battle/patron-source";
 
 type Db = ReturnType<typeof getDb>;
 
@@ -61,7 +62,11 @@ export interface SettlementRecord {
   commanders: [CommanderIdentity, CommanderIdentity];
   /** Verified owner wallets (lowercase) per seat; null for free commanders. Not part of the evidence hash. */
   owners: [string | null, string | null];
-  evidence: { formatVersion: 1; config: CombatConfig; commands: CombatCommand[] };
+  /** v1: synthetic patron era, config+commands only. v2 adds the locked
+   * authentic patron snapshot; it travels inside the evidence hash. */
+  evidence:
+    | { formatVersion: 1; config: CombatConfig; commands: CombatCommand[] }
+    | { formatVersion: 2; config: CombatConfig; commands: CombatCommand[]; patron: LockedPatron };
   evidenceSha256: string;
 }
 
@@ -92,7 +97,7 @@ export function recordFromReplay(
     crowns: [number, number];
   }
 ): SettlementRecord {
-  const evidence = { formatVersion: 1 as const, config: replay.config, commands: replay.commands };
+  const evidence = { formatVersion: 2 as const, config: replay.config, commands: replay.commands, patron: replay.patron };
   return {
     matchId: opts.matchId,
     roomId: opts.roomId,
@@ -159,6 +164,15 @@ export function verifySettlement(record: SettlementRecord): void {
     }
   }
   if (evidenceDigest(record.evidence) !== record.evidenceSha256) fail("evidence hash mismatch");
+  // v2 evidence carries the locked authentic patron; its snapshot and the
+  // recorded Chaos schedule must re-derive from it.
+  if (record.evidence.formatVersion === 2) {
+    try {
+      verifyPatronEvidence(record.evidence.config, record.evidence.patron);
+    } catch (err) {
+      fail(`patron evidence invalid: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
   const replay = runMatch(record.evidence.config, record.evidence.commands);
   if (replay.result.stateHash !== record.liveHash || replay.result.stateHash !== record.replayHash) {
     fail("replay hash does not reproduce the recorded live hash");
@@ -227,6 +241,8 @@ export async function settleMatch(record: SettlementRecord, db: Db): Promise<"se
       ),
       db.insert(matchEvidence).values({
         matchId: record.matchId,
+        // The format_version column is check-constrained to 1; the evidence
+        // jsonb's own formatVersion field carries the v1/v2 discriminant.
         formatVersion: 1,
         evidence: record.evidence as unknown as Record<string, unknown>,
         evidenceSha256: record.evidenceSha256,

@@ -132,6 +132,8 @@ export interface StartMessage {
   deck: string[];
   /** Own commander identity. The opponent's is never sent. */
   commander: CommanderIdentity;
+  /** The indexed Chog Genesis patron locked for this match. Public metadata only. */
+  patron: { tokenId: string; name: string | null; tier: string | null; theme: string };
   catalog: Record<string, CardInfo>;
   geometry: {
     width: number;

@@ -24,6 +24,7 @@ import { PRESETS } from "@/server/battle/session";
 import type { EntitlementDeps } from "@/server/battle/entitlement";
 import { MatchCoordinator } from "@/server/battle/matchmaking";
 import { startBattleServer } from "@/server/battle/server";
+import { testPatronSource } from "@/server/battle/test-helpers";
 
 const PORT = 29700 + Math.floor(Math.random() * 200);
 const URL_ = `http://127.0.0.1:${PORT}`;
@@ -54,6 +55,7 @@ beforeAll(async () => {
     },
     loader: async (did) => PLAYERS[did.replace("did:privy:", "")] ?? null,
     entitlement,
+    patrons: testPatronSource(),
     tickMs: 2,
     replayDir,
     closeAfterMs: 50,

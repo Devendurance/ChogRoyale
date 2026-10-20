@@ -23,7 +23,7 @@ import {
 } from "@/db/schema";
 import { upsertNftToken, upsertNftMetadata } from "@/db/nfts";
 import { PRESETS, BattleSession, type SessionRandom, type TrustedLoadout } from "@/server/battle/session";
-import { freeGrant, makeLoadoutWithGrant, nftGrant } from "@/server/battle/test-helpers";
+import { freeGrant, makeLoadoutWithGrant, nftGrant, testLockedPatron } from "@/server/battle/test-helpers";
 import { SettlementService, recordFromReplay } from "@/server/battle/settlement";
 import { LegacyProcessor } from "@/server/battle/legacy";
 import { getPlayerStats, getCasualLeaderboard, getCasualPosition, CASUAL_MIN_MATCHES } from "@/db/progression";
@@ -86,7 +86,7 @@ async function settleReal(a: Player, b: Player, matchType: "private" | "matchmak
   s.setReady(a.id, makeLoadoutWithGrant(d0.cards, freeGrant(d0.cls)));
   s.setReady(b.id, makeLoadoutWithGrant(d1.cards, freeGrant(d1.cls)));
   const epoch = s.lock();
-  s.start(epoch, s.readyLoadouts() as [TrustedLoadout, TrustedLoadout]);
+  s.start(epoch, s.readyLoadouts() as [TrustedLoadout, TrustedLoadout], testLockedPatron());
   while (s.phase === "active") s.tick();
   const matchId = randomUUID();
   matchIds.push(matchId);
@@ -214,7 +214,7 @@ describe("getPlayerStats", () => {
     s.setReady(a.id, makeLoadoutWithGrant(d0.cards, nftGrant("91301", "0x" + "ab".repeat(20), d0.cls)));
     s.setReady(b.id, makeLoadoutWithGrant(d1.cards, freeGrant(d1.cls)));
     const epoch = s.lock();
-    s.start(epoch, s.readyLoadouts() as [TrustedLoadout, TrustedLoadout]);
+    s.start(epoch, s.readyLoadouts() as [TrustedLoadout, TrustedLoadout], testLockedPatron());
     while (s.phase === "active") s.tick();
     const matchId = randomUUID();
     matchIds.push(matchId);

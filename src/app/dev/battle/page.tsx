@@ -464,6 +464,7 @@ function BattlePanel() {
           )}
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
             <span>vs {start.opponent}</span>
+            <span>Patron: {start.patron.name ?? `CHOG #${start.patron.tokenId}`} ({start.patron.tier ?? "Unranked"}, {start.patron.theme})</span>
             <span>
               {frame ? `${frame.phase === "overtime" ? "OT " : ""}${secs(frame.clockTicks)}` : "--"} · crowns you {frame?.crowns[me] ?? 0} - {frame?.crowns[1 - me] ?? 0} them
             </span>

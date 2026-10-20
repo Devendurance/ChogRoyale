@@ -6,7 +6,7 @@
 import { randomBytes, randomInt } from "crypto";
 import { scenarioConfig } from "@/lib/arena-scenarios";
 import { DECKS_V13 } from "@/lib/bot-economy";
-import { FAIRNESS_PATRONS, fairnessSchedule } from "@/lib/chaos-fairness";
+import { deriveChaosSchedule } from "@/lib/chaos";
 import {
   ARENA_V2,
   ARENA_VERSION,
@@ -57,6 +57,7 @@ import {
   type TroopCardDef,
 } from "@/lib/combat";
 import type { CommanderGrant } from "@/server/battle/entitlement";
+import { verifyLockedPatron, type LockedPatron } from "@/server/battle/patron-source";
 
 /** Loadout suggestions derived from the B3.1 field decks. Advisory only;
  * players build their own 7 + commander and the server re-validates. */
@@ -105,6 +106,8 @@ export interface ReplayRecord {
   commanders: [CommanderIdentity, CommanderIdentity];
   /** Seat-ordered verified owner wallets (lowercase) proven at match start. Null for free commanders. */
   owners: [string | null, string | null];
+  /** The authentic indexed Chog Genesis patron locked at match start. */
+  patron: LockedPatron;
 }
 
 interface Pending {
@@ -211,6 +214,8 @@ export class BattleSession {
   state: CombatState | null = null;
   readonly commands: CombatCommand[] = [];
   replay: ReplayRecord | null = null;
+  /** The locked Arena Patron for this match, set at start. */
+  patron: LockedPatron | null = null;
   abortReason: string | null = null;
   private pending: Pending[] = [];
   private readonly cids: [Set<string>, Set<string>] = [new Set(), new Set()];
@@ -315,7 +320,7 @@ export class BattleSession {
    * abandons it). `rechecked` carries the grants re-verified post-lock,
    * indexed by join slot.
    */
-  start(epoch: number, rechecked: [TrustedLoadout, TrustedLoadout]): void {
+  start(epoch: number, rechecked: [TrustedLoadout, TrustedLoadout], patron: LockedPatron): void {
     if (this.phase !== "waiting" || !this.locked || epoch !== this.lockEpoch) {
       throw new Error("Loadout lock is stale");
     }
@@ -331,10 +336,15 @@ export class BattleSession {
     this.loadouts[0] = rechecked[0];
     this.loadouts[1] = rechecked[1];
     // Server-controlled seats, seed and Chaos patron. The seed never leaves the server.
+    // The patron is an authentic indexed Chog Genesis token locked by the
+    // room; a tampered snapshot fails closed (no synthetic fallback). The
+    // session deep-copies it so later mutation of the caller's object can
+    // never change the live config.
+    verifyLockedPatron(patron);
+    this.patron = JSON.parse(JSON.stringify(patron)) as LockedPatron;
     this.seatOfSlot = this.rng.int(2) === 0 ? [0, 1] : [1, 0];
     const seed = this.rng.seed();
-    const patrons = Object.keys(FAIRNESS_PATRONS);
-    const schedule = fairnessSchedule(patrons[this.rng.int(patrons.length)]!, seed);
+    const schedule = deriveChaosSchedule({ patron: this.patron.config, serverSeed: seed, matchKey: `arena:${this.patron.tokenId}` });
     const deckOf = (seat: PlayerIndex) => deckFor(rechecked[this.seatOfSlot.indexOf(seat)]!);
     const slotOf = (seat: PlayerIndex) => rechecked[this.seatOfSlot.indexOf(seat)]!.grant.slot;
     this.config = scenarioConfig(deckOf(0), deckOf(1), schedule, seed, [slotOf(0), slotOf(1)]);
@@ -366,6 +376,13 @@ export class BattleSession {
       opponent: opp.username,
       deck: [...this.config!.decks[seat]],
       commander: grant.identity,
+      // Public NFT metadata only; never ownership or seeds.
+      patron: {
+        tokenId: this.patron!.tokenId,
+        name: this.patron!.name,
+        tier: this.patron!.config.tier,
+        theme: this.patron!.config.theme,
+      },
       catalog,
       geometry: {
         width: ARENA_V2.maxX,
@@ -447,7 +464,7 @@ export class BattleSession {
     const players = [this.slots[this.seatOfSlot.indexOf(0)]!, this.slots[this.seatOfSlot.indexOf(1)]!] as [SeatPlayer, SeatPlayer];
     const commanders = [this.loadouts[this.seatOfSlot.indexOf(0)]!.grant.identity, this.loadouts[this.seatOfSlot.indexOf(1)]!.grant.identity] as [CommanderIdentity, CommanderIdentity];
     const owners = [this.loadouts[this.seatOfSlot.indexOf(0)]!.grant.owner, this.loadouts[this.seatOfSlot.indexOf(1)]!.grant.owner] as [string | null, string | null];
-    this.replay = { config: this.config!, commands: [...this.commands], players, liveHash, replayHash: replay.result.stateHash, replayIdentical: replay.result.stateHash === liveHash, winner: state.winner, endReason: state.endReason, ticks: state.tick, commanders, owners };
+    this.replay = { config: this.config!, commands: [...this.commands], players, liveHash, replayHash: replay.result.stateHash, replayIdentical: replay.result.stateHash === liveHash, winner: state.winner, endReason: state.endReason, ticks: state.tick, commanders, owners, patron: this.patron! };
     const msg = (seat: PlayerIndex): EndMessage => ({
       result: state.winner === "draw" || state.winner === null ? "draw" : state.winner === seat ? "win" : "loss",
       reason: state.endReason,
