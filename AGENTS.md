@@ -134,3 +134,5 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Arena art must map to authoritative engine cell centers and inclusive cell envelopes explicitly. A warning or expiry overlay never opens the Rift Ford. Use authoritative frame.riftOpen for ford presentation and keep environment theme names separate from Chaos mechanics.
 
 - Arena texture derivatives must record source-to-display coordinate and pivot scaling explicitly. A renderer max+1 band fill can differ from authoritative centered-cell art by half a cell. Fix visual adapters without moving engine coordinates, and treat static directional aim poses separately from continuous target tracking.
+
+- Presentation asset readiness and runtime event-binding readiness must be tracked separately. Never infer authoritative tower firing or projectile origins from target-position snapshots. Preserve captured source hashes when a compatible concurrent UI edit is reviewed, and record the observed change as provenance rather than silently replacing history.
