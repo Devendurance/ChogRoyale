@@ -17,6 +17,16 @@ export const PLAY: SiteNavLink = { href: "/dev/battle", label: "Play the first m
 export const EXPLORE: SiteNavLink = { href: "#how-the-chog-matters", label: "See how the Chog matters" }; // 5.1 secondary CTA
 export const NAV: SiteNavLink[] = [{ href: EXPLORE.href, label: "How the Chog matters" }];
 
+export const CARDS = {
+  eyebrow: "The cards",
+  heading: "Build your first deck.", // 5.2 onboarding
+  // NEW (not in the messaging doc): counts come from the live card tables.
+  lead: (c: { troops: number; buildings: number; spells: number }) =>
+    `The current build has ${c.troops} troops, ${c.buildings} buildings and ${c.spells} spells. Pick seven, add a commander and spend energy to deploy them.`,
+  caption: (shown: number, total: number) => `${shown} of the ${total} cards in the current build. Costs and traits can change with balancing.`, // NEW, honesty note
+  carouselLabel: "Chog Royale cards",
+};
+
 export interface Pillar {
   step: string;
   title: string;

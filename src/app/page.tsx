@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import AboutScene from "@/components/site/AboutScene";
+import CardsScene from "@/components/site/CardsScene";
 import HeroWorld from "@/components/site/HeroWorld";
 import MarketingHeader from "@/components/site/MarketingHeader";
 import SiteDocumentFlags from "@/components/site/SiteDocumentFlags";
@@ -24,6 +25,7 @@ export default function Home() {
       <main id="main" tabIndex={-1} className="outline-none">
         <HeroWorld headline={HERO.headline} lead={HERO.lead} primary={PLAY} secondary={EXPLORE} />
         <AboutScene id={EXPLORE.href.slice(1)} {...ABOUT} />
+        <CardsScene id="cards" />
       </main>
     </div>
   );

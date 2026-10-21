@@ -2,7 +2,16 @@
 
 Last updated: 2026-10-21
 
-## Public site L2 About scene (2026-10-21), awaiting owner review
+## Public site L3 card carousel (2026-10-21), awaiting owner review
+
+- L2 approved visually. Review corrections committed in `ac9262e`: `data-scroll-behavior="smooth"` set with the site's smooth scroll (Next 16 warning, route transitions animated), quieter Pillar 4 "In development" note, caption reads "Commander class art / Reaver".
+- The red "1 Issue" in the owner's screenshots is a hydration mismatch from the Grammarly extension adding `data-gr-ext-installed` / `data-new-gr-c-s-check-loaded` to `<body>`. Not an app bug, not suppressed. Clean Chrome shows 0 issues.
+- Done: `CardsScene` (`#cards`) + `ChogCardCarousel`: face-down deck, center card flips face-up, six READY_STATIC presentation-kit v001 cards copied to `public/assets/site/cards/`. Names, costs, types and traits come from live `CARDS_V1` via `site-cards.ts`. Autoplay 4.8s with pause button, pauses on hover/focus/hidden/off-screen, off for reduced motion and Save-Data. Arrows, buttons, dots, swipe and side-card click.
+- Copy: heading "Build your first deck." (5.2). Lead and caption are NEW, built from live card counts, need owner sign-off.
+- Evidence: `C:/Users/USER/Documents/ChogRoyale-Assets/site-l3-review/` (after/, reduced/, full/). Typecheck, lint, build green. Battle UI tests 55/55.
+- Next: owner review of L3, then L4 Collect only.
+
+## Public site L2 About scene (2026-10-21), approved
 
 - L0/L1 approved by owner (hero art for development review only, not cleared for launch; wordmark is a temporary fallback; 3000px+ hero master is a pre-launch item).
 - Done: `AboutScene` at `#how-the-chog-matters` overlaps the hero fade, white to mist to lilac wash, four messaging pillars as match-loop steps (Reveal, Understand and adapt, Clash, Remember), v001 Reaver commander class art peeking over the pillar panel. Pillar 3 and 4 text ADAPTED for honesty (no ranked; Match Recipe "In development"). All copy and provenance in `src/components/site/copy.ts`.
