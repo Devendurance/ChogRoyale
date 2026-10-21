@@ -31,6 +31,9 @@ Durable facts, conventions, and gotchas that should survive across sessions.
 - Absolute decorative glows in the last section need `overflow: clip` on the section, or they extend the document and show a white band at the page end.
 - Next.js 16 no longer overrides html `scroll-behavior: smooth` on route changes unless `<html data-scroll-behavior="smooth">` is set. The site sets both together in `SiteDocumentFlags`.
 - A "1 Issue" dev indicator from a body attribute mismatch (`data-gr-ext-installed`) comes from the Grammarly extension, not the app. Check the dev server's forwarded `[browser]` log before chasing it.
+- A section with `overflow: clip` hard-cuts any glow that extends past its top edge. Size halos to fit inside the section or the seam shows on desktop.
+- Overlapping a later section into an earlier one (negative margin) needs a transparent top in its gradient, or a white band shows over the earlier section's tint.
+- Playwright programmatic scroll can make a lazy below-fold image the LCP candidate and trigger Next's dev "add loading=eager" warning. Real user scroll input ends LCP first, so check with wheel scrolling before chasing it.
 - Tailwind `@theme inline` tokens emit no CSS variables. Use the utility class (e.g. `font-site`) rather than `var(--font-site)` in plain CSS.
 
 - 2D cutout c001 is frozen under `C:/Users/USER/Documents/ChogRoyale-Assets/chogling-2d-production/c001-cutout-prototype-20261019-154531/`. Preserve m001 head RGB and assert alpha after part extraction. Scale every key from one neutral character height, not canvas height. Whole punch intent survives at 48/64 px, while lower-body joins and short shuffle stride still block this candidate. Keyed zero stance drift does not prove interpolated motion or Phaser integration. ORA edits alone are not consumed by regeneration: save replacement part art separately and update rig source/crop/pivot. Independent preservation passed 444/444 source files.

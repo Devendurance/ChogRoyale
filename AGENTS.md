@@ -132,6 +132,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Final site copy comes from `docs/Chog Royale messaging.md`. Every claim must match shipped code. Don't present ranked, rewards, economy or social features as live.
 - Keep site styles scoped to `.site-root` or `site-` classes. Cache Components keeps hidden routes mounted, so html-level site rules must be applied from an effect, never via `html:has(...)`.
 - Reference media A-F is study-only and never ships. The G hero image and any NFT art need owner rights confirmation before public release.
+- Commander class art is shared by every commander of the class. Label it as class art on the site and never present it as a specific NFT. Keep NFT commanders (player-selected) and the Arena Patron (server-selected) distinct in copy.
 
 ## SPRITE KIT INVENTORY
 

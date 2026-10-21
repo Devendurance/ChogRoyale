@@ -27,6 +27,44 @@ export const CARDS = {
   carouselLabel: "Chog Royale cards",
 };
 
+export interface CollectBeat {
+  title: string;
+  text: string;
+  note?: { label: string; text: string };
+}
+
+// L4. Lines marked NEW are not in the messaging doc. Each is backed by code
+// (cited) and needs owner sign-off.
+export const COLLECT = {
+  eyebrow: "Commanders",
+  heading: "The NFT is part of the match.", // 1.4 competition line
+  lead: "Give your Chog a visible job in the match rather than leaving it as a static collectible.", // 2.2 Chog holder promise
+  beats: [
+    {
+      title: "Your commander",
+      // NEW: lib/commanders.ts derives class from traits; /api/players/me/commanders gates NFT commanders on a verified wallet.
+      text: "A verified Chog’s traits decide its class. Hold one and it can lead your deck.",
+      // NFT-holder end-to-end play has not been run yet (B3.2a).
+      note: { label: "In testing", text: "NFT commanders are built and waiting on holder testing." },
+    },
+    {
+      title: "The Arena Patron",
+      // NEW, adapted from 1.8: server/battle/patron-source.ts locks one indexed Genesis token per match; lib/patrons.ts says players never choose it.
+      text: "Each match, the server picks a separate Chog from the Genesis collection. Its metadata sets the Chaos Pulse, and neither player chooses it.",
+    },
+    {
+      title: "The free route",
+      // "Play free first..." is 4.5 onboarding. Second sentence NEW: COMMANDER_COMBAT_PROFILE_V1 is class-keyed, free == NFT.
+      text: "Play free first. Connect a Chog when you are ready. Free commanders fight with the same class stats as NFT ones.",
+    },
+  ] satisfies CollectBeat[],
+  // NEW: lib/commanders.ts, Tier is prestige only and never scored.
+  fairness: "Tier is prestige only. It never changes combat stats.",
+  pickerLabel: "Commander classes",
+  // NEW: class templates are shared art, never a token likeness.
+  caption: { kind: "Commander class art", note: "Shared by every commander of this class. Not a specific NFT." },
+};
+
 export interface Pillar {
   step: string;
   title: string;

@@ -28,7 +28,8 @@ Last updated: 2026-10-19
 - L0/L1 approved 2026-10-21. L2 About scene (`AboutScene.tsx`, copy in `copy.ts`) built and awaiting review. Mascot is the v001 Reaver commander class template at `public/assets/site/mascots/`, labelled as class art, marketing use not yet cleared.
 - Satoshi self-hosted via next/font/local (FFL license file alongside). Georama and Lilita One via next/font/google.
 - L2 approved. L3 card carousel (`CardsScene.tsx`, `ChogCardCarousel.tsx`, `cards.css`, `site-cards.ts`) built and awaiting review. Card display data is read from `CARDS_V1`, never hardcoded. The site shows no rarity because the game has none.
-- Phases L4-L8 (collect, spotlight/bento, CTA/footer, splash, QA) not started.
+- L3 approved. L4 Collect (`CollectScene.tsx`, `CommanderSpotlight.tsx`, `collect.css`, `site-commanders.ts`) built and awaiting review. `ChogCard.tsx` is the shared card frame for L3 and L4. Commander display data comes from `CLASS_ROSTER` and `COMMANDER_COMBAT_PROFILE_V1`.
+- Phases L5-L8 (spotlight/bento, CTA/footer, splash, QA) not started.
 
 ## Key documents
 

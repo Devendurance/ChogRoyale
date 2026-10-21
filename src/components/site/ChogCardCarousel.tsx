@@ -1,8 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
+import ChogCard from "./ChogCard";
 import type { SiteCard } from "./site-cards";
+import { useMedia } from "./use-media";
 
 interface Props {
   cards: SiteCard[];
@@ -16,18 +17,6 @@ function offsetOf(i: number, active: number, n: number) {
   let d = (i - active + n) % n;
   if (d > n / 2) d -= n;
   return Math.max(-2, Math.min(2, d));
-}
-
-function useMedia(query: string) {
-  const [match, setMatch] = useState(false);
-  useEffect(() => {
-    const m = window.matchMedia(query);
-    const sync = () => setMatch(m.matches);
-    sync();
-    m.addEventListener("change", sync);
-    return () => m.removeEventListener("change", sync);
-  }, [query]);
-  return match;
 }
 
 /**
@@ -136,34 +125,7 @@ export default function ChogCardCarousel({ cards, label }: Props) {
                 go(i);
               }}
             >
-              <div className="chog-card" data-face={isActive ? "up" : "down"}>
-                <div className="chog-card__inner">
-                  <div className="chog-card__face chog-card__front">
-                    <div className="chog-card__art">
-                      <Image src={card.art.src} alt="" width={card.art.width} height={card.art.height} sizes="(min-width: 768px) 260px, 200px" className="chog-card__img" draggable={false} />
-                    </div>
-                    <p className="chog-card__cost">
-                      <span className="sr-only">Cost </span>
-                      <span className="chog-card__cost-num">{card.cost}</span>
-                      <span className="sr-only"> energy</span>
-                    </p>
-                    <h3 className="chog-card__name">{card.name}</h3>
-                    <p className="chog-card__type">{card.type}</p>
-                    {card.traits.length > 0 && (
-                      <ul className="chog-card__traits" aria-label="Traits">
-                        {card.traits.map((t) => (
-                          <li key={t}>{t}</li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                  <div aria-hidden className="chog-card__face chog-card__back">
-                    <div className="chog-card__lattice">
-                      <span className="chog-card__seal font-game">Chog Royale</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <ChogCard card={card} face={isActive ? "up" : "down"} sizes="(min-width: 768px) 260px, 200px" />
             </div>
           );
         })}

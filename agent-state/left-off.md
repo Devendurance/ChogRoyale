@@ -2,7 +2,16 @@
 
 Last updated: 2026-10-21
 
-## Public site L3 card carousel (2026-10-21), awaiting owner review
+## Public site L4 Collect scene (2026-10-21), awaiting owner review
+
+- L3 approved. Done: `CollectScene` (`#commanders`) + `CommanderSpotlight`: one large commander class card (shared `ChogCard` frame, extracted from L3 unchanged), gold motes, breathing halo, mouse tilt, scroll entrance. A five-class picker flips the card to another class. Cost from `COMMANDER_COMBAT_PROFILE_V1`, role and active ability from `CLASS_ROSTER`. Reaver default.
+- Art: v001 presentation-kit commander class sources (READY_STATIC, class_template), hashes match `cards.json`. Four new files in `public/assets/site/commanders/`, Reaver reuses the L2 mascot file. No exact NFT art or token data shown.
+- Copy: heading 1.4, lead 2.2, "Play free first..." 4.5. Beats, fairness line and caption are NEW with code citations in `copy.ts`, need owner sign-off. NFT commanders labelled "In testing" (holder E2E never run).
+- No CTA: no public commander route exists, `/dev/battle` stays gated.
+- Evidence: `C:/Users/USER/Documents/ChogRoyale-Assets/site-l4-review/` (after/, reduced/). Lint, typecheck, build green. commanders/combat tests 79/79. /dev/battle regression clean.
+- Next: owner review of L4, then L5 spotlight grid + bento only.
+
+## Public site L3 card carousel (2026-10-21), approved
 
 - L2 approved visually. Review corrections committed in `ac9262e`: `data-scroll-behavior="smooth"` set with the site's smooth scroll (Next 16 warning, route transitions animated), quieter Pillar 4 "In development" note, caption reads "Commander class art / Reaver".
 - The red "1 Issue" in the owner's screenshots is a hydration mismatch from the Grammarly extension adding `data-gr-ext-installed` / `data-new-gr-c-s-check-loaded` to `<body>`. Not an app bug, not suppressed. Clean Chrome shows 0 issues.
