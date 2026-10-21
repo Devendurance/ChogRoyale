@@ -148,6 +148,87 @@ export const SPOTLIGHT = {
   },
 };
 
+export type BentoArt =
+  | { kind: "tableau" }
+  | { kind: "cards" }
+  | { kind: "card" }
+  | { kind: "orbit" }
+  | { kind: "exchange" };
+
+export interface BentoTile {
+  id: string;
+  status: string;
+  sticker: string;
+  title: string;
+  body: string;
+  link?: { href: string; label: string };
+  art: BentoArt;
+}
+
+// L6. NEW: the bento copy is not in the messaging doc. Every line is adapted
+// from the messaging doc (section noted) or read against the shipped ruleset,
+// and all of it needs owner sign-off. "Available now" means implemented and
+// playable in the current build. "Coming later" is listed as future scope in
+// 2.4 and 7.2 and is not built, so those tiles carry no art that implies it.
+export const BENTO = {
+  eyebrow: "Beyond the match",
+  heading: "The world expands.",
+  lead: "What runs today sits beside what is still being built. Both are on the same board.",
+  tiles: [
+    {
+      id: "battle",
+      status: "Available now",
+      sticker: "Battle",
+      title: "Play a match.",
+      // NEW, adapted from 1.3 and 7.1: real-time 1v1, energy, deploys, a Core.
+      body: "Real-time 1v1. Deploy troops and spells, spend energy, and break the Core before your opponent breaks yours.",
+      link: { href: "/dev/battle", label: "Play the first match" }, // 5.1 primary CTA
+      art: { kind: "tableau" },
+    },
+    {
+      id: "deck",
+      status: "Available now",
+      sticker: "Decks",
+      title: "Build a deck.",
+      // NEW: 7 ordinary cards and 1 commander (combat.ts validateDeck), drawn
+      // from the live card table.
+      body: "Seven ordinary cards and one commander, drawn from the live card table.",
+      link: { href: "#cards", label: "See the cards" }, // NEW: anchors the L3 card scene
+      art: { kind: "cards" },
+    },
+    {
+      id: "patron",
+      status: "Available now",
+      sticker: "Patrons",
+      title: "Meet the Arena Patron.",
+      // NEW, adapted from 1.8: server/battle/patron-source.ts locks one
+      // indexed Genesis token per match and its traits set the Chaos Pulse.
+      body: "One Genesis Chog sets the Chaos Pulse each match. You read it before it acts.",
+      link: { href: "#arena", label: "How the arena works" }, // NEW: anchors the L5 arena scene
+      art: { kind: "card" },
+    },
+    {
+      id: "social",
+      status: "Coming later",
+      sticker: "Friends",
+      title: "Friends and clans.",
+      // NEW: social play is future scope in 2.4 and 7.2. Nothing is built, so
+      // this tile carries an abstract motif instead of artwork.
+      body: "Bring your people into the arena, share decks and keep a rivalry going.",
+      art: { kind: "orbit" },
+    },
+    {
+      id: "lending",
+      status: "Coming later",
+      sticker: "Lending",
+      title: "Lend a commander.",
+      // NEW, adapted from 5.8: "Lend the commander's in-game use right. The
+      // NFT stays in your wallet." Lending is Roadmap in 3.3.
+      body: "Lend a commander's use to a friend for a run. The Chog stays in your wallet.",
+      art: { kind: "exchange" },
+    },
+  ] satisfies BentoTile[],
+};
 
 export const ABOUT = {
   eyebrow: "How the Chog matters",

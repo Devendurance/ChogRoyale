@@ -1,6 +1,16 @@
 # Left Off
 
-Last updated: 2026-10-21
+Last updated: 2026-10-22
+
+## Public site L6 cinematic bento (2026-10-22), awaiting owner review
+
+- L5 approved. Done: `BentoScene` (`#world`) + `BentoGrid` + `bento.css`. A 12-column asymmetric bento inside one white 28px-radius shell on a mist-to-white ground that pulls up into the L5 mist tail. Desktop rows: battle span 8 / deck span 4 (440px tall), then patron, social and lending span 4 (350px tall). Tablet 2 columns, mobile 1 column with the art as a band along the bottom of each tile.
+- Art: only approved assets. Battle tile is a tableau: the Reaver class cutout with a violet aura and a soft ground shadow, a Rift Sentry card behind and a Chaos Comet card in front, both cropped by the tile's right and bottom edges, labelled "Commander class art / Reaver". Deck tile peeks Chaos Archer and Hexwing. Patron tile peeks Boulderback. Social and Lending carry inline SVG motifs only, no character art, because nothing is built for them yet.
+- Copy: all NEW, not in the messaging doc. Every line is adapted from the doc (5.1, 5.8, 2.4, 7.2, 1.8, 1.3) or read against the shipped ruleset, and all of it needs owner sign-off. "Available now" on the three live tiles, "Coming later" on the two future ones. No ranked, rewards, leaderboard, season, XP, clan or lending-as-live claims, no $CHOG.
+- Card frames keep the source art's own proportion, so the two deck cards never read as the same shape. One small gold rule above each status caption is the only gold in the section.
+- Interaction: pointer parallax on the art (mouse only), tile lift plus sticker tip and card separation on hover, scroll rise on the five tiles with a stagger, a 10s aura breath on the battle tile. Reduced motion drops the entrance, the hover transform, the parallax and the breath. Save-Data drops the entrance, the parallax and the breath.
+- Evidence: `C:/Users/USER/Documents/ChogRoyale-Assets/site-l6-review/` (after/, reduced/, report.json). Screenshots at 360x800, 390x844, 820x1180, 1366x768, 1920x1080 plus hover, focus and the L5 to L6 transition. No horizontal overflow, no console errors, no text and art collisions at any width, contrast 4.72 to 17.5. Typecheck, lint and build green.
+- Next: owner review of L6, then L7 only.
 
 ## Public site L5 feature spotlight grid (2026-10-21), awaiting owner review
 

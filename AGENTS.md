@@ -133,6 +133,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Keep site styles scoped to `.site-root` or `site-` classes. Cache Components keeps hidden routes mounted, so html-level site rules must be applied from an effect, never via `html:has(...)`.
 - Reference media A-F is study-only and never ships. The G hero image and any NFT art need owner rights confirmation before public release.
 - Commander class art is shared by every commander of the class. Label it as class art on the site and never present it as a specific NFT. Keep NFT commanders (player-selected) and the Arena Patron (server-selected) distinct in copy.
+- Site sections that crop art against their own edges must measure the source PNG's painted alpha bounds before positioning, and must verify text and art separation with per-line Range rects, not element boxes. A hover lift uses the `translate` property, because a scroll entrance animation on `transform` overrides it.
 
 ## SPRITE KIT INVENTORY
 

@@ -1,0 +1,670 @@
+/* L6 cinematic bento. Scoped to site-bento*. Reuses the Chog card frame
+   vocabulary from cards.css and the sticker pill from DESIGN.md "Bento Grid". */
+
+/* Pulls up into the mist tail of the L5 scene so the two read as one. */
+.site-bento {
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  overflow: clip;
+  margin-top: -40px;
+  padding: 16px 20px 96px;
+  background: linear-gradient(
+    180deg,
+    rgb(244 240 255 / 0) 0px,
+    var(--color-chog-mist) 150px,
+    var(--color-chog-mist) 64%,
+    #fff 100%
+  );
+}
+.site-bento__glow {
+  position: absolute;
+  z-index: -1;
+  top: 16%;
+  left: 50%;
+  width: min(1240px, 170vw);
+  aspect-ratio: 1.8;
+  transform: translateX(-50%);
+  background: radial-gradient(closest-side, rgb(124 77 255 / 0.16), rgb(185 162 255 / 0.08) 52%, rgb(185 162 255 / 0) 76%);
+  pointer-events: none;
+}
+.site-bento__inner {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+.site-bento__intro {
+  max-width: 42rem;
+}
+.site-bento__heading {
+  margin-top: 16px;
+  max-width: 18ch;
+  font-size: clamp(32px, 4.2vw, 52px);
+  font-weight: 700;
+  line-height: 1.06;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+  color: var(--color-chog-ink);
+}
+.site-bento__lead {
+  margin-top: 20px;
+  max-width: 34rem;
+  font-size: 18px;
+  line-height: 30px;
+  color: var(--color-chog-ink-70);
+  text-wrap: pretty;
+}
+
+/* DESIGN.md "Bento Grid" container: white, hairline border, radius 28. */
+.site-bento__shell {
+  margin-top: 48px;
+  border: 1px solid var(--color-chog-hairline);
+  border-radius: 28px;
+  background: #fff;
+  padding: 20px;
+  box-shadow: 0 32px 64px -36px rgb(46 26 122 / 0.28);
+}
+
+.site-bento__grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.site-bento__tile {
+  --px: 0;
+  --py: 0;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 12px;
+  padding: 28px;
+  transition:
+    translate 320ms var(--site-ease-out),
+    box-shadow 320ms var(--site-ease-out);
+}
+.site-bento__tile--battle {
+  grid-column: span 12;
+  min-height: 440px;
+  padding: 36px;
+  background: linear-gradient(135deg, #e6dcff 0%, #f4f0ff 100%);
+}
+.site-bento__tile--deck {
+  grid-column: span 12;
+  min-height: 440px;
+  background: linear-gradient(135deg, #d9e4ff 0%, #f1f5ff 100%);
+}
+.site-bento__tile--patron {
+  grid-column: span 12;
+  min-height: 350px;
+  background: linear-gradient(135deg, #d4c6ff 0%, #ede6ff 100%);
+}
+.site-bento__tile--social {
+  grid-column: span 12;
+  min-height: 350px;
+  background: linear-gradient(135deg, #fbd9f0 0%, #fff0fa 100%);
+}
+.site-bento__tile--lending {
+  grid-column: span 12;
+  min-height: 350px;
+  background: linear-gradient(135deg, #f4f0ff 0%, #fff 100%);
+}
+
+/* Tile anatomy: caption, sticker, title, body, link, art. */
+.site-bento__text {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.site-bento__caption {
+  font-family: var(--font-georama), "Satoshi", system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 18px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-chog-ink-70);
+}
+/* One small gold accent per tile, taken from the card frame vocabulary. */
+.site-bento__caption::before {
+  content: "";
+  display: block;
+  width: 20px;
+  height: 3px;
+  margin-bottom: 10px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #ffd45c, #f2b51f);
+}
+.site-bento__sticker {
+  --sticker-tilt: -3deg;
+  margin-top: 12px;
+  transform: rotate(var(--sticker-tilt));
+  border-radius: 999px;
+  background: var(--color-chog-ink);
+  padding: 8px 18px;
+  font-family: var(--font-georama), "Satoshi", system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 16px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #fff;
+  box-shadow: 0 10px 20px -12px rgb(46 26 122 / 0.7);
+  transition: transform 320ms var(--site-ease-out);
+}
+/* A feature that is not built yet wears an outlined pill, not a solid one. */
+.site-bento__tile[data-status="Coming later"] .site-bento__sticker {
+  border: 1px solid rgb(91 47 214 / 0.25);
+  background: #fff;
+  color: var(--color-chog-ink);
+  box-shadow: 0 8px 18px -12px rgb(46 26 122 / 0.3);
+}
+.site-bento__tile--deck .site-bento__sticker {
+  --sticker-tilt: 2deg;
+}
+.site-bento__tile--patron .site-bento__sticker {
+  --sticker-tilt: -2deg;
+}
+.site-bento__tile--social .site-bento__sticker {
+  --sticker-tilt: 3deg;
+}
+.site-bento__tile--lending .site-bento__sticker {
+  --sticker-tilt: -4deg;
+}
+.site-bento__title {
+  margin-top: 22px;
+  max-width: 20ch;
+  font-size: clamp(26px, 2.2vw, 30px);
+  font-weight: 700;
+  line-height: 1.14;
+  letter-spacing: -0.02em;
+  color: var(--color-chog-ink);
+  text-wrap: balance;
+}
+.site-bento__tile--battle .site-bento__title {
+  margin-top: 26px;
+  max-width: 12ch;
+  font-size: clamp(34px, 3.4vw, 44px);
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+}
+.site-bento__body {
+  margin-top: 12px;
+  max-width: 34ch;
+  font-size: 16px;
+  line-height: 26px;
+  color: var(--color-chog-ink-70);
+  text-wrap: pretty;
+}
+.site-bento__tile--battle .site-bento__body {
+  max-width: 30ch;
+}
+.site-bento__link {
+  display: inline-flex;
+  margin-top: 20px;
+  align-items: center;
+  gap: 8px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 24px;
+  color: var(--color-chog-royal);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 6px;
+  transition:
+    text-decoration-color 200ms,
+    color 200ms;
+}
+.site-bento__link-arrow {
+  transition: transform 320ms var(--site-ease-out);
+}
+
+/* Art layer. It sits behind the text block and never steals a click. */
+.site-bento__art {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+.site-bento__parallax {
+  position: absolute;
+  inset: 0;
+  transform: translate3d(calc(var(--px, 0) * 6px), calc(var(--py, 0) * 6px), 0);
+  transition: transform 320ms var(--site-ease-out);
+}
+
+/* Chog card in the site frame. The window keeps the source art's own
+   proportion so two cards never read as the same shape. */
+.site-bento__card {
+  position: absolute;
+  z-index: 1;
+  margin: 0;
+}
+.site-bento__card-frame {
+  position: relative;
+  width: var(--w);
+  border: 2px solid #120b45;
+  border-radius: 16px;
+  padding: 9px;
+  background: linear-gradient(160deg, #8c63ff 0%, #6a3df0 45%, #4a23b8 100%);
+  box-shadow:
+    0 26px 44px -22px rgb(46 26 122 / 0.55),
+    inset 0 1px 0 rgb(255 255 255 / 0.35),
+    inset 0 -3px 0 rgb(18 11 69 / 0.35);
+}
+.site-bento__card-art {
+  position: relative;
+  overflow: hidden;
+  border-radius: 10px;
+  background: radial-gradient(circle at 50% 42%, #fff 0%, #efe8ff 38%, #c9b6ff 100%);
+  box-shadow: inset 0 0 0 2px rgb(18 11 69 / 0.55);
+}
+.site-bento__card-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 6px 8px rgb(46 26 122 / 0.24));
+  pointer-events: none;
+}
+.site-bento__card-cost {
+  position: absolute;
+  top: -9px;
+  left: -9px;
+  z-index: 1;
+  display: grid;
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  place-items: center;
+}
+.site-bento__card-cost::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  transform: rotate(45deg);
+  border: 1.5px solid #120b45;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #ff9ae6 0%, #c13bff 60%, #8a2be2 100%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.4), 0 2px 0 #120b45;
+}
+.site-bento__card-cost-num {
+  position: relative;
+  font-family: var(--font-lilita), "Titan One", Impact, sans-serif;
+  font-size: 14px;
+  line-height: 1;
+  color: #fff;
+  -webkit-text-stroke: 2px #120b45;
+  paint-order: stroke fill;
+}
+
+/* Battle tableau: the Reaver class cutout standing behind a fan of two
+   cards, cropped by the tile's right and bottom edges. */
+.site-bento__aura {
+  position: absolute;
+  z-index: 0;
+  top: -14%;
+  right: -2%;
+  width: 72%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgb(255 255 255 / 0.9) 0%,
+    rgb(185 162 255 / 0.55) 46%,
+    rgb(124 77 255 / 0) 100%
+  );
+}
+.site-bento__shadow {
+  position: absolute;
+  z-index: 1;
+  right: 10%;
+  bottom: 2%;
+  width: 32%;
+  height: 11%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgb(91 47 214 / 0.3), rgb(124 77 255 / 0) 70%);
+}
+.site-bento__reaver {
+  position: absolute;
+  z-index: 2;
+  right: -18px;
+  bottom: -46px;
+  width: auto;
+  height: 380px;
+  filter: drop-shadow(0 22px 30px rgb(46 26 122 / 0.3));
+  pointer-events: none;
+  transition: translate 320ms var(--site-ease-out);
+}
+.site-bento__card--tableau-back {
+  --w: 150px;
+  z-index: 1;
+  right: 296px;
+  bottom: -44px;
+  transform: rotate(-9deg);
+}
+.site-bento__card--tableau-front {
+  --w: 182px;
+  z-index: 3;
+  right: 140px;
+  bottom: -34px;
+  transform: rotate(9deg);
+}
+.site-bento__art-caption {
+  position: absolute;
+  z-index: 4;
+  top: 24px;
+  right: 24px;
+  display: grid;
+  gap: 1px;
+  white-space: nowrap;
+  border: 1px solid var(--color-chog-hairline);
+  border-radius: 12px;
+  background: rgb(255 255 255 / 0.9);
+  padding: 7px 11px 8px;
+  box-shadow: 0 10px 24px -14px rgb(46 26 122 / 0.35);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+.site-bento__art-caption-kind {
+  font-family: var(--font-georama), "Satoshi", system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-chog-royal);
+}
+.site-bento__art-caption-name {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 18px;
+  color: var(--color-chog-ink);
+}
+
+/* Deck and patron cards peek from the lower right, cropped by the bottom. */
+.site-bento__card--deck-0 {
+  --w: 165px;
+  right: 96px;
+  bottom: -44px;
+  transform: rotate(8deg);
+}
+.site-bento__card--deck-1 {
+  --w: 180px;
+  right: -30px;
+  bottom: -20px;
+  transform: rotate(-6deg);
+}
+.site-bento__card--patron {
+  --w: 128px;
+  right: -14px;
+  bottom: -62px;
+  transform: rotate(-10deg);
+}
+
+/* Abstract motifs for the features that are not built. No character art,
+   so nothing on the page implies a shipped screen that does not exist. */
+.site-bento__motif {
+  position: absolute;
+  z-index: 1;
+  right: 0;
+  bottom: 4px;
+  width: 48%;
+  color: rgb(91 47 214 / 0.6);
+  pointer-events: none;
+}
+
+/* Hover: the tile lifts, the sticker tips further and the art shifts. */
+@media (hover: hover) {
+  .site-bento__tile:hover {
+    translate: 0 -3px;
+    box-shadow: 0 22px 40px -24px rgb(46 26 122 / 0.45);
+  }
+  .site-bento__tile:hover .site-bento__sticker {
+    transform: rotate(calc(var(--sticker-tilt) + 2deg));
+  }
+  .site-bento__tile:hover .site-bento__link {
+    text-decoration-color: currentColor;
+  }
+  .site-bento__tile:hover .site-bento__link-arrow {
+    transform: translateX(4px);
+  }
+  .site-bento__tile--battle:hover .site-bento__card--tableau-front {
+    transform: rotate(9deg) translate(-10px, -6px);
+  }
+  .site-bento__tile--battle:hover .site-bento__card--tableau-back {
+    transform: rotate(-9deg) translate(6px, -4px);
+  }
+  .site-bento__tile--battle:hover .site-bento__reaver {
+    translate: -4px -4px;
+  }
+  .site-bento__card--tableau-front,
+  .site-bento__card--tableau-back,
+  .site-bento__card--deck-0,
+  .site-bento__card--deck-1,
+  .site-bento__card--patron {
+    transition: transform 320ms var(--site-ease-out);
+  }
+}
+
+/* Tablet: two columns, the battle tile across the top. */
+@media (min-width: 640px) {
+  .site-bento {
+    margin-top: -64px;
+    padding: 24px 40px 120px;
+  }
+  .site-bento__tile--deck,
+  .site-bento__tile--patron,
+  .site-bento__tile--social,
+  .site-bento__tile--lending {
+    grid-column: span 6;
+  }
+}
+
+/* Desktop: the asymmetric 12 column bento. */
+@media (min-width: 1100px) {
+  .site-bento {
+    margin-top: -96px;
+    padding: 0 40px 140px;
+  }
+  .site-bento__tile--battle {
+    grid-column: span 8;
+  }
+  .site-bento__tile--deck {
+    grid-column: span 4;
+  }
+  .site-bento__tile--patron,
+  .site-bento__tile--social,
+  .site-bento__tile--lending {
+    grid-column: span 4;
+  }
+}
+
+/* Mobile: one column. The art becomes a band along the bottom of each tile
+   so the text never collides with it. */
+@media (max-width: 639px) {
+  .site-bento__shell {
+    margin-top: 36px;
+    padding: 12px;
+  }
+  .site-bento__tile {
+    padding: 24px 22px;
+  }
+  .site-bento__tile--battle {
+    min-height: 0;
+    padding-bottom: 292px;
+  }
+  .site-bento__tile--deck {
+    min-height: 0;
+    padding-bottom: 190px;
+  }
+  .site-bento__tile--patron {
+    min-height: 0;
+    padding-bottom: 160px;
+  }
+  .site-bento__tile--social,
+  .site-bento__tile--lending {
+    min-height: 0;
+    padding-bottom: 150px;
+  }
+  .site-bento__art--battle {
+    inset: auto 0 0 0;
+    height: 282px;
+  }
+  .site-bento__art--deck {
+    inset: auto 0 0 0;
+    height: 180px;
+  }
+  .site-bento__art--patron {
+    inset: auto 0 0 0;
+    height: 152px;
+  }
+  .site-bento__art--social,
+  .site-bento__art--lending {
+    inset: auto 0 0 0;
+    height: 142px;
+  }
+  .site-bento__aura {
+    top: -30%;
+    right: 0;
+    width: 88%;
+  }
+  .site-bento__reaver {
+    right: 2%;
+    bottom: -34px;
+    height: 240px;
+  }
+  .site-bento__shadow {
+    right: 12%;
+    bottom: 6%;
+    width: 46%;
+  }
+  .site-bento__card--tableau-back {
+    --w: 116px;
+    right: 46%;
+    bottom: -30px;
+  }
+  .site-bento__card--tableau-front {
+    --w: 132px;
+    right: 5%;
+    bottom: -44px;
+  }
+  .site-bento__art-caption {
+    top: 10px;
+    right: 14px;
+  }
+  .site-bento__card--deck-0 {
+    --w: 140px;
+    right: 26%;
+    bottom: -34px;
+  }
+  .site-bento__card--deck-1 {
+    --w: 152px;
+    right: -12px;
+    bottom: -14px;
+  }
+  .site-bento__card--patron {
+    --w: 118px;
+    right: -6px;
+    bottom: -34px;
+  }
+  .site-bento__motif {
+    right: 4px;
+    bottom: 4px;
+    width: 46%;
+  }
+}
+
+/* Motion: tiles rise on scroll, the battle aura breathes. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .site-bento__intro > *,
+    .site-bento__tile {
+      animation: site-bento-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 55%;
+    }
+    .site-bento__tile:nth-child(2) {
+      animation-range: entry 4% entry 59%;
+    }
+    .site-bento__tile:nth-child(3) {
+      animation-range: entry 8% entry 63%;
+    }
+    .site-bento__tile:nth-child(4) {
+      animation-range: entry 12% entry 67%;
+    }
+    .site-bento__tile:nth-child(5) {
+      animation-range: entry 16% entry 71%;
+    }
+  }
+  .site-bento__aura {
+    animation: site-bento-breathe 10s ease-in-out infinite alternate;
+  }
+}
+@keyframes site-bento-rise {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes site-bento-breathe {
+  from {
+    opacity: 0.7;
+    scale: 0.94;
+  }
+  to {
+    opacity: 1;
+    scale: 1.06;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-bento__tile,
+  .site-bento__parallax,
+  .site-bento__sticker,
+  .site-bento__link-arrow,
+  .site-bento__card--tableau-front,
+  .site-bento__card--tableau-back,
+  .site-bento__card--deck-0,
+  .site-bento__card--deck-1,
+  .site-bento__card--patron,
+  .site-bento__reaver {
+    transition: none;
+  }
+  .site-bento__parallax {
+    transform: none;
+  }
+  /* No hover transform at all when motion is off. */
+  .site-bento__tile:hover {
+    translate: none;
+    box-shadow: none;
+  }
+  .site-bento__tile:hover .site-bento__sticker {
+    transform: rotate(var(--sticker-tilt));
+  }
+  .site-bento__tile:hover .site-bento__link-arrow {
+    transform: none;
+  }
+  .site-bento__tile--battle:hover .site-bento__card--tableau-front {
+    transform: rotate(9deg);
+  }
+  .site-bento__tile--battle:hover .site-bento__card--tableau-back {
+    transform: rotate(-9deg);
+  }
+  .site-bento__tile--battle:hover .site-bento__reaver {
+    translate: none;
+  }
+}
+.site-root[data-save-data] .site-bento__tile {
+  animation: none;
+}
+.site-root[data-save-data] .site-bento__aura {
+  animation: none;
+}
+.site-root[data-save-data] .site-bento__parallax {
+  transform: none;
+}

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import AboutScene from "@/components/site/AboutScene";
+import BentoScene from "@/components/site/BentoScene";
 import CardsScene from "@/components/site/CardsScene";
 import CollectScene from "@/components/site/CollectScene";
 import HeroWorld from "@/components/site/HeroWorld";
@@ -30,6 +31,7 @@ export default function Home() {
         <CardsScene id="cards" />
         <CollectScene id="commanders" />
         <SpotlightScene id="arena" />
+        <BentoScene id="world" />
       </main>
     </div>
   );
