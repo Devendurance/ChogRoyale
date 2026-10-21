@@ -25,7 +25,9 @@ Last updated: 2026-10-19
 
 - `/` is the public landing page: `src/app/page.tsx` composes `src/components/site/` (MarketingHeader, HeroWorld, SiteDocumentFlags, fonts, site.css). All site CSS is `site-` prefixed or under `.site-root`. Tokens live in `globals.css` `@theme` as `chog-*` colors and `font-site/data/game`.
 - Hero art: proposed G pagoda image, derived to `public/assets/site/hero/` (wide 1672x941, portrait crop 560x941). Rights and editorial approval still pending.
-- Phases L2-L8 (About, cards, collect, spotlight/bento, CTA/footer, splash, QA) not started.
+- L0/L1 approved 2026-10-21. L2 About scene (`AboutScene.tsx`, copy in `copy.ts`) built and awaiting review. Mascot is the v001 Reaver commander class template at `public/assets/site/mascots/`, labelled as class art, marketing use not yet cleared.
+- Satoshi self-hosted via next/font/local (FFL license file alongside). Georama and Lilita One via next/font/google.
+- Phases L3-L8 (cards, collect, spotlight/bento, CTA/footer, splash, QA) not started.
 
 ## Key documents
 

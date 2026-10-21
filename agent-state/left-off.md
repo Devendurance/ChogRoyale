@@ -2,7 +2,15 @@
 
 Last updated: 2026-10-21
 
-## Public site L0/L1 (2026-10-21), awaiting owner review
+## Public site L2 About scene (2026-10-21), awaiting owner review
+
+- L0/L1 approved by owner (hero art for development review only, not cleared for launch; wordmark is a temporary fallback; 3000px+ hero master is a pre-launch item).
+- Done: `AboutScene` at `#how-the-chog-matters` overlaps the hero fade, white to mist to lilac wash, four messaging pillars as match-loop steps (Reveal, Understand and adapt, Clash, Remember), v001 Reaver commander class art peeking over the pillar panel. Pillar 3 and 4 text ADAPTED for honesty (no ranked; Match Recipe "In development"). All copy and provenance in `src/components/site/copy.ts`.
+- Done: Satoshi self-hosted (unmodified official variable WOFF2 + FFL in `src/components/site/font-files/`), Fontshare link removed. Hero wordmark reduced to clamp(42px, 5.6vw, 80px). Hero text rise is transform-only so it counts for LCP.
+- Evidence: `C:/Users/USER/Documents/ChogRoyale-Assets/site-l2-review/` (after/, reduced/). Typecheck, lint, build green. Battle UI tests 55/55. Local prod LCP 0.7-1.3s unthrottled.
+- Next: owner visual review of L2, then L3 card carousel only.
+
+## Public site L0/L1 (2026-10-21), approved
 
 - Doing: public landing page, built in phases from the visual handoff (unzipped outside repo at `C:/Users/USER/Documents/ChogRoyale-Assets/visual-handoff/`). Stop after each phase for owner approval.
 - Done: L0 tokens (`@theme` chog-* colors, font-site/data/game), Satoshi via Fontshare link, Georama + Lilita One via next/font scoped to `.site-root`, `MarketingHeader` (transparent to glass, mobile disclosure menu, Escape, skip link). L1 `HeroWorld` with proposed G pagoda image (wide + portrait crop, AVIF/WebP via next/image), scrims, eased fade to white, CSS petals/Ken Burns/scroll parallax with reduced-motion and Save-Data off paths, stub `#how-the-chog-matters` section as anchor target.

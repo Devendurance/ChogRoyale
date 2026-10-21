@@ -26,6 +26,10 @@ Durable facts, conventions, and gotchas that should survive across sessions.
 - Public site copy source is `docs/Chog Royale messaging.md`. Owner `DESIGN.md` at repo root matches the handoff `source-docs/chog-royale-DESIGN.md` byte for byte. Both were untracked on 2026-10-21.
 - Editing `next.config.ts` restarts `next dev`. On 2026-10-21 the already running :3000 server exited instead of restarting, so check the port after config edits.
 - `next build` can fail on a transient fonts.googleapis.com fetch error. Retry before changing font setup.
+- Satoshi is self-hosted under ITF FFL 2.0: self-hosting for our own sites is allowed, but no subsetting, format conversion or redistribution. The WOFF2 lives in the private repo; making the repo public would count as redistribution.
+- Don't fade hero text in from opacity 0. Chrome skipped it for LCP and picked a late below-fold element (up to 2.8s). Transform-only entrance keeps hero LCP at 0.7-1.3s locally.
+- Absolute decorative glows in the last section need `overflow: clip` on the section, or they extend the document and show a white band at the page end.
+- Tailwind `@theme inline` tokens emit no CSS variables. Use the utility class (e.g. `font-site`) rather than `var(--font-site)` in plain CSS.
 
 - 2D cutout c001 is frozen under `C:/Users/USER/Documents/ChogRoyale-Assets/chogling-2d-production/c001-cutout-prototype-20261019-154531/`. Preserve m001 head RGB and assert alpha after part extraction. Scale every key from one neutral character height, not canvas height. Whole punch intent survives at 48/64 px, while lower-body joins and short shuffle stride still block this candidate. Keyed zero stance drift does not prove interpolated motion or Phaser integration. ORA edits alone are not consumed by regeneration: save replacement part art separately and update rig source/crop/pivot. Independent preservation passed 444/444 source files.
 - On-chain token IDs differ from artwork/display numbers. Always follow `token_uri_original` and `image_original`, never build filenames from token ID.

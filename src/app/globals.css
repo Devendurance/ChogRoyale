@@ -26,10 +26,10 @@
   --color-chog-ink-70: rgb(27 17 64 / 0.7);
   --color-chog-ink-55: rgb(27 17 64 / 0.55);
   --color-chog-hairline: rgb(91 47 214 / 0.14);
-  --font-site: "Satoshi", "General Sans", -apple-system, "Segoe UI", sans-serif;
 }
 
 @theme inline {
+  --font-site: var(--font-satoshi), "Satoshi", "General Sans", -apple-system, "Segoe UI", sans-serif;
   --font-data: var(--font-georama), "Satoshi", system-ui, sans-serif;
   --font-game: var(--font-lilita), "Titan One", Impact, sans-serif;
 }
