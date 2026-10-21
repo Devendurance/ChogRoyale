@@ -52,13 +52,20 @@ function describe(id: string): Pick<SiteCard, "type" | "traits"> {
 }
 
 export function showcaseCards(): SiteCard[] {
-  return SHOWCASE.map(({ id, width, height }) => ({
+  return SHOWCASE.map(({ id }) => cardById(id));
+}
+
+/** One approved showcase card by id. The L5 feature grid points at these. */
+export function cardById(id: string): SiteCard {
+  const art = SHOWCASE.find((s) => s.id === id);
+  if (!art) throw new Error(`Unknown showcase card ${id}`);
+  return {
     id,
     name: CARDS_V1[id]!.name,
     cost: CARDS_V1[id]!.cost,
     ...describe(id),
-    art: { src: `/assets/site/cards/${id}.png`, width, height },
-  }));
+    art: { src: `/assets/site/cards/${id}.png`, width: art.width, height: art.height },
+  };
 }
 
 export function rosterCounts() {

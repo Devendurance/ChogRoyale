@@ -29,7 +29,9 @@ Last updated: 2026-10-19
 - Satoshi self-hosted via next/font/local (FFL license file alongside). Georama and Lilita One via next/font/google.
 - L2 approved. L3 card carousel (`CardsScene.tsx`, `ChogCardCarousel.tsx`, `cards.css`, `site-cards.ts`) built and awaiting review. Card display data is read from `CARDS_V1`, never hardcoded. The site shows no rarity because the game has none.
 - L3 approved. L4 Collect (`CollectScene.tsx`, `CommanderSpotlight.tsx`, `collect.css`, `site-commanders.ts`) built and awaiting review. `ChogCard.tsx` is the shared card frame for L3 and L4. Commander display data comes from `CLASS_ROSTER` and `COMMANDER_COMBAT_PROFILE_V1`.
-- Phases L5-L8 (spotlight/bento, CTA/footer, splash, QA) not started.
+- L4 approved. L5 spotlight grid (`SpotlightScene.tsx`, `FeatureGrid.tsx`, `ChogCardMini.tsx`, `spotlight.css`, copy in `copy.ts`) built and awaiting review. Six cells: server authority, deck and energy, Arena Patron, telegraphed Chaos Pulse, free/NFT commander parity, replay verification. Cell art is the approved v001 READY_STATIC showcase set plus the Bulwark commander class template, labelled "Commander class art".
+- Phases L6-L8 (bento, CTA/footer, splash, QA) not started.
+- Public-site ground truth for marketing claims: real-time 1v1 is server-authoritative (Colyseus `BattleRoom`, 100ms tick) but gated to a dev surface; the Arena Patron and Chaos Pulse are live per match and symmetric; `COMMANDER_COMBAT_PROFILE_V1` is class-keyed so free and NFT commanders share one profile; every finished match is replayed and hash-compared on the server, but durable settlement is off by default; there is no XP or level system, only match stats over settled rows.
 
 ## Key documents
 

@@ -2,6 +2,16 @@
 
 Last updated: 2026-10-21
 
+## Public site L5 feature spotlight grid (2026-10-21), awaiting owner review
+
+- L4 approved. Done: `SpotlightScene` (`#arena`) + `FeatureGrid` + `ChogCardMini`. Six cells on a shared 1px hairline grid (3 cols desktop, 2 tablet, 1 mobile), 12px violet "+" crosshairs at each cell's top-left and bottom-right, per-cell violet spotlight that follows the mouse and rises from .16 to .26 on hover, mini card tilt and lift. Heading "Read the Pulse. Break the Core." (messaging 1.3). No CTA, no focusable elements, no fake controls: the cells are content only, so nothing on the page looks clickable without being so.
+- Art: approved v001 READY_STATIC showcase set (boulderback, rift_sentry, chaos_comet, frostshell, chaos_archer) plus the Bulwark commander class template, captioned "Commander class art" like L4. No new artwork, no token likeness.
+- Copy: value lines from messaging section 6. Bodies adapted from section 6 and 2.3 and read against the shipped ruleset. Bodies and two value lines are NEW, cited in `copy.ts`, need owner sign-off. "Player progression" was dropped: there is no XP or level system, and match stats plus the casual leaderboard are empty because settlement is off.
+- Honesty: section note says the battle, Arena Patron and free route run now, saved match history is not on yet. No ranked, rewards, leaderboard or lending claims.
+- Interaction: pointer tracking is mouse-only, so a tap never leaves a spotlight stuck. Reduced motion drops the scroll-rise and the tilt transition. Save-Data drops the 3D tilt but keeps the lift.
+- Evidence: `C:/Users/USER/Documents/ChogRoyale-Assets/site-l5-review/` (after/, reduced/, report.json). Screenshots at 360x800, 390x844, 820x1180, 1366x768, 1920x1080, plus hover and L4->L5 transition. No horizontal overflow, no console errors. Typecheck, lint, build green, vitest 640/640, /dev/battle free of site CSS.
+- Next: owner review of L5, then L6 bento only.
+
 ## Public site L4 Collect scene (2026-10-21), awaiting owner review
 
 - L3 approved. Done: `CollectScene` (`#commanders`) + `CommanderSpotlight`: one large commander class card (shared `ChogCard` frame, extracted from L3 unchanged), gold motes, breathing halo, mouse tilt, scroll entrance. A five-class picker flips the card to another class. Cost from `COMMANDER_COMBAT_PROFILE_V1`, role and active ability from `CLASS_ROSTER`. Reaver default.

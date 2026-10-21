@@ -5,6 +5,7 @@ import CollectScene from "@/components/site/CollectScene";
 import HeroWorld from "@/components/site/HeroWorld";
 import MarketingHeader from "@/components/site/MarketingHeader";
 import SiteDocumentFlags from "@/components/site/SiteDocumentFlags";
+import SpotlightScene from "@/components/site/SpotlightScene";
 import { ABOUT, EXPLORE, HERO, META_DESCRIPTION, NAV, PLAY } from "@/components/site/copy";
 import { georama, lilitaOne, satoshi } from "@/components/site/fonts";
 import "@/components/site/site.css";
@@ -28,6 +29,7 @@ export default function Home() {
         <AboutScene id={EXPLORE.href.slice(1)} {...ABOUT} />
         <CardsScene id="cards" />
         <CollectScene id="commanders" />
+        <SpotlightScene id="arena" />
       </main>
     </div>
   );

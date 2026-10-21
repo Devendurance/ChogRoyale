@@ -3,6 +3,7 @@
 // what the current build actually ships; keep them until the owner signs off.
 
 import type { SiteNavLink } from "./MarketingHeader";
+import type { CommanderClass } from "@/lib/commanders";
 
 export const META_DESCRIPTION = "Chog Royale is a 1v1 card battler where a real Chog changes the match."; // 1.6
 
@@ -72,6 +73,77 @@ export interface Pillar {
   line: string;
   note?: { label: string; text: string };
 }
+
+export type SpotlightArt = { kind: "card"; id: string } | { kind: "commander"; id: CommanderClass };
+
+export interface SpotlightCell {
+  title: string;
+  body: string;
+  value: string;
+  art: SpotlightArt;
+}
+
+// L5. The value lines come from the messaging doc's feature-to-value table
+// (section 6). Bodies are adapted from the same table and the pillar copy
+// (2.3) and read against the shipped ruleset. Lines marked NEW are not in
+// the messaging doc; each is backed by code (cited) and needs owner sign-off.
+export const SPOTLIGHT = {
+  eyebrow: "How the arena works",
+  heading: "Read the Pulse. Break the Core.", // 1.3
+  lead: "Here is what actually runs a match, from the first card to the last result. Every rule below is decided on the server, not in your browser.",
+  cells: [
+    {
+      title: "The server owns the arena",
+      // NEW, from 6 "Server authority". session.ts tick() runs one 100ms step.
+      body: "The server deals both hands, holds the seed and steps the match ten times a second. Your browser sends intent, never the outcome.",
+      value: "Browser manipulation cannot decide the match.", // 6
+      art: { kind: "card", id: "boulderback" },
+    },
+    {
+      title: "Seven cards and a commander",
+      // NEW: 7 ordinary + 1 commander (combat.ts validateDeck); ENERGY_V1 start 5, regen 1 per 28 ticks.
+      body: "A deck is seven ordinary cards and one commander. Energy starts at five and refills on a timer, so every card you hold is a timing decision.",
+      value: "Energy makes every card a decision.", // NEW
+      art: { kind: "card", id: "rift_sentry" },
+    },
+    {
+      title: "A Chog sets the rule",
+      // NEW, from 6 "Arena Patron". server/battle/patron-source.ts picks the
+      // indexed Genesis token and the room locks it per match.
+      body: "Before the match the server verifies a Chog from the Genesis collection and locks it as the Arena Patron. Neither seat picks it, and both play under the same one.",
+      value: "Players know what rule is coming.", // 6
+      art: { kind: "card", id: "chaos_comet" },
+    },
+    {
+      title: "The rule is visible before it acts",
+      // NEW, from 6 "Chaos Pulse" and 2.3 pillar 2. chaos.ts CHAOS_TIMELINE_V1:
+      // 180s match, pulses at 45/90/135s, 5s warn, 8-15s effect, symmetric.
+      body: "The Patron's traits choose one Chaos Pulse. It warns you first, it lands on both sides the same way, and it expires on its own.",
+      value: "Decks and timing decisions matter.", // 6
+      art: { kind: "card", id: "frostshell" },
+    },
+    {
+      title: "Free commanders fight the same",
+      // NEW, from 6 "Free route". COMMANDER_COMBAT_PROFILE_V1 is keyed by
+      // class only, so free and NFT commanders of a class share one profile.
+      body: "Play without owning anything. A free commander and an NFT commander of the same class share one combat profile, so ownership never buys raw stats.",
+      value: "Welcome instead of exclusion.", // 6
+      art: { kind: "commander", id: "bulwark" },
+    },
+    {
+      title: "Every match is replayed",
+      // NEW, from 6 "Match Recipe". session.ts finish() always re-runs the
+      // match and compares state hashes; room.ts refuses a mismatched result.
+      body: "When the Core falls the server replays the match from its recorded commands and compares the outcome with the live one. A result that fails the check is never recorded.",
+      value: "Trust in the result.", // 6
+      art: { kind: "card", id: "chaos_archer" },
+    },
+  ] satisfies SpotlightCell[],
+  note: {
+    label: "In the current build",
+    text: "The battle, the Arena Patron and the free route run now. Saved match history is not on yet.",
+  },
+};
 
 export const ABOUT = {
   eyebrow: "How the Chog matters",

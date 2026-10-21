@@ -44,3 +44,10 @@ export function commanderClasses(): SiteCommander[] {
     };
   });
 }
+
+/** One commander class card by class id. Shared class art, never a token. */
+export function commanderCard(id: CommanderClass): SiteCard {
+  const found = commanderClasses().find((c) => c.id === id);
+  if (!found) throw new Error(`Unknown commander class ${id}`);
+  return found.card;
+}

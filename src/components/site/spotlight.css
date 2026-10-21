@@ -1,0 +1,383 @@
+/* L5 feature spotlight grid. Scoped to site-arena / site-grid / site-mini.
+   Reuses the Chog card frame vocabulary from cards.css. */
+
+/* Pulls up into the white tail of the L4 scene so the two read as one. */
+.site-arena {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  margin-top: -40px;
+  padding: 16px 20px 96px;
+  background: linear-gradient(180deg, #fff 0%, #fff 62%, var(--color-chog-mist) 100%);
+}
+.site-arena__glow {
+  position: absolute;
+  z-index: -1;
+  top: 4%;
+  left: 50%;
+  width: min(1240px, 160vw);
+  aspect-ratio: 1.7;
+  transform: translateX(-50%);
+  background: radial-gradient(closest-side, rgb(124 77 255 / 0.15), rgb(185 162 255 / 0.08) 54%, rgb(185 162 255 / 0) 76%);
+  pointer-events: none;
+}
+.site-arena__inner {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+.site-arena__intro {
+  max-width: 42rem;
+}
+.site-arena__heading {
+  margin-top: 16px;
+  max-width: 18ch;
+  font-size: clamp(32px, 4.2vw, 52px);
+  font-weight: 700;
+  line-height: 1.06;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+  color: var(--color-chog-ink);
+}
+.site-arena__lead {
+  margin-top: 20px;
+  max-width: 34rem;
+  font-size: 18px;
+  line-height: 30px;
+  color: var(--color-chog-ink-70);
+  text-wrap: pretty;
+}
+
+/* Grid: shared 1px hairline dividers, no gaps between cells. */
+.site-grid {
+  display: grid;
+  gap: 1px;
+  margin-top: 48px;
+  overflow: hidden;
+  border-radius: 28px;
+  background: var(--color-chog-hairline);
+  box-shadow: 0 32px 64px -36px rgb(46 26 122 / 0.28);
+}
+.site-grid__cell {
+  --spot-x: 20%;
+  --spot-y: 0%;
+  --spot-a: 0.16;
+  --tilt-x: 0deg;
+  --tilt-y: 0deg;
+  --lift: 0px;
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-height: 280px;
+  padding: 32px;
+  background: #fff;
+}
+/* Violet spotlight, anchored top-left until a mouse enters the cell. */
+.site-grid__cell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(ellipse 60% 55% at var(--spot-x) var(--spot-y), rgb(124 77 255 / var(--spot-a)), rgb(124 77 255 / 0) 70%);
+  pointer-events: none;
+}
+@media (hover: hover) {
+  .site-grid__cell:hover {
+    --spot-a: 0.26;
+    --lift: -4px;
+  }
+}
+
+/* Registration crosshairs at each cell's top-left and bottom-right. */
+.site-grid__cross {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.site-grid__cross::before,
+.site-grid__cross::after {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background:
+    linear-gradient(rgb(91 47 214 / 0.4) 0 0) center / 12px 1px no-repeat,
+    linear-gradient(rgb(91 47 214 / 0.4) 0 0) center / 1px 12px no-repeat;
+}
+.site-grid__cross::before {
+  top: 14px;
+  left: 14px;
+}
+.site-grid__cross::after {
+  right: 14px;
+  bottom: 14px;
+}
+
+.site-grid__art {
+  transform: perspective(760px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y)) translateY(var(--lift));
+  transition: transform 420ms var(--site-ease-out);
+  will-change: transform;
+}
+@media (hover: hover) {
+  .site-grid__cell:hover .site-grid__art {
+    transition-duration: 120ms;
+  }
+}
+.site-grid__title {
+  margin-top: 22px;
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 26px;
+  letter-spacing: -0.01em;
+  color: var(--color-chog-ink);
+}
+.site-grid__body {
+  margin-top: 8px;
+  font-size: 16px;
+  line-height: 26px;
+  color: var(--color-chog-ink-70);
+  text-wrap: pretty;
+}
+.site-grid__value {
+  margin-top: auto;
+  padding-top: 20px;
+  font-family: var(--font-georama), "Satoshi", system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 19px;
+  color: var(--color-chog-royal);
+}
+.site-grid__value::before {
+  content: "";
+  display: block;
+  width: 24px;
+  height: 2px;
+  margin-bottom: 10px;
+  border-radius: 2px;
+  background: var(--color-chog-violet);
+}
+
+.site-arena__note {
+  display: flex;
+  margin-top: 28px;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--color-chog-ink-55);
+}
+.site-arena__note-label {
+  flex: none;
+  font-family: var(--font-georama), "Satoshi", system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 14px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-chog-ink-55);
+}
+
+/* Mini Chog card (DESIGN.md "Chog Card" at 104px): frame, art window and
+   cost gem survive the scale, the ribbon and traits do not. */
+.site-mini {
+  display: grid;
+  margin: 0;
+  justify-items: center;
+  gap: 9px;
+}
+.site-mini__frame {
+  position: relative;
+  width: 104px;
+  aspect-ratio: 5 / 7;
+  border: 2px solid #120b45;
+  border-radius: 18px;
+  padding: 7px;
+  background: linear-gradient(160deg, #8c63ff 0%, #6a3df0 45%, #4a23b8 100%);
+  box-shadow:
+    0 18px 30px -18px rgb(46 26 122 / 0.55),
+    inset 0 1px 0 rgb(255 255 255 / 0.35),
+    inset 0 -3px 0 rgb(18 11 69 / 0.35);
+}
+.site-mini__frame::before {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 14px;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 5px 5px, #ffd45c 0 2px, transparent 2.5px),
+    radial-gradient(circle at calc(100% - 5px) 5px, #ffd45c 0 2px, transparent 2.5px),
+    radial-gradient(circle at 5px calc(100% - 5px), #ffd45c 0 2px, transparent 2.5px),
+    radial-gradient(circle at calc(100% - 5px) calc(100% - 5px), #ffd45c 0 2px, transparent 2.5px);
+}
+.site-mini__art {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 12px;
+  background: radial-gradient(circle at 50% 42%, #fff 0%, #efe8ff 38%, #c9b6ff 100%);
+  box-shadow: inset 0 0 0 2px rgb(18 11 69 / 0.55);
+}
+.site-mini__img {
+  position: absolute;
+  inset: 8% 8% 9%;
+  width: 84%;
+  height: 83%;
+  object-fit: contain;
+  filter: drop-shadow(0 5px 6px rgb(46 26 122 / 0.28));
+  pointer-events: none;
+}
+.site-mini__cost {
+  position: absolute;
+  top: -9px;
+  left: -9px;
+  z-index: 1;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  margin: 0;
+  place-items: center;
+}
+.site-mini__cost::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  transform: rotate(45deg);
+  border: 1.5px solid #120b45;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #ff9ae6 0%, #c13bff 60%, #8a2be2 100%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.4), 0 2px 0 #120b45;
+}
+.site-mini__cost-num {
+  position: relative;
+  font-family: var(--font-lilita), "Titan One", Impact, sans-serif;
+  font-size: 15px;
+  line-height: 1;
+  color: #fff;
+  -webkit-text-stroke: 2px #120b45;
+  paint-order: stroke fill;
+}
+.site-mini__caption {
+  display: grid;
+  justify-items: center;
+  gap: 1px;
+  text-align: center;
+}
+.site-mini__name {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 17px;
+  color: var(--color-chog-ink);
+}
+.site-mini__kind {
+  font-family: var(--font-georama), "Satoshi", system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-chog-ink-55);
+}
+
+@media (max-width: 639px) {
+  /* One column leaves the art tile stranded beside a void. Put the card and
+     the title on one row so the cell reads as a specimen list. */
+  .site-grid__cell {
+    display: grid;
+    grid-template-columns: 104px minmax(0, 1fr);
+    column-gap: 18px;
+    align-items: start;
+    min-height: 0;
+    padding: 26px 22px 26px;
+  }
+  .site-grid__art {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .site-grid__title {
+    grid-column: 2;
+    grid-row: 1;
+    margin-top: 4px;
+  }
+  .site-grid__body {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    margin-top: 16px;
+  }
+  .site-grid__value {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    margin-top: 16px;
+  }
+}
+@media (min-width: 640px) {
+  .site-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1100px) {
+  .site-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 768px) {
+  .site-arena {
+    margin-top: -64px;
+    padding: 24px 40px 120px;
+  }
+}
+@media (min-width: 1100px) {
+  .site-arena {
+    margin-top: -96px;
+    padding: 0 40px 140px;
+  }
+}
+
+/* Motion: cells rise on scroll, then hold. The spotlight and the tilt are
+   pointer-driven, so they need no autoplay and never run off screen. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .site-arena__intro > *,
+    .site-grid__cell {
+      animation: site-cell-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 55%;
+    }
+    .site-grid__cell:nth-child(2) {
+      animation-range: entry 4% entry 59%;
+    }
+    .site-grid__cell:nth-child(3) {
+      animation-range: entry 8% entry 63%;
+    }
+    .site-grid__cell:nth-child(4) {
+      animation-range: entry 12% entry 67%;
+    }
+    .site-grid__cell:nth-child(5) {
+      animation-range: entry 16% entry 71%;
+    }
+    .site-grid__cell:nth-child(6) {
+      animation-range: entry 20% entry 75%;
+    }
+  }
+}
+@keyframes site-cell-rise {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-grid__art {
+    transition: none;
+  }
+}
+.site-root[data-save-data] .site-grid__art {
+  transform: translateY(var(--lift));
+}
