@@ -126,6 +126,13 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Battle identity comes only from a server-verified Privy token in the matchmaking Authorization header. Never put tokens in URLs, room options, logs or replicated state. Seats, seeds, decks and Chaos are server-chosen; clients send intents only.
 - The dev battle alpha writes nothing to the database. Settlement, legacy and leaderboard updates belong to later B3 slices.
 
+## PUBLIC SITE
+
+- Build the public landing page one handoff phase at a time (L0 to L8) and stop for owner screenshot approval after each phase.
+- Final site copy comes from `docs/Chog Royale messaging.md`. Every claim must match shipped code. Don't present ranked, rewards, economy or social features as live.
+- Keep site styles scoped to `.site-root` or `site-` classes. Cache Components keeps hidden routes mounted, so html-level site rules must be applied from an effect, never via `html:has(...)`.
+- Reference media A-F is study-only and never ships. The G hero image and any NFT art need owner rights confirmation before public release.
+
 ## SPRITE KIT INVENTORY
 
 - Derive asset scope from current implemented code, including spawned nondeckable units. Count primary entries, card-art derivatives and auxiliary VFX separately, and distinguish commander class templates from exact NFT artwork.

@@ -21,6 +21,12 @@ Last updated: 2026-10-19
 - `scripts`: ingest-nfts, nft-index (discover/ingest-missing/traits/sync-ownership/coverage), commanders-derive. All idempotent and resumable.
 - Tests: vitest, 192 passing (46 combat); DAL routes to TEST via `CHOG_TEST_DB=1` (fail-closed, prod-forbidden).
 
+## Public site (L0/L1, 2026-10-21)
+
+- `/` is the public landing page: `src/app/page.tsx` composes `src/components/site/` (MarketingHeader, HeroWorld, SiteDocumentFlags, fonts, site.css). All site CSS is `site-` prefixed or under `.site-root`. Tokens live in `globals.css` `@theme` as `chog-*` colors and `font-site/data/game`.
+- Hero art: proposed G pagoda image, derived to `public/assets/site/hero/` (wide 1672x941, portrait crop 560x941). Rights and editorial approval still pending.
+- Phases L2-L8 (About, cards, collect, spotlight/bento, CTA/footer, splash, QA) not started.
+
 ## Key documents
 
 - `.fast-build/STATE.md`: slice-by-slice build log (B0 through B1.3).

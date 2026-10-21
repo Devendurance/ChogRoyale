@@ -22,6 +22,11 @@ Durable facts, conventions, and gotchas that should survive across sessions.
 
 ## Gotchas
 
+- Cache Components (next.config `cacheComponents: true`) keeps previously visited routes mounted but hidden after client navigation. CSS like `html:has(.site-root)` then leaks into `/dev/battle`. Apply html-level site rules from an effect (`SiteDocumentFlags` adds `html.site-doc`) so they follow mount lifetime.
+- Public site copy source is `docs/Chog Royale messaging.md`. Owner `DESIGN.md` at repo root matches the handoff `source-docs/chog-royale-DESIGN.md` byte for byte. Both were untracked on 2026-10-21.
+- Editing `next.config.ts` restarts `next dev`. On 2026-10-21 the already running :3000 server exited instead of restarting, so check the port after config edits.
+- `next build` can fail on a transient fonts.googleapis.com fetch error. Retry before changing font setup.
+
 - 2D cutout c001 is frozen under `C:/Users/USER/Documents/ChogRoyale-Assets/chogling-2d-production/c001-cutout-prototype-20261019-154531/`. Preserve m001 head RGB and assert alpha after part extraction. Scale every key from one neutral character height, not canvas height. Whole punch intent survives at 48/64 px, while lower-body joins and short shuffle stride still block this candidate. Keyed zero stance drift does not prove interpolated motion or Phaser integration. ORA edits alone are not consumed by regeneration: save replacement part art separately and update rig source/crop/pivot. Independent preservation passed 444/444 source files.
 - On-chain token IDs differ from artwork/display numbers. Always follow `token_uri_original` and `image_original`, never build filenames from token ID.
 - `nft_metadata.content_hash` hashes fetched JSON bytes. JSONB exports preserve semantics and need a separate exported-file hash. Commander hashes are separate derivation hashes.

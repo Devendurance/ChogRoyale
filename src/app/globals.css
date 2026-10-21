@@ -12,6 +12,28 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Public site tokens (DESIGN.md sections 2-3). Utilities are only emitted
+   where used, so the Phaser battle routes are unaffected. */
+@theme {
+  --color-chog-white: #ffffff;
+  --color-chog-mist: #f4f0ff;
+  --color-chog-lilac: #e6dcff;
+  --color-chog-lavender: #b9a2ff;
+  --color-chog-violet: #7c4dff;
+  --color-chog-royal: #5b2fd6;
+  --color-chog-deep: #2e1a7a;
+  --color-chog-ink: #1b1140;
+  --color-chog-ink-70: rgb(27 17 64 / 0.7);
+  --color-chog-ink-55: rgb(27 17 64 / 0.55);
+  --color-chog-hairline: rgb(91 47 214 / 0.14);
+  --font-site: "Satoshi", "General Sans", -apple-system, "Segoe UI", sans-serif;
+}
+
+@theme inline {
+  --font-data: var(--font-georama), "Satoshi", system-ui, sans-serif;
+  --font-game: var(--font-lilita), "Titan One", Impact, sans-serif;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;

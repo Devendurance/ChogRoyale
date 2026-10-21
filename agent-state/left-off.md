@@ -1,6 +1,15 @@
 # Left Off
 
-Last updated: 2026-10-19
+Last updated: 2026-10-21
+
+## Public site L0/L1 (2026-10-21), awaiting owner review
+
+- Doing: public landing page, built in phases from the visual handoff (unzipped outside repo at `C:/Users/USER/Documents/ChogRoyale-Assets/visual-handoff/`). Stop after each phase for owner approval.
+- Done: L0 tokens (`@theme` chog-* colors, font-site/data/game), Satoshi via Fontshare link, Georama + Lilita One via next/font scoped to `.site-root`, `MarketingHeader` (transparent to glass, mobile disclosure menu, Escape, skip link). L1 `HeroWorld` with proposed G pagoda image (wide + portrait crop, AVIF/WebP via next/image), scrims, eased fade to white, CSS petals/Ken Burns/scroll parallax with reduced-motion and Save-Data off paths, stub `#how-the-chog-matters` section as anchor target.
+- Copy comes from `docs/Chog Royale messaging.md` section 5.1/1.5/2.3. Play CTA goes to `/dev/battle`, which is disabled in production builds unless `NEXT_PUBLIC_ENABLE_DEV_BATTLE=1`.
+- Evidence: screenshots in `C:/Users/USER/Documents/ChogRoyale-Assets/site-l0l1-review/after/` (5 viewports, menu, keyboard, anchor, reduced motion, battle regression). Typecheck, lint, build, vitest 640/640 green.
+- Next: owner approves L0/L1 screenshots, answers asset/rights questions (official logo, G image rights, higher-res G master). Then L2 About scene only.
+- Known: no official logo (Lilita wordmark fallback), G source is only 1672x941 so tablet/phone crops look soft.
 
 ## Just finished
 
