@@ -7,7 +7,7 @@ interface Props {
   heading: string;
   lead: string;
   loopLabel: string;
-  mascotCaption: string;
+  mascot: { name: string; kind: string };
   pillars: Pillar[];
 }
 
@@ -15,7 +15,7 @@ interface Props {
  * L2 About scene. It rises out of the hero's white fade, so the steps lead
  * straight into the explanation. The four pillars follow the match loop.
  */
-export default function AboutScene({ id, eyebrow, heading, lead, loopLabel, mascotCaption, pillars }: Props) {
+export default function AboutScene({ id, eyebrow, heading, lead, loopLabel, mascot, pillars }: Props) {
   return (
     <section id={id} aria-labelledby={`${id}-title`} className="site-about">
       <div aria-hidden className="site-about__glow" />
@@ -41,7 +41,10 @@ export default function AboutScene({ id, eyebrow, heading, lead, loopLabel, masc
               className="site-about__mascot-img"
             />
           </div>
-          <figcaption className="site-about__caption">{mascotCaption}</figcaption>
+          <figcaption className="site-about__caption">
+            <span className="site-about__caption-kind">{mascot.kind}</span>
+            <span className="site-about__caption-name">{mascot.name}</span>
+          </figcaption>
         </figure>
 
         <ol className="site-loop" aria-label={loopLabel}>
@@ -51,11 +54,15 @@ export default function AboutScene({ id, eyebrow, heading, lead, loopLabel, masc
                 <span aria-hidden className="site-loop__dot" />
                 <span className="site-loop__num">{String(i + 1).padStart(2, "0")}</span>
                 {p.step}
-                {p.status && <span className="site-status">{p.status}</span>}
               </p>
               <h3 className="site-loop__title">{p.title}</h3>
               <p className="site-loop__message">{p.message}</p>
               <p className="site-loop__line">{p.line}</p>
+              {p.note && (
+                <p className="site-loop__note">
+                  <span className="site-loop__note-label">{p.note.label}</span> {p.note.text}
+                </p>
+              )}
             </li>
           ))}
         </ol>

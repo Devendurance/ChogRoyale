@@ -22,7 +22,7 @@ export interface Pillar {
   title: string;
   message: string;
   line: string;
-  status?: string;
+  note?: { label: string; text: string };
 }
 
 export const ABOUT = {
@@ -30,7 +30,7 @@ export const ABOUT = {
   heading: "Identity changes the conditions. Skill decides the outcome.", // 1.5
   lead: "Build an eight-card deck, defend your Core and react to a Chaos Pulse derived from a verified Chog NFT. Play through the free route, read the arena and outsmart your opponent.", // 1.7
   loopLabel: "Reveal, understand, adapt, clash, remember", // 1.10 core loop
-  mascotCaption: "Reaver · commander class art",
+  mascot: { name: "Reaver", kind: "Commander class art" },
   pillars: [
     {
       step: "Reveal", // 1.10
@@ -53,9 +53,9 @@ export const ABOUT = {
     {
       step: "Remember", // 1.10
       title: "Every match leaves a trace", // 2.3 pillar 4
-      message: "The server replays every match to check the result. A Match Recipe that shows the Patron, the rule and the outcome is in development.", // ADAPTED from 2.3 pillar 4: no player-facing Match Recipe yet
+      message: "The server replays every match to check the result.", // ADAPTED from 2.3 pillar 4: shipped part only
       line: "See what changed. See why it changed.", // 2.3 pillar 4 language
-      status: "In development", // honest status label, not from the messaging doc
+      note: { label: "In development", text: "A Match Recipe that shows the Patron, the rule and the outcome." }, // honest caveat: no player-facing Match Recipe yet
     },
   ] satisfies Pillar[],
 };

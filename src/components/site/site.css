@@ -513,18 +513,33 @@ html.site-doc {
 }
 .site-about__caption {
   position: absolute;
-  bottom: calc(var(--loop-overlap) + 14px);
-  right: 92%;
+  bottom: calc(var(--loop-overlap) + 20px);
+  right: 90%;
+  display: grid;
+  gap: 2px;
   white-space: nowrap;
   border: 1px solid var(--color-chog-hairline);
-  border-radius: 999px;
-  background: rgb(255 255 255 / 0.9);
-  padding: 4px 10px;
+  border-radius: 14px;
+  background: rgb(255 255 255 / 0.92);
+  padding: 8px 12px 9px;
+  box-shadow: 0 10px 24px -14px rgb(46 26 122 / 0.35);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+.site-about__caption-kind {
   font-family: var(--font-georama), "Satoshi", system-ui, sans-serif;
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 14px;
-  color: var(--color-chog-ink-70);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-chog-royal);
+}
+.site-about__caption-name {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 20px;
+  color: var(--color-chog-ink);
 }
 
 .site-loop {
@@ -544,8 +559,7 @@ html.site-doc {
 .site-loop__item {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 28px 24px 30px;
+  padding: 28px 24px 28px;
   background: #fff;
 }
 .site-loop__step {
@@ -573,20 +587,8 @@ html.site-doc {
   margin-left: 4px;
   color: var(--color-chog-ink-55);
 }
-.site-status {
-  margin-left: auto;
-  border: 1px solid var(--color-chog-hairline);
-  border-radius: 999px;
-  background: #fff;
-  padding: 3px 10px;
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 14px;
-  letter-spacing: 0.08em;
-  color: var(--color-chog-ink-70);
-}
 .site-loop__title {
-  margin-top: 6px;
+  margin-top: 18px;
   font-size: 22px;
   font-weight: 700;
   line-height: 28px;
@@ -594,16 +596,33 @@ html.site-doc {
   color: var(--color-chog-ink);
 }
 .site-loop__message {
+  margin-top: 8px;
   font-size: 16px;
   line-height: 26px;
   color: var(--color-chog-ink-70);
 }
 .site-loop__line {
-  padding-top: 10px;
+  margin-top: 18px;
   font-size: 16px;
   font-weight: 500;
   line-height: 24px;
   color: var(--color-chog-royal);
+}
+.site-loop__note {
+  margin-top: auto;
+  padding-top: 18px;
+  font-size: 13px;
+  line-height: 19px;
+  color: var(--color-chog-ink-55);
+}
+.site-loop__note-label {
+  margin-right: 4px;
+  font-family: var(--font-georama), "Satoshi", system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-chog-ink-55);
 }
 .site-loop__line::before {
   content: "";
@@ -650,6 +669,10 @@ html.site-doc {
   }
   .site-loop {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .site-loop__title {
+    font-size: 20px;
+    line-height: 26px;
   }
 }
 
