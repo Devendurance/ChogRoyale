@@ -94,31 +94,33 @@ export const SPOTLIGHT = {
   cells: [
     {
       title: "The server owns the arena",
-      // NEW, from 6 "Server authority". session.ts tick() runs one 100ms step.
-      body: "The server deals both hands, holds the seed and steps the match ten times a second. Your browser sends intent, never the outcome.",
+      // NEW, from 6 "Server authority". The server owns seats, seed and Chaos,
+      // and the client only ever sends a deploy or an ability command.
+      body: "The match runs on the server, not in your browser. You send the moves you want to make, and the server decides what happens and who breaks the Core first.",
       value: "Browser manipulation cannot decide the match.", // 6
       art: { kind: "card", id: "boulderback" },
     },
     {
       title: "Seven cards and a commander",
-      // NEW: 7 ordinary + 1 commander (combat.ts validateDeck); ENERGY_V1 start 5, regen 1 per 28 ticks.
-      body: "A deck is seven ordinary cards and one commander. Energy starts at five and refills on a timer, so every card you hold is a timing decision.",
+      // NEW: 7 ordinary + 1 commander (combat.ts validateDeck); ENERGY_V1 start 5,
+      // one point per 28 ticks, doubling at 120s and tripling at 240s.
+      body: "A deck is seven ordinary cards and one commander. Energy starts at five and refills on a timer, faster as the match goes on, so every card you hold is a timing decision.",
       value: "Energy makes every card a decision.", // NEW
       art: { kind: "card", id: "rift_sentry" },
     },
     {
       title: "A Chog sets the rule",
-      // NEW, from 6 "Arena Patron". server/battle/patron-source.ts picks the
-      // indexed Genesis token and the room locks it per match.
-      body: "Before the match the server verifies a Chog from the Genesis collection and locks it as the Arena Patron. Neither seat picks it, and both play under the same one.",
+      // NEW, from 6 "Arena Patron". server/battle/patron-source.ts picks an
+      // indexed Genesis token with resolved metadata and the room locks it.
+      body: "Before the match the server picks a Chog from the Genesis collection and locks it as the Arena Patron. Neither seat picks it, and both play under the same one.",
       value: "Players know what rule is coming.", // 6
       art: { kind: "card", id: "chaos_comet" },
     },
     {
       title: "The rule is visible before it acts",
       // NEW, from 6 "Chaos Pulse" and 2.3 pillar 2. chaos.ts CHAOS_TIMELINE_V1:
-      // 180s match, pulses at 45/90/135s, 5s warn, 8-15s effect, symmetric.
-      body: "The Patron's traits choose one Chaos Pulse. It warns you first, it lands on both sides the same way, and it expires on its own.",
+      // 180s match, three pulses at 45/90/135s, 3-5s warn, 8-15s effect, symmetric.
+      body: "The Patron's traits pick the first Chaos Pulse, and two more follow as the match runs. Each one warns you first, hits both sides the same way, and expires on its own.",
       value: "Decks and timing decisions matter.", // 6
       art: { kind: "card", id: "frostshell" },
     },
@@ -126,24 +128,26 @@ export const SPOTLIGHT = {
       title: "Free commanders fight the same",
       // NEW, from 6 "Free route". COMMANDER_COMBAT_PROFILE_V1 is keyed by
       // class only, so free and NFT commanders of a class share one profile.
-      body: "Play without owning anything. A free commander and an NFT commander of the same class share one combat profile, so ownership never buys raw stats.",
+      body: "Play without owning a Chog. A free commander and an NFT commander of the same class fight with the exact same numbers, so ownership never buys extra power.",
       value: "Welcome instead of exclusion.", // 6
       art: { kind: "commander", id: "bulwark" },
     },
     {
       title: "Every match is replayed",
-      // NEW, from 6 "Match Recipe". session.ts finish() always re-runs the
-      // match and compares state hashes; room.ts refuses a mismatched result.
-      body: "When the Core falls the server replays the match from its recorded commands and compares the outcome with the live one. A result that fails the check is never recorded.",
+      // NEW, from 6 "Match Recipe". session.ts finish() re-runs the match for
+      // every end reason (core, crowns, overtime, timeout) and compares state
+      // hashes; room.ts and settlement.ts refuse a mismatched result.
+      body: "Every finished match is replayed by the server, whether it ended on the Core, on crowns or in overtime. The replay has to match the live match, or the result is refused.",
       value: "Trust in the result.", // 6
       art: { kind: "card", id: "chaos_archer" },
     },
   ] satisfies SpotlightCell[],
   note: {
     label: "In the current build",
-    text: "The battle, the Arena Patron and the free route run now. Saved match history is not on yet.",
+    text: "The battle, the Arena Patron and the free-commander route are all in the current build and playable. Playing needs a dev login, so the match is not open to the public yet, and saved match history is off until settlement is switched on.",
   },
 };
+
 
 export const ABOUT = {
   eyebrow: "How the Chog matters",
