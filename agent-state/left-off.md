@@ -12,6 +12,15 @@ Last updated: 2026-10-22
 - The Reaver is the approved commander class art, so the opening is a class-art moment and never a claim about a specific token. The real Chog Royale logotype and crest are still an open asset slot, so the wordmark stays the Lilita One fallback.
 - Next: owner review of L8.
 
+## Public site L8 acceptance check (2026-10-22), two defects fixed
+
+- L8 built. Verified in the browser against a fresh load, a reload, a return from `/dev/battle`, scrolling, in-page anchor navigation, Skip, Escape, focus restore, reduced motion and a Save-Data path. Two confirmed defects were found and fixed, the rest passed.
+- Defect 1: `aria-modal="true"` was a promise the overlay did not keep. It had `pointer-events: none`, so a pointer hit on the header Play link landed on the background link while assistive tech was told the background was inert. The overlay now takes the pointer, so the background is blocked the same way for mouse and for AT, and a click that lands on the overlay dismisses the intro so nothing feels dead.
+- Defect 2: the Skip control was painted in the server HTML about 28ms before its click handler existed, so a fast click could hit a dead button. The control is now rendered only once the client is hydrated, using a `useHydrated()` store built on `useSyncExternalStore` with a false server snapshot. The server HTML has no Skip button at all, and the button fades in when it appears.
+- Layout fixes confirmed: L5 has 142px of top padding, 186px below L4's last content, on a soft gradient seam. L6 has 142px of top padding and 254px below the L5 grid on its own white ground. The footer has no Royal Purple element left.
+- Evidence: `C:/Users/USER/Documents/ChogRoyale-Assets/site-l8-review/` (`final-1366-opening.png`, `final-390-opening.png`, `final-1920-hero.png`, `accept.mjs`, `final-shots.mjs`). No console errors at any viewport.
+- Next: owner review of L8, then L8 QA.
+
 ## Public site L7 closing CTA and mascot footer (2026-10-22), awaiting owner review
 
 - L6 built. Done: `ClosingScene` (`#enter`) + `SiteFooter` + `closing.css`, mounted after the L6 bento. The CTA is white at the top so it continues the bento tail, washes up through mist and lilac, and returns to white for the footer's white band. One soft violet glow, no bevels, no mascot, type only, buttons reuse `.site-btn--primary` and `.site-btn--white` untouched.

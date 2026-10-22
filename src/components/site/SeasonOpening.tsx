@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useMedia, useSaveData } from "./use-media";
+import { useHydrated, useMedia, useSaveData } from "./use-media";
 import "./opening.css";
 
 const REAVER = {
@@ -44,6 +44,11 @@ export default function SeasonOpening() {
 
   const cycle = reduceMotion ? REDUCED_CYCLE : saveData ? SAVE_CYCLE : CYCLE;
 
+  // The overlay is server rendered, so it paints before React hydrates. The
+  // skip control only appears once its handler can actually run, so it is
+  // never a visible button that does nothing.
+  const ready = useHydrated();
+
   // A genuine visit to the landing page. The first mount needs nothing: the
   // server already rendered the overlay and its animation is running. Coming
   // back from another route is the only case that has to start it again.
@@ -58,11 +63,11 @@ export default function SeasonOpening() {
 
   // Take focus, and remember where to give it back.
   useEffect(() => {
-    if (phase !== "playing") return;
+    if (phase !== "playing" || !ready) return;
     const active = document.activeElement;
     restoreTo.current = active instanceof HTMLElement && active !== document.body ? active : null;
     skipRef.current?.focus();
-  }, [phase]);
+  }, [phase, ready]);
 
   // No scrolling behind the intro, and no scrollbar jump when it locks.
   useEffect(() => {
@@ -111,14 +116,14 @@ export default function SeasonOpening() {
         skip();
         return;
       }
-      if (e.key === "Tab") {
+      if (e.key === "Tab" && ready) {
         e.preventDefault();
         skipRef.current?.focus();
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [phase, skip]);
+  }, [phase, ready, skip]);
 
   if (phase === "done") return null;
 
@@ -133,6 +138,10 @@ export default function SeasonOpening() {
       role="dialog"
       aria-modal="true"
       aria-label="Chog Royale"
+      /* The overlay is a real modal: it takes the pointer, so the background
+         is inert for the mouse as well as for assistive tech. A click that
+         lands on it dismisses the intro, so nothing feels dead. */
+      onClick={skip}
       onAnimationEnd={(e) => {
         // Only the overlay's own cycle counts. The children animate too.
         if (e.animationName === "site-opening-cycle" || e.animationName === "site-opening-leave") {
@@ -162,9 +171,11 @@ export default function SeasonOpening() {
         <span className="site-opening__rule" />
       </p>
 
-      <button type="button" ref={skipRef} className="site-opening__skip site-focus" onClick={skip}>
-        Skip
-      </button>
+      {ready && (
+        <button type="button" ref={skipRef} className="site-opening__skip site-focus" onClick={skip}>
+          Skip
+        </button>
+      )}
     </div>
   );
 }

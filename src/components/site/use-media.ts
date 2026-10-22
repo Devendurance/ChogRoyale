@@ -23,3 +23,16 @@ export function useSaveData() {
     () => false
   );
 }
+
+/**
+ * True once React has hydrated. The server snapshot is false and the client
+ * snapshot is true, so the first client render matches the server HTML and
+ * the next one carries the real value.
+ */
+export function useHydrated() {
+  return useSyncExternalStore(
+    noSubscribe,
+    () => true,
+    () => false
+  );
+}
