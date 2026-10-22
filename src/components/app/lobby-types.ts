@@ -24,8 +24,18 @@ export interface LobbyCatalogCard {
   typeLabel: string;
   /** Short real traits read from the card definition, never invented. */
   traits: string[];
+  /** One line describing what the card does, read from its definition. */
+  description: string;
+  /** The real numbers behind the card, for the detail panel. */
+  stats: LobbyStat[];
   /** Approved art, or null when the card has no approved art. */
   art: LobbyArt | null;
+}
+
+/** One labelled fact about a card or a commander class. */
+export interface LobbyStat {
+  label: string;
+  value: string;
 }
 
 /** Approved art with its intrinsic size, so the image pipeline never crops. */
@@ -50,6 +60,9 @@ export interface LobbyCatalogCommander {
   counters: string[];
   /** Name of the free starter template for this class. */
   freeName: string;
+  /** The real combat numbers for the class. Free and NFT commanders of the
+   *  same class report exactly the same rows. */
+  stats: LobbyStat[];
   /** Shared commander class art. */
   art: LobbyArt;
   /** Game sprite for the class. */

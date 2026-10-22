@@ -7,6 +7,7 @@ import type { ReactNode } from "react";
 export type IconName =
   | "lobby"
   | "decks"
+  | "collection"
   | "commanders"
   | "progress"
   | "user"
@@ -14,7 +15,12 @@ export type IconName =
   | "logout"
   | "refresh"
   | "lock"
-  | "swords";
+  | "swords"
+  | "energy"
+  | "back"
+  | "check"
+  | "swap"
+  | "close";
 
 const PATHS: Record<IconName, ReactNode> = {
   lobby: (
@@ -84,6 +90,43 @@ const PATHS: Record<IconName, ReactNode> = {
       <path d="M19.6 4.4l-1 3.6-2.4-1" />
       <path d="M14.2 16.2l3.4 3.4" />
       <path d="M9.8 16.2l-3.4 3.4" />
+    </>
+  ),
+  collection: (
+    <>
+      <rect x="3.4" y="3.4" width="7.2" height="9.6" rx="1.8" />
+      <rect x="13.4" y="3.4" width="7.2" height="9.6" rx="1.8" />
+      <rect x="3.4" y="15.4" width="7.2" height="5.2" rx="1.6" />
+      <rect x="13.4" y="15.4" width="7.2" height="5.2" rx="1.6" />
+    </>
+  ),
+  energy: (
+    <>
+      <path d="M12 3.2c3.4 4 5.6 6.8 5.6 9.6a5.6 5.6 0 1 1-11.2 0c0-2.8 2.2-5.6 5.6-9.6z" />
+    </>
+  ),
+  back: (
+    <>
+      <path d="M14.4 5.6L8 12l6.4 6.4" />
+    </>
+  ),
+  check: (
+    <>
+      <path d="M4.8 12.6l4.4 4.4L19.2 7" />
+    </>
+  ),
+  swap: (
+    <>
+      <path d="M4.4 8.4h13.2" />
+      <path d="M14.4 5.2l3.2 3.2-3.2 3.2" />
+      <path d="M19.6 15.6H6.4" />
+      <path d="M9.6 12.4l-3.2 3.2 3.2 3.2" />
+    </>
+  ),
+  close: (
+    <>
+      <path d="M6.4 6.4l11.2 11.2" />
+      <path d="M17.6 6.4L6.4 17.6" />
     </>
   ),
 };

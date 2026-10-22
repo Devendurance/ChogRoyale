@@ -8,7 +8,7 @@
 // tokens, fetch calls and Privy, so it can also be rendered from a preview.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { PrivyProvider, usePrivy, useLogin } from "@privy-io/react-auth";
+import { usePrivy, useLogin } from "@privy-io/react-auth";
 import LobbyView from "./LobbyView";
 import { useLobbyCatalog } from "./catalog-context";
 import {
@@ -23,7 +23,6 @@ import {
 import type { LobbyCommander, LobbyDeck, LobbyNotice, LobbyPlayer, LobbyPhase } from "./lobby-types";
 import { useMedia, useSaveData } from "@/components/site/use-media";
 
-const APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID ?? "";
 const ENABLED = process.env.NODE_ENV !== "production" || process.env.NEXT_PUBLIC_ENABLE_DEV_BATTLE === "1";
 
 interface ApiError {
@@ -115,7 +114,7 @@ function loadoutNotice(error: ApiError): LobbyNotice {
   if (error.code === "INTERNAL_ERROR") {
     return {
       tone: "warn",
-      text: "The deck service is not available in this build yet, so no saved deck can be shown here.",
+      text: "The deck service is not available right now, so no saved deck can be shown here.",
     };
   }
   if (error.code === "UNAUTHORIZED") {
@@ -269,7 +268,7 @@ function LobbyShell() {
     if (profileError) list.push(profileNotice(profileError));
     if (loadoutError) list.push(loadoutNotice(loadoutError));
     if (!loadoutError && loadout && !loadout.loadout && !loadout.invalidSaved) {
-      list.push({ tone: "info", text: "No deck is saved yet. The deck screen is not part of this build." });
+      list.push({ tone: "info", text: "No deck is saved to your account yet." });
     }
     if (loadout?.invalidSaved) {
       list.push({
@@ -378,24 +377,5 @@ function LobbyShell() {
 }
 
 export default function GameLobby() {
-  if (!APP_ID) {
-    return (
-      <main className="app-stage app-stage--gate">
-        <div className="app-column app-column--gate">
-          <div className="app-panel app-gate">
-            <h1 className="app-gate__title">Chog Royale</h1>
-            <p className="app-gate__lead">
-              This build is missing NEXT_PUBLIC_PRIVY_APP_ID, so the lobby cannot sign anyone in.
-            </p>
-          </div>
-        </div>
-      </main>
-    );
-  }
-
-  return (
-    <PrivyProvider appId={APP_ID} config={{ embeddedWallets: { ethereum: { createOnLogin: "users-without-wallets" } } }}>
-      <LobbyShell />
-    </PrivyProvider>
-  );
+  return <LobbyShell />;
 }

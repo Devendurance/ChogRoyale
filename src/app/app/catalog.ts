@@ -12,6 +12,7 @@ import {
   SPELL_CARDS_V1,
   TROOP_CARDS_V1,
 } from "@/lib/combat";
+import { cardStatRows, commanderStatRows, describeCard } from "@/lib/card-details";
 import {
   CLASS_ROSTER,
   COMMANDER_CLASSES,
@@ -70,7 +71,7 @@ function cardKind(id: string): LobbyCatalogCard["kind"] {
 }
 
 /** Type label and traits read from the authored card definition. */
-function describeCard(id: string): { typeLabel: string; traits: string[] } {
+function describeCardTypes(id: string): { typeLabel: string; traits: string[] } {
   const troop = TROOP_CARDS_V1[id];
   if (troop) {
     const traits: string[] = [];
@@ -104,7 +105,7 @@ export function buildLobbyCatalog(): LobbyCatalog {
   const cards: Record<string, LobbyCatalogCard> = {};
   for (const id of Object.keys(CARDS_V1)) {
     const def = CARDS_V1[id]!;
-    const { typeLabel, traits } = describeCard(id);
+    const { typeLabel, traits } = describeCardTypes(id);
     cards[id] = {
       id,
       name: def.name,
@@ -112,6 +113,8 @@ export function buildLobbyCatalog(): LobbyCatalog {
       kind: cardKind(id),
       typeLabel,
       traits,
+      description: describeCard(def),
+      stats: cardStatRows(def),
       art: cardArt(id),
     };
   }
@@ -131,6 +134,7 @@ export function buildLobbyCatalog(): LobbyCatalog {
       ability: active?.name ?? null,
       counters: profile.counters.map((c) => titleCase(c)),
       freeName: freeByClass.get(classId)?.name ?? titleCase(classId),
+      stats: commanderStatRows(classId),
       art,
       sprite: { src: `/assets/chog-kit/v001/commanders/commander_${classId}/sprite.png`, width: 192, height: 256 },
       commanderCardArt: {

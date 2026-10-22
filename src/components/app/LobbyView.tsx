@@ -6,6 +6,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import AppHud from "./AppHud";
 import AppNav from "./AppNav";
 import Icon from "./icons";
 import type { LobbyArt, LobbyViewProps } from "./lobby-types";
@@ -142,52 +143,9 @@ export default function LobbyView({
     );
   }
 
-  const identityName = player?.displayName ?? player?.username ?? "";
-
   return (
     <>
-      <header className="app-hud">
-        <div className="app-identity">
-          {player?.avatarUrl ? (
-            <Image
-              src={player.avatarUrl}
-              alt={player.avatarName ? `${player.avatarName} avatar` : "Player avatar"}
-              width={42}
-              height={42}
-              className="app-avatar"
-              unoptimized
-            />
-          ) : (
-            <span className="app-avatar app-avatar--empty" aria-hidden="true">
-              <Icon name="user" size={20} />
-            </span>
-          )}
-          <div className="app-identity__names">
-            <p className="app-identity__name">{identityName || "Player"}</p>
-            <p className="app-identity__handle">{player?.username ? `@${player.username}` : "No username yet"}</p>
-          </div>
-          {player?.walletLinked && (
-            <span className="app-chip" role="img" aria-label="Wallet linked" title="Wallet linked">
-              <Icon name="wallet" size={12} />
-              <span className="app-chip__text">Wallet linked</span>
-            </span>
-          )}
-        </div>
-
-        <div className="app-hud__utils">
-          <Link
-            href="/dev/progress"
-            className="app-iconbtn"
-            aria-label="Profile and match stats"
-            title="Profile and match stats"
-          >
-            <Icon name="user" />
-          </Link>
-          <button type="button" className="app-iconbtn" onClick={onSignOut} aria-label="Sign out" title="Sign out">
-            <Icon name="logout" />
-          </button>
-        </div>
-      </header>
+      <AppHud player={player} onSignOut={onSignOut} />
 
       <main className={`app-stage${calm ? " app-calm" : ""}`}>
         <div className="app-column">
@@ -273,17 +231,21 @@ export default function LobbyView({
               <h2 className="app-deck__label" id="app-deck-title">
                 Battle deck
               </h2>
-              <p className="app-deck__meta">
-                {deck && deck.cards.length > 0 ? (
-                  <>
-                    {deck.cards.length} cards
-                    {deck.averageCost !== null ? ` · avg cost ${deck.averageCost}` : ""}
-                  </>
-                ) : (
-                  "Not saved"
-                )}
-              </p>
+              <Link href="/app/decks" className="app-deck__edit">
+                Edit deck
+              </Link>
             </div>
+
+            <p className="app-deck__meta">
+              {deck && deck.cards.length > 0 ? (
+                <>
+                  {deck.cards.length} cards
+                  {deck.averageCost !== null ? ` · avg cost ${deck.averageCost}` : ""}
+                </>
+              ) : (
+                "Not saved"
+              )}
+            </p>
 
             {deck && deck.cards.length > 0 ? (
               <ul className="app-deck__rail">
@@ -322,7 +284,7 @@ export default function LobbyView({
                 </p>
                 <p className="app-empty__body">
                   {deckEmpty?.body ??
-                    "Your saved deck appears here once the deck screen ships and you save a loadout. Nothing is guessed in its place."}
+                    "Your saved deck appears here once you build one on the deck screen. Nothing is guessed in its place."}
                 </p>
               </div>
             )}

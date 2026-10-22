@@ -22,6 +22,10 @@ Durable facts, conventions, and gotchas that should survive across sessions.
 
 ## Gotchas
 
+- The Privy provider lives in the shared `/app` layout (`src/components/app/AppSession.tsx`). A route inside `/app` must never mount its own provider: a route change would tear the session down and mount a second one, and two providers write the same storage.
+- Reading `localStorage` in a render-phase `useState` initializer is a hydration mismatch waiting to happen. The deck screen starts with the same draft on the server and the client, then applies the account copy and the local draft after the reads resolve.
+- `src/lib/env.test.ts` "rejects missing required vars" only fails when the suite runs with `CHOG_TEST_DB=1`, because `vitest.setup.ts` then calls `requireTestDatabaseUrl()`, which calls `getEnv()` and caches the environment before the test can delete `DATABASE_URL`. Pre-existing, unrelated to any feature.
+- Card descriptions and stat rows for the UI come from `src/lib/card-details.ts`, which reads the authored card definitions and is shared with `src/server/battle/session.ts`. Never write card copy by hand, and never read a card cost anywhere else.
 - `--color-chog-ink-55` is `rgba(27,17,64,.55)`, which measures 3.98:1 on white, not the 5.6:1 that DESIGN.md states. `--color-chog-ink-70` measures 6.65:1. The public site uses ink-55 for footer links and section notes because DESIGN.md prescribes it, so any WCAG AA pass on those strings needs a token change, not a copy change.
 - A CSS `mask-image` of repeating radial gradients cuts a scalloped crest into a hill layer, and the mask also clips the layer's `::before` and `::after`, so any crest highlight has to live inside the masked element to follow the scallops.
 - An absolutely positioned element with a percentage `left` is shrink-to-fit, so a wide child near the right edge of its container gets squeezed. Set `width: max-content` when the child must keep its own size.

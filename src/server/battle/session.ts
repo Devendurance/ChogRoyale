@@ -5,6 +5,7 @@
 
 import { randomBytes, randomInt } from "crypto";
 import { scenarioConfig } from "@/lib/arena-scenarios";
+import { describeCard, describeCommander } from "@/lib/card-details";
 import { DECKS_V13 } from "@/lib/bot-economy";
 import { deriveChaosSchedule } from "@/lib/chaos";
 import {
@@ -25,7 +26,6 @@ import {
   initMatch,
   rankedChaosZones,
   runMatch,
-  spawnWavesFor,
   stateHash,
   stepMatch,
   type CombatCommand,
@@ -52,9 +52,6 @@ import {
   commanderCardId as engineCommanderCardId,
   isCommanderCard,
   validateDeck,
-  type BuildingCardDef,
-  type SpellCardDef,
-  type TroopCardDef,
 } from "@/lib/combat";
 import type { CommanderGrant } from "@/server/battle/entitlement";
 import { verifyLockedPatron, type LockedPatron } from "@/server/battle/patron-source";
@@ -129,63 +126,16 @@ const PUBLIC_EVENTS = new Set([
 ]);
 const OWN_EVENTS = new Set(["command_rejected", "ability_ready"]);
 
-// Descriptions are derived mechanically from the authored def fields; no
-// hand-written numbers and no new rules.
-function describe(card: TroopCardDef | SpellCardDef | BuildingCardDef): string {
-  if ("lifetimeTicks" in card) {
-    const b = card;
-    if (b.shell) {
-      const s = b.shell;
-      return `Siege building, ${b.hp} hp. Lobs a shell every ${b.attackIntervalTicks / 10}s at enemy towers/Core first, then buildings, then ground troops, range ${b.minRange ?? 0}-${b.range}. Shell lands ${s.flightTicks / 10}s later: ${s.unitDamage} to units/buildings, ${s.structureDamage} to towers/Core, radius ${s.radius}, never air. Lasts ${b.lifetimeTicks / 10}s.`;
-    }
-    const attack = b.damage > 0 ? `, ${b.damage} damage every ${b.attackIntervalTicks / 10}s, range ${b.range}${b.hitsAir ? ", hits air" : ""}` : ", no attack";
-    const spawn = b.spawnCardId
-      ? ` Spawns ${b.spawnCount ?? 1} ${SPAWNED_TROOPS_V1[b.spawnCardId]?.name ?? b.spawnCardId} every ${(b.spawnIntervalTicks ?? 0) / 10}s, first after ${b.deployTicks / 10}s, up to ${spawnWavesFor(b)}, lasts ${b.lifetimeTicks / 10}s.`
-      : "";
-    return `Building with ${b.hp} hp${attack}. Lasts ${b.lifetimeTicks / 10}s, footprint ${b.footprint}.${spawn}`;
-  }
-  if ("count" in card) {
-    const t = card;
-    const parts = [
-      t.count > 1 ? `${t.count} units` : "Unit",
-      `${t.hp} hp`,
-      t.damage > 0 ? `${t.damage} damage` : "no attack",
-      `range ${t.range}`,
-      `speed ${t.speed}`,
-    ];
-    if (t.moveType === "air") parts.push("air");
-    else if (t.hitsAir) parts.push("hits air");
-    if (t.splashRadius > 0) parts.push(`splash ${t.splashRadius}`);
-    if (t.structPriority) parts.push("targets structures");
-    if (t.slowPct > 0) parts.push(`slows ${t.slowPct}%`);
-    if (t.targetPriority === "air") parts.push("prioritizes air");
-    if (t.targetPriority === "building") parts.push("prioritizes buildings");
-    return `${parts.join(", ")}.`;
-  }
-  const s = card;
-  const parts = [`radius ${s.radius}`];
-  if (s.damage > 0) parts.push(`${s.damage} damage`);
-  if (s.buffPct !== 0) parts.push(`${s.buffPct}% buff for ${s.buffDurationTicks / 10}s`);
-  if (s.impact) parts.push(`lands after ${s.impact.delayTicks / 10}s`);
-  return `Spell: ${parts.join(", ")}.`;
-}
-
-function commanderDescription(cls: string): string {
-  const p = COMMANDER_COMBAT_PROFILE_V1[cls as keyof typeof COMMANDER_COMBAT_PROFILE_V1];
-  if (!p) return "";
-  return `${cls[0]!.toUpperCase()}${cls.slice(1)} commander: ${p.hp} hp, ${p.damage} damage, range ${p.range}, speed ${p.speed}${p.armor > 0 ? `, armor ${p.armor}` : ""}${p.hitsAir ? ", hits air" : ""}.`;
-}
-
 export function cardCatalog(): Record<string, CardInfo> {
   const out: Record<string, CardInfo> = {};
-  for (const t of Object.values(TROOP_CARDS_V1)) out[t.id] = { id: t.id, name: t.name, cost: t.cost, kind: "troop", air: t.moveType === "air", radius: 0, description: describe(t) };
-  for (const s of Object.values(SPELL_CARDS_V1)) out[s.id] = { id: s.id, name: s.name, cost: s.cost, kind: "spell", air: false, radius: s.radius, description: describe(s) };
-  for (const b of Object.values(BUILDING_CARDS_V1)) out[b.id] = { id: b.id, name: b.name, cost: b.cost, kind: "building", air: false, radius: b.footprint, description: describe(b) };
+  for (const t of Object.values(TROOP_CARDS_V1)) out[t.id] = { id: t.id, name: t.name, cost: t.cost, kind: "troop", air: t.moveType === "air", radius: 0, description: describeCard(t) };
+  for (const s of Object.values(SPELL_CARDS_V1)) out[s.id] = { id: s.id, name: s.name, cost: s.cost, kind: "spell", air: false, radius: s.radius, description: describeCard(s) };
+  for (const b of Object.values(BUILDING_CARDS_V1)) out[b.id] = { id: b.id, name: b.name, cost: b.cost, kind: "building", air: false, radius: b.footprint, description: describeCard(b) };
   // Display-only entries for spawned units: shown by id in frames, never deckable.
-  for (const t of Object.values(SPAWNED_TROOPS_V1)) out[t.id] = { id: t.id, name: t.name, cost: 0, kind: "troop", air: t.moveType === "air", radius: 0, description: describe(t) };
+  for (const t of Object.values(SPAWNED_TROOPS_V1)) out[t.id] = { id: t.id, name: t.name, cost: 0, kind: "troop", air: t.moveType === "air", radius: 0, description: describeCard(t) };
   for (const [cls, p] of Object.entries(COMMANDER_COMBAT_PROFILE_V1)) {
     const id = `cmdr:free-${cls}`;
-    out[id] = { id, name: `${cls[0]!.toUpperCase()}${cls.slice(1)} Commander`, cost: p.cost, kind: "commander", air: false, radius: 0, description: commanderDescription(cls) };
+    out[id] = { id, name: `${cls[0]!.toUpperCase()}${cls.slice(1)} Commander`, cost: p.cost, kind: "commander", air: false, radius: 0, description: describeCommander(cls) };
   }
   return out;
 }
@@ -366,7 +316,7 @@ export class BattleSession {
       kind: "commander",
       air: false,
       radius: 0,
-      description: commanderDescription(grant.identity.class),
+      description: describeCommander(grant.identity.class),
     };
     return {
       protocol: BATTLE_PROTOCOL_VERSION,

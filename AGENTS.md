@@ -126,6 +126,15 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Battle identity comes only from a server-verified Privy token in the matchmaking Authorization header. Never put tokens in URLs, room options, logs or replicated state. Seats, seeds, decks and Chaos are server-chosen; clients send intents only.
 - The dev battle alpha writes nothing to the database. Settlement, legacy and leaderboard updates belong to later B3 slices.
 
+## GAME APP SHELL
+
+- The Privy provider lives in the shared `/app` layout. A route inside `/app` must never mount its own provider, or a route change tears the session down and starts a second one.
+- Card names, costs, type labels, traits, descriptions and stat rows come from `src/lib/card-details.ts` and the ruleset tables. Never write card copy by hand and never read a card cost from anywhere else.
+- The deck screen may only write through `GET`/`PUT /api/players/me/loadout`. Keep the revision check and the 409 behaviour. Do not add a second persistence system or a new endpoint.
+- "Saved to your account" may only appear after the server confirms the save. Loading, unsaved, no saved deck, service unavailable, revision conflict and save failed are separate states, and an unsaved deck must stay on the device instead of being discarded.
+- A saved NFT token id is a claim, not proof of ownership. The battle server re-checks ownership at ready and at match start. Commander class art is shared by every commander of that class and must be labelled as class art.
+- The ruleset has no levels, upgrades, card XP, upgrade currencies or rarities. A reference screen that shows them is a composition guide, not a feature list.
+
 ## PUBLIC SITE
 
 - Build the public landing page one handoff phase at a time (L0 to L8) and stop for owner screenshot approval after each phase.
