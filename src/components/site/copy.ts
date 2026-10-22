@@ -265,3 +265,89 @@ export const ABOUT = {
     },
   ] satisfies Pillar[],
 };
+
+// L7. The closing CTA. Every line is sourced: the handoff Scene 07 title,
+// messaging 4.3, messaging 1.7 and messaging 5.1. The note is the honest gate
+// and it matches the L5 section note, because /dev/battle is the only working
+// play surface and it is closed off in production builds.
+export const CTA = {
+  eyebrow: "Enter the arena", // handoff Scene 07 title
+  heading: "Read. React. Break.", // 4.3 three-beat calls to action
+  lead: "Build an eight-card deck, defend your Core and react to a Chaos Pulse derived from a verified Chog NFT.", // 1.7, first sentence
+  primary: { href: "/dev/battle", label: "Play the first match" }, // 5.1 primary CTA
+  secondary: { href: "#how-the-chog-matters", label: "See how the Chog matters" }, // 5.1 secondary CTA
+  note: {
+    label: "Closed alpha",
+    text: "Playing needs a dev login today, so the match is not open to the public yet.",
+  },
+};
+
+export interface FooterLink {
+  label: string;
+  href: string;
+  /** True for the verified off-site URLs. They open in a new tab. */
+  external?: boolean;
+}
+
+export interface FooterColumn {
+  heading: string;
+  links: FooterLink[];
+}
+
+export interface FooterContent {
+  wordmark: string;
+  tagline: string[];
+  playLink: FooterLink;
+  columns: FooterColumn[];
+  copyright: string;
+  statement: string;
+  caption: { kind: string; note: string };
+}
+
+// L7. The footer. The three external URLs are the ones already verified in
+// this repo (docs/PRD.md, docs/TRD.md, docs/architecture.md and the messaging
+// doc). There are no verified social accounts, so the footer carries no
+// social icon buttons. The DESIGN.md social squares are dropped on purpose.
+export const FOOTER: FooterContent = {
+  wordmark: "Chog Royale", // product name
+  tagline: [
+    "Every Chog changes the arena.", // 1.1 primary line
+    "A 1v1 card battler where a real Chog changes the match.", // 1.2 product descriptor
+  ],
+  playLink: { label: "Play the closed alpha", href: "/dev/battle" },
+  columns: [
+    {
+      heading: "Explore",
+      links: [
+        { label: "How the Chog matters", href: "#how-the-chog-matters" },
+        { label: "The cards", href: "#cards" },
+        { label: "Commanders", href: "#commanders" },
+        { label: "How the arena works", href: "#arena" },
+        { label: "The world expands", href: "#world" },
+      ],
+    },
+    {
+      heading: "Learn",
+      links: [
+        { label: "The Chaos Pulse", href: "#arena" },
+        { label: "Commander classes", href: "#commanders" },
+        { label: "Building a deck", href: "#cards" },
+      ],
+    },
+    {
+      heading: "Project",
+      links: [
+        { label: "Chogathon 2026", href: "https://chogathon.chog.xyz", external: true },
+        { label: "The Chog project", href: "https://chog.xyz/", external: true },
+        { label: "Genesis collection", href: "https://opensea.io/collection/chog-genesis", external: true },
+      ],
+    },
+  ],
+  copyright: "© 2026 Chog Royale.",
+  statement: "Identity changes the conditions. Skill decides the outcome.", // 1.5 fairness line
+  // The three mascots in the scene are shared commander class art.
+  caption: {
+    kind: "Commander class art",
+    note: "Shared by every commander of these classes. Not a specific NFT.",
+  },
+};

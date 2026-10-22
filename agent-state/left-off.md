@@ -2,6 +2,19 @@
 
 Last updated: 2026-10-22
 
+## Public site L7 closing CTA and mascot footer (2026-10-22), awaiting owner review
+
+- L6 built. Done: `ClosingScene` (`#enter`) + `SiteFooter` + `closing.css`, mounted after the L6 bento. The CTA is white at the top so it continues the bento tail, washes up through mist and lilac, and returns to white for the footer's white band. One soft violet glow, no bevels, no mascot, type only, buttons reuse `.site-btn--primary` and `.site-btn--white` untouched.
+- Footer structure follows DESIGN.md: 16px Royal Purple band, white top area with a 1.4fr 1fr 1fr 1fr grid (brand, Explore, Learn, Project), a bottom row with the copyright left and the fairness line right, then the fantasy scene.
+- Copy: CTA eyebrow is the handoff Scene 07 title, heading is messaging 4.3, lead is messaging 1.7 first sentence, buttons are messaging 5.1. Footer tagline is messaging 1.1 and 1.2, statement is 1.5. The "Closed alpha" note sits next to the buttons and repeats the L5 wording, because `/dev/battle` is gated off in production builds. No new marketing claims.
+- Footer links: the three external URLs are the ones already verified (chog.xyz, chogathon.chog.xyz, opensea.io/collection/chog-genesis). There are no verified social accounts, so the two DESIGN.md social squares are dropped and there are no social buttons. In-page anchors point at the five finished sections.
+- Art: only approved class art. Warden, Reaver and Scout peeking over the front ridge at 18, 66 and 82 percent, with a visible chip outside the aria-hidden scene reading "Commander class art / Shared by every commander of these classes. Not a specific NFT." The scene's hills are CSS scallops, not the DESIGN.md fur artwork, and that is a known gap.
+- Motion: hills parallax on scroll with the back layers moving less, the mascots rise once with a 120ms stagger and a spring ease, the sun pulses over 6s, the ring turns over 120s, the beads drift. Reduced motion and Save-Data drop every one of them and the back-to-top scrolls instantly.
+- Evidence: `C:/Users/USER/Documents/ChogRoyale-Assets/site-l7-review/` (shots/, report.json). Screenshots at 390x844, 1366x768 and 1920x1080 for the CTA, the scene and the L6 to L7 transition, plus a full page at 1920 and a reduced-motion frame. No horizontal overflow at 360, 390, 820, 1366 or 1920, no console errors, all 14 footer links and both CTA links resolve, focus ring on the footer links and on the back-to-top button, the document ends on the scene with no white band. Typecheck, lint and one production build green.
+- Known deviations: on a 390px screen the three Chogs sit at 16, 52 and 85 percent instead of 18, 66 and 82, because the brief's percentages overlap at that width.
+- Corrections applied after the build agent handed back: the honesty chip moved out of the ridge line into the empty sky above it (it was sitting on the Warden's face at 360 and 390), the chip is now aligned to the footer's 1320px content grid, the brand column no longer repeats the two external links that the Project column already carries, and every L7 small-text colour moved from `--color-chog-ink-55` (3.98:1 on white, a real AA failure that DESIGN.md misstates as 5.6:1) to `--color-chog-ink-70` (6.65:1).
+- Next: owner review of L7, then L8 season splash only.
+
 ## Public site L6 cinematic bento (2026-10-22), awaiting owner review
 
 - L5 approved. Done: `BentoScene` (`#world`) + `BentoGrid` + `bento.css`. A 12-column asymmetric bento inside one white 28px-radius shell on a mist-to-white ground that pulls up into the L5 mist tail. Desktop rows: battle span 8 / deck span 4 (440px tall), then patron, social and lending span 4 (350px tall). Tablet 2 columns, mobile 1 column with the art as a band along the bottom of each tile.

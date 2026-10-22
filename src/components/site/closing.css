@@ -1,0 +1,798 @@
+/* L7 closing CTA and mascot footer. Every selector is scoped to
+   site-closing* or site-footer* so the Phaser battle routes never receive
+   these rules. The footer is the last element on the page, so the footer
+   and the scene both clip: any absolute glow stays inside and the document
+   never grows a white band at the end. */
+
+/* ------------------------------------------------------------------ *
+ * Closing CTA
+ * ------------------------------------------------------------------ */
+
+.site-closing {
+  position: relative;
+  /* The L6 bento carries z-index 1, so the CTA needs its own or the bento's
+     white tail paints over the first 96px of this section. */
+  z-index: 1;
+  isolation: isolate;
+  overflow: clip;
+  /* Pulls up into the white tail of the L6 bento, so the two read as one. */
+  margin-top: -40px;
+  padding: 72px 20px 104px;
+  background: linear-gradient(
+    180deg,
+    #fff 0%,
+    #fff 12%,
+    var(--color-chog-mist) 44%,
+    var(--color-chog-lilac) 70%,
+    #fff 100%
+  );
+}
+.site-closing__glow {
+  position: absolute;
+  z-index: -1;
+  top: 4%;
+  left: 50%;
+  width: min(1240px, 170vw);
+  aspect-ratio: 1.8;
+  transform: translateX(-50%);
+  background: radial-gradient(closest-side, rgb(124 77 255 / 0.16), rgb(185 162 255 / 0.08) 52%, rgb(185 162 255 / 0) 76%);
+  pointer-events: none;
+}
+.site-closing__inner {
+  display: grid;
+  max-width: 1280px;
+  margin: 0 auto;
+  grid-template-columns: minmax(0, 1fr);
+}
+.site-closing__copy {
+  max-width: 46rem;
+}
+.site-closing__heading {
+  margin-top: 16px;
+  font-size: clamp(38px, 5vw, 64px);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+  color: var(--color-chog-ink);
+}
+.site-closing__lead {
+  margin-top: 20px;
+  max-width: 38rem;
+  font-size: 18px;
+  line-height: 30px;
+  color: var(--color-chog-ink-70);
+  text-wrap: pretty;
+}
+.site-closing__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 24px;
+  margin-top: 32px;
+}
+/* Same shape as the L5 section note: a Georama label and a quiet body. */
+.site-closing__note {
+  display: flex;
+  margin-top: 28px;
+  align-items: baseline;
+  gap: 8px;
+  max-width: 42rem;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--color-chog-ink-70);
+}
+.site-closing__note-label {
+  flex: none;
+  font-family: var(--font-georama), "Satoshi", system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 14px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-chog-ink-70);
+}
+
+@media (max-width: 767px) {
+  .site-closing {
+    padding: 56px 20px 88px;
+  }
+  .site-closing__actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .site-closing__actions .site-btn {
+    width: 100%;
+  }
+}
+@media (min-width: 1100px) {
+  .site-closing {
+    margin-top: -96px;
+    padding: 88px 40px 140px;
+  }
+  /* The text sits left, the right side stays deliberately empty. */
+  .site-closing__inner {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  }
+  .site-closing__copy {
+    grid-column: 1;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Footer
+ * ------------------------------------------------------------------ */
+
+.site-footer {
+  --scene-h: clamp(420px, 62vh, 760px);
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  background: #fff;
+  color: var(--color-chog-ink);
+}
+
+/* DESIGN.md footer: a 16px Royal Purple band across the full width. */
+.site-footer__band {
+  height: 16px;
+  background: var(--color-chog-royal);
+}
+
+.site-footer__top {
+  background: #fff;
+  padding: 64px 20px 40px;
+}
+.site-footer__inner {
+  display: grid;
+  max-width: 1320px;
+  margin: 0 auto;
+  gap: 40px 32px;
+  /* Brand on its own row, the three link columns two up. */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.site-footer__brand {
+  grid-column: 1 / -1;
+}
+
+/* Brand column */
+.site-footer__wordmark {
+  display: flex;
+  margin: 0;
+  align-items: center;
+  gap: 12px;
+}
+/* Original mark: a violet squircle with the initials, no copied logo. */
+.site-footer__mark {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  place-items: center;
+  border-radius: 11px;
+  background: linear-gradient(150deg, #8c63ff, #5b2fd6);
+  font-family: var(--font-lilita), "Titan One", Impact, sans-serif;
+  font-size: 15px;
+  line-height: 1;
+  color: #fff;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.35),
+    0 10px 20px -12px rgb(46 26 122 / 0.6);
+}
+.site-footer__name {
+  font-family: var(--font-lilita), "Titan One", Impact, sans-serif;
+  font-size: 22px;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  color: var(--color-chog-royal);
+}
+.site-footer__tagline {
+  display: grid;
+  gap: 4px;
+  margin: 18px 0 0;
+  max-width: 32ch;
+  font-size: 16px;
+  line-height: 26px;
+  color: var(--color-chog-ink-70);
+}
+.site-footer__play {
+  display: inline-flex;
+  margin-top: 20px;
+  align-items: center;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 22px;
+  color: var(--color-chog-royal);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 6px;
+  transition:
+    text-decoration-color 200ms,
+    color 200ms;
+}
+.site-footer__play:hover {
+  text-decoration-color: currentColor;
+}
+
+/* Link columns */
+.site-footer__col-heading {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 24px;
+  color: var(--color-chog-ink);
+}
+.site-footer__links {
+  display: grid;
+  gap: 0;
+  margin: 12px 0 0;
+  list-style: none;
+  padding: 0;
+}
+.site-footer__link {
+  display: inline-block;
+  padding: 10px 0;
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--color-chog-ink-70);
+  text-decoration: none;
+  transition: color 180ms var(--site-ease-out);
+}
+.site-footer__link:hover {
+  color: var(--color-chog-royal);
+  text-decoration: underline;
+  text-underline-offset: 5px;
+}
+
+/* Bottom row */
+.site-footer__bottom {
+  display: flex;
+  max-width: 1320px;
+  margin: 48px auto 0;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 24px;
+  border-top: 1px solid var(--color-chog-hairline);
+  padding-top: 24px;
+}
+.site-footer__copyright,
+.site-footer__statement {
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--color-chog-ink-70);
+}
+.site-footer__statement {
+  text-wrap: balance;
+}
+
+@media (max-width: 1023px) {
+  .site-footer__top {
+    padding: 52px 20px 32px;
+  }
+  .site-footer__inner {
+    gap: 32px 24px;
+  }
+}
+@media (min-width: 560px) and (max-width: 1023px) {
+  /* Tablet: the three link columns sit on one row. */
+  .site-footer__inner {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1024px) {
+  .site-footer__top {
+    padding: 72px 40px 44px;
+  }
+  .site-footer__inner {
+    grid-template-columns: 1.4fr 1fr 1fr 1fr;
+    column-gap: 40px;
+  }
+  .site-footer__brand {
+    grid-column: auto;
+  }
+}
+@media (max-width: 559px) {
+  .site-footer__bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * The fantasy scene
+ * ------------------------------------------------------------------ */
+
+.site-footer__scene {
+  position: relative;
+  height: var(--scene-h);
+  overflow: clip;
+  background: linear-gradient(
+    180deg,
+    #fff 0%,
+    #f4f0ff 14%,
+    #e6dcff 40%,
+    #b9a2ff 66%,
+    #7c4dff 100%
+  );
+}
+
+/* Sun bloom and disc */
+.site-footer__bloom {
+  position: absolute;
+  top: calc(9% - 60px);
+  right: calc(12% - 60px);
+  width: 370px;
+  height: 370px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgb(255 255 255 / 0.6) 0%,
+    rgb(255 255 255 / 0.34) 42%,
+    rgb(255 255 255 / 0) 70%
+  );
+}
+.site-footer__sun {
+  position: absolute;
+  top: 9%;
+  right: 12%;
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 50% 50%,
+    #fff 0%,
+    #fff 56%,
+    rgb(255 255 255 / 0.8) 66%,
+    rgb(255 255 255 / 0) 78%
+  );
+}
+
+/* Glossy ring, crossed by the sun. */
+.site-footer__ring {
+  position: absolute;
+  top: 4%;
+  right: 2%;
+  width: min(800px, 96vw);
+  height: min(300px, 36vw);
+  border-radius: 50%;
+  background: conic-gradient(
+    from 205deg,
+    rgb(255 255 255 / 0) 0deg,
+    rgb(255 255 255 / 0.95) 48deg,
+    rgb(255 255 255 / 0.28) 128deg,
+    rgb(255 255 255 / 0) 196deg,
+    rgb(255 255 255 / 0.6) 282deg,
+    rgb(255 255 255 / 0) 360deg
+  );
+  -webkit-mask: radial-gradient(closest-side, rgb(0 0 0 / 0) 93%, #000 95%, #000 100%);
+  mask: radial-gradient(closest-side, rgb(0 0 0 / 0) 93%, #000 95%, #000 100%);
+  transform: rotate(-12deg);
+  opacity: 0.85;
+}
+
+/* Two small glossy beads drifting near the sun. */
+.site-footer__bead {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 26%, #fff 0%, #f4efff 16%, #cbb6ff 52%, #8f6dff 100%);
+  box-shadow:
+    inset -2px -3px 8px rgb(46 26 122 / 0.32),
+    0 10px 20px rgb(46 26 122 / 0.22);
+}
+.site-footer__bead--a {
+  top: 17%;
+  right: 27%;
+  width: 26px;
+  height: 26px;
+}
+.site-footer__bead--b {
+  top: 31%;
+  right: 19%;
+  width: 16px;
+  height: 16px;
+}
+
+/* Hills. Each layer is a wide mound with a scalloped crest, so the ridge
+   reads as fur and never as a hard straight edge. */
+.site-footer__hill {
+  --c1: #b9a2ff;
+  --c2: #7c4dff;
+  --c3: #3b1fa8;
+  position: absolute;
+  left: var(--l);
+  width: var(--w);
+  bottom: var(--b);
+  height: var(--h);
+  border-radius: 50% 50% 0 0 / var(--vr, 28%) var(--vr, 28%) 0 0;
+  background: linear-gradient(180deg, var(--c1) 0%, var(--c2) 45%, var(--c3) 100%);
+  /* A repeating row of small discs cuts the crest into soft scallops. */
+  -webkit-mask-image: radial-gradient(circle 23px at 50% 0, rgb(0 0 0 / 0) 0 19px, #000 20px);
+  mask-image: radial-gradient(circle 23px at 50% 0, rgb(0 0 0 / 0) 0 19px, #000 20px);
+  -webkit-mask-size: 46px 100%;
+  mask-size: 46px 100%;
+  -webkit-mask-repeat: repeat-x;
+  mask-repeat: repeat-x;
+  /* A light rim under the crest, cut by the same scallops. */
+  box-shadow: inset 0 12px 16px -10px rgb(255 255 255 / 0.45);
+}
+/* A soft band just under the crest, so the ridge catches the light. */
+.site-footer__hill::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 22px;
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.26), rgb(255 255 255 / 0));
+  pointer-events: none;
+}
+.site-footer__hill--far {
+  --l: -26%;
+  --w: 152%;
+  --b: 16%;
+  --h: 30%;
+  --vr: 34%;
+  --c1: #e6dcff;
+  --c2: #c9b6ff;
+  --c3: #ab93ff;
+}
+.site-footer__hill--mid {
+  --l: 2%;
+  --w: 138%;
+  --b: 8%;
+  --h: 32%;
+  --vr: 30%;
+  --c1: #cdb8ff;
+  --c2: #a98eff;
+  --c3: #7c4dff;
+}
+.site-footer__hill--near {
+  --l: -20%;
+  --w: 146%;
+  --b: 1%;
+  --h: 32%;
+  --vr: 26%;
+  --c1: #b194ff;
+  --c2: #7c4dff;
+  --c3: #5530c4;
+}
+/* The front ridge crops the mascots, so they sit behind it. Its crest is
+   kept nearly flat between 18% and 82% of the width, so all three Chogs are
+   cut by the same line and the Reaver still sits on the tallest point. */
+.site-footer__hill--front {
+  --l: -30%;
+  --w: 190%;
+  --b: -8%;
+  --h: 36%;
+  --vr: 22%;
+  --c1: #7c4dff;
+  --c2: #4b28bd;
+  --c3: #26125f;
+  z-index: 4;
+}
+.site-footer__hill--far,
+.site-footer__hill--mid,
+.site-footer__hill--near {
+  z-index: 1;
+}
+.site-footer__hill--mid {
+  z-index: 2;
+}
+.site-footer__hill--near {
+  z-index: 3;
+}
+
+/* Mascots peeking over the ridge. The front ridge sits at 28% of the scene
+   height, so each Chog is lifted until about half of its art clears the
+   crest and the ridge crops the rest. */
+.site-footer__mascot {
+  --img-h: 220px;
+  position: absolute;
+  left: var(--at-sm, var(--at));
+  /* max-content keeps the wrapper the width of the art, so the centering
+     offset stays right even when the mascot sits near the right edge. */
+  width: max-content;
+  z-index: 3;
+  bottom: calc(var(--scene-h) * 0.28 - var(--img-h) * 0.55);
+  translate: -50% 0;
+  transform-origin: 50% 100%;
+  pointer-events: none;
+}
+.site-footer__mascot--warden {
+  --img-h: clamp(158px, 16vw, 218px);
+}
+.site-footer__mascot--reaver {
+  --img-h: clamp(168px, 17vw, 232px);
+}
+.site-footer__mascot--scout {
+  --img-h: clamp(146px, 15vw, 205px);
+}
+.site-footer__mascot-img {
+  display: block;
+  height: var(--img-h);
+  width: auto;
+  transform: rotate(var(--tilt, 0deg));
+  transform-origin: 50% 100%;
+  filter: drop-shadow(0 14px 22px rgb(46 26 122 / 0.32));
+}
+
+/* Honesty caption, outside the aria-hidden scene. It sits on the front ridge,
+   below the crest, so it never covers a mascot. */
+.site-footer__stage {
+  position: relative;
+}
+.site-footer__caption {
+  position: absolute;
+  /* Aligned to the footer's 1320px content grid so it does not look orphaned
+     on a wide screen, and clamped so it never leaves the viewport. */
+  left: max(20px, calc((100% - 1320px) / 2));
+  top: 18px;
+  z-index: 5;
+  display: grid;
+  max-width: min(300px, calc(100% - 40px));
+  gap: 2px;
+  border: 1px solid var(--color-chog-hairline);
+  border-radius: 14px;
+  background: rgb(255 255 255 / 0.92);
+  padding: 9px 13px 10px;
+  box-shadow: 0 12px 26px -16px rgb(46 26 122 / 0.45);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+.site-footer__caption-kind {
+  font-family: var(--font-georama), "Satoshi", system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-chog-royal);
+}
+.site-footer__caption-note {
+  font-size: 12px;
+  line-height: 17px;
+  color: var(--color-chog-ink-70);
+}
+
+/* Back to top handle. */
+.site-footer__handle {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  z-index: 6;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  translate: -50% 0;
+  place-items: center;
+  align-content: center;
+  gap: 4px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  cursor: pointer;
+}
+.site-footer__handle-arrow {
+  width: 10px;
+  height: 10px;
+  border-top: 2px solid rgb(255 255 255 / 0.88);
+  border-left: 2px solid rgb(255 255 255 / 0.88);
+  transform: rotate(45deg) translate(1px, 1px);
+}
+.site-footer__handle-bar {
+  width: 50px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgb(27 17 64 / 0.55);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.2);
+}
+
+@media (max-width: 767px) {
+  .site-footer {
+    --scene-h: 430px;
+  }
+  .site-footer__sun {
+    top: 4%;
+    right: 6%;
+    width: 170px;
+    height: 170px;
+  }
+  .site-footer__bloom {
+    top: calc(4% - 40px);
+    right: calc(6% - 40px);
+    width: 250px;
+    height: 250px;
+  }
+  .site-footer__bead--a {
+    top: 12%;
+    right: 30%;
+    width: 20px;
+    height: 20px;
+  }
+  .site-footer__bead--b {
+    top: 22%;
+    right: 22%;
+    width: 12px;
+    height: 12px;
+  }
+  /* A 390px screen cannot hold three Chogs at 18, 66 and 82 percent without
+     them piling up, so the phone layout spaces them out instead. */
+  .site-footer__mascot--warden {
+    --at-sm: 16%;
+    --img-h: 128px;
+  }
+  .site-footer__mascot--reaver {
+    --at-sm: 52%;
+    --img-h: 142px;
+  }
+  .site-footer__mascot--scout {
+    --at-sm: 85%;
+    --img-h: 118px;
+  }
+  .site-footer__caption {
+    left: 16px;
+    top: 12px;
+    /* Narrow enough to clear the sun on the right and stay three lines. */
+    max-width: 178px;
+    padding: 8px 11px 9px;
+  }
+  .site-footer__caption-note {
+    font-size: 11px;
+    line-height: 15px;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Motion. Ambient only, and it all stops on reduced motion and on
+ * Save-Data.
+ * ------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: no-preference) {
+  .site-footer__sun {
+    animation: site-sun-pulse 6s ease-in-out infinite;
+  }
+  .site-footer__ring {
+    animation: site-ring-spin 120s linear infinite;
+  }
+  .site-footer__bead--a {
+    animation: site-bead-drift 14s ease-in-out infinite alternate;
+  }
+  .site-footer__bead--b {
+    animation: site-bead-drift 19s ease-in-out infinite alternate-reverse;
+  }
+  /* The mascots rise once, when the footer first comes into view. */
+  .site-footer__mascot {
+    animation: site-mascot-rise 900ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    animation-play-state: paused;
+  }
+  .site-footer__scene[data-inview="true"] .site-footer__mascot {
+    animation-play-state: running;
+  }
+  .site-footer__mascot--reaver {
+    animation-delay: 120ms;
+  }
+  .site-footer__mascot--scout {
+    animation-delay: 240ms;
+  }
+  /* Back hills move less than the front ones. */
+  @supports (animation-timeline: view()) {
+    .site-footer__hill--far {
+      animation: site-hill-far linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+    }
+    .site-footer__hill--mid {
+      animation: site-hill-mid linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+    }
+    .site-footer__hill--near {
+      animation: site-hill-near linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+    }
+    .site-footer__hill--front {
+      animation: site-hill-front linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+    }
+    /* The Chogs sit behind the ridge, so they drift less than it does. */
+    .site-footer__mascot-img {
+      animation: site-mascot-drift linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+    }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-footer__play,
+  .site-footer__link {
+    transition: none;
+  }
+}
+.site-root[data-save-data] .site-footer__sun,
+.site-root[data-save-data] .site-footer__ring,
+.site-root[data-save-data] .site-footer__bead,
+.site-root[data-save-data] .site-footer__mascot,
+.site-root[data-save-data] .site-footer__mascot-img,
+.site-root[data-save-data] .site-footer__hill {
+  animation: none;
+}
+
+@keyframes site-sun-pulse {
+  0%,
+  100% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.045);
+  }
+}
+@keyframes site-ring-spin {
+  from {
+    transform: rotate(-12deg);
+  }
+  to {
+    transform: rotate(348deg);
+  }
+}
+@keyframes site-bead-drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-16px, 20px, 0);
+  }
+}
+@keyframes site-mascot-rise {
+  from {
+    opacity: 0;
+    transform: translateY(40%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes site-hill-far {
+  from {
+    translate: 0 -4px;
+  }
+  to {
+    translate: 0 6px;
+  }
+}
+@keyframes site-hill-mid {
+  from {
+    translate: 0 -7px;
+  }
+  to {
+    translate: 0 10px;
+  }
+}
+@keyframes site-hill-near {
+  from {
+    translate: 0 -10px;
+  }
+  to {
+    translate: 0 15px;
+  }
+}
+@keyframes site-hill-front {
+  from {
+    translate: 0 -14px;
+  }
+  to {
+    translate: 0 20px;
+  }
+}
+@keyframes site-mascot-drift {
+  from {
+    translate: 0 -5px;
+  }
+  to {
+    translate: 0 5px;
+  }
+}

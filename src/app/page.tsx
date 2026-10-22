@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import AboutScene from "@/components/site/AboutScene";
 import BentoScene from "@/components/site/BentoScene";
 import CardsScene from "@/components/site/CardsScene";
+import ClosingScene from "@/components/site/ClosingScene";
 import CollectScene from "@/components/site/CollectScene";
 import HeroWorld from "@/components/site/HeroWorld";
 import MarketingHeader from "@/components/site/MarketingHeader";
 import SiteDocumentFlags from "@/components/site/SiteDocumentFlags";
+import SiteFooter from "@/components/site/SiteFooter";
 import SpotlightScene from "@/components/site/SpotlightScene";
 import { ABOUT, EXPLORE, HERO, META_DESCRIPTION, NAV, PLAY } from "@/components/site/copy";
 import { georama, lilitaOne, satoshi } from "@/components/site/fonts";
@@ -32,7 +34,9 @@ export default function Home() {
         <CollectScene id="commanders" />
         <SpotlightScene id="arena" />
         <BentoScene id="world" />
+        <ClosingScene id="enter" />
       </main>
+      <SiteFooter />
     </div>
   );
 }

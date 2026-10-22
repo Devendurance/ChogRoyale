@@ -22,6 +22,9 @@ Durable facts, conventions, and gotchas that should survive across sessions.
 
 ## Gotchas
 
+- `--color-chog-ink-55` is `rgba(27,17,64,.55)`, which measures 3.98:1 on white, not the 5.6:1 that DESIGN.md states. `--color-chog-ink-70` measures 6.65:1. The public site uses ink-55 for footer links and section notes because DESIGN.md prescribes it, so any WCAG AA pass on those strings needs a token change, not a copy change.
+- A CSS `mask-image` of repeating radial gradients cuts a scalloped crest into a hill layer, and the mask also clips the layer's `::before` and `::after`, so any crest highlight has to live inside the masked element to follow the scallops.
+- An absolutely positioned element with a percentage `left` is shrink-to-fit, so a wide child near the right edge of its container gets squeezed. Set `width: max-content` when the child must keep its own size.
 - Cache Components (next.config `cacheComponents: true`) keeps previously visited routes mounted but hidden after client navigation. CSS like `html:has(.site-root)` then leaks into `/dev/battle`. Apply html-level site rules from an effect (`SiteDocumentFlags` adds `html.site-doc`) so they follow mount lifetime.
 - Public site copy source is `docs/Chog Royale messaging.md`. Owner `DESIGN.md` at repo root matches the handoff `source-docs/chog-royale-DESIGN.md` byte for byte. Both were untracked on 2026-10-21.
 - Site sections compose as: a server component in `src/components/site/` gathers display data and a client component under it owns the interaction. Card and commander display data is read from `CARDS_V1`, `CLASS_ROSTER` and `COMMANDER_COMBAT_PROFILE_V1` at build time, never hardcoded, and never a token likeness.

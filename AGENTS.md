@@ -134,6 +134,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Reference media A-F is study-only and never ships. The G hero image and any NFT art need owner rights confirmation before public release.
 - Commander class art is shared by every commander of the class. Label it as class art on the site and never present it as a specific NFT. Keep NFT commanders (player-selected) and the Arena Patron (server-selected) distinct in copy.
 - Site sections that crop art against their own edges must measure the source PNG's painted alpha bounds before positioning, and must verify text and art separation with per-line Range rects, not element boxes. A hover lift uses the `translate` property, because a scroll entrance animation on `transform` overrides it.
+- The footer scene is the last element on the page, so it must clip its own absolute layers, and the document must end on the scene rather than on a white band. Place a caption that assistive tech must read outside any `aria-hidden` scene wrapper, and keep every mascot `alt` empty inside it.
+- `--color-chog-ink-55` is `rgba(27,17,64,.55)` and measures 3.98:1 on white, so DESIGN.md's 5.6:1 note for it is wrong. Use `--color-chog-ink-70` (6.65:1) for any small text that has to pass WCAG AA, and flag the token when a spec asks for ink-55 as a body colour.
 
 ## SPRITE KIT INVENTORY
 
