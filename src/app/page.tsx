@@ -6,6 +6,7 @@ import ClosingScene from "@/components/site/ClosingScene";
 import CollectScene from "@/components/site/CollectScene";
 import HeroWorld from "@/components/site/HeroWorld";
 import MarketingHeader from "@/components/site/MarketingHeader";
+import SeasonOpening from "@/components/site/SeasonOpening";
 import SiteDocumentFlags from "@/components/site/SiteDocumentFlags";
 import SiteFooter from "@/components/site/SiteFooter";
 import SpotlightScene from "@/components/site/SpotlightScene";
@@ -25,6 +26,7 @@ export default function Home() {
       <a href="#main" className="site-skip site-focus">
         Skip to content
       </a>
+      <SeasonOpening />
       <MarketingHeader links={NAV} play={{ href: PLAY.href, label: "Play" }} />
 
       <main id="main" tabIndex={-1} className="outline-none">

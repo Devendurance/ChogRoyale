@@ -1,0 +1,241 @@
+/* L8 seasonal opening. A short violet atmosphere over the pagoda hero, with
+   the Reaver arriving and the Chog Royale wordmark. Scoped to site-opening*. */
+
+/* The overlay is transparent to pointers so the header and the hero stay
+   reachable underneath. Only the skip control takes a click. */
+.site-opening {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  pointer-events: none;
+  background:
+    radial-gradient(112% 42% at 50% 90%, rgb(255 200 120 / 0.5) 0%, rgb(255 200 120 / 0) 66%),
+    radial-gradient(78% 50% at 50% 16%, rgb(124 77 255 / 0.42) 0%, rgb(124 77 255 / 0) 74%),
+    linear-gradient(180deg, #15093d 0%, #2c1a6b 42%, #4b2fc4 100%);
+  /* Fade in, hold, dissolve into the hero. The whole cycle is one animation
+     so the intro still ends on its own when the script does not run. */
+  animation: site-opening-cycle var(--opening-cycle, 2520ms) cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.site-opening[data-state="leaving"] {
+  animation: site-opening-leave 320ms ease-in both;
+}
+@keyframes site-opening-cycle {
+  0% {
+    opacity: 0;
+  }
+  13% {
+    opacity: 1;
+  }
+  83% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+@keyframes site-opening-leave {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+/* Two soft cloud bands drifting across the violet. */
+.site-opening__haze {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(185 162 255 / 0.22), rgb(185 162 255 / 0) 72%);
+  pointer-events: none;
+}
+.site-opening__haze--a {
+  top: 4%;
+  left: -22%;
+  width: 86%;
+  aspect-ratio: 2.6;
+  animation: site-opening-drift 9s ease-in-out infinite alternate;
+}
+.site-opening__haze--b {
+  right: -24%;
+  bottom: 10%;
+  width: 76%;
+  aspect-ratio: 3;
+  background: radial-gradient(closest-side, rgb(255 200 120 / 0.16), rgb(255 200 120 / 0) 70%);
+  animation: site-opening-drift 12s ease-in-out infinite alternate-reverse;
+}
+@keyframes site-opening-drift {
+  from {
+    transform: translate3d(-3%, 0, 0);
+  }
+  to {
+    transform: translate3d(4%, 0, 0);
+  }
+}
+
+/* The violet light behind the character, and the ground it stands on. */
+.site-opening__aura {
+  position: absolute;
+  top: 52%;
+  left: 50%;
+  width: min(760px, 108vw);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(124 77 255 / 0.6) 0%, rgb(124 77 255 / 0) 66%);
+  pointer-events: none;
+}
+.site-opening__ground {
+  position: absolute;
+  right: -10%;
+  bottom: -20%;
+  left: -10%;
+  height: 50%;
+  border-radius: 50% 50% 0 0 / 38% 38% 0 0;
+  background: linear-gradient(180deg, rgb(27 14 82 / 0) 0%, rgb(27 14 82 / 0.62) 46%, rgb(19 9 58 / 0.92) 100%);
+  pointer-events: none;
+}
+
+/* The Reaver, tilted like the season mascot on the opening key art. The
+   wrapper spans the frame and centres the art, so the tilt never shifts it
+   off the middle of the screen. */
+.site-opening__reaver {
+  position: absolute;
+  right: 0;
+  bottom: 3%;
+  left: 0;
+  display: grid;
+  justify-items: center;
+  pointer-events: none;
+}
+.site-opening__reaver-img {
+  display: block;
+  width: auto;
+  height: min(52vh, 430px);
+  transform: rotate(-8deg);
+  transform-origin: 50% 100%;
+  filter: drop-shadow(0 26px 34px rgb(9 4 32 / 0.55));
+  animation: site-opening-reaver 1040ms cubic-bezier(0.16, 1, 0.3, 1) 260ms both;
+}
+@keyframes site-opening-reaver {
+  from {
+    opacity: 0;
+    transform: translate3d(18%, -14%, 0) scale(0.86) rotate(-2deg);
+  }
+  55% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1) rotate(-8deg);
+  }
+}
+
+/* The wordmark. Gold bevel on the violet, with a thin gold rule under it. */
+.site-opening__mark {
+  position: absolute;
+  top: 17%;
+  right: 0;
+  left: 0;
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  margin: 0;
+  font-size: clamp(38px, 6.6vw, 84px);
+  line-height: 0.92;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  background: linear-gradient(180deg, #fff3c4 0%, #ffd45c 48%, #ffa318 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-stroke: 5px #120b45;
+  paint-order: stroke fill;
+  filter: drop-shadow(0 6px 0 #1b0e52);
+  animation: site-opening-mark 480ms cubic-bezier(0.34, 1.56, 0.64, 1) 1180ms both;
+}
+.site-opening__rule {
+  width: 92px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, rgb(255 212 92 / 0) 0%, #ffd45c 50%, rgb(255 212 92 / 0) 100%);
+}
+@keyframes site-opening-mark {
+  from {
+    opacity: 0;
+    transform: scale(1.32);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Skip. Small, bottom right, the same voice as the rest of the site. */
+.site-opening__skip {
+  position: absolute;
+  right: 20px;
+  bottom: 18px;
+  pointer-events: auto;
+  border: 0;
+  background: transparent;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 18px;
+  color: rgb(255 255 255 / 0.82);
+  cursor: pointer;
+  transition: color 180ms var(--site-ease-out);
+}
+.site-opening__skip:hover {
+  color: #fff;
+}
+/* The focus ring has to read on the deep violet, not the white page. The
+   selector is deliberately stronger than .site-focus so it wins. */
+.site-opening .site-opening__skip:focus-visible {
+  outline: 2px solid #ffd45c;
+  outline-offset: 3px;
+}
+
+@media (max-width: 639px) {
+  .site-opening__mark {
+    top: 15%;
+    font-size: clamp(34px, 10vw, 52px);
+    -webkit-text-stroke-width: 4px;
+  }
+  .site-opening__reaver-img {
+    height: min(42vh, 320px);
+  }
+  .site-opening__skip {
+    right: 14px;
+    bottom: 14px;
+  }
+}
+
+/* Reduced motion keeps the brand moment but drops every movement. */
+.site-opening[data-reduced="true"] {
+  animation-timing-function: linear;
+}
+.site-opening[data-reduced="true"] .site-opening__haze,
+.site-opening[data-reduced="true"] .site-opening__reaver-img,
+.site-opening[data-reduced="true"] .site-opening__mark {
+  animation: none;
+}
+.site-opening[data-reduced="true"] .site-opening__reaver-img {
+  opacity: 1;
+  transform: rotate(-8deg);
+}
+.site-opening[data-reduced="true"] .site-opening__mark {
+  opacity: 1;
+  transform: none;
+}
+
+/* Save-Data keeps the sequence but drops the drifting haze. */
+.site-opening[data-save-data="true"] .site-opening__haze {
+  animation: none;
+}

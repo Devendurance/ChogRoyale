@@ -2,6 +2,16 @@
 
 Last updated: 2026-10-22
 
+## Public site L8 seasonal opening (2026-10-22), awaiting owner review
+
+- L7 built. Done: `SeasonOpening.tsx` + `opening.css`, mounted in `page.tsx` before the header. A fixed violet overlay over the pagoda hero: deep violet atmosphere with a gold horizon, the Reaver commander class art arriving from the upper right and settling tilted -8 degrees, the Chog Royale wordmark in gold bevel, then a dissolve into the hero that is already rendered underneath. No Three.js, no canvas, no new dependency.
+- Plays on EVERY genuine visit to the landing page. Nothing is stored: no sessionStorage, localStorage, cookie or persistent flag. The component watches `usePathname()` and starts on the first mount and on any return to "/" from another route. It does not restart for a re-render, for scrolling or for an in-page anchor, because the pathname is the only dependency. Verified in the browser for fresh load, reload, and return from `/dev/battle`.
+- Sequence is 2520ms: fade in 320ms, Reaver sweep 1040ms from 260ms, wordmark slam 480ms from 1180ms, dissolve 420ms from 2100ms. The whole cycle is ONE CSS animation on the overlay, so the intro still ends on its own if the script never runs, and `animationend` is what tears it down, so the fade and the teardown never drift apart. A JS timer is only a backstop.
+- Accessibility: the overlay is a `role="dialog" aria-modal="true"`, focus moves to the Skip button, Tab stays inside it, Escape dismisses, the click target restores focus to `#main`, the scroll is locked while it plays and unlocked when it ends with a scrollbar-width compensation. The overlay is `pointer-events: none` except the Skip control, so the header and hero stay reachable. Reduced motion keeps the brand moment with no movement at all and a 1200ms cycle. Save-Data drops the drifting haze and shortens the cycle to 1900ms.
+- Verified in Chrome at 360x800, 390x844, 1366x768 and 1920x1080: no horizontal overflow during or after the intro, no console errors, the Play link still points at /dev/battle. Typecheck, lint and one production build green.
+- The Reaver is the approved commander class art, so the opening is a class-art moment and never a claim about a specific token. The real Chog Royale logotype and crest are still an open asset slot, so the wordmark stays the Lilita One fallback.
+- Next: owner review of L8.
+
 ## Public site L7 closing CTA and mascot footer (2026-10-22), awaiting owner review
 
 - L6 built. Done: `ClosingScene` (`#enter`) + `SiteFooter` + `closing.css`, mounted after the L6 bento. The CTA is white at the top so it continues the bento tail, washes up through mist and lilac, and returns to white for the footer's white band. One soft violet glow, no bevels, no mascot, type only, buttons reuse `.site-btn--primary` and `.site-btn--white` untouched.
