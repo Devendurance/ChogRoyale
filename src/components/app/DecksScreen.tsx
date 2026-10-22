@@ -29,17 +29,19 @@ import {
   DECK_CARD_COUNT,
   addCard,
   allOrdinaryCards,
-  averageEnergyCost,
   cardAction,
   commanderCostFor,
+  deckAverage,
   deckSaveState,
   filterCards,
   removeCard,
   replaceCard,
   saveStateLabel,
+  saveStateStatus,
   validateDeckDraft,
   type DeckDraft,
-} from "./decks-model";import type {
+} from "./decks-model";
+import type {
   CardCostFilter,
   CardRoleFilter,
   CommanderChoiceLike,
@@ -162,8 +164,6 @@ function DecksShell() {
   // render matches the server HTML. The account copy and the local draft are
   // applied once the reads resolve, after hydration.
   const [draft, setDraft] = useState<DeckDraft>({ cards: [], commander: { kind: "free", class: "scout" } });
-  /** True when the deck on screen is also remembered on this device. */
-  const [localDraft, setLocalDraft] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [conflict, setConflict] = useState<{ revision: number; cards: string[]; commander: CommanderChoiceLike } | null>(null);
@@ -218,18 +218,18 @@ function DecksShell() {
         setCommandersError({ code: commandersResult.code, message: commandersResult.message });
       }
 
-      if (loadoutResult.ok && !touched.current) {
-        // The account copy always wins. The local draft is only the fallback
-        // when the account holds no deck.
+      if (!touched.current) {
+        // The account copy always wins. When the account cannot be read, the
+        // local draft is what the player has, so it is shown instead of an
+        // empty deck. It stays an unsaved draft either way.
         const pick = chooseInitialLoadout({
-          server: loadoutResult.data.loadout,
-          serverInvalid: Boolean(loadoutResult.data.invalidSaved),
+          server: loadoutResult.ok ? loadoutResult.data.loadout : null,
+          serverInvalid: loadoutResult.ok ? Boolean(loadoutResult.data.invalidSaved) : false,
           localDraft: typeof window === "undefined" ? null : readLocalDraft(),
           presets: {},
         });
         const cards = pick.cards.filter((id) => Boolean(catalog.cards[id]));
         setDraft({ cards, commander: pick.commander as CommanderChoice });
-        setLocalDraft(pick.source === "local-draft");
       }
     } finally {
       setBusy(false);
@@ -315,17 +315,15 @@ function DecksShell() {
     return catalog.commanders.find((c) => c.classId === cls)?.cost ?? null;
   }, [catalog, draft.commander, nftClassOf]);
 
-  const averageCost = useMemo(
-    () => averageEnergyCost(catalog, draft.cards, commanderCost),
-    [catalog, draft.cards, commanderCost]
-  );
-
   const deckProblems = useMemo(() => validateDeckDraft(catalog, draft.cards), [catalog, draft.cards]);
+  const average = useMemo(
+    () => deckAverage(catalog, draft.cards, commanderCost, deckProblems.length === 0),
+    [catalog, draft.cards, commanderCost, deckProblems]
+  );
 
   const updateDraft = useCallback((next: DeckDraft) => {
     touched.current = true;
     setDraft(next);
-    setLocalDraft(true);
     writeLocalDraft(next);
   }, []);
 
@@ -473,6 +471,7 @@ function DecksShell() {
     saveFailed: Boolean(saveError),
     conflict: Boolean(conflict),
   });
+  const saveStatus = saveStateStatus(saveState, serverDeck?.revision ?? null);
 
   const deckCards = useMemo<(DecksCatalogCard | null)[]>(
     () =>
@@ -493,13 +492,11 @@ function DecksShell() {
     if (loadoutError) {
       if (loadoutError.code === "FORBIDDEN") {
         list.push({ tone: "warn", text: "Your saved deck unlocks once your profile setup is complete." });
-      } else if (loadoutError.code === "INTERNAL_ERROR" || loadoutError.code === "SERVICE_UNAVAILABLE") {
-        list.push({ tone: "warn", text: "The deck service is not available right now, so your account deck cannot be read or written. You can still build a deck here; it stays on this device until the service is back." });
       } else if (loadoutError.code === "UNAUTHORIZED") {
         list.push({ tone: "error", text: "Your session is no longer valid. Sign in again to open your deck." });
-      } else {
-        list.push({ tone: "error", text: `Your saved deck could not be read. ${loadoutError.message}` });
       }
+      // Every other read or write failure is the same account-save outage.
+      // The save strip states it once, so it is not repeated here.
     }
     if (invalidSaved) {
       list.push({ tone: "warn", text: `The saved deck is no longer valid and cannot be used: ${invalidSaved.reason}.` });
@@ -528,26 +525,14 @@ function DecksShell() {
           ? "profile"
           : "ready";
 
-  const status = useMemo(() => {
-    const parts: string[] = [];
-    parts.push(`Deck on screen: ${draft.cards.length} of ${DECK_CARD_COUNT} ordinary cards.`);
-    parts.push(averageCost !== null ? `Average energy cost ${averageCost}.` : "Average energy cost is not set yet.");
-    parts.push(
-      saveState === "saved"
-        ? "Saved to your account."
-        : saveState === "unsaved"
-          ? "Unsaved changes on this device."
-          : saveState === "unavailable"
-            ? "The deck service is not available, so this deck is only on this device."
-            : saveState === "conflict"
-              ? "Your account deck changed elsewhere. Choose which deck to keep."
-              : saveState === "save-failed"
-                ? "The last save failed. Your draft is kept on this device."
-                : "Reading your saved deck."
-    );
-    if (busy) parts.push("Refreshing.");
-    return parts.join(" ");
-  }, [draft.cards.length, averageCost, saveState, busy]);
+  const status = [
+    `Deck on screen: ${draft.cards.length} of ${DECK_CARD_COUNT} ordinary cards.`,
+    average.sentence,
+    saveStatus,
+    busy ? "Refreshing." : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   const canSave =
     saveState !== "loading" &&
@@ -573,7 +558,8 @@ function DecksShell() {
       deckCards={deckCards}
       swapping={swapping}
       deckProblems={deckProblems}
-      averageCost={averageCost}
+      averageCost={average.value}
+      averageLabel={average.label}
       onDeckSlot={onDeckSlot}
       onCancelSwap={() => {
         setSwapping(false);
@@ -599,7 +585,8 @@ function DecksShell() {
       }}
       onCardAction={onCardAction}
       saveState={saveState}
-      saveLabel={saveStateLabel(saveState, serverDeck?.revision ?? null)}
+      saveLabel={saveStateLabel(saveState)}
+      saveStatus={saveStatus}
       revision={serverDeck?.revision ?? null}
       saving={saving}
       canSave={canSave}
@@ -608,8 +595,6 @@ function DecksShell() {
       onSave={onSave}
       onLoadAccountDeck={onLoadAccountDeck}
       onOverwriteAccountDeck={onOverwriteAccountDeck}
-      unavailable={unavailable}
-      localDraft={localDraft}
       notices={notices}
       busy={busy}
       calm={calm}

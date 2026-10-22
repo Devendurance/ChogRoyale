@@ -2,6 +2,18 @@
 
 Last updated: 2026-10-22
 
+## A2.1 decks acceptance and polish (2026-10-22), awaiting owner review
+
+- Doing: finish the A2.1 pass that an interrupted Claude Code session started. Recovery found its partial work in `decks-model.ts`, `decks-types.ts` and `env.test.ts`; the model helpers were correct but nothing used them yet, so typecheck was failing. The work was finished, not replaced.
+- Done: the unavailable account-save message is stated once, in the save strip, and the ribbon badge is a short token (`Saved`, `Save unavailable`, `Conflict`). The old service notice and the separate save note were removed. The save button gets a grey disabled treatment, stays disabled while account saving is unavailable and never claims a save the server did not confirm. The average chip says "current selection average" for a partial deck and "average energy" only for a complete seven plus one deck with a known commander cost. The local draft is now loaded even when the loadout read fails, so a reload during an outage keeps the deck on screen.
+- Commander: "Fleet Recruit" is the free Scout starter (`FREE_NAMES.scout` in `src/lib/commanders.ts` is the source of the name), class scout, cost 4 from `COMMANDER_COMBAT_PROFILE_V1.scout`, with the shared Scout commander class portrait. It is a valid class template, not an NFT and not a fallback, so no commander code changed. Verified against the built catalog and the art file on disk.
+- Battle: the A2 extraction of `describeCard` / `describeCommander` into `src/lib/card-details.ts` is description-only. `session.test.ts` 15/15 includes a full match with `replayIdentical`. No combat stat, simulation or replay hash change.
+- Env test: the previous `CHOG_TEST_DB=1` failure was a warm memoized env cache from `vitest.setup.ts`. `env.test.ts` now calls `resetEnvCache()` before each assertion and restores the saved keys in a `finally`. Passes with and without `CHOG_TEST_DB=1`; the DB isolation guard is untouched.
+- Checks: typecheck clean, lint 0 errors with the one pre-existing `no-img-element` warning, focused tests 43/43 (decks model 26, battle session 15, env 2). Browser pass at 390x844 and 1366x768 on `/app/decks`: login gate renders, no horizontal overflow, no console errors. A CSS probe on the live page confirmed the disabled save button is grey with opacity 0.62, the "current selection average" chip fits at 390px and the unavailable status is one sentence.
+- Limitation: the authenticated deck screen was not reachable, because Privy needs a real wallet or email round trip and there is no dev bypass. The save, conflict, commander and average states are code and test verified only. Manual checks still pending: real login, saved deck load, partial and complete average labels, unavailable save with local draft after reload, 409 conflict and recovery, and "Fleet Recruit" in the real account.
+- Evidence: `C:/Users/USER/Documents/ChogRoyale-Assets/app-a2.1-review/` (login gate screenshots at both viewports). The production build was not rerun, to avoid disturbing the healthy dev server on :3000; the change is client-only and typecheck, lint and focused tests are green.
+- Unrelated dirty files left untouched: `.fast-build/STATE.md`, untracked `DESIGN.md` and `docs/Chog Royale messaging.md`.
+
 ## A2 decks and collection (2026-10-22), awaiting owner review
 
 - Doing: the A2 slice of the authenticated game. One bounded vertical slice: the deck builder and the card collection inside the existing `/app` shell. Stopped after A2, nothing from A3 started.

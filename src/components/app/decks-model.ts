@@ -79,6 +79,63 @@ export function averageEnergyCost(catalog: LobbyCatalog, cards: string[], comman
   return Math.round((costs.reduce((sum, c) => sum + c, 0) / costs.length) * 10) / 10;
 }
 
+/**
+ * The average as the deck screen shows it: the number, the short chip label
+ * and the honest sentence behind it.
+ *
+ * A selection that is not a valid seven plus one deck has no deck average
+ * yet, so it is labelled as the average of what is currently selected. The
+ * number always comes from the real card costs.
+ */
+export interface DeckAverage {
+  /** The mean deploy cost, or null when nothing is selected yet. */
+  value: number | null;
+  /** The short label on the chip. */
+  label: string;
+  /** The sentence for the status line and for screen readers. */
+  sentence: string;
+}
+
+export function deckAverage(
+  catalog: LobbyCatalog,
+  cards: string[],
+  commanderCost: number | null,
+  deckComplete: boolean
+): DeckAverage {
+  const known = cards.filter((id) => Boolean(catalog.cards[id]));
+  const value = averageEnergyCost(catalog, cards, commanderCost);
+
+  if (value === null) {
+    return {
+      value: null,
+      label: "no cards yet",
+      sentence: "No cards are selected yet, so there is no average energy cost.",
+    };
+  }
+
+  // A full deck average needs all seven known cards and a commander whose
+  // class cost is known. A partial selection is still a real average, but it
+  // is the average of the current selection, not of a finished deck.
+  const complete = deckComplete && known.length === DECK_CARD_COUNT && commanderCost !== null;
+  if (complete) {
+    return {
+      value,
+      label: "average energy",
+      sentence: `Average energy cost ${value} across the ${DECK_CARD_COUNT} cards and the commander.`,
+    };
+  }
+
+  const from =
+    commanderCost === null
+      ? `${known.length} card${known.length === 1 ? "" : "s"}`
+      : `${known.length} card${known.length === 1 ? "" : "s"} and the commander`;
+  return {
+    value,
+    label: "current selection average",
+    sentence: `Current selection average energy cost ${value}, from ${from}.`,
+  };
+}
+
 /** Adds a card, keeping the deck at seven cards and refusing duplicates. */
 export function addCard(cards: string[], id: string): string[] {
   if (cards.includes(id)) return cards;
@@ -192,23 +249,54 @@ export function commanderClassFor(commander: CommanderChoiceLike, nftClassOf: (t
   return commander.tokenId ? nftClassOf(commander.tokenId) : null;
 }
 
-/** A short, honest label for the deck status line. */
-export function saveStateLabel(state: DeckSaveState, revision: number | null): string {
+/**
+ * The short label for the ribbon badge beside the deck title.
+ *
+ * It is a compact state token, never the full explanation. The full
+ * explanation lives in the status line, so the same sentence is not repeated
+ * across the ribbon, the notices and the save strip.
+ */
+export function saveStateLabel(state: DeckSaveState): string {
   switch (state) {
     case "loading":
-      return "Loading your saved deck";
+      return "Loading";
     case "saved":
-      return revision !== null ? `Saved to your account (revision ${revision})` : "Saved to your account";
+      return "Saved";
     case "unsaved":
-      return "Unsaved changes on this device";
+      return "Unsaved";
     case "no-saved-deck":
-      return "No deck saved to your account yet";
+      return "No saved deck";
     case "unavailable":
-      return "The deck service is not available, so this deck is only on this device";
+      return "Save unavailable";
     case "conflict":
-      return "Your account deck changed elsewhere";
+      return "Conflict";
     case "save-failed":
-      return "The deck could not be saved";
+      return "Save failed";
+  }
+}
+
+/**
+ * The readable sentence for the status line next to the Save button.
+ *
+ * "Saved to your account" appears here only in the saved state, which the
+ * server has confirmed. Every other state says exactly what is true.
+ */
+export function saveStateStatus(state: DeckSaveState, revision: number | null): string {
+  switch (state) {
+    case "loading":
+      return "Reading your saved deck.";
+    case "saved":
+      return revision !== null ? `Saved to your account (revision ${revision}).` : "Saved to your account.";
+    case "unsaved":
+      return "Unsaved changes on this device.";
+    case "no-saved-deck":
+      return "No deck is saved to your account yet.";
+    case "unavailable":
+      return "Account saving is unavailable, so this deck stays on this device.";
+    case "conflict":
+      return "Your account deck changed elsewhere.";
+    case "save-failed":
+      return "The last save failed.";
   }
 }
 

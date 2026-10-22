@@ -10,12 +10,14 @@ import {
   availableCosts,
   cardAction,
   commanderCostFor,
+  deckAverage,
   deckSaveState,
   filterCards,
   removeCard,
   replaceCard,
   sameDraft,
   saveStateLabel,
+  saveStateStatus,
   validateDeckDraft,
   type DeckDraft,
 } from "./decks-model";
@@ -109,6 +111,37 @@ describe("average energy cost", () => {
 
   it("ignores cards the ruleset no longer knows", () => {
     expect(averageEnergyCost(catalog, ["choglings", "gone"], 4)).toBe(3);
+  });
+});
+
+describe("average energy label", () => {
+  it("calls a complete seven plus one deck the deck average", () => {
+    const average = deckAverage(catalog, seven, 4, true);
+    expect(average).toEqual({
+      value: 3.5,
+      label: "average energy",
+      sentence: "Average energy cost 3.5 across the 7 cards and the commander.",
+    });
+  });
+
+  it("calls an incomplete selection the current selection average", () => {
+    const average = deckAverage(catalog, seven.slice(0, 5), 4, false);
+    expect(average.value).toBe(3.5);
+    expect(average.label).toBe("current selection average");
+    expect(average.sentence).toBe("Current selection average energy cost 3.5, from 5 cards and the commander.");
+  });
+
+  it("does not call a deck complete without a known commander cost", () => {
+    const average = deckAverage(catalog, seven, null, true);
+    expect(average.value).toBe(3.4);
+    expect(average.label).toBe("current selection average");
+    expect(average.sentence).toBe("Current selection average energy cost 3.4, from 7 cards.");
+  });
+
+  it("has no average before a card is selected", () => {
+    const average = deckAverage(catalog, [], 4, false);
+    expect(average.value).toBeNull();
+    expect(average.label).toBe("no cards yet");
   });
 });
 
@@ -207,7 +240,14 @@ describe("account state", () => {
       conflict: false,
     });
     expect(state).toBe("unavailable");
-    expect(saveStateLabel(state, null)).not.toContain("Saved to your account");
+    expect(saveStateLabel(state)).toBe("Save unavailable");
+    expect(saveStateLabel(state)).not.toContain("Saved to your account");
+    expect(saveStateStatus(state, null)).toBe("Account saving is unavailable, so this deck stays on this device.");
+  });
+
+  it("only says Saved to your account for a confirmed save", () => {
+    expect(saveStateStatus("saved", 4)).toBe("Saved to your account (revision 4).");
+    expect(saveStateStatus("unsaved", 4)).toBe("Unsaved changes on this device.");
   });
 
   it("reports a conflict and a failed save as their own states", () => {

@@ -132,6 +132,8 @@ export interface DecksViewProps {
   swapping: boolean;
   deckProblems: DeckProblemView[];
   averageCost: number | null;
+  /** How the average is labelled: a plain deck average or a partial one. */
+  averageLabel: string;
   onDeckSlot: (slot: number) => void;
   onCancelSwap: () => void;
 
@@ -147,7 +149,10 @@ export interface DecksViewProps {
   onCardAction: (cardId: string) => void;
 
   saveState: DeckSaveState;
+  /** Short state token for the ribbon badge. */
   saveLabel: string;
+  /** The one visible sentence that explains the save state. */
+  saveStatus: string;
   revision: number | null;
   saving: boolean;
   canSave: boolean;
@@ -157,10 +162,6 @@ export interface DecksViewProps {
   onLoadAccountDeck: () => void;
   onOverwriteAccountDeck: () => void;
 
-  /** True when the account deck service could not be reached. */
-  unavailable: boolean;
-  /** True when the deck on screen came from the local draft store. */
-  localDraft: boolean;
   notices: DecksNotices[];
   busy: boolean;
   calm: boolean;

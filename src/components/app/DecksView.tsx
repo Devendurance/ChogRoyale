@@ -382,6 +382,7 @@ export default function DecksView(props: DecksViewProps) {
     swapping,
     deckProblems,
     averageCost,
+    averageLabel,
     onDeckSlot,
     onCancelSwap,
     commanderOption,
@@ -395,6 +396,7 @@ export default function DecksView(props: DecksViewProps) {
     onCardAction,
     saveState,
     saveLabel,
+    saveStatus,
     revision,
     saving,
     canSave,
@@ -403,8 +405,6 @@ export default function DecksView(props: DecksViewProps) {
     onSave,
     onLoadAccountDeck,
     onOverwriteAccountDeck,
-    unavailable,
-    localDraft,
     notices,
     busy,
     calm,
@@ -571,7 +571,7 @@ export default function DecksView(props: DecksViewProps) {
                     <span className="app-costchip">
                       <Icon name="energy" size={16} />
                       <span className="app-costchip__num">{averageCost ?? "\u2014"}</span>
-                      <span className="app-costchip__label">average energy</span>
+                      <span className="app-costchip__label">{averageLabel}</span>
                     </span>
                     <span className="app-decks__count">
                       {deckCards.filter(Boolean).length} of {DECK_CARD_COUNT} cards
@@ -590,10 +590,7 @@ export default function DecksView(props: DecksViewProps) {
                   )}
 
                   <div className="app-save">
-                    <p className="app-save__status" role="status" aria-live="polite">
-                      {saveLabel}
-                      {localDraft && saveState !== "saved" ? " Kept on this device." : ""}
-                    </p>
+                    <p className="app-save__status">{saveStatus}</p>
                     {saveError && <p className="app-save__error">{saveError}</p>}
                     {conflict && (
                       <div className="app-conflict">
@@ -620,11 +617,6 @@ export default function DecksView(props: DecksViewProps) {
                         {busy ? "Refreshing" : "Refresh"}
                       </button>
                     </div>
-                    {unavailable && (
-                      <p className="app-save__note">
-                        The account deck service is not available, so saving is turned off. Your deck stays on this device and is not lost.
-                      </p>
-                    )}
                   </div>
                 </div>
               </div>

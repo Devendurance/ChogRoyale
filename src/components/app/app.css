@@ -1748,6 +1748,19 @@
   font-size: 19px;
 }
 
+/* A save that cannot run must not look like the orange battle action. */
+.app-btn--save[disabled] {
+  border-color: rgba(18, 11, 69, 0.9);
+  background: linear-gradient(180deg, #807a8f, #565066);
+  color: rgba(255, 255, 255, 0.72);
+  -webkit-text-stroke: 2px rgba(18, 11, 69, 0.8);
+  box-shadow: 0 3px 0 rgba(18, 11, 69, 0.55);
+}
+
+.app-btn--save[disabled] svg {
+  stroke: rgba(255, 255, 255, 0.72);
+}
+
 .app-btn--danger {
   min-height: 48px;
   padding: 0 20px;
