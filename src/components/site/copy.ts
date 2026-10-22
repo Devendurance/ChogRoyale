@@ -9,7 +9,10 @@ export const META_DESCRIPTION = "Chog Royale is a 1v1 card battler where a real 
 
 export const HERO = {
   headline: "Every Chog changes the arena.", // 5.1 hero headline
-  lead: "Chog Royale is a fast 1v1 card battler where a verified Chog NFT sets the match’s Chaos Pulse. Build your deck, read the arena and break the Core.", // 5.1 supporting text
+  // ADAPTED from 5.1 supporting text: a match has three scheduled Chaos
+  // Pulses and only the first comes from the Patron's traits, so the line
+  // says "first" rather than implying the whole schedule is derived.
+  lead: "Chog Royale is a fast 1v1 card battler where a verified Chog NFT sets the match’s first Chaos Pulse. Build your deck, read the arena and break the Core.",
 };
 
 // /dev/battle is the only working play surface (Privy login, then matchmaking).

@@ -91,7 +91,9 @@ export default function SeasonOpening() {
     return () => window.clearTimeout(t);
   }, [phase, cycle]);
 
-  // Give the focus back to wherever it came from.
+  // Give the focus back to wherever it came from. With no previous target the
+  // tab order has to be reset to the top of the document, otherwise it starts
+  // where the overlay used to sit and the skip link is skipped.
   useEffect(() => {
     if (phase !== "done") return;
     const el = restoreTo.current;
@@ -100,7 +102,10 @@ export default function SeasonOpening() {
       el.focus();
       return;
     }
-    document.getElementById("main")?.focus();
+    const body = document.body;
+    body.setAttribute("tabindex", "-1");
+    body.focus();
+    body.removeAttribute("tabindex");
   }, [phase]);
 
   const skip = useCallback(() => {

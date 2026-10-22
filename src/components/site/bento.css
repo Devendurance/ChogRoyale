@@ -205,6 +205,7 @@
   max-width: 30ch;
 }
 .site-bento__link {
+  position: relative;
   display: inline-flex;
   margin-top: 20px;
   align-items: center;
@@ -223,6 +224,13 @@
 }
 .site-bento__link-arrow {
   transition: transform 320ms var(--site-ease-out);
+}
+/* A 24px link is under the 44px target. The extra hit area is a transparent
+   overlay, so the text block and the tile do not move. */
+.site-bento__link::after {
+  content: ;
+  position: absolute;
+  inset: -10px -6px;
 }
 
 /* Art layer. It sits behind the text block and never steals a click. */

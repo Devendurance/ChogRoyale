@@ -335,10 +335,11 @@
 .chog-carousel__progress {
   display: flex;
   align-items: center;
+  justify-content: center;
 }
 .chog-carousel__dot {
   display: inline-flex;
-  width: 30px;
+  width: 44px;
   height: 44px;
   align-items: center;
   justify-content: center;

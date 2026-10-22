@@ -136,8 +136,12 @@
 }
 .site-grid__title {
   margin-top: 22px;
+  /* Two lines of room, so the bodies in a row stay aligned when a title
+     wraps. The three column desktop layout fits every title on one line,
+     so the rule below drops back to a single line there. */
+  min-height: 52px;
   font-size: 20px;
-  font-weight: 500;
+  font-weight: 700;
   line-height: 26px;
   letter-spacing: -0.01em;
   color: var(--color-chog-ink);
@@ -343,6 +347,9 @@
   .site-arena {
     margin-top: -96px;
     padding: 120px 40px 140px;
+  }
+  .site-grid__title {
+    min-height: 26px;
   }
 }
 

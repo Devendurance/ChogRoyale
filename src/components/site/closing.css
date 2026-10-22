@@ -189,6 +189,7 @@
   color: var(--color-chog-ink-70);
 }
 .site-footer__play {
+  position: relative;
   display: inline-flex;
   margin-top: 20px;
   align-items: center;
@@ -206,6 +207,13 @@
 }
 .site-footer__play:hover {
   text-decoration-color: currentColor;
+}
+/* The link is 22px tall. A transparent overlay lifts the hit area to 44px
+   without moving the footer layout. */
+.site-footer__play::after {
+  content: ;
+  position: absolute;
+  inset: -11px -8px;
 }
 
 /* Link columns */
@@ -521,7 +529,8 @@
   /* Aligned to the footer's 1320px content grid so it does not look orphaned
      on a wide screen, and clamped so it never leaves the viewport. */
   left: max(20px, calc((100% - 1320px) / 2));
-  top: 18px;
+  /* Just above the ridge, so the note sits with the mascots it describes. */
+  top: 46%;
   z-index: 5;
   display: grid;
   max-width: min(300px, calc(100% - 40px));
@@ -626,7 +635,7 @@
   }
   .site-footer__caption {
     left: 16px;
-    top: 12px;
+    top: 34%;
     /* Narrow enough to clear the sun on the right and stay three lines. */
     max-width: 178px;
     padding: 8px 11px 9px;

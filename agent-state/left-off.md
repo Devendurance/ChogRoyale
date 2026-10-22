@@ -2,6 +2,20 @@
 
 Last updated: 2026-10-22
 
+## Public site L9 final landing corrections (2026-10-22), awaiting owner review
+
+- L8 accepted. The read-only audit found one P1 and a set of P2 items. Fixed here.
+- Intro to hero (was P1): the intro wordmark and the hero wordmark are both a gold Chog Royale in the same place, so during the 420ms dissolve they doubled into unreadable text, and the Reaver covered the hero paragraph and both CTAs. The intro foreground now clears before the background thins. The mark rises and scales away from 74 to 86 percent of the cycle, the Reaver sinks, the aura and the skip leave with them, and the background still dissolves. Measured at the midpoint of the dissolve on both viewports: overlay 0.52, foreground 0.13. The hero title, paragraph and both CTAs are fully legible. The 2520ms length, the replay on every visit, Skip, Escape, focus handling, reduced motion, Save-Data and the scroll lock are unchanged.
+- Hero copy: the lead said a verified Chog NFT sets the match's Chaos Pulse, which implied the whole schedule is trait-derived. It now says the match's first Chaos Pulse, which is what the Patron's traits actually set. The headline is untouched.
+- Target sizes: the carousel dots were 30x44, the L6 tile links 24px tall and the footer play link 22px. The dots are now 44x44 buttons and the row is centred, so no control overlaps another. The two text links got a transparent overlay that lifts the hit area to 44px without moving the layout. Verified by hit testing 8px above and below each link: HIT, and at 14px it falls back to the surrounding container.
+- Keyboard flow: after the intro, focus went to #main, so the first Tab reached the hero and the header navigation and the skip link were only reachable after a full cycle. With no previous focus target the order now resets to the document start, so the first Tab is the skip link again. A real previous target is still restored.
+- L5 headings: the cell titles were weight 500 while L2, L4 and L6 use 700. They are 700 now, all on one line at desktop, with a two line minimum only in the one and two column layouts where a title actually wraps, so the bodies stay aligned across a row.
+- Footer caption: the class-art note sat in the empty sky well above the mascots. It now sits just above the ridge, 43px clear of the mascot boxes, and covers no face.
+- Checks: typecheck clean, lint 0 errors with the one pre-existing warning, one production build green, one browser pass at 390x844 and 1366x768 plus a 360px overflow check. No console errors. Skip, Escape, the replay on reload and the scroll unlock all still work.
+- Still open: the About lead and the closing lead both say "react to a Chaos Pulse derived from a verified Chog NFT", which is the canonical 1.7 wording and is looser than the hero now is. The owner decides whether to align them.
+- Evidence: `C:/Users/USER/Documents/ChogRoyale-Assets/site-l8-review/qa-1366-crossfade.png`, `qa-390-crossfade.png`, `qa-1366-l5-grid.png`, `qa-1366-footer-scene.png`.
+- Next: owner review, then the landing page phase is closed.
+
 ## Public site L8 seasonal opening (2026-10-22), awaiting owner review
 
 - L7 built. Done: `SeasonOpening.tsx` + `opening.css`, mounted in `page.tsx` before the header. A fixed violet overlay over the pagoda hero: deep violet atmosphere with a gold horizon, the Reaver commander class art arriving from the upper right and settling tilted -8 degrees, the Chog Royale wordmark in gold bevel, then a dissolve into the hero that is already rendered underneath. No Three.js, no canvas, no new dependency.
