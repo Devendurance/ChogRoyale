@@ -1,0 +1,117 @@
+// Inline icons for the lobby shell. Drawn here so the game side carries no
+// icon dependency and every glyph keeps the same stroke weight and shape
+// language as the Chog plates.
+
+import type { ReactNode } from "react";
+
+export type IconName =
+  | "lobby"
+  | "decks"
+  | "commanders"
+  | "progress"
+  | "user"
+  | "wallet"
+  | "logout"
+  | "refresh"
+  | "lock"
+  | "swords";
+
+const PATHS: Record<IconName, ReactNode> = {
+  lobby: (
+    <>
+      <path d="M3.4 10.6L12 3.8l8.6 6.8" />
+      <path d="M5.6 9.2V20h12.8V9.2" />
+      <path d="M10 20v-5.4h4V20" />
+    </>
+  ),
+  decks: (
+    <>
+      <rect x="6.5" y="3.5" width="12" height="15" rx="2.4" />
+      <path d="M4.2 6.6v11.2a2.6 2.6 0 0 0 2.6 2.6h7.4" />
+    </>
+  ),
+  commanders: (
+    <>
+      <path d="M3.6 18.2h16.8" />
+      <path d="M4.4 18.2L3 8.4l5 3.6L12 5.4l4 6.6 5-3.6-1.4 9.8" />
+    </>
+  ),
+  progress: (
+    <>
+      <path d="M4 20h16" />
+      <path d="M7 20v-6" />
+      <path d="M12 20V6" />
+      <path d="M17 20v-9" />
+    </>
+  ),
+  user: (
+    <>
+      <circle cx="12" cy="8.2" r="3.6" />
+      <path d="M4.8 20c0-3.5 3.2-5.6 7.2-5.6s7.2 2.1 7.2 5.6" />
+    </>
+  ),
+  wallet: (
+    <>
+      <path d="M3.6 8.4a2.6 2.6 0 0 1 2.6-2.6h11.4a2 2 0 0 1 2 2v1.2" />
+      <path d="M3.6 8.4v9.4a2.6 2.6 0 0 0 2.6 2.6h13a2 2 0 0 0 2-2v-6.2a2 2 0 0 0-2-2H6.2a2.6 2.6 0 0 1-2.6-2.6z" />
+      <path d="M16.6 13.4h.02" />
+    </>
+  ),
+  logout: (
+    <>
+      <path d="M14 4.6H6.6A1.8 1.8 0 0 0 4.8 6.4v11.2a1.8 1.8 0 0 0 1.8 1.8H14" />
+      <path d="M17.4 8.6l3.2 3.4-3.2 3.4" />
+      <path d="M9.8 12h10.4" />
+    </>
+  ),
+  refresh: (
+    <>
+      <path d="M19.4 12a7.4 7.4 0 1 1-2.2-5.2" />
+      <path d="M19.8 4.6v4.2h-4.2" />
+    </>
+  ),
+  lock: (
+    <>
+      <rect x="5.2" y="10.4" width="13.6" height="9.4" rx="2.4" />
+      <path d="M8.4 10.2V7.8a3.6 3.6 0 0 1 7.2 0v2.4" />
+    </>
+  ),
+  swords: (
+    <>
+      <path d="M4.4 4.4l11 11" />
+      <path d="M19.6 4.4l-11 11" />
+      <path d="M4.4 4.4l1 3.6 2.4-1" />
+      <path d="M19.6 4.4l-1 3.6-2.4-1" />
+      <path d="M14.2 16.2l3.4 3.4" />
+      <path d="M9.8 16.2l-3.4 3.4" />
+    </>
+  ),
+};
+
+export default function Icon({
+  name,
+  size = 22,
+  className,
+}: {
+  name: IconName;
+  size?: number;
+  className?: string;
+}) {
+  return (
+    <svg
+      className={className}
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.9}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      {PATHS[name]}
+    </svg>
+  );
+}

@@ -144,6 +144,10 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - A dense row of small controls cannot reach a 44px target without either a wider visible row or overlapping hit areas. Widening the row is the honest fix; overlapping hit areas make one control intercept its neighbour.
 - The footer scene is the last element on the page, so it must clip its own absolute layers, and the document must end on the scene rather than on a white band. Place a caption that assistive tech must read outside any `aria-hidden` scene wrapper, and keep every mascot `alt` empty inside it.
 - `--color-chog-ink-55` is `rgba(27,17,64,.55)` and measures 3.98:1 on white, so DESIGN.md's 5.6:1 note for it is wrong. Use `--color-chog-ink-70` (6.65:1) for any small text that has to pass WCAG AA, and flag the token when a spec asks for ink-55 as a body colour.
+- API envelope shapes differ per route. `GET /api/players/me` nests the profile under `data.player`, while the loadout and commander reads answer with their payload directly. Read the route's own `success()` call before typing the client, or the panel silently reads one level too shallow and throws.
+- A client model must degrade a partial payload instead of throwing. Guard array and object reads in the derivation layer, because a blank lobby is far worse than a missing badge.
+- A fixed bottom nav means the primary action must be sticky above it. Otherwise the action ends up behind the nav on short phones, and below the fold on a short desktop viewport.
+- In the App Router a folder whose name starts with `_` is private and is not routable, so a QA route named `__preview` answers 404.
 
 ## SPRITE KIT INVENTORY
 

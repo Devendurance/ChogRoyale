@@ -2,6 +2,18 @@
 
 Last updated: 2026-10-22
 
+## A1 game lobby and app shell (2026-10-22), awaiting owner review
+
+- Landing L0 to L9 is done and approved (latest `0f8b201`). A1 is the authenticated game lobby at the new `/app` route.
+- Done: `src/app/app/{page,layout,catalog}.tsx` and `src/components/app/{GameLobby,LobbyView,AppNav,lobby-model,lobby-types,catalog-context,icons}.tsx` plus `app.css`. The route layout is the server half: `@/lib/combat` and `@/lib/commanders` import `next/server`, so the ruleset catalog is flattened on the server and handed to the client as plain data. The container owns Privy, the three API reads and every failure branch. The view takes plain props only.
+- Composition follows the DESIGN.md lobby spec and the C and D reference clips: a top identity row with the avatar, name, a wallet-linked chip and two utility buttons, a commander stage with the Reaver class art on a glowing plinth over the V002 arena layers, a scrollable battle-deck strip of the real cards, a gold Battle button and a Refresh button, and a bottom tab bar whose active tab expands and is labelled.
+- Data: `/api/players/me` for the player, `/api/players/me/loadout` for the deck and commander claim, `/api/players/me/commanders` for the free-starter fallback and NFT eligibility. Every failure has an honest state. No coins, gems, trophies, XP, levels, chests, win rates, stats or history tiles, because none of those exist.
+- Two real defects were found and fixed during the acceptance pass. First, `GET /api/players/me` nests the profile under `data.player` while the loadout and commander reads answer with their payload directly, so the lobby read one level too shallow and threw on `profile.wallets.some` for every authenticated player. Second, the Battle action sat behind the fixed mobile tab bar and entirely below the fold at 1366x768.
+- Fixed: the profile read unwraps `data.player`, and `resolvePlayer` and `toEligibility` now degrade a partial payload instead of throwing. The battle cluster is sticky above the fixed nav on mobile, a short desktop viewport tightens the stage so the action stays above the fold, and long card names break instead of clipping.
+- Limitation: the authenticated path was never exercised for real. Privy needs a real wallet or email round trip and there is no dev bypass, so the profile, loadout and commander branches are type and code verified only. The visual QA used a temporary preview route with sample data, which has been deleted: `/app/qa-preview` answers 404 and `src/app/app/` holds only `catalog.ts`, `layout.tsx` and `page.tsx`.
+- Evidence: `C:/Users/USER/Documents/ChogRoyale-Assets/app-a1-review/`. Typecheck clean, lint 0 errors with the one pre-existing warning, one production build green with `/app` prerendered static.
+- Next: owner review of A1, then A2 only.
+
 ## Public site L9 final landing corrections (2026-10-22), awaiting owner review
 
 - L8 accepted. The read-only audit found one P1 and a set of P2 items. Fixed here.
