@@ -8,11 +8,15 @@
   isolation: isolate;
   overflow: clip;
   margin-top: -40px;
-  padding: 16px 20px 96px;
+  padding: 72px 20px 96px;
+  /* L5 ends on a mist wash. This section owns a white ground of its own, so
+     the bento reads as a new block rather than a continuation of the grid
+     above it, and the intro sits inside the section instead of on the seam. */
   background: linear-gradient(
     180deg,
     rgb(244 240 255 / 0) 0px,
-    var(--color-chog-mist) 150px,
+    #fff 130px,
+    var(--color-chog-mist) 250px,
     var(--color-chog-mist) 64%,
     #fff 100%
   );
@@ -452,7 +456,7 @@
 @media (min-width: 640px) {
   .site-bento {
     margin-top: -64px;
-    padding: 24px 40px 120px;
+    padding: 96px 40px 120px;
   }
   .site-bento__tile--deck,
   .site-bento__tile--patron,
@@ -466,7 +470,7 @@
 @media (min-width: 1100px) {
   .site-bento {
     margin-top: -96px;
-    padding: 0 40px 140px;
+    padding: 120px 40px 140px;
   }
   .site-bento__tile--battle {
     grid-column: span 8;

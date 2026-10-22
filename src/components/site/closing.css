@@ -132,11 +132,6 @@
 }
 
 /* DESIGN.md footer: a 16px Royal Purple band across the full width. */
-.site-footer__band {
-  height: 16px;
-  background: var(--color-chog-royal);
-}
-
 .site-footer__top {
   background: #fff;
   padding: 64px 20px 40px;

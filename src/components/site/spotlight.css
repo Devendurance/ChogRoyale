@@ -7,8 +7,18 @@
   isolation: isolate;
   overflow: clip;
   margin-top: -40px;
-  padding: 16px 20px 96px;
-  background: linear-gradient(180deg, #fff 0%, #fff 62%, var(--color-chog-mist) 100%);
+  padding: 72px 20px 96px;
+  /* The section pulls up into the L4 tail, so its own top stays transparent
+     and the seam reads as a soft horizon instead of a hard white edge. The
+     intro then sits inside the section, not on the boundary. */
+  background: linear-gradient(
+    180deg,
+    rgb(255 255 255 / 0) 0%,
+    rgb(255 255 255 / 0) 64px,
+    #fff 170px,
+    #fff 62%,
+    var(--color-chog-mist) 100%
+  );
 }
 .site-arena__glow {
   position: absolute;
@@ -326,13 +336,13 @@
 @media (min-width: 768px) {
   .site-arena {
     margin-top: -64px;
-    padding: 24px 40px 120px;
+    padding: 96px 40px 120px;
   }
 }
 @media (min-width: 1100px) {
   .site-arena {
     margin-top: -96px;
-    padding: 0 40px 140px;
+    padding: 120px 40px 140px;
   }
 }
 

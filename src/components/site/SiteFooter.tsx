@@ -70,8 +70,6 @@ export default function SiteFooter() {
 
   return (
     <footer className="site-footer">
-      <div className="site-footer__band" aria-hidden="true" />
-
       <div className="site-footer__top">
         <div className="site-footer__inner">
           <div className="site-footer__brand">
