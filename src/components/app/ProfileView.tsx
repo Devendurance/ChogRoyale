@@ -295,12 +295,12 @@ export default function ProfileView({
                 )}
 
                 <div className="app-profile-actions">
-                  <Link href="/dev/progress" className="app-btn app-btn--ghost">
+                  <Link href="/app/progress" className="app-btn app-btn--ghost">
                     Open progress
                   </Link>
                 </div>
                 <p className="app-profile-caption">
-                  Match history and the casual leaderboard live on the progress screen.
+                  Your full match history and the Casual Alpha Leaderboard live on the progress screen.
                 </p>
               </section>
 

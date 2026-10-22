@@ -2,6 +2,23 @@
 
 Last updated: 2026-10-22
 
+## A3.2a progress, match history and casual leaderboard (2026-10-22), awaiting owner review
+
+- Doing: one bounded UI integration slice, the authenticated progress screen at `/app/progress`. Stopped after A3.2a; nothing from A3.2b started.
+- Done: `src/app/app/progress/page.tsx`, `src/components/app/{ProgressScreen,ProgressView,progress-model,progress-types}.ts(x)` and `progress-model.test.ts`. The screen reads the real `/api/players/me`, `/stats`, `/matches` and `/leaderboard/casual` endpoints with the existing Privy token. No new endpoint, table, migration, settlement, rating or reward.
+- Record: a hero with the server win rate and W/L/D, then real match counts, wins, losses, draws, crowns earned/conceded, private versus matchmaking splits and first/latest match dates. The causal chip uses the server's eligibility and position. No trophies, XP, levels, currencies, streaks or ranked language.
+- History: cursor-paginated at 6 per page through the existing API. Rows show result, opponent username, crown score, match type, date, caller-side commander and deck size/names, and the replay-verified state. No seeds, commands, state hashes, wallets, Privy ids, player ids or opponent decks.
+- Leaderboard: the exact heading "Casual Alpha Leaderboard", offset-paginated at 10 per page, with the server minimum, server eligibility/position, the real ordering and a `You` row. Private rooms are excluded. No fake rows.
+- States: loading, ready, genuine empty, service unavailable, setup locked and session expired are separate. A 500 or network failure says "isn't available yet" and never becomes zero. `resolveBoard` also refuses to call an `entries: []` first page empty when the payload says players qualified.
+- Navigation: `AppNav` Progress and the profile "Open progress" action point to `/app/progress`. `/dev/progress` is unchanged and still answers 200. The HUD user icon still points at `/app/profile`. A3.1 `ProfileView` copy now names the Casual Alpha Leaderboard.
+- Shell fix: at 430px and below the disabled "Commanders" nav label now uses 7px with no side padding. The previous 8px label was 63px wide in a 57px item at 360px, so it spilled into the active Progress tab. Working labels keep their 8px step.
+- Checks: typecheck clean, lint 0 errors with the one pre-existing `/dev/progress` `no-img-element` warning, focused tests 70/70 (progress model, profile model, decks model), existing API route tests 10/10 (matches cursor pagination, stats, casual leaderboard), one final production build green with `/app/progress` prerendered static. The dev server on :3000 is healthy; it was restarted once because stale server chunks from earlier shared-component edits produced false hydration mismatches.
+- Browser pass: 390x844, 1366x768 and 360x800 on the fixture route: no horizontal overflow, no console errors, 6 match rows, 10 board rows, the 1-10 of 12 pager, the anchor jump to the board, the focus ring, and a privacy scan with no DID, wallet, seed, command or hash text. The live `/app/progress` shows the Privy login gate with no console errors and no overflow. `/app/profile` and `/dev/progress` still answer 200. The temporary fixture route was deleted; `/app/qa-progress` answers 404.
+- Limitation: the authenticated path was not exercised. Privy needs a real wallet or email round trip and there is no dev bypass, so the stats, history and leaderboard branches are code, model-test and fixture verified only. The fixture screenshots are sample data, labelled as such in the page, and are not authenticated player evidence. Manual checks still pending: a real login, a real settled record, a real saved match page, a real board page, and the real 500 shape when the settlement tables are absent.
+- Evidence: `C:/Users/USER/Documents/ChogRoyale-Assets/app-a3.2a-review/` (`progress-fixture-390.png`, `progress-fixture-1366.png`, `progress-login-390.png`). The 390 capture is a 390-wide full-page review at 2350px so the fixed nav sits at the page end; 390x844 and 360x800 were measured separately.
+- Next: owner review of A3.2a, then A3.2b NFT legacy only. A3.2b has not started.
+- Unrelated dirty files left untouched: modified `.fast-build/STATE.md`, untracked `DESIGN.md` and `docs/Chog Royale messaging.md`.
+
 ## A3.1 player profile (2026-10-22), awaiting owner review
 
 - Doing: one bounded UI integration slice, the authenticated profile at `/app/profile`. Stopped after A3.1, nothing from A3.2 started.

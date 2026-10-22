@@ -2682,6 +2682,20 @@
     letter-spacing: 0.06em;
   }
 
+  /* "Commanders" is the longest label in the five-tab bar. At 360px the
+     working labels keep their 8px step, and only the disabled label takes a
+     smaller step with no side padding, so it cannot spill into the active
+     tab beside it. */
+  .app-nav__item--disabled {
+    padding-right: 0;
+    padding-left: 0;
+  }
+
+  .app-nav__item--disabled .app-nav__label {
+    font-size: 7px;
+    letter-spacing: 0.03em;
+  }
+
   .app-nav__item--active {
     flex: 1.8;
   }
@@ -2698,5 +2712,931 @@
   .app-nav__label {
     font-size: 8.5px;
     letter-spacing: 0.08em;
+  }
+
+  /* The 431-520px band is the tightest five-tab band. Keep the working labels
+     at 8.5px and give only the disabled label the narrower step. */
+  .app-nav__item--disabled {
+    padding-right: 0;
+    padding-left: 0;
+  }
+
+  .app-nav__item--disabled .app-nav__label {
+    font-size: 7.5px;
+    letter-spacing: 0.04em;
+  }
+}
+
+/* ===========================================================================
+   A3.2a progress, match history and the Casual Alpha Leaderboard
+   The same lobby register: deep violet plates, hard outlines, gold for the
+   record and lilac for secondary detail. The screen reports only settled
+   records, saved matches and the casual standings the server returned. It
+   carries no trophies, XP, levels, currencies, streaks or ranked ladder.
+   ========================================================================= */
+
+.app-progress {
+  --progress-gold: var(--coin-gold);
+  --progress-gold-soft: rgba(255, 200, 61, 0.1);
+  --progress-win: #7fe3a6;
+  --progress-loss: #ff8b98;
+  --progress-line: rgba(185, 162, 255, 0.22);
+  --progress-line-strong: rgba(185, 162, 255, 0.38);
+  --progress-well: rgba(18, 11, 69, 0.42);
+
+  display: grid;
+  gap: 14px;
+}
+
+.app-progress__main,
+.app-progress__side {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+/* ------------------------------------------------------------------ hero */
+
+.app-progress-hero {
+  position: relative;
+  padding: 16px;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.app-progress-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(110% 90% at 100% 0%, rgba(255, 200, 61, 0.14), transparent 56%),
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 18px);
+}
+
+.app-progress-hero__crest {
+  position: absolute;
+  z-index: 0;
+  top: -30px;
+  right: -14px;
+  color: rgba(255, 200, 61, 0.1);
+  transform: rotate(-9deg);
+  pointer-events: none;
+}
+
+.app-progress-hero__top,
+.app-progress-hero__metric,
+.app-progress-chips,
+.app-progress-hero__actions {
+  position: relative;
+  z-index: 1;
+}
+
+.app-progress-hero__top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.app-progress-hero__avatar {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 56px;
+  height: 56px;
+  overflow: hidden;
+  border: 3px solid var(--outline);
+  border-radius: 17px;
+  background: linear-gradient(180deg, var(--plate-light), var(--plate-dark));
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.22),
+    0 5px 0 rgba(18, 11, 69, 0.72),
+    0 0 22px rgba(143, 123, 255, 0.4);
+}
+
+.app-progress-hero__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.app-progress-hero__empty {
+  color: var(--app-ink-45);
+}
+
+.app-progress-hero__id {
+  min-width: 0;
+}
+
+.app-progress-kicker {
+  margin: 0;
+  font-family: var(--font-data);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--app-lilac);
+}
+
+.app-progress-hero__name {
+  margin: 2px 0 0;
+  font-family: var(--font-game);
+  font-size: 28px;
+  line-height: 31px;
+  color: #fff;
+  -webkit-text-stroke: 3px var(--outline);
+  paint-order: stroke fill;
+  overflow-wrap: anywhere;
+}
+
+.app-progress-hero__handle {
+  margin: 3px 0 0;
+  font-family: var(--font-data);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--app-ink-65);
+  overflow-wrap: anywhere;
+}
+
+.app-progress-hero__metric {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px 16px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--progress-line-strong);
+}
+
+.app-progress-hero__score {
+  min-width: 0;
+}
+
+.app-progress-hero__value {
+  margin: 0;
+  font-family: var(--font-game);
+  font-size: 44px;
+  line-height: 44px;
+  color: var(--progress-gold);
+  -webkit-text-stroke: 3px var(--outline);
+  paint-order: stroke fill;
+}
+
+.app-progress-hero__value-label {
+  margin: 2px 0 0;
+  font-family: var(--font-data);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--app-ink-65);
+}
+
+.app-progress-hero__summary {
+  flex: 1 1 160px;
+  min-width: 0;
+  text-align: right;
+}
+
+.app-progress-hero__record {
+  margin: 0;
+  font-family: var(--font-game);
+  font-size: 17px;
+  line-height: 20px;
+  color: #fff;
+}
+
+.app-progress-hero__caption {
+  margin: 4px 0 0;
+  font-size: 11.5px;
+  line-height: 16px;
+  color: var(--app-ink-65);
+}
+
+.app-progress-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 11px;
+}
+
+.app-progress-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 9px;
+  border: 1px solid var(--progress-line);
+  border-radius: 999px;
+  background: var(--progress-well);
+  color: #e4dcff;
+  font-family: var(--font-data);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.app-progress-chip--gold {
+  border-color: rgba(255, 200, 61, 0.5);
+  background: var(--progress-gold-soft);
+  color: #ffe7a3;
+}
+
+.app-progress-chip--muted {
+  border-color: rgba(255, 255, 255, 0.18);
+  color: var(--app-ink-65);
+}
+
+.app-progress-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.app-progress-hero__actions .app-btn {
+  min-height: 44px;
+}
+
+/* ---------------------------------------------------------------- panels */
+
+.app-progress-record,
+.app-progress-history,
+.app-progress-board {
+  padding: 15px;
+}
+
+.app-progress-panel__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.app-progress-panel__heading {
+  min-width: 0;
+}
+
+.app-progress-title {
+  margin: 2px 0 0;
+  font-family: var(--font-game);
+  font-size: 21px;
+  line-height: 24px;
+  color: #fff;
+  -webkit-text-stroke: 2.5px var(--outline);
+  paint-order: stroke fill;
+  overflow-wrap: anywhere;
+}
+
+.app-progress-note {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  line-height: 18px;
+  color: var(--app-ink-65);
+}
+
+.app-progress-caption {
+  margin: 0;
+  font-size: 11px;
+  line-height: 15px;
+  color: var(--app-ink-65);
+}
+
+/* ------------------------------------------------------------- stat tiles */
+
+.app-progress-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  margin: 0;
+}
+
+.app-progress-tile {
+  min-width: 0;
+  min-height: 62px;
+  padding: 8px 9px;
+  border: 1px solid var(--progress-line);
+  border-radius: 11px;
+  background: var(--progress-well);
+}
+
+.app-progress-tile dt {
+  min-height: 22px;
+  font-family: var(--font-data);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--app-ink-65);
+}
+
+.app-progress-tile dd {
+  margin: 3px 0 0;
+  font-family: var(--font-game);
+  font-size: 22px;
+  line-height: 24px;
+  color: #fff;
+}
+
+.app-progress-tile--win dd {
+  color: var(--progress-win);
+}
+
+.app-progress-tile--loss dd {
+  color: var(--progress-loss);
+}
+
+.app-progress-tile--draw dd {
+  color: var(--app-lilac);
+}
+
+.app-progress-tile--gold dd {
+  color: var(--progress-gold);
+}
+
+.app-progress-tile--muted dd {
+  color: #d9d2f5;
+}
+
+/* --------------------------------------------------------- private split */
+
+.app-progress-split {
+  display: grid;
+  gap: 7px;
+  margin-top: 9px;
+}
+
+.app-progress-split__row {
+  padding: 9px 10px;
+  border: 1px solid var(--progress-line);
+  border-radius: 11px;
+  background: var(--progress-well);
+}
+
+.app-progress-split__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.app-progress-split__name {
+  font-family: var(--font-data);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--app-ink-65);
+}
+
+.app-progress-tag {
+  padding: 2px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  color: var(--app-ink-65);
+  font-family: var(--font-data);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.app-progress-tag--on {
+  border-color: rgba(255, 200, 61, 0.45);
+  color: var(--progress-gold);
+}
+
+.app-progress-split__line {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--app-ink-85);
+}
+
+.app-progress-split__line strong {
+  font-family: var(--font-game);
+  font-size: 16px;
+  color: #fff;
+}
+
+.app-progress-window {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin: 9px 0 0;
+}
+
+.app-progress-window > div {
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px dashed var(--progress-line);
+  border-radius: 10px;
+}
+
+.app-progress-window dt {
+  font-family: var(--font-data);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--app-ink-65);
+}
+
+.app-progress-window dd {
+  margin: 3px 0 0;
+  font-size: 12px;
+  line-height: 16px;
+  color: #fff;
+  overflow-wrap: anywhere;
+}
+
+/* ----------------------------------------------------------- state plates */
+
+.app-progress-state {
+  display: grid;
+  gap: 5px;
+  padding: 13px 13px 13px 14px;
+  border: 1px solid var(--progress-line);
+  border-left: 4px solid var(--app-lilac);
+  border-radius: 11px;
+  background: var(--progress-well);
+}
+
+.app-progress-state--empty {
+  border-left-color: var(--progress-gold);
+}
+
+.app-progress-state--locked {
+  border-left-color: var(--app-ink-45);
+}
+
+.app-progress-state--auth {
+  border-left-color: var(--danger);
+}
+
+.app-progress-state__label {
+  margin: 0;
+  font-family: var(--font-data);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--app-ink-65);
+}
+
+.app-progress-state__title {
+  margin: 0;
+  font-family: var(--font-game);
+  font-size: 17px;
+  line-height: 20px;
+  color: #fff;
+  overflow-wrap: anywhere;
+}
+
+.app-progress-state__body {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 18px;
+  color: var(--app-ink-65);
+}
+
+.app-progress-state__action {
+  margin-top: 4px;
+}
+
+.app-progress-state__action .app-btn {
+  min-height: 44px;
+}
+
+/* ---------------------------------------------------------- match history */
+
+.app-progress-matches {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.app-progress-match {
+  --result-color: var(--app-lilac);
+  --result-soft: rgba(185, 162, 255, 0.14);
+
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  padding: 9px;
+  border: 1px solid var(--progress-line);
+  border-radius: 12px;
+  background: var(--progress-well);
+}
+
+.app-progress-match--win {
+  --result-color: var(--progress-win);
+  --result-soft: rgba(67, 201, 59, 0.16);
+}
+
+.app-progress-match--loss {
+  --result-color: var(--progress-loss);
+  --result-soft: rgba(229, 56, 74, 0.16);
+}
+
+.app-progress-match--draw {
+  --result-color: var(--progress-gold);
+  --result-soft: rgba(255, 200, 61, 0.12);
+}
+
+.app-progress-match__result {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 2px solid var(--outline);
+  border-radius: 10px;
+  background: var(--result-soft);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.12);
+  color: var(--result-color);
+  font-family: var(--font-game);
+  font-size: 17px;
+  line-height: 1;
+}
+
+.app-progress-match__main {
+  min-width: 0;
+}
+
+.app-progress-match__opponent {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 17px;
+  color: #fff;
+  overflow-wrap: anywhere;
+}
+
+.app-progress-match__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin: 2px 0 0;
+  font-family: var(--font-data);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--app-ink-65);
+}
+
+.app-progress-match__deck {
+  margin: 3px 0 0;
+  overflow: hidden;
+  font-size: 10.5px;
+  line-height: 14px;
+  color: var(--app-ink-65);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.app-progress-match__score {
+  display: grid;
+  justify-items: end;
+  gap: 1px;
+  min-width: 54px;
+}
+
+.app-progress-match__score-label {
+  font-family: var(--font-data);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--app-ink-65);
+}
+
+.app-progress-match__score-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--progress-gold);
+  font-family: var(--font-game);
+  font-size: 15px;
+  line-height: 17px;
+  white-space: nowrap;
+}
+
+.app-progress-history__foot {
+  margin-top: 10px;
+}
+
+.app-progress-history__foot .app-btn {
+  width: 100%;
+  min-height: 44px;
+}
+
+.app-progress-inline-error {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(229, 56, 74, 0.45);
+  border-radius: 9px;
+  background: rgba(229, 56, 74, 0.12);
+  color: #ffc2c7;
+  font-size: 11.5px;
+  line-height: 16px;
+}
+
+/* ------------------------------------------------------------- leaderboard */
+
+.app-progress-board {
+  scroll-margin-top: calc(var(--app-hud-h) + 12px);
+}
+
+.app-progress-board__note {
+  margin: 0 0 10px;
+  font-size: 11.5px;
+  line-height: 16px;
+  color: var(--app-ink-65);
+}
+
+.app-progress-standing {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 7px;
+  margin: 0 0 10px;
+  padding: 9px 10px;
+  border: 1px solid rgba(255, 200, 61, 0.35);
+  border-left: 4px solid var(--progress-gold);
+  border-radius: 11px;
+  background: var(--progress-gold-soft);
+  color: var(--app-ink-85);
+  font-size: 11.5px;
+  line-height: 16px;
+}
+
+.app-progress-standing strong {
+  font-family: var(--font-game);
+  font-size: 19px;
+  line-height: 19px;
+  color: var(--progress-gold);
+}
+
+.app-progress-standing__label {
+  font-family: var(--font-data);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--app-ink-65);
+}
+
+.app-progress-standing__text {
+  min-width: 0;
+}
+
+.app-progress-standing--muted {
+  border-color: var(--progress-line);
+  border-left-color: var(--app-ink-45);
+  background: var(--progress-well);
+  color: var(--app-ink-65);
+}
+
+.app-progress-standing--muted strong {
+  color: #d9d2f5;
+  font-size: 16px;
+}
+
+.app-progress-board__list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.app-progress-board-row {
+  display: grid;
+  grid-template-columns: 22px 26px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 8px;
+  border: 1px solid var(--progress-line);
+  border-radius: 10px;
+  background: var(--progress-well);
+}
+
+.app-progress-board-row--you {
+  border-color: rgba(255, 200, 61, 0.55);
+  background: var(--progress-gold-soft);
+  box-shadow: inset 3px 0 0 var(--progress-gold);
+}
+
+.app-progress-board-row__pos {
+  color: var(--app-ink-65);
+  font-family: var(--font-game);
+  font-size: 14px;
+  line-height: 16px;
+  text-align: center;
+}
+
+.app-progress-board-row__pos--top {
+  color: var(--progress-gold);
+}
+
+.app-progress-board-row__avatar {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  overflow: hidden;
+  border: 1px solid var(--outline);
+  border-radius: 8px;
+  background: linear-gradient(180deg, var(--plate-light), var(--plate-dark));
+  color: var(--app-ink-45);
+}
+
+.app-progress-board-row__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.app-progress-board-row__names {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.app-progress-board-row__name {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 15px;
+}
+
+.app-progress-board-row__name-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-progress-board-row__you {
+  flex: 0 0 auto;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: var(--progress-gold);
+  color: #3a2500;
+  font-family: var(--font-data);
+  font-size: 7.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.app-progress-board-row__meta {
+  overflow: hidden;
+  color: var(--app-ink-65);
+  font-family: var(--font-data);
+  font-size: 9px;
+  line-height: 12px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.app-progress-board-row__rate {
+  display: grid;
+  justify-items: end;
+  gap: 1px;
+  min-width: 44px;
+}
+
+.app-progress-board-row__rate-value {
+  color: #fff;
+  font-family: var(--font-game);
+  font-size: 14px;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+.app-progress-board-row__rate-label {
+  font-family: var(--font-data);
+  font-size: 7.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--app-ink-65);
+}
+
+.app-progress-board__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.app-progress-board__foot .app-btn {
+  min-height: 44px;
+  padding: 0 10px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+.app-progress-board__pages {
+  margin: 0;
+  color: var(--app-ink-65);
+  font-family: var(--font-data);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-align: center;
+}
+
+/* ---------------------------------------------------------------- desktop */
+
+@media (min-width: 640px) {
+  .app-progress-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 18px;
+    align-items: start;
+  }
+
+  .app-progress-hero__top {
+    grid-column: 1;
+  }
+
+  .app-progress-hero__chips {
+    grid-column: 1;
+  }
+
+  .app-progress-hero__metric {
+    grid-row: 1 / span 2;
+    grid-column: 2;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: flex-start;
+    gap: 8px;
+    margin-top: 0;
+    padding-top: 0;
+    padding-left: 18px;
+    border-top: 0;
+    border-left: 1px dashed var(--progress-line-strong);
+  }
+
+  .app-progress-hero__summary {
+    flex: 0 0 auto;
+  }
+
+  .app-progress-hero__actions {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 1024px) {
+  .app-progress {
+    grid-template-columns: minmax(0, 1fr) 340px;
+    align-items: start;
+  }
+}
+
+@media (max-width: 374px) {
+  .app-progress-hero__name {
+    font-size: 25px;
+    line-height: 28px;
+  }
+
+  .app-progress-hero__value {
+    font-size: 40px;
+    line-height: 40px;
+  }
+
+  .app-progress-tile {
+    padding: 7px;
+  }
+
+  .app-progress-tile dd {
+    font-size: 20px;
+    line-height: 22px;
+  }
+
+  .app-progress-board__foot .app-btn {
+    padding: 0 8px;
+    font-size: 9px;
   }
 }

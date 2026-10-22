@@ -135,6 +135,16 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - A saved NFT token id is a claim, not proof of ownership. The battle server re-checks ownership at ready and at match start. Commander class art is shared by every commander of that class and must be labelled as class art.
 - The ruleset has no levels, upgrades, card XP, upgrade currencies or rarities. A reference screen that shows them is a composition guide, not a feature list.
 
+## PROGRESS
+
+- `/app/progress` is the authenticated progression surface. `/dev/progress` stays the development surface and is not redirected or deleted.
+- A successful 200 with zero rows is empty. A 401 is a session failure, a 403 is a setup lock, and a 500, 503 or network failure is unavailable. Never turn a failed stats, history or leaderboard read into "no matches" or zeroes.
+- Progress reads only the existing `/api/players/me/stats`, `/api/players/me/matches` and `/api/leaderboard/casual` endpoints. Do not add progression, rating, reward, trophy, XP, level or streak mechanics.
+- Match history is cursor-paginated and caller-side only. Never render seeds, commands, state hashes, wallets, Privy identifiers, player ids or the opponent's deck.
+- The Casual Alpha Leaderboard is unranked matchmaking only. The minimum and eligibility come from the server. Private rooms never count, and the screen must not imply a ranked ladder.
+- The profile "Open progress" action and the Progress nav tab both point to `/app/progress`.
+- At 520px and below, the disabled Commanders nav label takes a smaller step with no side padding so it cannot spill into the active tab.
+
 ## PUBLIC SITE
 
 - Build the public landing page one handoff phase at a time (L0 to L8) and stop for owner screenshot approval after each phase.
