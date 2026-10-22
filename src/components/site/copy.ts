@@ -167,8 +167,9 @@ export interface BentoTile {
 
 // L6. NEW: the bento copy is not in the messaging doc. Every line is adapted
 // from the messaging doc (section noted) or read against the shipped ruleset,
-// and all of it needs owner sign-off. "Available now" means implemented and
-// playable in the current build. "Coming later" is listed as future scope in
+// and all of it needs owner sign-off. "Built · Closed alpha" means the
+// feature is implemented and playable in the current build, but the match is
+// not open to the public yet. "Coming later" is listed as future scope in
 // 2.4 and 7.2 and is not built, so those tiles carry no art that implies it.
 export const BENTO = {
   eyebrow: "Beyond the match",
@@ -177,7 +178,7 @@ export const BENTO = {
   tiles: [
     {
       id: "battle",
-      status: "Available now",
+      status: "Built · Closed alpha",
       sticker: "Battle",
       title: "Play a match.",
       // NEW, adapted from 1.3 and 7.1: real-time 1v1, energy, deploys, a Core.
@@ -187,7 +188,7 @@ export const BENTO = {
     },
     {
       id: "deck",
-      status: "Available now",
+      status: "Built · Closed alpha",
       sticker: "Decks",
       title: "Build a deck.",
       // NEW: 7 ordinary cards and 1 commander (combat.ts validateDeck), drawn
@@ -198,7 +199,7 @@ export const BENTO = {
     },
     {
       id: "patron",
-      status: "Available now",
+      status: "Built · Closed alpha",
       sticker: "Patrons",
       title: "Meet the Arena Patron.",
       // NEW, adapted from 1.8: server/battle/patron-source.ts locks one
