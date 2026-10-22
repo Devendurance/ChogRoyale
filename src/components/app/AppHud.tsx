@@ -55,10 +55,10 @@ export default function AppHud({
       <div className="app-hud__utils">
         {extra}
         <Link
-          href="/dev/progress"
+          href="/app/profile"
           className="app-iconbtn"
-          aria-label="Profile and match stats"
-          title="Profile and match stats"
+          aria-label="Profile"
+          title="Profile"
         >
           <Icon name="user" />
         </Link>

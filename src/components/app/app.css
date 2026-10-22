@@ -2374,3 +2374,329 @@
     grid-template-columns: repeat(8, minmax(0, 1fr));
   }
 }
+
+/* ===========================================================================
+   A3.1 player profile
+   The same lobby register: deep violet ground, beveled plates, lilac and warm
+   accents, and the shared commander class art. The screen reports only what
+   the account endpoints returned, so it carries no levels, XP, currencies,
+   trophies or rankings.
+   ========================================================================= */
+
+.app-profile {
+  display: grid;
+  gap: 14px;
+}
+
+.app-profile__main,
+.app-profile__side {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+/* -------------------------------------------------------------- identity */
+
+.app-profile-id {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+}
+
+.app-profile-id__avatar {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 84px;
+  height: 84px;
+  border-radius: 22px;
+  border: 3px solid var(--outline);
+  background: linear-gradient(180deg, var(--plate-light), var(--plate-dark));
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.22),
+    0 6px 0 rgba(18, 11, 69, 0.72),
+    0 0 26px rgba(143, 123, 255, 0.45);
+  overflow: hidden;
+}
+
+.app-profile-id__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.app-profile-id__empty {
+  color: var(--app-ink-45);
+}
+
+.app-profile-id__names {
+  flex: 1 1 170px;
+  min-width: 0;
+}
+
+.app-profile-id__name {
+  margin: 0;
+  font-family: var(--font-game);
+  font-size: 29px;
+  line-height: 33px;
+  color: #fff;
+  -webkit-text-stroke: 3px var(--outline);
+  paint-order: stroke fill;
+  overflow-wrap: anywhere;
+}
+
+.app-profile-id__handle {
+  margin: 3px 0 0;
+  font-family: var(--font-data);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--app-ink-65);
+  overflow-wrap: anywhere;
+}
+
+.app-profile-id__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 9px;
+}
+
+/* The profile stage keeps the lobby art, aura and disc on a slightly shorter
+   frame, because it shares the main column with the identity panel. */
+.app-profile-commander {
+  min-height: 236px;
+}
+
+/* ---------------------------------------------------------------- panels */
+
+.app-profile-class,
+.app-profile-deck,
+.app-profile-record,
+.app-profile-account {
+  padding: 15px;
+}
+
+.app-profile-panel__title {
+  margin: 0 0 10px;
+  font-family: var(--font-data);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--app-lilac);
+}
+
+.app-profile-class__role {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 20px;
+  color: var(--app-ink-85);
+}
+
+.app-profile-class__counters {
+  margin-top: 12px;
+}
+
+.app-profile-class__counters-label {
+  margin: 0 0 6px;
+  font-family: var(--font-data);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--app-ink-65);
+}
+
+.app-profile-class__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.app-profile-note {
+  margin: 0;
+  font-size: 13px;
+  line-height: 19px;
+  color: var(--app-ink-65);
+}
+
+.app-profile-caption {
+  margin: 10px 0 0;
+  font-size: 11.5px;
+  line-height: 16px;
+  color: var(--app-ink-65);
+}
+
+.app-profile-actions,
+.app-profile-account__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+/* --------------------------------------------------------- class numbers */
+
+.app-profile-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin: 10px 0 0;
+}
+
+.app-profile-stat {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 9px;
+  border-radius: 9px;
+  border: 1px solid rgba(185, 162, 255, 0.2);
+  background: rgba(18, 11, 69, 0.4);
+}
+
+/* The targets value can run to two words, so that row spans both columns
+   instead of wrapping inside a half-width cell. */
+.app-profile-stat--wide {
+  grid-column: 1 / -1;
+}
+
+.app-profile-stat dt {
+  font-family: var(--font-data);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--app-ink-65);
+}
+
+.app-profile-stat dd {
+  margin: 0;
+  font-family: var(--font-game);
+  font-size: 14px;
+  line-height: 16px;
+  color: #fff;
+  text-align: right;
+}
+
+/* ----------------------------------------------------------- deck and rows */
+
+.app-profile-deck__meta {
+  margin: 0;
+  font-family: var(--font-data);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--app-ink-65);
+}
+
+.app-profile-deck__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.app-profile-deck__chip {
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(185, 162, 255, 0.24);
+  background: rgba(18, 11, 69, 0.4);
+  color: var(--app-ink-85);
+  font-size: 11px;
+  line-height: 15px;
+}
+
+.app-profile-deck__chip--commander {
+  border-color: var(--plate-highlight);
+  color: #fff;
+  box-shadow: 0 0 12px rgba(143, 123, 255, 0.35);
+}
+
+.app-profile-record__rows,
+.app-profile-account__rows {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+}
+
+.app-profile-record__row,
+.app-profile-account__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(185, 162, 255, 0.2);
+  background: rgba(18, 11, 69, 0.4);
+}
+
+.app-profile-record__row dt,
+.app-profile-account__row dt {
+  font-family: var(--font-data);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--app-ink-65);
+}
+
+.app-profile-record__row dd,
+.app-profile-account__row dd {
+  margin: 0;
+  font-family: var(--font-game);
+  font-size: 15px;
+  line-height: 18px;
+  color: #fff;
+  text-align: right;
+}
+
+/* ------------------------------------------------------------- desktop */
+
+@media (min-width: 1024px) {
+  /* The identity and the commander stage on the left, the account panels on
+     the right, so nothing important sits below the fold. */
+  .app-profile {
+    grid-template-columns: minmax(0, 1fr) 340px;
+    align-items: start;
+  }
+}
+
+/* ---------------------------------------------------------- five tab bar */
+
+/* Five tabs have to fit a 360-430px phone without the labels colliding. The
+   desktop rail keeps its own spacing. */
+@media (max-width: 430px) {
+  .app-nav {
+    gap: 2px;
+  }
+
+  .app-nav__label {
+    font-size: 8px;
+    letter-spacing: 0.06em;
+  }
+
+  .app-nav__item--active {
+    flex: 1.8;
+  }
+}
+
+/* The 431-520px band is the tightest one for five tabs: the bar is only a
+   little wider than a phone, so the label takes one step down rather than the
+   phone step above. */
+@media (min-width: 431px) and (max-width: 520px) {
+  .app-nav {
+    gap: 3px;
+  }
+
+  .app-nav__label {
+    font-size: 8.5px;
+    letter-spacing: 0.08em;
+  }
+}

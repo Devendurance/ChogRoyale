@@ -2,6 +2,20 @@
 
 Last updated: 2026-10-22
 
+## A3.1 player profile (2026-10-22), awaiting owner review
+
+- Doing: one bounded UI integration slice, the authenticated profile at `/app/profile`. Stopped after A3.1, nothing from A3.2 started.
+- Done: `src/app/app/profile/page.tsx`, `src/components/app/{ProfileScreen,ProfileView,profile-model,profile-types}.ts(x)` and `profile-model.test.ts`. The screen reads the real `/api/players/me`, `/loadout`, `/commanders` and `/stats` endpoints in parallel with the existing Privy token and reuses `resolvePlayer`, `resolveCommander`, `resolveDeck` and `toEligibility` from `lobby-model.ts`. No new endpoint, no new persistence, no API, DB or combat change.
+- Shared: `CommanderStage` and `AppNotice` were extracted from `LobbyView` verbatim and are now used by the lobby and the profile. `CommanderStage` gained a `headingLevel` prop, so the profile has one h1 (the player name) and the commander title is an h2. The lobby keeps h1 and its own render.
+- Identity: real avatar, display name and @username, an account-status badge, a verified-wallet count badge, the real `createdAt` as "Member since", and the onboarding step. No wallet address, player id, DID or role list is rendered. Missing values show "Not available".
+- Commander: the featured stage shows class name, class art, role, real cost, real ability and the free/NFT origin label. The class detail panel adds the full role sentence, the real class combat rows and the counters. An unresolved NFT claim shows "No class art" and "Class detail is unavailable". No loadout falls back to a clearly labelled free starter, never an invented selection.
+- Deck and record: the deck panel lists the real saved card names with the average cost and links to `/app/decks`. The record panel shows the real settled W/L/D, win rate and crowns when the stats read succeeds, "No verified matches yet" when it is empty, and one honest unavailable line when it fails. No leaderboard, trophies, XP, levels, currencies, streaks or rankings; `/dev/progress` stays the full progress surface for A3.2.
+- Navigation: `AppNav` now has five tabs (Lobby, Decks, Commanders/Soon, Progress, Profile) and the HUD user icon points at `/app/profile`. The bar fits 360px with no label overlap. Logout and `/dev/progress` are unchanged.
+- Checks: typecheck clean, lint 0 errors with the one pre-existing warning, focused tests 42/42 (profile model 16, decks model 26). Browser pass at 390x844, 1366x768 and 360x800: live `/app/profile` shows the login gate with no console errors and no overflow, `/app` and `/app/decks` still answer 200, and a temporary presentation fixture (real catalog data, no API or DB) rendered the ready and fallback states. Fixed during the pass: a wrapped Targets stat row, the two-h1 outline, and duplicated stats and deck failure copy.
+- Limitation: the authenticated path was not exercised. Privy needs a real wallet or email round trip and there is no dev bypass. The fixture screenshots are sample-data presentation evidence, not live player evidence. Manual checks pending: real login, a real saved deck and commander, a real settled record, the locked/unavailable states against a real 403 or 500, and the lobby ready state after the shared-component extraction.
+- Evidence: `C:/Users/USER/Documents/ChogRoyale-Assets/app-a3.1-review/` (`profile-390.png`, `profile-1366.png`, `profile-login-390.png`).
+- Unrelated dirty files left untouched: `.fast-build/STATE.md`, untracked `DESIGN.md` and `docs/Chog Royale messaging.md`.
+
 ## A2.1 decks acceptance and polish (2026-10-22), awaiting owner review
 
 - Doing: finish the A2.1 pass that an interrupted Claude Code session started. Recovery found its partial work in `decks-model.ts`, `decks-types.ts` and `env.test.ts`; the model helpers were correct but nothing used them yet, so typecheck was failing. The work was finished, not replaced.

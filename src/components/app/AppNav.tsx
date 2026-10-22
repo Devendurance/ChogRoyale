@@ -24,6 +24,7 @@ const TABS: Tab[] = [
   { id: "decks", label: "Decks", icon: "decks", href: "/app/decks", available: true },
   { id: "commanders", label: "Commanders", icon: "commanders", href: null, available: false },
   { id: "progress", label: "Progress", icon: "progress", href: "/dev/progress", available: true },
+  { id: "profile", label: "Profile", icon: "user", href: "/app/profile", available: true },
 ];
 
 export default function AppNav({ activeId = "lobby" }: { activeId?: string }) {
