@@ -2,6 +2,14 @@
 
 Last updated: 2026-10-23
 
+## B5.3b COMPLETE: controlled settlement proven on PROD (2026-10-23), disarmed
+
+- Blossom driven via isolated agent Chromium (direct owner-tab control unavailable: no CDP). Lobby verified, room B4YeJf3ZO joined, swarm preset + free commander confirmed, Choglings selected, legal own-territory tap issued; match ended concurrently, no forced outcome.
+- Controlled match 5c0282e8 settled replay-verified: private, Endychog win 3-0 (seat 1), core, 1267 ticks, evidence stored. History correct for both accounts. 0 matchmaking rows: leaderboard untouched. No duplicates.
+- Scope note: one earlier owner-played match (1b055300, Endychog 1-0, full regulation) also settled through the enabled server. Genuine verified rows, but outside the single authorized acceptance. No fabrication by me.
+- Disarmed: settlement server stopped, restarted without flags ("settlement disabled", legacy never enabled), outbox pending/failed empty. PROD: 9 players, 2 matches, journal 1-10. Snapshot/branches/TEST preserved. No push, deploy, legacy, or migrations.
+- Next: B5.3c legacy activation needs its own approval + real NFT-holder match; A0.2 acceptance can now use these real rows.
+
 ## B5.3b Blossom control: isolated browser ready, awaiting manual login (2026-10-23)
 
 - Direct control of owner's tab unavailable: no CDP endpoint (verified refused on 9222); enabling it on the primary profile is prohibited. Owner Chrome untouched.
