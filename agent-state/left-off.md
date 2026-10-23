@@ -2,6 +2,15 @@
 
 Last updated: 2026-10-23
 
+## A4.2 commanders gallery completed (2026-10-23)
+
+- Done: activated `/app/commanders`. The five real free classes come from the server catalog, with a featured `CommanderStage`, class details, authored abilities and counters, and real combat rows. Genesis entries come from the existing eligibility route and stay separate, labelled as cached observations rather than ownership proof. The screen never reads or writes a loadout and links to `/app/decks` for selection.
+- Checks: focused commanders model tests 19/19, typecheck clean, lint 0 errors with the one pre-existing `/dev/progress` warning, production build green with `/app/commanders` prerendered static.
+- Browser: fixture pass at 390x844, 1366x768 and 360x800. Five free cards, three Genesis fixtures, keyboard and touch selection, active Commanders nav, no overflow, no console errors, no loadout request. Fixture route deleted before commit.
+- Pending: authenticated gallery QA needs a real Privy login. Real eligible token art, no-wallet, 403 and 500 shapes were not exercised.
+- Checkpoint: `.fast-build/A4.2-CHECKPOINT.md`. `.fast-build/STATE.md` still holds unrelated dirty B2.8f history and was not staged.
+- Next: A4.3 only. Not started.
+
 ## A4.1 settings completed (2026-10-23)
 
 - Done: finished the partial `/app/settings` slice. Display name and avatar save through `POST /api/players/onboard`, then reconcile from `GET /api/players/me`. Wallet addresses, row ids and Privy identifiers stay out of the UI. Settings is linked from the HUD and the profile account panel.

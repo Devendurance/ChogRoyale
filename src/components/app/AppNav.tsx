@@ -22,7 +22,7 @@ interface Tab {
 const TABS: Tab[] = [
   { id: "lobby", label: "Lobby", icon: "lobby", href: "/app", available: true },
   { id: "decks", label: "Decks", icon: "decks", href: "/app/decks", available: true },
-  { id: "commanders", label: "Commanders", icon: "commanders", href: null, available: false },
+  { id: "commanders", label: "Commanders", icon: "commanders", href: "/app/commanders", available: true },
   { id: "progress", label: "Progress", icon: "progress", href: "/app/progress", available: true },
   { id: "profile", label: "Profile", icon: "user", href: "/app/profile", available: true },
 ];

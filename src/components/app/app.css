@@ -4839,3 +4839,364 @@
     align-items: start;
   }
 }
+
+/* ===========================================================================
+   A4.2 commanders gallery
+   The same deep violet plates and gold selection accent as the deck builder.
+   Five free classes and any Genesis tokens the eligibility route reports are
+   browsing surfaces only. Nothing here writes a loadout.
+   ========================================================================= */
+
+.app-gallery-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 2px 2px 0;
+}
+
+.app-gallery-head__text {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.app-gallery-head__eyebrow {
+  margin: 0;
+  font-family: var(--font-data);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--app-lilac);
+}
+
+.app-gallery-head__title {
+  margin: 4px 0 0;
+  font-family: var(--font-game);
+  font-size: clamp(30px, 7vw, 42px);
+  line-height: 1;
+  color: #fff;
+  -webkit-text-stroke: 3px var(--outline);
+  paint-order: stroke fill;
+  overflow-wrap: anywhere;
+}
+
+.app-gallery-head__lead {
+  margin: 8px 0 0;
+  max-width: 66ch;
+  font-size: 13px;
+  line-height: 19px;
+  color: var(--app-ink-65);
+}
+
+.app-gallery-head > .app-btn {
+  flex: 0 0 auto;
+}
+
+.app-gallery {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.app-gallery__hero,
+.app-gallery__detail,
+.app-gallery-roster {
+  min-width: 0;
+}
+
+.app-gallery__stage {
+  min-height: 300px;
+}
+
+.app-gallery-detail {
+  padding: 15px;
+}
+
+.app-gallery-token {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 200, 61, 0.28);
+  border-radius: 12px;
+  background: rgba(18, 11, 69, 0.42);
+}
+
+.app-gallery-token__name {
+  margin: 0;
+  font-family: var(--font-game);
+  font-size: 20px;
+  line-height: 23px;
+  color: #fff;
+  -webkit-text-stroke: 2px var(--outline);
+  paint-order: stroke fill;
+  overflow-wrap: anywhere;
+}
+
+.app-gallery-token__id {
+  margin: 2px 0 0;
+  font-family: var(--font-data);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--app-ink-65);
+}
+
+.app-gallery-token__state {
+  margin: 7px 0 0;
+  font-size: 12px;
+  line-height: 17px;
+  color: #c7f2c2;
+}
+
+.app-gallery-token__state--warn {
+  color: #ffd7a3;
+}
+
+.app-gallery-token__note {
+  margin: 6px 0 0;
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--app-ink-65);
+}
+
+.app-gallery-facts {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.app-gallery-fact {
+  min-width: 0;
+}
+
+.app-gallery-fact__value {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 20px;
+  color: var(--app-ink-85);
+  overflow-wrap: anywhere;
+}
+
+.app-gallery-section__head {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 9px;
+}
+
+.app-gallery-section__title {
+  margin: 0;
+  font-family: var(--font-game);
+  font-size: 22px;
+  line-height: 25px;
+  color: #fff;
+  -webkit-text-stroke: 2px var(--outline);
+  paint-order: stroke fill;
+}
+
+.app-gallery-section__lead {
+  margin: 0;
+  max-width: 76ch;
+  font-size: 12px;
+  line-height: 17px;
+  color: var(--app-ink-65);
+}
+
+.app-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(152px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.app-gallery-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  width: 100%;
+  min-width: 0;
+  min-height: 190px;
+  padding: 9px;
+  border: 2px solid var(--outline);
+  border-radius: 14px;
+  background: linear-gradient(180deg, var(--plate-light), var(--plate-dark));
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.16),
+    0 4px 0 rgba(18, 11, 69, 0.72);
+  color: #fff;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 120ms var(--app-ease-out),
+    box-shadow 120ms var(--app-ease-out),
+    transform 120ms var(--app-ease-out);
+}
+
+@media (hover: hover) {
+  .app-gallery-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--app-lilac);
+  }
+}
+
+.app-gallery-card:active {
+  transform: translateY(2px);
+}
+
+.app-gallery-card--active {
+  border-color: var(--coin-gold);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.2),
+    0 0 0 2px rgba(255, 200, 61, 0.45),
+    0 4px 0 rgba(18, 11, 69, 0.72),
+    0 0 20px rgba(255, 200, 61, 0.24);
+}
+
+.app-gallery-card--unproven {
+  opacity: 0.82;
+}
+
+.app-gallery-card__art {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 82px;
+  margin-bottom: 3px;
+  border-radius: 10px;
+  border: 1px solid rgba(185, 162, 255, 0.2);
+  background: radial-gradient(70% 80% at 50% 22%, rgba(143, 123, 255, 0.32), rgba(18, 11, 69, 0.5));
+  overflow: hidden;
+}
+
+.app-gallery-card__img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 5px 8px rgba(10, 6, 40, 0.5));
+}
+
+.app-gallery-card__img--token {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: none;
+}
+
+.app-gallery-card__placeholder {
+  display: grid;
+  place-items: center;
+  color: var(--app-ink-45);
+}
+
+.app-gallery-card__active {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: 2px solid var(--outline);
+  background: var(--coin-gold);
+  color: var(--outline);
+  box-shadow: 0 0 10px rgba(255, 200, 61, 0.55);
+}
+
+.app-gallery-card__badge {
+  align-self: flex-start;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(185, 162, 255, 0.45);
+  background: rgba(18, 11, 69, 0.4);
+  font-family: var(--font-data);
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--app-lilac);
+}
+
+.app-gallery-card__badge--nft {
+  border-color: rgba(255, 200, 61, 0.5);
+  color: var(--coin-gold);
+}
+
+.app-gallery-card__name {
+  font-family: var(--font-game);
+  font-size: 16px;
+  line-height: 19px;
+  color: #fff;
+  -webkit-text-stroke: 1.5px var(--outline);
+  paint-order: stroke fill;
+  overflow-wrap: anywhere;
+}
+
+.app-gallery-card__class {
+  font-family: var(--font-data);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--app-ink-65);
+  overflow-wrap: anywhere;
+}
+
+.app-gallery-card__role {
+  margin-top: auto;
+  font-size: 11.5px;
+  line-height: 16px;
+  color: var(--app-ink-85);
+  overflow-wrap: anywhere;
+}
+
+.app-gallery-card__state {
+  margin-top: auto;
+  font-family: var(--font-data);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #c7f2c2;
+  overflow-wrap: anywhere;
+}
+
+.app-gallery-card__state--warn {
+  color: #ffd7a3;
+}
+
+.app-gallery-genesis__note {
+  margin: 10px 0 0;
+  font-size: 11.5px;
+  line-height: 16px;
+  color: var(--app-ink-65);
+}
+
+@media (min-width: 1024px) {
+  /* Featured class on the left, its details on the right, then both rosters
+     across the full column so five cards fit in one row at 1366. */
+  .app-gallery {
+    grid-template-columns: minmax(0, 1fr) 360px;
+    align-items: start;
+  }
+
+  .app-gallery__hero {
+    grid-column: 1;
+  }
+
+  .app-gallery__detail {
+    grid-column: 2;
+  }
+
+  .app-gallery-roster {
+    grid-column: 1 / -1;
+  }
+}
