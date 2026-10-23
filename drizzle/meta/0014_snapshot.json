@@ -1,0 +1,3335 @@
+{
+  "id": "60954aa1-1d55-4257-88a8-eb7914bc6867",
+  "prevId": "94ec4dbb-2fb6-4e21-a89c-0acfd3b77097",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.arena_patron_rulesets": {
+      "name": "arena_patron_rulesets",
+      "schema": "",
+      "columns": {
+        "version": {
+          "name": "version",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "definition": {
+          "name": "definition",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.card_xp_awards": {
+      "name": "card_xp_awards",
+      "schema": "",
+      "columns": {
+        "match_id": {
+          "name": "match_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "player_id": {
+          "name": "player_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "card_id": {
+          "name": "card_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "deployments": {
+          "name": "deployments",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "xp": {
+          "name": "xp",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "policy_version": {
+          "name": "policy_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "card_xp_awards_player_card_idx": {
+          "name": "card_xp_awards_player_card_idx",
+          "columns": [
+            {
+              "expression": "player_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "card_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "card_xp_awards_match_id_matches_id_fk": {
+          "name": "card_xp_awards_match_id_matches_id_fk",
+          "tableFrom": "card_xp_awards",
+          "tableTo": "matches",
+          "columnsFrom": [
+            "match_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "card_xp_awards_player_id_players_id_fk": {
+          "name": "card_xp_awards_player_id_players_id_fk",
+          "tableFrom": "card_xp_awards",
+          "tableTo": "players",
+          "columnsFrom": [
+            "player_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "card_xp_awards_pk": {
+          "name": "card_xp_awards_pk",
+          "columns": [
+            "match_id",
+            "player_id",
+            "card_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "card_xp_awards_counts_check": {
+          "name": "card_xp_awards_counts_check",
+          "value": "\"card_xp_awards\".\"deployments\" > 0 and \"card_xp_awards\".\"xp\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.card_xp_progress": {
+      "name": "card_xp_progress",
+      "schema": "",
+      "columns": {
+        "player_id": {
+          "name": "player_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "card_id": {
+          "name": "card_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "xp": {
+          "name": "xp",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "level": {
+          "name": "level",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "purchased_level": {
+          "name": "purchased_level",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "card_xp_progress_player_idx": {
+          "name": "card_xp_progress_player_idx",
+          "columns": [
+            {
+              "expression": "player_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "card_xp_progress_player_id_players_id_fk": {
+          "name": "card_xp_progress_player_id_players_id_fk",
+          "tableFrom": "card_xp_progress",
+          "tableTo": "players",
+          "columnsFrom": [
+            "player_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "card_xp_progress_pk": {
+          "name": "card_xp_progress_pk",
+          "columns": [
+            "player_id",
+            "card_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "card_xp_progress_xp_check": {
+          "name": "card_xp_progress_xp_check",
+          "value": "\"card_xp_progress\".\"xp\" >= 0"
+        },
+        "card_xp_progress_level_check": {
+          "name": "card_xp_progress_level_check",
+          "value": "\"card_xp_progress\".\"level\" >= 1 and \"card_xp_progress\".\"level\" <= 10"
+        },
+        "card_xp_progress_purchased_check": {
+          "name": "card_xp_progress_purchased_check",
+          "value": "\"card_xp_progress\".\"purchased_level\" >= 1 and \"card_xp_progress\".\"purchased_level\" <= 10"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.card_xp_runs": {
+      "name": "card_xp_runs",
+      "schema": "",
+      "columns": {
+        "match_id": {
+          "name": "match_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "applied": {
+          "name": "applied",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "awards_created": {
+          "name": "awards_created",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "details": {
+          "name": "details",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "card_xp_runs_match_id_matches_id_fk": {
+          "name": "card_xp_runs_match_id_matches_id_fk",
+          "tableFrom": "card_xp_runs",
+          "tableTo": "matches",
+          "columnsFrom": [
+            "match_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "card_xp_runs_status_check": {
+          "name": "card_xp_runs_status_check",
+          "value": "\"card_xp_runs\".\"status\" in ('done','no-eligible')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.chaos_rulesets": {
+      "name": "chaos_rulesets",
+      "schema": "",
+      "columns": {
+        "version": {
+          "name": "version",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "definition": {
+          "name": "definition",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.commander_rulesets": {
+      "name": "commander_rulesets",
+      "schema": "",
+      "columns": {
+        "version": {
+          "name": "version",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "definition": {
+          "name": "definition",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.commanders": {
+      "name": "commanders",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "nft_id": {
+          "name": "nft_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ruleset_version": {
+          "name": "ruleset_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "token_id": {
+          "name": "token_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "class": {
+          "name": "class",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "affinity": {
+          "name": "affinity",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stats": {
+          "name": "stats",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "abilities": {
+          "name": "abilities",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "variant": {
+          "name": "variant",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "prestige": {
+          "name": "prestige",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source_traits": {
+          "name": "source_traits",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "unmatched_traits": {
+          "name": "unmatched_traits",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "scores": {
+          "name": "scores",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "power_score": {
+          "name": "power_score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "content_hash": {
+          "name": "content_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "previous_content_hash": {
+          "name": "previous_content_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "derivation_count": {
+          "name": "derivation_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "derived_at": {
+          "name": "derived_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "commanders_nft_ruleset_unique": {
+          "name": "commanders_nft_ruleset_unique",
+          "columns": [
+            {
+              "expression": "nft_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "ruleset_version",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "commanders_token_idx": {
+          "name": "commanders_token_idx",
+          "columns": [
+            {
+              "expression": "token_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "commanders_class_idx": {
+          "name": "commanders_class_idx",
+          "columns": [
+            {
+              "expression": "class",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "commanders_nft_id_nft_tokens_id_fk": {
+          "name": "commanders_nft_id_nft_tokens_id_fk",
+          "tableFrom": "commanders",
+          "tableTo": "nft_tokens",
+          "columnsFrom": [
+            "nft_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "commanders_ruleset_version_commander_rulesets_version_fk": {
+          "name": "commanders_ruleset_version_commander_rulesets_version_fk",
+          "tableFrom": "commanders",
+          "tableTo": "commander_rulesets",
+          "columnsFrom": [
+            "ruleset_version"
+          ],
+          "columnsTo": [
+            "version"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "commanders_class_check": {
+          "name": "commanders_class_check",
+          "value": "\"commanders\".\"class\" in ('bulwark','reaver','deadeye','scout','warden')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.friendships": {
+      "name": "friendships",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_a": {
+          "name": "user_a",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_b": {
+          "name": "user_b",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "requested_by": {
+          "name": "requested_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "friendships_pair_unique": {
+          "name": "friendships_pair_unique",
+          "columns": [
+            {
+              "expression": "user_a",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "user_b",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "friendships_user_a_players_id_fk": {
+          "name": "friendships_user_a_players_id_fk",
+          "tableFrom": "friendships",
+          "tableTo": "players",
+          "columnsFrom": [
+            "user_a"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "friendships_user_b_players_id_fk": {
+          "name": "friendships_user_b_players_id_fk",
+          "tableFrom": "friendships",
+          "tableTo": "players",
+          "columnsFrom": [
+            "user_b"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "friendships_canonical_order_check": {
+          "name": "friendships_canonical_order_check",
+          "value": "\"friendships\".\"user_a\" < \"friendships\".\"user_b\""
+        },
+        "friendships_status_check": {
+          "name": "friendships_status_check",
+          "value": "\"friendships\".\"status\" in ('pending','accepted')"
+        },
+        "friendships_requester_check": {
+          "name": "friendships_requester_check",
+          "value": "\"friendships\".\"requested_by\" = \"friendships\".\"user_a\" or \"friendships\".\"requested_by\" = \"friendships\".\"user_b\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.gold_earn_ledger": {
+      "name": "gold_earn_ledger",
+      "schema": "",
+      "columns": {
+        "match_id": {
+          "name": "match_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "player_id": {
+          "name": "player_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "amount": {
+          "name": "amount",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "result": {
+          "name": "result",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "policy_version": {
+          "name": "policy_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "gold_earn_ledger_player_idx": {
+          "name": "gold_earn_ledger_player_idx",
+          "columns": [
+            {
+              "expression": "player_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "gold_earn_ledger_match_id_matches_id_fk": {
+          "name": "gold_earn_ledger_match_id_matches_id_fk",
+          "tableFrom": "gold_earn_ledger",
+          "tableTo": "matches",
+          "columnsFrom": [
+            "match_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "gold_earn_ledger_player_id_players_id_fk": {
+          "name": "gold_earn_ledger_player_id_players_id_fk",
+          "tableFrom": "gold_earn_ledger",
+          "tableTo": "players",
+          "columnsFrom": [
+            "player_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "gold_earn_ledger_pk": {
+          "name": "gold_earn_ledger_pk",
+          "columns": [
+            "match_id",
+            "player_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "gold_earn_ledger_amount_check": {
+          "name": "gold_earn_ledger_amount_check",
+          "value": "\"gold_earn_ledger\".\"amount\" >= 0"
+        },
+        "gold_earn_ledger_result_check": {
+          "name": "gold_earn_ledger_result_check",
+          "value": "\"gold_earn_ledger\".\"result\" in ('win','loss','draw')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.gold_spend_ledger": {
+      "name": "gold_spend_ledger",
+      "schema": "",
+      "columns": {
+        "idempotency_key": {
+          "name": "idempotency_key",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "player_id": {
+          "name": "player_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "card_id": {
+          "name": "card_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "from_level": {
+          "name": "from_level",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "to_level": {
+          "name": "to_level",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cost": {
+          "name": "cost",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "policy_version": {
+          "name": "policy_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "gold_spend_ledger_player_idx": {
+          "name": "gold_spend_ledger_player_idx",
+          "columns": [
+            {
+              "expression": "player_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "gold_spend_ledger_player_id_players_id_fk": {
+          "name": "gold_spend_ledger_player_id_players_id_fk",
+          "tableFrom": "gold_spend_ledger",
+          "tableTo": "players",
+          "columnsFrom": [
+            "player_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "gold_spend_ledger_levels_check": {
+          "name": "gold_spend_ledger_levels_check",
+          "value": "\"gold_spend_ledger\".\"from_level\" >= 1 and \"gold_spend_ledger\".\"to_level\" = \"gold_spend_ledger\".\"from_level\" + 1 and \"gold_spend_ledger\".\"to_level\" <= 10"
+        },
+        "gold_spend_ledger_cost_check": {
+          "name": "gold_spend_ledger_cost_check",
+          "value": "\"gold_spend_ledger\".\"cost\" > 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.index_checkpoints": {
+      "name": "index_checkpoints",
+      "schema": "",
+      "columns": {
+        "key": {
+          "name": "key",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "last_block": {
+          "name": "last_block",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.legacy_achievements": {
+      "name": "legacy_achievements",
+      "schema": "",
+      "columns": {
+        "code": {
+          "name": "code",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "version": {
+          "name": "version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "eligibility": {
+          "name": "eligibility",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.match_evidence": {
+      "name": "match_evidence",
+      "schema": "",
+      "columns": {
+        "match_id": {
+          "name": "match_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "format_version": {
+          "name": "format_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "evidence": {
+          "name": "evidence",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "evidence_sha256": {
+          "name": "evidence_sha256",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "match_evidence_match_id_matches_id_fk": {
+          "name": "match_evidence_match_id_matches_id_fk",
+          "tableFrom": "match_evidence",
+          "tableTo": "matches",
+          "columnsFrom": [
+            "match_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "match_evidence_format_check": {
+          "name": "match_evidence_format_check",
+          "value": "\"match_evidence\".\"format_version\" = 1"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.match_legacy_runs": {
+      "name": "match_legacy_runs",
+      "schema": "",
+      "columns": {
+        "match_id": {
+          "name": "match_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "processed_at": {
+          "name": "processed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "events_created": {
+          "name": "events_created",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "details": {
+          "name": "details",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "match_legacy_runs_match_id_matches_id_fk": {
+          "name": "match_legacy_runs_match_id_matches_id_fk",
+          "tableFrom": "match_legacy_runs",
+          "tableTo": "matches",
+          "columnsFrom": [
+            "match_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "match_legacy_runs_status_check": {
+          "name": "match_legacy_runs_status_check",
+          "value": "\"match_legacy_runs\".\"status\" in ('done','no-eligible')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.match_participants": {
+      "name": "match_participants",
+      "schema": "",
+      "columns": {
+        "match_id": {
+          "name": "match_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "seat": {
+          "name": "seat",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "player_id": {
+          "name": "player_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "result": {
+          "name": "result",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "crowns": {
+          "name": "crowns",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "deck": {
+          "name": "deck",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "commander_kind": {
+          "name": "commander_kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "commander_class": {
+          "name": "commander_class",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nft_token_id": {
+          "name": "nft_token_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "commander_identity": {
+          "name": "commander_identity",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "entitlement_owner": {
+          "name": "entitlement_owner",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "match_participants_match_player_unique": {
+          "name": "match_participants_match_player_unique",
+          "columns": [
+            {
+              "expression": "match_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "player_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "match_participants_player_match_idx": {
+          "name": "match_participants_player_match_idx",
+          "columns": [
+            {
+              "expression": "player_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "match_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "match_participants_match_id_matches_id_fk": {
+          "name": "match_participants_match_id_matches_id_fk",
+          "tableFrom": "match_participants",
+          "tableTo": "matches",
+          "columnsFrom": [
+            "match_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "match_participants_player_id_players_id_fk": {
+          "name": "match_participants_player_id_players_id_fk",
+          "tableFrom": "match_participants",
+          "tableTo": "players",
+          "columnsFrom": [
+            "player_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "match_participants_pk": {
+          "name": "match_participants_pk",
+          "columns": [
+            "match_id",
+            "seat"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "match_participants_seat_check": {
+          "name": "match_participants_seat_check",
+          "value": "\"match_participants\".\"seat\" in (0,1)"
+        },
+        "match_participants_result_check": {
+          "name": "match_participants_result_check",
+          "value": "\"match_participants\".\"result\" in ('win','loss','draw')"
+        },
+        "match_participants_deck_check": {
+          "name": "match_participants_deck_check",
+          "value": "cardinality(\"match_participants\".\"deck\") = 8"
+        },
+        "match_participants_commander_kind_check": {
+          "name": "match_participants_commander_kind_check",
+          "value": "\"match_participants\".\"commander_kind\" in ('free','nft')"
+        },
+        "match_participants_owner_check": {
+          "name": "match_participants_owner_check",
+          "value": "\"match_participants\".\"entitlement_owner\" is null or \"match_participants\".\"entitlement_owner\" ~ '^0x[0-9a-f]{40}$'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.matches": {
+      "name": "matches",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "room_id": {
+          "name": "room_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "match_type": {
+          "name": "match_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ruleset_version": {
+          "name": "ruleset_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "protocol_version": {
+          "name": "protocol_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "started_at": {
+          "name": "started_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "finished_at": {
+          "name": "finished_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "settled_at": {
+          "name": "settled_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "outcome": {
+          "name": "outcome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "winner_seat": {
+          "name": "winner_seat",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "end_reason": {
+          "name": "end_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "crowns_0": {
+          "name": "crowns_0",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "crowns_1": {
+          "name": "crowns_1",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ticks": {
+          "name": "ticks",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "live_hash": {
+          "name": "live_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "replay_hash": {
+          "name": "replay_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "evidence_sha256": {
+          "name": "evidence_sha256",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "verification": {
+          "name": "verification",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "matches_settled_at_idx": {
+          "name": "matches_settled_at_idx",
+          "columns": [
+            {
+              "expression": "settled_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "matches_match_type_check": {
+          "name": "matches_match_type_check",
+          "value": "\"matches\".\"match_type\" in ('private','matchmaking','ranked')"
+        },
+        "matches_outcome_check": {
+          "name": "matches_outcome_check",
+          "value": "\"matches\".\"outcome\" in ('win','draw')"
+        },
+        "matches_winner_check": {
+          "name": "matches_winner_check",
+          "value": "(\"matches\".\"outcome\" = 'win' and \"matches\".\"winner_seat\" in (0,1)) or (\"matches\".\"outcome\" = 'draw' and \"matches\".\"winner_seat\" is null)"
+        },
+        "matches_crowns_check": {
+          "name": "matches_crowns_check",
+          "value": "\"matches\".\"crowns_0\" between 0 and 3 and \"matches\".\"crowns_1\" between 0 and 3"
+        },
+        "matches_hash_equal_check": {
+          "name": "matches_hash_equal_check",
+          "value": "\"matches\".\"live_hash\" = \"matches\".\"replay_hash\""
+        },
+        "matches_verification_check": {
+          "name": "matches_verification_check",
+          "value": "\"matches\".\"verification\" = 'replay-verified'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.nft_achievement_awards": {
+      "name": "nft_achievement_awards",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "nft_id": {
+          "name": "nft_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "token_id": {
+          "name": "token_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "achievement_code": {
+          "name": "achievement_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "evidence": {
+          "name": "evidence",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "awarded_at": {
+          "name": "awarded_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "nft_achievement_awards_nft_code_unique": {
+          "name": "nft_achievement_awards_nft_code_unique",
+          "columns": [
+            {
+              "expression": "nft_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "achievement_code",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "nft_achievement_awards_nft_idx": {
+          "name": "nft_achievement_awards_nft_idx",
+          "columns": [
+            {
+              "expression": "nft_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "nft_achievement_awards_nft_id_nft_tokens_id_fk": {
+          "name": "nft_achievement_awards_nft_id_nft_tokens_id_fk",
+          "tableFrom": "nft_achievement_awards",
+          "tableTo": "nft_tokens",
+          "columnsFrom": [
+            "nft_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "nft_achievement_awards_achievement_code_legacy_achievements_code_fk": {
+          "name": "nft_achievement_awards_achievement_code_legacy_achievements_code_fk",
+          "tableFrom": "nft_achievement_awards",
+          "tableTo": "legacy_achievements",
+          "columnsFrom": [
+            "achievement_code"
+          ],
+          "columnsTo": [
+            "code"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.nft_legacy_events": {
+      "name": "nft_legacy_events",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "authority_key": {
+          "name": "authority_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nft_id": {
+          "name": "nft_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "token_id": {
+          "name": "token_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "category": {
+          "name": "category",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "match_id": {
+          "name": "match_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "match_status": {
+          "name": "match_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "payload": {
+          "name": "payload",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ruleset_refs": {
+          "name": "ruleset_refs",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source": {
+          "name": "source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "actor": {
+          "name": "actor",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "supersedes_event_id": {
+          "name": "supersedes_event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'recorded'"
+        },
+        "occurred_at": {
+          "name": "occurred_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "nft_legacy_events_authority_key_unique": {
+          "name": "nft_legacy_events_authority_key_unique",
+          "columns": [
+            {
+              "expression": "authority_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "nft_legacy_events_nft_created_idx": {
+          "name": "nft_legacy_events_nft_created_idx",
+          "columns": [
+            {
+              "expression": "nft_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "nft_legacy_events_match_idx": {
+          "name": "nft_legacy_events_match_idx",
+          "columns": [
+            {
+              "expression": "match_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "nft_legacy_events_nft_id_nft_tokens_id_fk": {
+          "name": "nft_legacy_events_nft_id_nft_tokens_id_fk",
+          "tableFrom": "nft_legacy_events",
+          "tableTo": "nft_tokens",
+          "columnsFrom": [
+            "nft_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "nft_legacy_events_category_check": {
+          "name": "nft_legacy_events_category_check",
+          "value": "\"nft_legacy_events\".\"category\" in ('patron_appearance','commander_appearance','commander_outcome','achievement')"
+        },
+        "nft_legacy_events_status_check": {
+          "name": "nft_legacy_events_status_check",
+          "value": "\"nft_legacy_events\".\"status\" in ('recorded','corrected')"
+        },
+        "nft_legacy_events_token_id_check": {
+          "name": "nft_legacy_events_token_id_check",
+          "value": "\"nft_legacy_events\".\"token_id\" ~ '^[0-9]{1,78}$'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.nft_metadata": {
+      "name": "nft_metadata",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "nft_id": {
+          "name": "nft_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "document_original": {
+          "name": "document_original",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "image_original": {
+          "name": "image_original",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "attributes_original": {
+          "name": "attributes_original",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "content_hash": {
+          "name": "content_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'resolved'"
+        },
+        "error": {
+          "name": "error",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source_url": {
+          "name": "source_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fetched_at": {
+          "name": "fetched_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "nft_metadata_nft_unique": {
+          "name": "nft_metadata_nft_unique",
+          "columns": [
+            {
+              "expression": "nft_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "nft_metadata_hash_idx": {
+          "name": "nft_metadata_hash_idx",
+          "columns": [
+            {
+              "expression": "content_hash",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "nft_metadata_nft_id_nft_tokens_id_fk": {
+          "name": "nft_metadata_nft_id_nft_tokens_id_fk",
+          "tableFrom": "nft_metadata",
+          "tableTo": "nft_tokens",
+          "columnsFrom": [
+            "nft_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "nft_metadata_status_check": {
+          "name": "nft_metadata_status_check",
+          "value": "\"nft_metadata\".\"status\" in ('resolved','failed')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.nft_ownership_observations": {
+      "name": "nft_ownership_observations",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "nft_id": {
+          "name": "nft_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "owner_address": {
+          "name": "owner_address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "owner_normalized": {
+          "name": "owner_normalized",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "block_number": {
+          "name": "block_number",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "block_hash": {
+          "name": "block_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source": {
+          "name": "source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'live'"
+        },
+        "observed_at": {
+          "name": "observed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "nft_ownership_nft_observed_idx": {
+          "name": "nft_ownership_nft_observed_idx",
+          "columns": [
+            {
+              "expression": "nft_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "observed_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "nft_ownership_owner_idx": {
+          "name": "nft_ownership_owner_idx",
+          "columns": [
+            {
+              "expression": "owner_normalized",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "nft_ownership_observations_nft_id_nft_tokens_id_fk": {
+          "name": "nft_ownership_observations_nft_id_nft_tokens_id_fk",
+          "tableFrom": "nft_ownership_observations",
+          "tableTo": "nft_tokens",
+          "columnsFrom": [
+            "nft_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "nft_ownership_source_check": {
+          "name": "nft_ownership_source_check",
+          "value": "\"nft_ownership_observations\".\"source\" in ('live')"
+        },
+        "nft_ownership_address_check": {
+          "name": "nft_ownership_address_check",
+          "value": "\"nft_ownership_observations\".\"owner_normalized\" ~ '^0x[0-9a-f]{40}$'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.nft_tokens": {
+      "name": "nft_tokens",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "chain_id": {
+          "name": "chain_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 143
+        },
+        "contract_address": {
+          "name": "contract_address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "token_id": {
+          "name": "token_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "token_uri_original": {
+          "name": "token_uri_original",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "nft_tokens_chain_contract_token_unique": {
+          "name": "nft_tokens_chain_contract_token_unique",
+          "columns": [
+            {
+              "expression": "chain_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "contract_address",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "token_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "nft_tokens_contract_token_idx": {
+          "name": "nft_tokens_contract_token_idx",
+          "columns": [
+            {
+              "expression": "contract_address",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "token_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "nft_tokens_chain_check": {
+          "name": "nft_tokens_chain_check",
+          "value": "\"nft_tokens\".\"chain_id\" = 143"
+        },
+        "nft_tokens_contract_check": {
+          "name": "nft_tokens_contract_check",
+          "value": "\"nft_tokens\".\"contract_address\" ~ '^0x[0-9a-f]{40}$'"
+        },
+        "nft_tokens_token_id_check": {
+          "name": "nft_tokens_token_id_check",
+          "value": "\"nft_tokens\".\"token_id\" ~ '^[0-9]{1,78}$'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.nft_trait_stats": {
+      "name": "nft_trait_stats",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "trait_type": {
+          "name": "trait_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trait_value": {
+          "name": "trait_value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nft_count": {
+          "name": "nft_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "nft_trait_stats_type_value_unique": {
+          "name": "nft_trait_stats_type_value_unique",
+          "columns": [
+            {
+              "expression": "trait_type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "trait_value",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.patron_assignments": {
+      "name": "patron_assignments",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "match_key": {
+          "name": "match_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nft_id": {
+          "name": "nft_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "token_id": {
+          "name": "token_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ruleset_version": {
+          "name": "ruleset_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "commander_ruleset_version": {
+          "name": "commander_ruleset_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "server_seed": {
+          "name": "server_seed",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "patron_config": {
+          "name": "patron_config",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "config_hash": {
+          "name": "config_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trait_snapshot": {
+          "name": "trait_snapshot",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "metadata_content_hash": {
+          "name": "metadata_content_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "patron_assignments_match_key_unique": {
+          "name": "patron_assignments_match_key_unique",
+          "columns": [
+            {
+              "expression": "match_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "patron_assignments_token_idx": {
+          "name": "patron_assignments_token_idx",
+          "columns": [
+            {
+              "expression": "token_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "patron_assignments_nft_idx": {
+          "name": "patron_assignments_nft_idx",
+          "columns": [
+            {
+              "expression": "nft_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "patron_assignments_nft_id_nft_tokens_id_fk": {
+          "name": "patron_assignments_nft_id_nft_tokens_id_fk",
+          "tableFrom": "patron_assignments",
+          "tableTo": "nft_tokens",
+          "columnsFrom": [
+            "nft_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "patron_assignments_token_id_check": {
+          "name": "patron_assignments_token_id_check",
+          "value": "\"patron_assignments\".\"token_id\" ~ '^[0-9]{1,78}$'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.player_loadouts": {
+      "name": "player_loadouts",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "player_id": {
+          "name": "player_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "slot": {
+          "name": "slot",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "schema_version": {
+          "name": "schema_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "cards": {
+          "name": "cards",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "commander_kind": {
+          "name": "commander_kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "commander_class": {
+          "name": "commander_class",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nft_chain_id": {
+          "name": "nft_chain_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nft_contract": {
+          "name": "nft_contract",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nft_token_id": {
+          "name": "nft_token_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "revision": {
+          "name": "revision",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "player_loadouts_player_slot_unique": {
+          "name": "player_loadouts_player_slot_unique",
+          "columns": [
+            {
+              "expression": "player_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "slot",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "player_loadouts_player_id_players_id_fk": {
+          "name": "player_loadouts_player_id_players_id_fk",
+          "tableFrom": "player_loadouts",
+          "tableTo": "players",
+          "columnsFrom": [
+            "player_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "player_loadouts_slot_check": {
+          "name": "player_loadouts_slot_check",
+          "value": "\"player_loadouts\".\"slot\" = 0"
+        },
+        "player_loadouts_schema_version_check": {
+          "name": "player_loadouts_schema_version_check",
+          "value": "\"player_loadouts\".\"schema_version\" = 1"
+        },
+        "player_loadouts_cards_count_check": {
+          "name": "player_loadouts_cards_count_check",
+          "value": "cardinality(\"player_loadouts\".\"cards\") = 7"
+        },
+        "player_loadouts_commander_kind_check": {
+          "name": "player_loadouts_commander_kind_check",
+          "value": "\"player_loadouts\".\"commander_kind\" in ('free','nft')"
+        },
+        "player_loadouts_commander_shape_check": {
+          "name": "player_loadouts_commander_shape_check",
+          "value": "((\"player_loadouts\".\"commander_kind\" = 'free'\n          and \"player_loadouts\".\"commander_class\" in ('bulwark','reaver','deadeye','scout','warden')\n          and \"player_loadouts\".\"nft_chain_id\" is null and \"player_loadouts\".\"nft_contract\" is null and \"player_loadouts\".\"nft_token_id\" is null)\n        or (\"player_loadouts\".\"commander_kind\" = 'nft'\n          and \"player_loadouts\".\"commander_class\" is null\n          and \"player_loadouts\".\"nft_chain_id\" = 143\n          and \"player_loadouts\".\"nft_contract\" = '0xc96d31f8626c6d03fae5dcd3d61e3fb9f4a73763'\n          and \"player_loadouts\".\"nft_token_id\" ~ '^[1-9][0-9]{0,77}$'))"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.player_roles": {
+      "name": "player_roles",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "player_id": {
+          "name": "player_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "granted_by": {
+          "name": "granted_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "granted_at": {
+          "name": "granted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "player_roles_player_role_unique": {
+          "name": "player_roles_player_role_unique",
+          "columns": [
+            {
+              "expression": "player_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "role",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "player_roles_player_id_idx": {
+          "name": "player_roles_player_id_idx",
+          "columns": [
+            {
+              "expression": "player_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "player_roles_player_id_players_id_fk": {
+          "name": "player_roles_player_id_players_id_fk",
+          "tableFrom": "player_roles",
+          "tableTo": "players",
+          "columnsFrom": [
+            "player_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "player_roles_role_check": {
+          "name": "player_roles_role_check",
+          "value": "\"player_roles\".\"role\" in ('PLAYER','MODERATOR','ADMIN')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.player_wallets": {
+      "name": "player_wallets",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "player_id": {
+          "name": "player_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "address": {
+          "name": "address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "address_normalized": {
+          "name": "address_normalized",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "chain_id": {
+          "name": "chain_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 143
+        },
+        "wallet_type": {
+          "name": "wallet_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'external'"
+        },
+        "is_primary": {
+          "name": "is_primary",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "link_source": {
+          "name": "link_source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
+        "verified_at": {
+          "name": "verified_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "player_wallets_address_normalized_unique": {
+          "name": "player_wallets_address_normalized_unique",
+          "columns": [
+            {
+              "expression": "address_normalized",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "player_wallets_one_primary_per_player": {
+          "name": "player_wallets_one_primary_per_player",
+          "columns": [
+            {
+              "expression": "player_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"player_wallets\".\"is_primary\" = true",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "player_wallets_player_id_idx": {
+          "name": "player_wallets_player_id_idx",
+          "columns": [
+            {
+              "expression": "player_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "player_wallets_player_id_players_id_fk": {
+          "name": "player_wallets_player_id_players_id_fk",
+          "tableFrom": "player_wallets",
+          "tableTo": "players",
+          "columnsFrom": [
+            "player_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "player_wallets_type_check": {
+          "name": "player_wallets_type_check",
+          "value": "\"player_wallets\".\"wallet_type\" in ('embedded','external')"
+        },
+        "player_wallets_address_format_check": {
+          "name": "player_wallets_address_format_check",
+          "value": "\"player_wallets\".\"address_normalized\" ~ '^0x[0-9a-f]{40}$'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.players": {
+      "name": "players",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "privy_did": {
+          "name": "privy_did",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "username": {
+          "name": "username",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "username_key": {
+          "name": "username_key",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "avatar_id": {
+          "name": "avatar_id",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "account_status": {
+          "name": "account_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'active'"
+        },
+        "onboarding_status": {
+          "name": "onboarding_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "players_privy_did_unique": {
+          "name": "players_privy_did_unique",
+          "columns": [
+            {
+              "expression": "privy_did",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "players_username_key_unique": {
+          "name": "players_username_key_unique",
+          "columns": [
+            {
+              "expression": "username_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "players_account_status_idx": {
+          "name": "players_account_status_idx",
+          "columns": [
+            {
+              "expression": "account_status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "players_account_status_check": {
+          "name": "players_account_status_check",
+          "value": "\"players\".\"account_status\" in ('active','suspended','banned')"
+        },
+        "players_onboarding_status_check": {
+          "name": "players_onboarding_status_check",
+          "value": "\"players\".\"onboarding_status\" in ('pending','complete')"
+        },
+        "players_username_key_format_check": {
+          "name": "players_username_key_format_check",
+          "value": "\"players\".\"username_key\" is null or \"players\".\"username_key\" ~ '^[a-z0-9_]{3,20}$'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.pulse_schedules": {
+      "name": "pulse_schedules",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "match_key": {
+          "name": "match_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "chaos_ruleset_version": {
+          "name": "chaos_ruleset_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "patron_ruleset_version": {
+          "name": "patron_ruleset_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "patron_config_hash": {
+          "name": "patron_config_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "server_seed_hash": {
+          "name": "server_seed_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "schedule": {
+          "name": "schedule",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "schedule_hash": {
+          "name": "schedule_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "pulse_schedules_match_key_unique": {
+          "name": "pulse_schedules_match_key_unique",
+          "columns": [
+            {
+              "expression": "match_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "pulse_schedules_hash_idx": {
+          "name": "pulse_schedules_hash_idx",
+          "columns": [
+            {
+              "expression": "schedule_hash",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "pulse_schedules_match_key_patron_assignments_match_key_fk": {
+          "name": "pulse_schedules_match_key_patron_assignments_match_key_fk",
+          "tableFrom": "pulse_schedules",
+          "tableTo": "patron_assignments",
+          "columnsFrom": [
+            "match_key"
+          ],
+          "columnsTo": [
+            "match_key"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.ranked_trophy_awards": {
+      "name": "ranked_trophy_awards",
+      "schema": "",
+      "columns": {
+        "match_id": {
+          "name": "match_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "player_id": {
+          "name": "player_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "season": {
+          "name": "season",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "result": {
+          "name": "result",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "delta": {
+          "name": "delta",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "balance_after": {
+          "name": "balance_after",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "ranked_trophy_awards_player_season_idx": {
+          "name": "ranked_trophy_awards_player_season_idx",
+          "columns": [
+            {
+              "expression": "player_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "season",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "ranked_trophy_awards_match_id_matches_id_fk": {
+          "name": "ranked_trophy_awards_match_id_matches_id_fk",
+          "tableFrom": "ranked_trophy_awards",
+          "tableTo": "matches",
+          "columnsFrom": [
+            "match_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "ranked_trophy_awards_player_id_players_id_fk": {
+          "name": "ranked_trophy_awards_player_id_players_id_fk",
+          "tableFrom": "ranked_trophy_awards",
+          "tableTo": "players",
+          "columnsFrom": [
+            "player_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "ranked_trophy_awards_pk": {
+          "name": "ranked_trophy_awards_pk",
+          "columns": [
+            "match_id",
+            "player_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "ranked_trophy_awards_result_check": {
+          "name": "ranked_trophy_awards_result_check",
+          "value": "\"ranked_trophy_awards\".\"result\" in ('win','loss','draw')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.ranked_trophy_balances": {
+      "name": "ranked_trophy_balances",
+      "schema": "",
+      "columns": {
+        "player_id": {
+          "name": "player_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "season": {
+          "name": "season",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trophies": {
+          "name": "trophies",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "ranked_matches": {
+          "name": "ranked_matches",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "ranked_wins": {
+          "name": "ranked_wins",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "ranked_losses": {
+          "name": "ranked_losses",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "ranked_draws": {
+          "name": "ranked_draws",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "ranked_trophy_balances_season_trophies_idx": {
+          "name": "ranked_trophy_balances_season_trophies_idx",
+          "columns": [
+            {
+              "expression": "season",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "trophies",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "ranked_trophy_balances_player_id_players_id_fk": {
+          "name": "ranked_trophy_balances_player_id_players_id_fk",
+          "tableFrom": "ranked_trophy_balances",
+          "tableTo": "players",
+          "columnsFrom": [
+            "player_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "ranked_trophy_balances_pk": {
+          "name": "ranked_trophy_balances_pk",
+          "columns": [
+            "player_id",
+            "season"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "ranked_trophy_balances_trophies_check": {
+          "name": "ranked_trophy_balances_trophies_check",
+          "value": "\"ranked_trophy_balances\".\"trophies\" >= 0"
+        },
+        "ranked_trophy_balances_counters_check": {
+          "name": "ranked_trophy_balances_counters_check",
+          "value": "\"ranked_trophy_balances\".\"ranked_matches\" >= 0 and \"ranked_trophy_balances\".\"ranked_wins\" >= 0 and \"ranked_trophy_balances\".\"ranked_losses\" >= 0 and \"ranked_trophy_balances\".\"ranked_draws\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

@@ -67,8 +67,13 @@ describe("P2a card XP ledger", () => {
     const p = await player("zero");
     const me = await getMyCardXp(p.id);
     expect(me.cards).toHaveLength(20);
-    expect(me.cards.every((c) => c.level === 1 && c.xp === 0 && c.eligible === false && c.maxed === false)).toBe(true);
+    // Purchased semantics: XP alone never moves `level`; without Gold
+    // nothing is eligible either.
+    expect(
+      me.cards.every((c) => c.level === 1 && c.xpLevel === 1 && c.xp === 0 && c.eligible === false && c.maxed === false && c.goldCost === 100)
+    ).toBe(true);
     expect(me.cards[0]).toMatchObject({ xpTarget: CARD_XP_LEVEL_REQUIREMENTS[1] });
+    expect(me.gold).toBe(0);
   });
 
   it("stages once and applies cumulative XP with the policy level ladder", async () => {
@@ -81,13 +86,15 @@ describe("P2a card XP ledger", () => {
     expect(await applyCardXp(m1)).toMatchObject({ applied: true, units: 1 });
     expect(await applyCardXp(m1)).toMatchObject({ applied: false, units: 0 });
     await applyCardXp(m2);
-    // a/swarm totals 8 -> level 2 (threshold 5); b/sentry totals 2 -> level 1.
+    // a/choglings totals 8 XP (potential level 2) but stays purchased 1:
+    // XP alone never advances the purchased level, and with no Gold the
+    // upgrade is not eligible.
     const me = await getMyCardXp(a.id);
     const swarm = me.cards.find((c) => c.cardId === "choglings")!;
-    expect(swarm).toMatchObject({ xp: 8, level: 2, eligible: false });
-    expect(swarm.xpTarget).toBe(CARD_XP_LEVEL_REQUIREMENTS[2]);
+    expect(swarm).toMatchObject({ xp: 8, xpLevel: 2, level: 1, maxed: false, eligible: false, goldCost: 100 });
+    expect(swarm.xpTarget).toBe(CARD_XP_LEVEL_REQUIREMENTS[1]);
     const other = me.cards.find((c) => c.cardId === "rift_sentry")!;
-    expect(other).toMatchObject({ xp: 0, level: 1 });
+    expect(other).toMatchObject({ xp: 0, xpLevel: 1, level: 1 });
   });
 
   it("keeps the SQL level ladder identical to the policy function", async () => {
@@ -95,18 +102,25 @@ describe("P2a card XP ledger", () => {
     const totals = [0, 4, 5, 11, 12, 21, 22, 34, 35, 51, 52, 71, 72, 95, 96, 123, 124, 154, 155, 400];
     const ids = ordinaryCardIds();
     expect(ids).toHaveLength(totals.length);
-    for (const [i, xp] of totals.entries()) {
-      const m = await seedMatch();
-      await stageCardXp(m, [{ playerId: p.id, cardId: ids[i]!, deployments: Math.max(xp, 1), xp }], "done");
-      await applyCardXp(m);
-    }
+    // One match stages all 20 units; one apply derives every level.
+    const m = await seedMatch();
+    await stageCardXp(
+      m,
+      totals.map((xp, i) => ({ playerId: p.id, cardId: ids[i]!, deployments: Math.max(xp, 1), xp })),
+      "done"
+    );
+    await applyCardXp(m);
     const me = await getMyCardXp(p.id);
     for (const [i, xp] of totals.entries()) {
       const row = me.cards.find((c) => c.cardId === ids[i])!;
-      expect(row.level).toBe(cardLevelForXp(xp));
-      expect(row.maxed).toBe(row.level === 10);
-      expect(row.eligible).toBe(row.level < 10 && xp >= CARD_XP_LEVEL_REQUIREMENTS[row.level]!);
-      expect(row.xpTarget).toBe(row.level >= 10 ? null : CARD_XP_LEVEL_REQUIREMENTS[row.level]!);
+      expect(row.xpLevel).toBe(cardLevelForXp(xp));
+      // Purchased level never moves on XP alone; nothing is eligible
+      // without a Gold balance to spend.
+      expect(row.level).toBe(1);
+      expect(row.maxed).toBe(false);
+      expect(row.eligible).toBe(false);
+      expect(row.xpTarget).toBe(CARD_XP_LEVEL_REQUIREMENTS[1]);
+      expect(row.goldCost).toBe(100);
     }
   });
 
@@ -117,7 +131,7 @@ describe("P2a card XP ledger", () => {
     const results = await Promise.all(Array.from({ length: 5 }, () => applyCardXp(m)));
     expect(results.filter((r) => r.applied).length).toBeLessThanOrEqual(1);
     const me = await getMyCardXp(p.id);
-    expect(me.cards.find((c) => c.cardId === "chaos_archer")).toMatchObject({ xp: 4, level: 1 });
+    expect(me.cards.find((c) => c.cardId === "chaos_archer")).toMatchObject({ xp: 4, xpLevel: 1, level: 1 });
     const again = await applyCardXp(m);
     expect(again).toMatchObject({ applied: false });
   });
@@ -137,7 +151,7 @@ describe("P2a card XP ledger", () => {
     });
     expect(rec.processed).toBeGreaterThanOrEqual(1);
     const me = await getMyCardXp(p.id);
-    expect(me.cards.find((c) => c.cardId === "chaos_bolt")).toMatchObject({ xp: 5, level: 2 });
+    expect(me.cards.find((c) => c.cardId === "chaos_bolt")).toMatchObject({ xp: 5, xpLevel: 2, level: 1 });
     const rows = await db.select().from(cardXpAwards).where(eq(cardXpAwards.matchId, m));
     expect(rows).toHaveLength(1);
   });

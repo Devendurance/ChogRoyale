@@ -70,7 +70,9 @@ describe("GET /api/players/me/card-xp", () => {
     expect(r.body.data.cards.policyVersion).toBe(1);
     expect(r.body.data.cards.maxLevel).toBe(10);
     expect(r.body.data.cards.cards).toHaveLength(20);
-    expect(r.body.data.cards.cards.every((c: { level: number; xp: number; eligible: boolean; maxed: boolean }) => c.level === 1 && c.xp === 0 && c.eligible === false && c.maxed === false)).toBe(true);
+    expect(
+      r.body.data.cards.cards.every((c: { level: number; xpLevel: number; xp: number; eligible: boolean; maxed: boolean }) => c.level === 1 && c.xpLevel === 1 && c.xp === 0 && c.eligible === false && c.maxed === false)
+    ).toBe(true);
   });
 
   it("returns server-owned progress after verified usage", async () => {
@@ -88,7 +90,9 @@ describe("GET /api/players/me/card-xp", () => {
     const r = await get(token);
     expect(r.status).toBe(200);
     const chog = r.body.data.cards.cards.find((c: { cardId: string }) => c.cardId === "choglings");
-    expect(chog).toMatchObject({ level: 2, xp: 5, xpTarget: CARD_XP_LEVEL_REQUIREMENTS[2], eligible: false, maxed: false });
+    // 5 XP unlocks potential level 2, but the purchased level stays 1
+    // until Gold is spent, and the upgrade is not eligible with no Gold.
+    expect(chog).toMatchObject({ level: 1, xpLevel: 2, xp: 5, xpTarget: CARD_XP_LEVEL_REQUIREMENTS[1], goldCost: 100, eligible: false, maxed: false });
     const rest = r.body.data.cards.cards.filter((c: { cardId: string }) => c.cardId !== "choglings");
     expect(rest.every((c: { xp: number }) => c.xp === 0)).toBe(true);
     // No XP-write surface: unknown routes stay 404.

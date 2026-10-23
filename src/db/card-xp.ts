@@ -14,7 +14,7 @@ import {
   CARD_XP_MAX_LEVEL,
   CARD_XP_POLICY_VERSION,
   cardLevelForXp,
-  cardUpgradeEligible,
+  goldCostForLevel,
   type CardXpEntry,
 } from "@/lib/card-xp";
 
@@ -179,25 +179,47 @@ export async function reconcileCardXp(
   return { processed: ids.length, awarded };
 }
 
-/** Server-owned progression for one player across all 20 ordinary cards. */
-export async function getMyCardXp(playerId: string): Promise<{ policyVersion: number; maxLevel: number; cards: CardXpEntry[] }> {
+/**
+ * Server-owned progression for one player across all 20 ordinary cards.
+ * `level` is the actual purchased level (XP alone never advances it);
+ * `xpLevel` is the XP-unlocked potential. Upgrade eligibility needs the XP
+ * requirement for the next purchased level plus enough Gold balance.
+ */
+export async function getMyCardXp(playerId: string): Promise<{
+  policyVersion: number;
+  maxLevel: number;
+  gold: number;
+  cards: CardXpEntry[];
+}> {
   const db = getDb();
-  const rows = await db.select().from(cardXpProgress).where(eq(cardXpProgress.playerId, playerId));
+  const [rows, gold] = await Promise.all([
+    db.select().from(cardXpProgress).where(eq(cardXpProgress.playerId, playerId)),
+    db.execute(sql`
+      select coalesce((select sum(amount) from gold_earn_ledger where player_id = ${playerId}::uuid), 0)::int
+        - coalesce((select sum(cost) from gold_spend_ledger where player_id = ${playerId}::uuid), 0)::int as balance
+    `),
+  ]);
+  const balance = Number((gold.rows as Array<{ balance: number }>)[0]?.balance ?? 0);
   const byCard = new Map(rows.map((r) => [r.cardId, r]));
   return {
     policyVersion: CARD_XP_POLICY_VERSION,
     maxLevel: CARD_XP_MAX_LEVEL,
+    gold: balance,
     cards: ordinaryCardIds().map((cardId) => {
       const row = byCard.get(cardId);
       const xp = row?.xp ?? 0;
-      const level = row ? Number(row.level) : cardLevelForXp(0);
-      const maxed = level >= CARD_XP_MAX_LEVEL;
+      const xpLevel = row ? Number(row.level) : cardLevelForXp(0);
+      const purchased = row ? Number(row.purchasedLevel) : 1;
+      const maxed = purchased >= CARD_XP_MAX_LEVEL;
+      const goldCost = goldCostForLevel(purchased);
       return {
         cardId,
-        level,
+        level: purchased,
+        xpLevel,
         xp,
-        xpTarget: maxed ? null : CARD_XP_LEVEL_REQUIREMENTS[level]!,
-        eligible: cardUpgradeEligible(level, xp),
+        xpTarget: maxed ? null : CARD_XP_LEVEL_REQUIREMENTS[purchased]!,
+        goldCost,
+        eligible: !maxed && xp >= CARD_XP_LEVEL_REQUIREMENTS[purchased]! && balance >= goldCost!,
         maxed,
       };
     }),

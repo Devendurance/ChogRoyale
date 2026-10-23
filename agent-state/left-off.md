@@ -2,6 +2,14 @@
 
 Last updated: 2026-10-23
 
+## P2b Gold economy and card level upgrades, complete (local commit, no push)
+
+- TEST policy: win +60, loss +30, draw +40 (matchmaking/ranked only, private 0); upgrade costs L2-L10 100/180/300/480/750/1100/1600/2300/3200. No blockchain, no $CHOG, no real money.
+- Purchased levels separated from XP levels via additive `purchased_level` on card_xp_progress (migration 0014 TEST only; 0010-0013 untouched; PROD verified without gold tables and the new column).
+- Gold earn stages idempotently post-settle; balances derived (earned minus spent) so nothing can disagree. Upgrade is one statement: per-player advisory lock, idempotency key, balance + XP + expected-level checks, exactly-one-level advance, spend insert. Retries replay the recorded spend; failures charge nothing.
+- APIs: GET /api/players/me/gold (balance + history), POST /api/players/me/card-xp/upgrade (200 + domain status, 400 only malformed, 401 unauth). Card progression now returns purchased level, xpLevel, xp/gold targets, costs, funded eligibility and Gold balance. No UI, no stat changes.
+- Checks: 30 P2b+P2a tests green sequentially (parallel overload caused timeouts, not failures; TEST orphans from those runs cleaned), settlement/trophy regressions 12/12, typecheck/lint/build green. Next: P2c prerequisites in the report. No push, no deploy, no PROD writes.
+
 ## P2a authoritative card XP and persistence, complete (local commit, no push)
 
 - XP from verified usage only: deploy commands carry seat+card, replay reproduces the rejected set, only accepted ordinary-card deploys count. Deck membership alone earns nothing; no cross-attribution; commanders earn nothing.

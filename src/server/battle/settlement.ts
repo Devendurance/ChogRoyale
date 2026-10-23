@@ -283,11 +283,20 @@ export interface SettlementServiceDeps {
   trophies?: TrophyProcessor | null;
   /** Optional P2a card XP pass. Same decoupling contract as trophies. */
   cardXp?: CardXpProcessor | null;
+  /** Optional P2b Gold earn pass. Same decoupling contract as trophies. */
+  gold?: GoldProcessor | null;
 }
 
 /** Structural contract for the card XP pass; keeps settlement.ts free of a
  * hard import on the card XP module. */
 export interface CardXpProcessor {
+  processMatch(matchId: string): Promise<void>;
+  reconcile(limit?: number): Promise<void>;
+}
+
+/** Structural contract for the Gold earn pass; keeps settlement.ts free of
+ * a hard import on the Gold module. */
+export interface GoldProcessor {
   processMatch(matchId: string): Promise<void>;
   reconcile(limit?: number): Promise<void>;
 }
@@ -312,6 +321,7 @@ export class SettlementService {
   private readonly legacy: LegacyProcessor | null;
   private readonly trophies: TrophyProcessor | null;
   private readonly cardXp: CardXpProcessor | null;
+  private readonly gold: GoldProcessor | null;
   private sweeper: ReturnType<typeof setInterval> | null = null;
   private readonly inFlight = new Set<string>();
 
@@ -324,6 +334,7 @@ export class SettlementService {
     this.legacy = deps.legacy ?? null;
     this.trophies = deps.trophies ?? null;
     this.cardXp = deps.cardXp ?? null;
+    this.gold = deps.gold ?? null;
   }
 
   /** Legacy writes are decoupled: settlement is already durable, and a
@@ -377,6 +388,7 @@ export class SettlementService {
           await this.runLegacy(record.matchId);
           await this.runTrophies(record.matchId);
           await this.runCardXp(record.matchId);
+          await this.runGold(record.matchId);
           return status;
         } catch (err) {
           if (err instanceof SettlementConflictError) {
@@ -465,6 +477,15 @@ export class SettlementService {
         logger.error("card xp reconcile failed", { reason: err instanceof Error ? err.message : String(err) });
       }
     }
+    // Refills settled eligible matches whose Gold earn ledger is short.
+    // Earn rows are idempotent, so this is always safe to rerun.
+    if (this.gold) {
+      try {
+        await this.gold.reconcile();
+      } catch (err) {
+        logger.error("gold reconcile failed", { reason: err instanceof Error ? err.message : String(err) });
+      }
+    }
   }
 
   /** Trophy writes are decoupled: settlement is already durable, and an
@@ -486,6 +507,17 @@ export class SettlementService {
       await this.cardXp.processMatch(matchId);
     } catch (err) {
       logger.error("card xp processing failed", { matchId, reason: err instanceof Error ? err.message : String(err) });
+    }
+  }
+
+  /** Gold earn rows are idempotent ledger inserts; a missing row is
+   * refilled by reconcile, so failures stay local to the earn pass. */
+  private async runGold(matchId: string): Promise<void> {
+    if (!this.gold) return;
+    try {
+      await this.gold.processMatch(matchId);
+    } catch (err) {
+      logger.error("gold processing failed", { matchId, reason: err instanceof Error ? err.message : String(err) });
     }
   }
 

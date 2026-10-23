@@ -37,11 +37,27 @@ export function cardUpgradeEligible(level: number, xp: number): boolean {
 
 export interface CardXpEntry {
   cardId: string;
+  /** Actual purchased card level. XP alone never advances this. */
   level: number;
+  /** XP-unlocked potential level derived from lifetime XP. */
+  xpLevel: number;
   xp: number;
+  /** XP required to buy the next purchased level, null at 10. */
   xpTarget: number | null;
+  /** Gold cost to buy the next purchased level, null at 10. */
+  goldCost: number | null;
+  /** Purchasable now: XP requirement met and enough Gold. */
   eligible: boolean;
   maxed: boolean;
+}
+
+/** Gold cost to buy each purchased level (index level-2 for levels 2-10). */
+export const CARD_UPGRADE_GOLD_COSTS = [100, 180, 300, 480, 750, 1100, 1600, 2300, 3200] as const;
+
+/** Gold cost to advance from the given purchased level, null at 10. */
+export function goldCostForLevel(purchasedLevel: number): number | null {
+  if (purchasedLevel < 1 || purchasedLevel >= CARD_XP_MAX_LEVEL) return null;
+  return CARD_UPGRADE_GOLD_COSTS[purchasedLevel - 1]!;
 }
 
 export interface MyCardXpResponse {

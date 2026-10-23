@@ -589,6 +589,9 @@ export const cardXpProgress = pgTable(
     cardId: text("card_id").notNull(),
     xp: integer("xp").notNull().default(0),
     level: smallint("level").notNull().default(1),
+    // P2b purchased level. XP alone never advances it; the paid upgrade
+    // path moves it exactly one level per confirmed transaction.
+    purchasedLevel: smallint("purchased_level").notNull().default(1),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
@@ -596,6 +599,7 @@ export const cardXpProgress = pgTable(
     index("card_xp_progress_player_idx").on(t.playerId),
     check("card_xp_progress_xp_check", sql`${t.xp} >= 0`),
     check("card_xp_progress_level_check", sql`${t.level} >= 1 and ${t.level} <= 10`),
+    check("card_xp_progress_purchased_check", sql`${t.purchasedLevel} >= 1 and ${t.purchasedLevel} <= 10`),
   ]
 );
 
@@ -638,6 +642,56 @@ export const cardXpRuns = pgTable(
 export type CardXpProgress = typeof cardXpProgress.$inferSelect;
 export type CardXpAward = typeof cardXpAwards.$inferSelect;
 export type CardXpRun = typeof cardXpRuns.$inferSelect;
+
+// P2b Gold economy and purchased card levels. Gold balances are derived
+// (earned minus spent) so no cached balance can disagree with its ledgers.
+// Purchased levels ride on card_xp_progress via a new additive column;
+// migration 0013 is untouched.
+export const goldEarnLedger = pgTable(
+  "gold_earn_ledger",
+  {
+    matchId: uuid("match_id")
+      .notNull()
+      .references(() => matches.id, { onDelete: "restrict" }),
+    playerId: uuid("player_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "restrict" }),
+    amount: integer("amount").notNull(),
+    result: text("result").notNull(),
+    policyVersion: integer("policy_version").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ name: "gold_earn_ledger_pk", columns: [t.matchId, t.playerId] }),
+    index("gold_earn_ledger_player_idx").on(t.playerId),
+    check("gold_earn_ledger_amount_check", sql`${t.amount} >= 0`),
+    check("gold_earn_ledger_result_check", sql`${t.result} in ('win','loss','draw')`),
+  ]
+);
+
+export const goldSpendLedger = pgTable(
+  "gold_spend_ledger",
+  {
+    idempotencyKey: uuid("idempotency_key").primaryKey(),
+    playerId: uuid("player_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "restrict" }),
+    cardId: text("card_id").notNull(),
+    fromLevel: smallint("from_level").notNull(),
+    toLevel: smallint("to_level").notNull(),
+    cost: integer("cost").notNull(),
+    policyVersion: integer("policy_version").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("gold_spend_ledger_player_idx").on(t.playerId),
+    check("gold_spend_ledger_levels_check", sql`${t.fromLevel} >= 1 and ${t.toLevel} = ${t.fromLevel} + 1 and ${t.toLevel} <= 10`),
+    check("gold_spend_ledger_cost_check", sql`${t.cost} > 0`),
+  ]
+);
+
+export type GoldEarnRow = typeof goldEarnLedger.$inferSelect;
+export type GoldSpendRow = typeof goldSpendLedger.$inferSelect;
 
 // P1b.2 ranked trophies (Season 1 provisional policy). The ledger is
 // authoritative: one row per (match, player) records the applied delta and

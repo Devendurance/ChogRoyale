@@ -1,5 +1,13 @@
 # Project State
 
+## P2b Gold economy and card level upgrades (2026-10-23)
+
+- TEST policy: earn win 60/loss 30/draw 40 (matchmaking+ranked; private 0); upgrade costs L2-L10 100/180/300/480/750/1100/1600/2300/3200. XP thresholds reused from P2a. No $CHOG, blockchain, or real-money flows.
+- Purchased levels separated additively (`purchased_level` on card_xp_progress, default 1, check 1-10); XP never advances it and is never consumed. Upgrade moves exactly one level or nothing.
+- Migration 0014 (TEST only): earn ledger, spend ledger with idempotency PK, progress column + checks. Derived balances; single-statement atomic upgrades with advisory locks; reconcile refills short earn ledgers.
+- Read/upgrade APIs: gold balance+history, upgrade endpoint with duplicate/level-mismatch/insufficient/mapped outcomes, extended progression response. Card XP response semantics updated (level = purchased).
+- Delivery: 30 P2b+P2a tests green sequentially, settlement/trophy regressions intact, typecheck/lint/build green. Committed locally, no push, no deploy, no PROD writes.
+
 ## P2a authoritative card XP and persistence (2026-10-23)
 
 - Verified-usage XP foundation on TEST: accepted deploy commands per player per card from replay evidence (rejected/ability/commander/unknown excluded), caps 5/card/match and 20/player/match, levels 1-10 on cumulative policy thresholds. Unranked and ranked eligible; private excluded.

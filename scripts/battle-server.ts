@@ -77,8 +77,22 @@ async function settlementService() {
       console.log("card xp enabled");
     }
   }
+  // P2b Gold rides on the settlement lifecycle: no new flags. It stays
+  // disabled unless the Gold migration is applied to the same database, so
+  // an unmigrated database (including PROD) can never take Gold writes.
+  let gold = null;
+  {
+    const check = await sql`select to_regclass('public.gold_earn_ledger') as t`;
+    if (!check[0]?.t) {
+      console.log("gold disabled (gold_earn_ledger missing)");
+    } else {
+      const { GoldService } = await import("@/server/battle/gold");
+      gold = new GoldService();
+      console.log("gold enabled");
+    }
+  }
   console.log("settlement enabled");
-  return new SettlementService({ legacy, trophies, cardXp });
+  return new SettlementService({ legacy, trophies, cardXp, gold });
 }
 
 void settlementService()
