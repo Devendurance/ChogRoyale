@@ -2,6 +2,14 @@
 
 Last updated: 2026-10-23
 
+## P1b.1 ranked queue and match provenance, complete (local commit, no push)
+
+- Separate ranked queue on existing Colyseus infra: `battle_queue_ranked` + mode-aware `MatchCoordinator` (ranked pairs only ranked, one ticket per player across both queues, cancel/timeout/disconnect reuse the existing lifecycle). No new combat engine.
+- Authoritative mode path: queue room name -> PendingMatch.mode -> room matched.mode -> session.mode -> StartMessage/LobbyMessage.mode -> SettlementRecord.matchType -> DB `matches.match_type`. Client labels never decide it.
+- Migration 0011 adds 'ranked' to the match_type check. Applied to TEST only via migrate-test-run; PROD verified read-only still on the old check. PROD migration needs owner approval.
+- PlayHub unchanged (ranked stays unavailable). `findMatch(queue)` + `?mode=ranked` contract exists; public ranked renders an unavailable note, no ranked-success UI.
+- Checks: ranked.test.ts 7/7 (TEST only), battle regressions 67/67, typecheck/lint/build green. Next: P1b.2 trophy dependencies (rating model, placement, decay, season, anti-abuse, casual-leaderboard exclusion of ranked already holds).
+
 ## P1a production play hub and battle routing, complete
 
 - Added `/app/play` and `/app/play/battle`, moved the battle session into a shared `BattlePanel`, and updated public and app Play links.

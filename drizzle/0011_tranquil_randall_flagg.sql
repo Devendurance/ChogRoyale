@@ -1,0 +1,2 @@
+ALTER TABLE "matches" DROP CONSTRAINT "matches_match_type_check";--> statement-breakpoint
+ALTER TABLE "matches" ADD CONSTRAINT "matches_match_type_check" CHECK ("matches"."match_type" in ('private','matchmaking','ranked'));

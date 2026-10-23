@@ -1,5 +1,12 @@
 # Project State
 
+## P1b.1 ranked queue and match provenance (2026-10-23)
+
+- Separate ranked matchmaking on the existing battle server: `BATTLE_RANKED_QUEUE_ROOM`, mode-aware `MatchCoordinator`, `RankedQueueRoom` sharing the one coordinator. Deck/commander validation, seats, lifecycle and battle room reused; no new combat.
+- Server-owned mode identity from queue entry through settlement (`matchmaking` vs `ranked` vs `private`); `matches.match_type` gains `ranked` via additive migration 0011 (TEST only, PROD needs approval).
+- Casual leaderboard and stats queries already filter `match_type = 'matchmaking'`, so ranked rows cannot pollute them. No trophy, rating, reward, XP or legacy changes.
+- Delivery: `ranked.test.ts` 7/7, battle regressions 67/67, typecheck/lint/build green. Committed locally, no push, no deploy.
+
 ## P1a production play hub and battle routing (2026-10-23)
 
 - Added `/app/play` with truthful Unranked, Private Room and Ranked unavailable states.

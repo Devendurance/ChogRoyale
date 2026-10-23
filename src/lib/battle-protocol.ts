@@ -6,6 +6,12 @@ import { z } from "zod";
 
 export const BATTLE_ROOM = "battle";
 export const BATTLE_QUEUE_ROOM = "battle_queue";
+export const BATTLE_RANKED_QUEUE_ROOM = "battle_queue_ranked";
+
+/** Authoritative match identity: server-chosen, never a client label. */
+export type MatchMode = "private" | "matchmaking" | "ranked";
+/** Which queue a ticket waits in. Unranked tickets use the casual queue. */
+export type QueueMode = "unranked" | "ranked";
 export const BATTLE_PROTOCOL_VERSION = "b3.1" as const;
 
 /** Structural copy of a Colyseus seat reservation (client-safe). */
@@ -31,6 +37,8 @@ export interface QueueStatusMessage {
 export interface MatchFoundMessage {
   reservation: SeatReservation;
   opponent: string;
+  /** Authoritative queue the pair came from. */
+  mode: QueueMode;
 }
 
 /** The ticket waited too long; the queue socket is closed after this. */
@@ -109,8 +117,8 @@ export interface LobbyMessage {
   presets: Record<string, { cards: string[]; commanderClass: string }>;
   /** Own confirmed loadout, null until ready. */
   mine: { cards: string[]; commander: CommanderIdentity } | null;
-  /** Present only in matchmaking-created rooms. */
-  match?: { opponent: string | null; /** epoch ms */ deadlineAt: number };
+  /** Present only in queue-created rooms. Server-set, never a client label. */
+  match?: { opponent: string | null; /** epoch ms */ deadlineAt: number; mode: MatchMode };
 }
 
 export interface CardInfo {
@@ -125,6 +133,8 @@ export interface CardInfo {
 
 export interface StartMessage {
   protocol: typeof BATTLE_PROTOCOL_VERSION;
+  /** Authoritative match identity chosen by the server at room creation. */
+  mode: MatchMode;
   ruleset: string;
   arena: string;
   seat: Seat;

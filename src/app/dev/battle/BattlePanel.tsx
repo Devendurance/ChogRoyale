@@ -8,6 +8,7 @@ import { usePrivy, useLogin } from "@privy-io/react-auth";
 import { Client, type Room } from "@colyseus/sdk";
 import {
   BATTLE_QUEUE_ROOM,
+  BATTLE_RANKED_QUEUE_ROOM,
   BATTLE_ROOM,
   type AckMessage,
   type BattleFrame,
@@ -38,7 +39,7 @@ export function BattlePanel({
   /** Public app routes reuse this panel without the development diagnostics. */
   publicMode?: boolean;
   /** The hub can send the player here with an intended queue or room flow. */
-  initialMode?: "unranked" | "private";
+  initialMode?: "unranked" | "ranked" | "private";
 }) {
   const { ready, authenticated, getAccessToken, logout } = usePrivy();
   const { login } = useLogin();
@@ -149,7 +150,10 @@ export function BattlePanel({
     [code, getAccessToken, attachRoom]
   );
 
-  const findMatch = useCallback(async () => {
+  /** Join one queue. The room name is the server-side mode authority: the
+   * ranked room only ever pairs ranked tickets, and the client label below
+   * never decides settlement. Ranked stays hub-gated until trophies land. */
+  const findMatch = useCallback(async (queue: "unranked" | "ranked" = "unranked") => {
     setError(null);
     setStage("searching");
     setQueueStatus(null);
@@ -157,7 +161,7 @@ export function BattlePanel({
       const token = await getAccessToken();
       if (!token) throw new Error("No Privy access token. Log in first.");
       const client = new Client(SERVER, { headers: { authorization: `Bearer ${token}` } });
-      const q = await client.joinOrCreate(BATTLE_QUEUE_ROOM);
+      const q = await client.joinOrCreate(queue === "ranked" ? BATTLE_RANKED_QUEUE_ROOM : BATTLE_QUEUE_ROOM);
       q.onMessage("queue_status", (m: QueueStatusMessage) => setQueueStatus(m));
       q.onMessage("queue_timeout", (m: { reason: string }) => (setError(m.reason), setStage("idle")));
       q.onMessage("match_found", (m: MatchFoundMessage) => {
@@ -424,9 +428,9 @@ export function BattlePanel({
       {publicMode && stage === "idle" && (
         <div className="app-play-battle-head">
           <div>
-            <p className="app-play-kicker">{initialMode === "private" ? "Private room" : "Unranked battle"}</p>
+            <p className="app-play-kicker">{initialMode === "private" ? "Private room" : initialMode === "ranked" ? "Ranked queue" : "Unranked battle"}</p>
             <h1>Enter the arena</h1>
-            <p>{initialMode === "private" ? "Create a room for a friend, or join with their code." : "Find a casual opponent through the live battle queue."}</p>
+            <p>{initialMode === "private" ? "Create a room for a friend, or join with their code." : initialMode === "ranked" ? "Ranked matchmaking stays unavailable until the rating and trophy pipeline lands." : "Find a casual opponent through the live battle queue."}</p>
           </div>
           <a className="app-btn app-btn--ghost" href="/app/play">Change mode</a>
         </div>
@@ -437,7 +441,11 @@ export function BattlePanel({
       {stage === "idle" && (
         <section className={publicMode ? "app-play-battle-controls" : undefined} style={publicMode ? undefined : { display: "grid", gap: 8 }}>
           <div className={publicMode ? "app-play-battle-actions" : undefined} style={publicMode ? undefined : { display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <button className={publicMode ? "app-btn app-btn--battle" : undefined} onClick={() => void findMatch()}>Find match</button>
+            {publicMode && initialMode === "ranked" ? (
+              <p className="app-play-battle-error" role="note">Ranked queue is unavailable in this build. No rating or trophies are awarded.</p>
+            ) : (
+              <button className={publicMode ? "app-btn app-btn--battle" : undefined} onClick={() => void findMatch(initialMode === "ranked" ? "ranked" : "unranked")}>Find match</button>
+            )}
             <button className={publicMode ? "app-btn app-btn--ghost" : undefined} onClick={() => void connect("create")}>Create battle</button>
             <label className={publicMode ? "app-play-code" : undefined}>
               <span className={publicMode ? "app-sr" : undefined}>Room code</span>

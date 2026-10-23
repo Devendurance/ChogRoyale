@@ -45,6 +45,7 @@ import {
   type EndMessage,
   type FrameEvent,
   type LobbyMessage,
+  type MatchMode,
   type SessionPhase,
   type StartMessage,
 } from "@/lib/battle-protocol";
@@ -150,6 +151,8 @@ export function ordinaryCatalog(): CardInfo[] {
 
 export class BattleSession {
   phase: SessionPhase = "waiting";
+  /** Authoritative match identity, set by the room (server) before start. Engine-neutral. */
+  mode: MatchMode = "private";
   /** Join order slots; seats are assigned by the server at start. */
   readonly slots: Array<SeatPlayer | null> = [null, null];
   /** Confirmed loadouts per join slot; a non-null entry means ready. */
@@ -320,6 +323,7 @@ export class BattleSession {
     };
     return {
       protocol: BATTLE_PROTOCOL_VERSION,
+      mode: this.mode,
       ruleset: COMBAT_RULESET_VERSION,
       arena: ARENA_VERSION,
       seat,

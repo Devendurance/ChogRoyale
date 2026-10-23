@@ -490,7 +490,7 @@ export const matches = pgTable(
   },
   (t) => [
     index("matches_settled_at_idx").on(t.settledAt, t.id),
-    check("matches_match_type_check", sql`${t.matchType} in ('private','matchmaking')`),
+    check("matches_match_type_check", sql`${t.matchType} in ('private','matchmaking','ranked')`),
     check("matches_outcome_check", sql`${t.outcome} in ('win','draw')`),
     check(
       "matches_winner_check",

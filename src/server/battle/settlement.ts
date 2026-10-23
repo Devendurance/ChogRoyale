@@ -42,7 +42,7 @@ export class SettlementPermanentError extends Error {}
 export interface SettlementRecord {
   matchId: string;
   roomId: string;
-  matchType: "private" | "matchmaking";
+  matchType: "private" | "matchmaking" | "ranked";
   rulesetVersion: string;
   protocolVersion: string;
   startedAt: string;
@@ -91,7 +91,7 @@ export function recordFromReplay(
   opts: {
     matchId: string;
     roomId: string;
-    matchType: "private" | "matchmaking";
+    matchType: "private" | "matchmaking" | "ranked";
     startedAt: Date;
     finishedAt?: Date;
     crowns: [number, number];

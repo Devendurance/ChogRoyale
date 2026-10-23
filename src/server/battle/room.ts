@@ -26,7 +26,8 @@ import { readySchema, type CommanderChoice } from "@/lib/battle-protocol";
 import { BattleSession, type SeatPlayer, type SessionRandom, type TrustedLoadout } from "@/server/battle/session";
 import { productionEntitlementDeps, resolveCommander, type EntitlementDeps } from "@/server/battle/entitlement";
 import { productionPatronSource, type PatronSource } from "@/server/battle/patron-source";
-import type { MatchCoordinator } from "@/server/battle/matchmaking";
+import type { MatchCoordinator, PendingMatch } from "@/server/battle/matchmaking";
+import type { MatchMode } from "@/lib/battle-protocol";
 import { recordFromReplay, type SettlementService } from "@/server/battle/settlement";
 
 export interface BattleRoomDeps {
@@ -87,6 +88,8 @@ interface MatchedContext {
   playerIds: Set<string>;
   /** playerId -> username, known before either client connects. */
   usernames: Record<string, string>;
+  /** Authoritative queue the pair came from. Server-set at creation. */
+  mode: MatchMode;
   /** Epoch ms by which the match must start, else the room aborts. */
   deadlineAt: number;
 }
@@ -122,17 +125,21 @@ export class BattleRoom extends Room {
     if (matchKey) {
       // The coordinator hands out one-shot keys; a forged or consumed key
       // fails creation, so clients can never self-create a matched room.
-      const pending = BattleRoom.coordinator?.claimMatch(matchKey);
+      // The queue mode travels with the key, so a client label can never
+      // promote an unranked pair into a ranked room or vice versa.
+      const pending: PendingMatch | null | undefined = BattleRoom.coordinator?.claimMatch(matchKey);
       if (!pending) throw new ServerError(403, "Unknown or expired match");
       this.matched = {
         playerIds: new Set(pending.players),
         usernames: pending.usernames,
+        mode: pending.mode === "ranked" ? "ranked" : "matchmaking",
         deadlineAt: Date.now() + (BattleRoom.deps.matchLobbyMs ?? MATCH_LOBBY_MS),
       };
       void this.setPrivate(true);
       this.clock.setTimeout(() => this.matchedLobbyTimeout(), this.matched.deadlineAt - Date.now());
     }
     this.session = new BattleSession(BattleRoom.deps.rng);
+    this.session.mode = this.matched ? this.matched.mode : "private";
     this.onMessage("ready", (client: BattleClient, msg: unknown) => void this.onReady(client, msg));
     this.onMessage("unready", (client: BattleClient) => {
       try {
@@ -291,7 +298,7 @@ export class BattleRoom extends Room {
       if (this.matched) {
         const me = this.session.slots[slot]?.playerId;
         const oppId = [...this.matched.playerIds].find((id) => id !== me);
-        msg.match = { opponent: (oppId && this.matched.usernames[oppId]) ?? null, deadlineAt: this.matched.deadlineAt };
+        msg.match = { opponent: (oppId && this.matched.usernames[oppId]) ?? null, deadlineAt: this.matched.deadlineAt, mode: this.matched.mode };
       }
       c.send("lobby", msg);
     });
@@ -422,7 +429,7 @@ export class BattleRoom extends Room {
     const record = recordFromReplay(r, {
       matchId: this.matchId,
       roomId: this.roomId,
-      matchType: this.matched ? "matchmaking" : "private",
+      matchType: this.matched ? this.matched.mode : "private",
       startedAt: this.startedAt,
       crowns: [...this.session.state!.crowns] as [number, number],
     });

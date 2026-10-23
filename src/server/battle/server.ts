@@ -1,7 +1,7 @@
 import { Server } from "@colyseus/core";
 import { WebSocketTransport } from "@colyseus/ws-transport";
-import { BATTLE_QUEUE_ROOM, BATTLE_ROOM } from "@/lib/battle-protocol";
-import { MatchCoordinator, QueueRoom } from "@/server/battle/matchmaking";
+import { BATTLE_QUEUE_ROOM, BATTLE_RANKED_QUEUE_ROOM, BATTLE_ROOM } from "@/lib/battle-protocol";
+import { MatchCoordinator, QueueRoom, RankedQueueRoom } from "@/server/battle/matchmaking";
 import { BattleRoom, type BattleRoomDeps } from "@/server/battle/room";
 
 /** Boots the dev battle server. Tests pass deps; the script passes none. */
@@ -12,12 +12,16 @@ export async function startBattleServer(port: number, deps: BattleRoomDeps = {},
   const coordinator = new MatchCoordinator({ maxWaitMs: deps.queueMaxWaitMs });
   BattleRoom.coordinator = coordinator;
   QueueRoom.coordinator = coordinator;
+  RankedQueueRoom.coordinator = coordinator;
+  // Ranked shares the coordinator's deps object so auth stays identical.
+  RankedQueueRoom.deps = QueueRoom.deps;
   // Retries pending settlement records at startup and periodically. The
   // service (not the room) owns results, so room dispose can't drop them.
   deps.settlement?.startSweeper();
   const server = new Server({ transport: new WebSocketTransport(), gracefullyShutdown: false, greet: false } as ConstructorParameters<typeof Server>[0]);
   server.define(BATTLE_ROOM, BattleRoom);
   server.define(BATTLE_QUEUE_ROOM, QueueRoom);
+  server.define(BATTLE_RANKED_QUEUE_ROOM, RankedQueueRoom);
   await server.listen(port, hostname);
   return server;
 }

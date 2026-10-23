@@ -1,13 +1,15 @@
-// B3.2b unranked matchmaking. MatchCoordinator is the single authoritative
-// in-memory queue: this design assumes ONE battle-server process (the dev
-// alpha topology). A multi-process deployment would need shared presence,
-// which is a later slice. Queue tickets, in-match pins and one-shot match
-// keys live here; the QueueRoom is a thin adapter and every QueueRoom
-// instance shares the one coordinator.
+// B3.2b unranked matchmaking plus the P1b.1 ranked queue. MatchCoordinator
+// is the single authoritative in-memory queue: this design assumes ONE
+// battle-server process (the dev alpha topology). A multi-process
+// deployment would need shared presence, which is a later slice. Queue
+// tickets, in-match pins and one-shot match keys live here. The two queue
+// rooms (casual + ranked) are thin adapters sharing the one coordinator,
+// so one player can never hold two tickets at once and ranked tickets only
+// ever pair with ranked tickets.
 
 import { randomBytes } from "crypto";
 import { matchMaker, Room, ServerError, type Client } from "@colyseus/core";
-import { BATTLE_QUEUE_ROOM, BATTLE_ROOM, type QueueStatusMessage } from "@/lib/battle-protocol";
+import { BATTLE_QUEUE_ROOM, BATTLE_RANKED_QUEUE_ROOM, BATTLE_ROOM, type MatchMode, type QueueMode, type QueueStatusMessage } from "@/lib/battle-protocol";
 import { logger } from "@/lib/logger";
 import type { SeatPlayer } from "@/server/battle/session";
 import { authenticateSeat, type BattleRoomDeps } from "@/server/battle/room";
@@ -22,6 +24,8 @@ export interface MatchCoordinatorDeps {
 interface Ticket {
   ticketId: string;
   player: SeatPlayer;
+  /** Which queue this ticket waits in. Set once at enqueue, never changed. */
+  mode: QueueMode;
   enqueuedAt: number;
   state: "waiting" | "matching";
   send: (type: string, msg: unknown) => void;
@@ -32,6 +36,9 @@ interface Ticket {
 export interface PendingMatch {
   players: [string, string];
   usernames: Record<string, string>;
+  /** Authoritative queue the pair came from. The battle room turns this
+   * into its MatchMode (ranked vs matchmaking); clients never choose it. */
+  mode: QueueMode;
 }
 
 const DEFAULT_MAX_WAIT_MS = 300_000;
@@ -61,14 +68,24 @@ export class MatchCoordinator {
     return n;
   }
 
-  /** Join the queue and immediately attempt to pair. Throws on conflicts. */
-  enqueue(player: SeatPlayer, send: Ticket["send"], close: Ticket["close"]): Ticket {
+  /** Waiting tickets in one queue only, so each lobby shows its own count. */
+  waitingCountFor(mode: QueueMode): number {
+    let n = 0;
+    for (const t of this.tickets.values()) if (t.state === "waiting" && t.mode === mode) n++;
+    return n;
+  }
+
+  /** Join one queue and immediately attempt to pair. Throws on conflicts.
+   * A player holding any ticket or room pin cannot take a second ticket,
+   * in either queue. */
+  enqueue(player: SeatPlayer, send: Ticket["send"], close: Ticket["close"], mode: QueueMode = "unranked"): Ticket {
     const act = this.activities.get(player.playerId);
     if (act?.kind === "queue") throw new ServerError(409, "Already searching");
     if (act?.kind === "room") throw new ServerError(409, "Already in a battle");
     const ticket: Ticket = {
       ticketId: randomBytes(16).toString("hex"),
       player,
+      mode,
       enqueuedAt: Date.now(),
       state: "waiting",
       send,
@@ -145,18 +162,21 @@ export class MatchCoordinator {
   }
 
   /**
-   * FIFO pairing. Both tickets are marked "matching" synchronously so a
-   * concurrent enqueue can never double-assign a player, then the room is
-   * created and seats reserved asynchronously.
+   * FIFO pairing within each queue. Both tickets are marked "matching"
+   * synchronously so a concurrent enqueue can never double-assign a
+   * player, then the room is created and seats reserved asynchronously.
+   * Ranked tickets only ever pair with ranked tickets.
    */
   private pair(): void {
-    while (true) {
-      const waiting = [...this.tickets.values()].filter((t) => t.state === "waiting").sort((a, b) => a.enqueuedAt - b.enqueuedAt);
-      if (waiting.length < 2) return;
-      const [a, b] = waiting as [Ticket, Ticket];
-      a.state = "matching";
-      b.state = "matching";
-      void this.formMatch(a, b);
+    for (const mode of ["unranked", "ranked"] as const) {
+      while (true) {
+        const waiting = [...this.tickets.values()].filter((t) => t.state === "waiting" && t.mode === mode).sort((a, b) => a.enqueuedAt - b.enqueuedAt);
+        if (waiting.length < 2) break;
+        const [a, b] = waiting as [Ticket, Ticket];
+        a.state = "matching";
+        b.state = "matching";
+        void this.formMatch(a, b);
+      }
     }
   }
 
@@ -171,10 +191,19 @@ export class MatchCoordinator {
   }
 
   private async formMatch(a: Ticket, b: Ticket): Promise<void> {
+    if (a.mode !== b.mode) {
+      // Defensive: pair() only hands same-mode tickets, but never mint a
+      // cross-mode room if that invariant ever breaks.
+      this.requeue(a);
+      this.requeue(b);
+      this.pair();
+      return;
+    }
     const matchKey = randomBytes(16).toString("hex");
     this.pendingMatches.set(matchKey, {
       players: [a.player.playerId, b.player.playerId],
       usernames: { [a.player.playerId]: a.player.username, [b.player.playerId]: b.player.username },
+      mode: a.mode,
     });
     let room;
     try {
@@ -212,8 +241,8 @@ export class MatchCoordinator {
       clearTimeout(b.expires);
       this.activities.set(a.player.playerId, { kind: "room", roomId: room.roomId });
       this.activities.set(b.player.playerId, { kind: "room", roomId: room.roomId });
-      a.send("match_found", { reservation: resA, opponent: b.player.username });
-      b.send("match_found", { reservation: resB, opponent: a.player.username });
+      a.send("match_found", { reservation: resA, opponent: b.player.username, mode: a.mode });
+      b.send("match_found", { reservation: resB, opponent: a.player.username, mode: b.mode });
       setTimeout(() => {
         a.close();
         b.close();
@@ -230,12 +259,15 @@ export class MatchCoordinator {
 type QueueClient = Client & { auth: SeatPlayer };
 
 /**
- * Queue lobby room. Clients joinOrCreate it; joining is the enqueue and
- * leaving is the cancel. No client messages are defined.
+ * Queue lobby room base. Clients joinOrCreate it; joining is the enqueue
+ * and leaving is the cancel. No client messages are defined. The queue
+ * mode comes from the concrete subclass, never from a client option.
  */
 export class QueueRoom extends Room {
   static deps: Pick<BattleRoomDeps, "verifier" | "loader"> = {};
   static coordinator: MatchCoordinator | null = null;
+  /** Overridden by RankedQueueRoom. Base class is the casual queue. */
+  static queueMode: QueueMode = "unranked";
   maxClients = 500;
   /** sessionId -> ticketId so a stale socket can only cancel its own ticket. */
   private readonly ticketIds = new Map<string, string>();
@@ -245,8 +277,9 @@ export class QueueRoom extends Room {
   }
 
   onJoin(client: QueueClient) {
-    const coordinator = QueueRoom.coordinator;
+    const coordinator = (this.constructor as typeof QueueRoom).coordinator;
     if (!coordinator) throw new ServerError(503, "Matchmaking unavailable");
+    const mode = (this.constructor as typeof QueueRoom).queueMode;
     const ticket = coordinator.enqueue(
       client.auth,
       (type, msg) => client.send(type, msg),
@@ -256,17 +289,28 @@ export class QueueRoom extends Room {
         } catch {
           /* already closed */
         }
-      }
+      },
+      mode
     );
     this.ticketIds.set(client.sessionId, ticket.ticketId);
-    client.send("queue_status", { state: "searching", waiting: coordinator.waitingCount, since: ticket.enqueuedAt } satisfies QueueStatusMessage);
+    client.send("queue_status", { state: "searching", waiting: coordinator.waitingCountFor(mode), since: ticket.enqueuedAt } satisfies QueueStatusMessage);
   }
 
   onLeave(client: QueueClient) {
     const ticketId = this.ticketIds.get(client.sessionId);
     this.ticketIds.delete(client.sessionId);
-    if (ticketId) QueueRoom.coordinator?.cancel(client.auth.playerId, ticketId);
+    if (ticketId) (this.constructor as typeof QueueRoom).coordinator?.cancel(client.auth.playerId, ticketId);
   }
 }
 
-export { BATTLE_QUEUE_ROOM };
+/** Ranked queue: same coordinator and lifecycle, isolated pairing. */
+export class RankedQueueRoom extends QueueRoom {
+  static override queueMode: QueueMode = "ranked";
+
+  static override async onAuth(token: string | undefined): Promise<SeatPlayer> {
+    return authenticateSeat(token, QueueRoom.deps);
+  }
+}
+
+export { BATTLE_QUEUE_ROOM, BATTLE_RANKED_QUEUE_ROOM };
+export type { MatchMode, QueueMode };
