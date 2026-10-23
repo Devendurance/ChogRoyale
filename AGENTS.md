@@ -126,6 +126,11 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Battle identity comes only from a server-verified Privy token in the matchmaking Authorization header. Never put tokens in URLs, room options, logs or replicated state. Seats, seeds, decks and Chaos are server-chosen; clients send intents only.
 - The dev battle alpha writes nothing to the database. Settlement, legacy and leaderboard updates belong to later B3 slices.
 
+## BATTLEFIELD PRESENTATION
+
+- B2.8g.1 environment polish stays outside the authoritative board. Non-interactive CSS atmosphere may frame the canvas, and Phaser mount shadows may ground existing structures, but the 100x160 transform, pointer mapper, deployment bounds and V002 layer geometry remain unchanged.
+- Fixture screenshots are presentation evidence only. Pointer/deployment delivery and touch behavior remain pending a real two-player regression.
+
 ## GAME APP SHELL
 
 - The Privy provider lives in the shared `/app` layout. A route inside `/app` must never mount its own provider, or a route change tears the session down and starts a second one.

@@ -2,6 +2,14 @@
 
 Last updated: 2026-10-23
 
+## B2.8g.1 arena environment and visual depth (2026-10-23)
+
+- Doing: one bounded environment pass after the approved B2.8g.0 HUD.
+- Done: added a non-interactive green/teal world surround to the existing arena shell and low contact shadows to V002 mounted towers/Cores. No board transform, gameplay coordinate, HUD composition, combat, networking or backend changes.
+- Checks: focused battle suites 55/55, typecheck passed, lint 0 errors with the one pre-existing `/dev/progress` image warning, production build passed with 38 static pages. Fixture captures at 390x844, 1366x768, 360x800 and 1920x1080 show no overflow or console/page errors, and preserve the 100:160 canvas aspect. Temporary fixture routes were deleted.
+- Evidence: `C:/Users/USER/Documents/ChogRoyale-Assets/battle-b28g0-review/qa-20261023/`. Fixture evidence does not establish live pointer/deployment delivery. Existing top Core edge clipping remains deferred because a safe fix would require changing visual bounds or camera space.
+- Next: owner visual review, then stop after B2.8g.1. Do not start B2.8g.2, character animation or audio.
+
 ## B2.8g.0 battlefield shell and combat HUD (2026-10-23)
 
 - Doing: one bounded active-battle presentation slice. Stop after B2.8g.0.

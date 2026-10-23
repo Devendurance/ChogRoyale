@@ -13,6 +13,9 @@
   overflow: hidden;
   padding: calc(10px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left));
   background:
+    radial-gradient(ellipse at 50% 54%, #2c9b7240, transparent 30%),
+    radial-gradient(ellipse at 50% 72%, #27b8c01c, transparent 22%),
+    radial-gradient(ellipse at 50% 17%, #f3c56512, transparent 24%),
     radial-gradient(ellipse at 50% 24%, #6444b155, transparent 58%),
     repeating-linear-gradient(45deg, #ffffff03 0 1px, transparent 1px 30px),
     repeating-linear-gradient(-45deg, #ffffff03 0 1px, transparent 1px 30px),
@@ -50,9 +53,11 @@
 .chud-giveup { padding: 4px 9px; min-height: 44px; margin-left: auto; border: 1px solid #c19ad1; border-radius: 5px; background: #40245c; color: #fff0fa; cursor: pointer; }
 .chud-status-error { color: #ffc0c8; }
 .chud-status-notice { color: #b7f4b4; }
-.chud-arena { position: relative; flex: 1; min-height: 0; display: flex; container-type: size; margin: 7px 0; border: 1px solid #c399554d; border-radius: 12px; background: radial-gradient(ellipse at center, #58408466, #21183c 75%); box-shadow: inset 0 0 32px #100b2c88, 0 4px 0 #11092966; }
+.chud-arena { position: relative; isolation: isolate; flex: 1; min-height: 0; display: flex; container-type: size; margin: 7px 0; border: 1px solid #9fcf9b66; border-radius: 12px; background: radial-gradient(ellipse at center, #3c785c66 0%, #2a3e4d4d 34%, #21183c 78%); box-shadow: inset 0 0 32px #100b2c88, 0 4px 0 #11092966; }
+.chud-arena::before { content: ""; position: absolute; inset: -14px; z-index: 0; border: 1px solid #75d4ad36; border-radius: 22px; pointer-events: none; background: radial-gradient(ellipse at center, transparent 38%, #3d9d7430 62%, transparent 78%), linear-gradient(90deg, #163d3b75, transparent 18%, transparent 82%, #163d3b75); box-shadow: 0 0 0 6px #120b452e, 0 18px 36px #07051e66, inset 0 0 24px #7dd9b51c; }
+.chud-arena::after { content: ""; position: absolute; inset: 0; z-index: 1; border-radius: inherit; pointer-events: none; background: linear-gradient(90deg, #071c2a2e, transparent 14%, transparent 86%, #071c2a2e), linear-gradient(180deg, #090b1c2e, transparent 18%, transparent 82%, #090b1c38); box-shadow: inset 0 0 20px #0b092777; }
 .chud-board { display: contents; }
-.chud [data-testid="battle-board"] { flex: none; box-shadow: 0 0 0 2px #bd9b5f, 0 0 0 5px #170e3c, 0 8px 24px #09051e99; }
+.chud [data-testid="battle-board"] { position: relative; z-index: 2; flex: none; box-shadow: 0 0 0 2px #bd9b5f, 0 0 0 5px #170e3c, 0 0 0 7px #70c79e33, 0 8px 24px #09051e99; }
 .chud [data-testid="battle-board"] canvas { display: block; }
 .chud-chaos-stack { position: absolute; top: 6px; left: 8px; display: flex; flex-direction: column; gap: 3px; align-items: flex-start; pointer-events: none; z-index: 3; max-width: 42%; }
 .chud-chaos { font: 600 11px/1.3 var(--font-georama), sans-serif; background: #22143deb; padding: 4px 9px; border: 1px solid #bf986e; border-radius: 6px; color: #ffe2aa; text-align: center; }

@@ -151,6 +151,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
       // authored root pivot. Defender state is driven by authoritative data.
       interface MountEnt {
         root: import("phaser").GameObjects.Container;
+        shadow: import("phaser").GameObjects.Ellipse;
         base: import("phaser").GameObjects.Image;
         socket: import("phaser").GameObjects.Image;
         defender: import("phaser").GameObjects.Image;
@@ -487,15 +488,23 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
               let me = mountPool.get(s.id);
               if (!me) {
                 const mk = (key: string) => this.add.image(0, 0, key).setOrigin(0.5, 0.875).setScale(0.5);
+                // A low contact shadow anchors each authored mount to the
+                // terrain without changing the authoritative ground point.
+                // The subtle green edge keeps the V002 base readable over the
+                // textured banks while the dark centre supplies depth.
+                const core = role === "core-keeper";
+                const shadow = this.add.ellipse(0, core ? 5 : 3, core ? 116 : 94, core ? 24 : 19, 0x07111a, 0.38);
+                shadow.setStrokeStyle(1, core ? 0xf5c96b : 0x9fe3bf, 0.18).setDepth(-1);
                 const base = mk(`${role}:structure-base`);
                 const socket = mk(`${role}:socket-platform`);
                 const defender = mk(`${role}:defender-idle`);
                 const rim = mk(`${role}:front-rim`);
-                const root = this.add.container(x, y, [base, socket, defender, rim]);
-                me = { root, base, socket, defender, rim, rubble: false };
+                const root = this.add.container(x, y, [shadow, base, socket, defender, rim]);
+                me = { root, shadow, base, socket, defender, rim, rubble: false };
                 mountPool.set(s.id, me);
               }
               me.root.setPosition(x, y).setDepth(y);
+              me.shadow.setAlpha(s.alive ? 0.38 : 0.22);
               const fire = towerFires.get(s.id) ?? null;
               const prevDef = defenderStates.get(s.id) ?? newDefenderState();
               const accepted = s.alive && fire !== null && fireFresh({ structureId: s.id, tick: fire.tick }, frame.tick) && !prevDef.firedKeys.includes(fireKey({ structureId: s.id, tick: fire.tick }));

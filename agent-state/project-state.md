@@ -1,12 +1,18 @@
 # Project State
 
+## B2.8g.1 arena environment and visual depth (2026-10-23)
+
+- The approved B2.8g.0 HUD remains intact. `battle-hud.css` now gives the fixed shell and arena a restrained green, teal and gold environmental surround with pointer-events disabled on decorative layers.
+- `BattleCanvas` keeps the V002 100x160 board, seat mirror, camera mapping and mount coordinates unchanged. Existing mounted towers and Cores gain low contact shadows only, with dimmed shadows for destroyed bases.
+- Scoped delivery and fixture evidence: `.fast-build/B2.8g.1-CHECKPOINT.md`. The temporary QA route was deleted. Live authenticated acceptance remains separate.
+
+Last updated: 2026-10-23
+
 ## B2.8g.0 battlefield shell (2026-10-23)
 
 - Active `/dev/battle` presentation uses scoped violet/gold panels and the shared Satoshi, Georama and Lilita One fonts. Desktop places the hand and energy beside the full-height board. Mobile keeps a bottom dock.
 - `BattleHud.tsx`, `battle-hud.css` and status-only props in `page.tsx` own the slice. `BattleCanvas`, arena assets, coordinate mapping, ruleset v16, networking and persistence are unchanged.
 - Scoped delivery and evidence: `.fast-build/B2.8g.0-CHECKPOINT.md`. Existing dirty `.fast-build/STATE.md` stays untouched. Live authenticated acceptance remains separate.
-
-Last updated: 2026-10-23
 
 ## What this is
 
