@@ -573,3 +573,35 @@ export type Match = typeof matches.$inferSelect;
 export type MatchParticipant = typeof matchParticipants.$inferSelect;
 export type MatchEvidence = typeof matchEvidence.$inferSelect;
 export type MatchLegacyRun = typeof matchLegacyRuns.$inferSelect;
+
+// B4.1 friendships. One row per player pair with canonical id ordering
+// (user_a < user_b), so a pair can never hold two rows in either
+// direction. requested_by records who sent the request and must be one of
+// the pair. pending means requested_by's request awaits the other party;
+// accepted means mutual friends. No self rows, enforced by the order check.
+export const friendships = pgTable(
+  "friendships",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    userA: uuid("user_a")
+      .notNull()
+      .references(() => players.id, { onDelete: "cascade" }),
+    userB: uuid("user_b")
+      .notNull()
+      .references(() => players.id, { onDelete: "cascade" }),
+    status: text("status").notNull(),
+    requestedBy: uuid("requested_by").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("friendships_pair_unique").on(t.userA, t.userB),
+    check("friendships_canonical_order_check", sql`${t.userA} < ${t.userB}`),
+    check("friendships_status_check", sql`${t.status} in ('pending','accepted')`),
+    check("friendships_requester_check", sql`${t.requestedBy} = ${t.userA} or ${t.requestedBy} = ${t.userB}`),
+  ]
+);
+
+export type Friendship = typeof friendships.$inferSelect;

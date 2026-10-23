@@ -2,6 +2,14 @@
 
 Last updated: 2026-10-23
 
+## B4.1 friends system (2026-10-23), code complete, PROD migration pending
+
+- Migration 0010 `friendships` (canonical pair order, status/requester checks, cascade FKs, pair unique) generated and applied to TEST only (journal 11). PROD untouched (journal 10, no table).
+- DAL + 5 routes (lists/search/send/accept/decline/remove) with server-side auth, ownership checks, idempotent sends, auto-accept on reverse. Tests 17/17 on TEST (8 DAL + 5 route + 4 model). Typecheck/lint/build green (1 pre-existing warning).
+- UI at /app/friends (screen/view/model/types) reusing shell, HUD, notices, violet/gold plates; new friends icon; Profile links to Friends (5-tab nav preserved for 360px safety). Login gate 200, no console errors, no 360px overflow.
+- No settlement/legacy/combat changes. No PROD writes. No push.
+- Next: owner approves PROD 0010 migration (`npm run db:migrate` once + read-only verify), then authenticated two-account acceptance (send/receive/accept/remove/refresh).
+
 ## Phase 5 closure resumption (2026-10-23), post-demo truth re-established
 
 - HEAD 44823c2; tree holds only pre-existing unrelated items. Legacy/settlement code untouched since B3.3-era commits; B5.1 review findings stand.

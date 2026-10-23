@@ -12,6 +12,7 @@ export type IconName =
   | "progress"
   | "guide"
   | "user"
+  | "friends"
   | "settings"
   | "wallet"
   | "logout"
@@ -62,6 +63,14 @@ const PATHS: Record<IconName, ReactNode> = {
     <>
       <circle cx="12" cy="8.2" r="3.6" />
       <path d="M4.8 20c0-3.5 3.2-5.6 7.2-5.6s7.2 2.1 7.2 5.6" />
+    </>
+  ),
+  friends: (
+    <>
+      <circle cx="8.6" cy="9" r="3" />
+      <path d="M2.8 19.4c0-3 2.6-4.8 5.8-4.8 1 0 2 .2 2.8.7" />
+      <circle cx="16.4" cy="9.6" r="2.4" />
+      <path d="M14.6 14.9c2.9.3 5.2 2 5.2 4.5" />
     </>
   ),
   settings: (
