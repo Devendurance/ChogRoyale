@@ -2,6 +2,13 @@
 
 Last updated: 2026-10-23
 
+## B5.3b Blossom control: isolated browser ready, awaiting manual login (2026-10-23)
+
+- Direct control of owner's tab unavailable: no CDP endpoint (verified refused on 9222); enabling it on the primary profile is prohibited. Owner Chrome untouched.
+- Fallback live: agent-controlled isolated Chromium (playwright_cli, headed) on /dev/battle showing the Privy login gate with zero interference to owner tabs. Control proven via snapshot.
+- Settlement server still active (matches=0, nothing settled). No re-activation churn.
+- Next: owner manually logs in as Blossom in the AGENT window, then confirms; I verify Blossom lobby, then the one private match proceeds.
+
 ## B5.3b accounts verified, awaiting live sessions (2026-10-23)
 
 - Designated accounts confirmed on PROD: Endychog and Blossom, both onboarding complete, both active. No accounts created or modified.
