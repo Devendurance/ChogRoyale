@@ -47,6 +47,7 @@ export interface BattleHudProps {
   error?: string | null;
   notice?: string | null;
   onGiveUp?: () => void;
+  onExit?: () => void;
   start: StartMessage;
   frame: BattleFrame | null;
   me: number;
@@ -287,6 +288,21 @@ const settlementText = (s: SettlementMessage | null) =>
           ? "Settlement disabled on this server"
           : "Result refused by settlement verification";
 
+const resultReasonText = (reason: string | null) => {
+  switch (reason) {
+    case "core":
+      return "Core broken";
+    case "crowns":
+      return "Crown lead";
+    case "overtime":
+      return "Overtime tiebreak";
+    case "timeout":
+      return "Time expired";
+    default:
+      return reason || "Battle complete";
+  }
+};
+
 export default function BattleHud(props: BattleHudProps) {
   const { start, frame, me, end, abort, settlement, presence, now, acks, selected, dragging, hint, feed, mapRef, onBoardTap, onBoardHover, send } = props;
   const manifest = useSpriteManifest();
@@ -459,17 +475,42 @@ export default function BattleHud(props: BattleHudProps) {
             </div>
           )}
           {(end || abort) && (
-            <div className="chud-result">
+            <div className={`chud-result${end ? ` chud-result--${end.result}` : " chud-result--abort"}`} role="dialog" aria-label={end ? "Match result" : "Match interrupted"}>
               {end ? (
-                <>
-                  <div style={{ fontSize: 30, fontWeight: 800 }}>{end.result === "win" ? "Victory" : end.result === "loss" ? "Defeat" : "Draw"}</div>
-                  <div>
-                    crowns {end.crowns[me]} - {end.crowns[1 - me]} · {end.reason} · {secs(end.ticks)}
+                <div className="chud-result-panel">
+                  <div className="chud-result-kicker">Battle complete</div>
+                  <div className="chud-result-title">{end.result === "win" ? "Victory" : end.result === "loss" ? "Defeat" : "Draw"}</div>
+                  <div className="chud-result-identities" aria-label={`You versus ${start.opponent}`}>
+                    <span className="chud-result-player chud-result-player--you">You</span>
+                    <span className="chud-result-versus">vs</span>
+                    <span className="chud-result-player chud-result-player--foe" title={start.opponent}>{start.opponent}</span>
                   </div>
-                  <div style={{ fontSize: 11 }}>{settlementText(settlement)}</div>
-                </>
+                  <div className="chud-result-score" aria-label={`${end.crowns[me]} crowns for you, ${end.crowns[1 - me]} crowns for ${start.opponent}`}>
+                    <div className="chud-result-score-side">
+                      <strong>{end.crowns[me]}</strong>
+                      <span>Your crowns</span>
+                    </div>
+                    <span className="chud-result-score-divider">:</span>
+                    <div className="chud-result-score-side chud-result-score-side--foe">
+                      <strong>{end.crowns[1 - me]}</strong>
+                      <span>{start.opponent}&apos;s crowns</span>
+                    </div>
+                  </div>
+                  <div className="chud-result-context">
+                    <span>{resultReasonText(end.reason)}</span>
+                    <span aria-hidden="true">·</span>
+                    <span>{secs(end.ticks)}</span>
+                  </div>
+                  <div className="chud-result-settlement">{settlementText(settlement)}</div>
+                  {props.onExit && <button type="button" className="chud-result-action" onClick={props.onExit}>Back to lobby</button>}
+                </div>
               ) : (
-                <div>{abort}</div>
+                <div className="chud-result-panel chud-result-panel--abort">
+                  <div className="chud-result-kicker">Battle interrupted</div>
+                  <div className="chud-result-title">Match ended early</div>
+                  <div className="chud-result-context">{abort}</div>
+                  {props.onExit && <button type="button" className="chud-result-action" onClick={props.onExit}>Back to lobby</button>}
+                </div>
               )}
             </div>
           )}

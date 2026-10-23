@@ -2,6 +2,14 @@
 
 Last updated: 2026-10-23
 
+## UI polish pass (2026-10-23)
+
+- Doing: finalizing one bounded UI-only polish slice on `aa52dc7`.
+- Done: fixed Progress identity wrapping, improved battle card cost/name readability, and rebuilt the existing result overlay with truthful match context and Back to lobby action. Temporary fixture route was removed.
+- Checks: focused HUD/progress tests 39/39, typecheck and lint passed. Production build completed. Browser fixtures at 390x844, 1366x768 and 360x800 had no overflow, and the fresh localhost:3000 pass had no console errors.
+- Evidence: `C:/Users/USER/Documents/ChogRoyale-Assets/ui-polish-20261023/`. Live authenticated QA was not performed.
+- Next: owner review of the labelled fixture evidence, then stop after UI polish. Live authenticated QA remains separate.
+
 ## B2.8g.2 combat VFX and gameplay feedback (2026-10-23)
 
 - Doing: finalizing one bounded combat feedback pass on the f449893 arena correction.

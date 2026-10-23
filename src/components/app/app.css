@@ -2848,6 +2848,7 @@
 }
 
 .app-progress-hero__id {
+  flex: 1 1 auto;
   min-width: 0;
 }
 
@@ -2869,7 +2870,10 @@
   color: #fff;
   -webkit-text-stroke: 3px var(--outline);
   paint-order: stroke fill;
-  overflow-wrap: anywhere;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: none;
 }
 
 .app-progress-hero__handle {
@@ -2880,7 +2884,10 @@
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--app-ink-65);
-  overflow-wrap: anywhere;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .app-progress-hero__metric {

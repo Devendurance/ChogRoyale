@@ -1,5 +1,7 @@
 # Memory
 
+- UI polish keeps the app progress identity flex child shrinkable with `overflow-wrap: break-word`, while battle card names use a bounded two-line label and the existing card cost remains data-bound. Result presentation reads only `EndMessage`, `StartMessage.opponent`, and settlement state.
+
 - B2.8g.2 Phaser feedback is event-driven. `combatEventKey` dedupes public frame events across refreshed snapshots, `eventStart` clears the key set on a new match, and HP drops add short hit cues without changing state. Keep `fx` and `fxImgs` bounded and pointer-transparent.
 - B2.8g.1 visual correction keeps the V002 100x160 geometry and pointer mapper fixed. `mountVisualOffsetY` is presentation-only for top Core art and labels, and `structureTeamFor(owner, seat)` drives coral opponent versus cyan friendly accents in both perspectives.
 - Battle shell styles live in `src/app/dev/battle/battle-hud.css`, scoped to `chud-` classes. At 1100px and above the hand docks beside the board. Compact landscape rules exclude desktop widths.

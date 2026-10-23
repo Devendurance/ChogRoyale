@@ -1,5 +1,12 @@
 # Project State
 
+## UI polish pass (2026-10-23)
+
+- Progress identity no longer breaks usernames at arbitrary characters. Avatar/name flex sizing and handle ellipsis preserve the verified record layout.
+- Battle cards keep the approved dock and state bindings while improving cost contrast, name wrapping and long-name readability.
+- Battle results now use a violet/gold panel with real result, opponent, crowns, reason, duration, settlement status and the existing Back to lobby action. Checkpoint: `.fast-build/UI-POLISH-CHECKPOINT.md`.
+- Browser evidence is external at `C:/Users/USER/Documents/ChogRoyale-Assets/ui-polish-20261023/`. Live authenticated QA remains separate.
+
 ## B2.8g.2 combat VFX and gameplay feedback (2026-10-23)
 
 - `BattleCanvas` now gives authoritative HP drops a short team-colored hit burst, strengthens destruction and ability cues, and adds existing aura feedback for building and spawned-unit events. Recorded deploy, projectile, spell, tower-fire and structure effects remain bound to their existing events.

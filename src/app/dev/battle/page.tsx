@@ -453,6 +453,7 @@ function BattlePanel() {
           error={error}
           notice={notice}
           onGiveUp={stage === "reconnecting" ? reset : undefined}
+          onExit={reset}
           start={start}
           frame={frame}
           me={me}
@@ -482,7 +483,7 @@ function BattlePanel() {
       )}
       {stage === "closed" && <div>Disconnected from the battle server.</div>}
       {stage === "failed" && <div>Could not restore the match.</div>}
-      {(stage === "ended" || stage === "aborted" || stage === "closed" || stage === "failed") && (
+      {(stage === "closed" || stage === "failed") && (
         <div>
           <button onClick={reset}>Back to lobby</button>
         </div>
