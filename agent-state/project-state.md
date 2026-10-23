@@ -46,6 +46,7 @@ Last updated: 2026-10-22
 ## Key documents
 
 - `.fast-build/STATE.md`: slice-by-slice build log (B0 through B1.3).
+- `.fast-build/ROADMAP.md`: dependency-aware roadmap for all remaining work, with the active B2.8f.3 QA slice, next A4.1 slice, GATE A, A4, B2.8g, B4, B5 and release gates.
 - `AGENTS.md`: working rules (no em-dashes, state protocol, test before claim).
 
 ## Decisions made

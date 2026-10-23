@@ -6,6 +6,7 @@ Durable facts, conventions, and gotchas that should survive across sessions.
 
 - Long sessions keep state in `agent-state/`: `project-state.md`, `memory.md`, `left-off.md`.
 - Rules and preferences live in `AGENTS.md`. Read it first.
+- The dependency-aware roadmap lives in `.fast-build/ROADMAP.md`. `.fast-build/STATE.md` is the detailed log and currently holds uncommitted B2.8f and B3 history. Read both plus `agent-state/` before a Fast-Build slice. Never reset `STATE.md`.
 - Auto-commit and push meaningful checkpoints per current `AGENTS.md`. Repo stays private.
 - Blender experiments and test outputs belong in `C:/Users/USER/Documents/ChogRoyale-Assets`, outside the source repository. Reuse the existing MCP connection, bind its bridge to loopback, and preserve live Blender work.
 - Mesh audit interpretation: keep raw UV-split counts distinct from positional-welded topology. Boundary edges at fitted detail bases can be intentional, and BVH candidate pairs are not validated crossings. Never infer independent holes directly from pair counts or blindly remesh/cap detail bases.
@@ -19,6 +20,7 @@ Durable facts, conventions, and gotchas that should survive across sessions.
 - Trait model: distinct-NFT counts, str/num-distinct, nulls excluded (Accessory/Side sparse by design).
 - Tier distribution: Common 1279 / Uncommon 590 / Rare 60 / Epic 30 / Legendary 10.
 - Ownership authority is the transfer-event scan (`ownership-transfers` checkpoint); ingest re-checks are belt-and-suspenders.
+- The production migration set at HEAD is `0007`, `0008`, `0009`. There is no `0010`. A later `0010` needs its own schema slice and approval before apply.
 
 ## Gotchas
 

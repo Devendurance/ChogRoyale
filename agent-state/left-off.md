@@ -1,6 +1,14 @@
 # Left Off
 
-Last updated: 2026-10-22
+Last updated: 2026-10-23
+
+## Fast-Build roadmap registered (2026-10-23)
+
+- Doing: roadmap intake only. No product code, tests, database writes, deploy or push.
+- Registered: `.fast-build/ROADMAP.md` with the completed baseline, the active B2.8f.3 live QA slice, the next A4.1 settings slice, GATE A, A4, B2.8g, B4, B5 and the release gates.
+- Preserved: `.fast-build/STATE.md` with its existing uncommitted B2.8f and B3 history, untracked `DESIGN.md`, and untracked `docs/Chog Royale messaging.md`.
+- Next: A4.1 settings and account surface in a fresh session. GATE A authenticated acceptance and the B2.8f.3 live match are owner-gated.
+- Git: scoped roadmap and state commit only. No push.
 
 ## A3.2b Genesis legacy vault (2026-10-22), awaiting owner review
 

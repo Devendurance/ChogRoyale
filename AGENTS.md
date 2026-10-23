@@ -187,3 +187,11 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Arena texture derivatives must record source-to-display coordinate and pivot scaling explicitly. A renderer max+1 band fill can differ from authoritative centered-cell art by half a cell. Fix visual adapters without moving engine coordinates, and treat static directional aim poses separately from continuous target tracking.
 
 - Presentation asset readiness and runtime event-binding readiness must be tracked separately. Never infer authoritative tower firing or projectile origins from target-position snapshots. Preserve captured source hashes when a compatible concurrent UI edit is reviewed, and record the observed change as provenance rather than silently replacing history.
+
+## FAST-BUILD ROADMAP
+
+- The dependency-aware plan for all remaining work lives in `.fast-build/ROADMAP.md`. Read it with `.fast-build/STATE.md` and the three `agent-state/` files before starting a Fast-Build slice.
+- `.fast-build/STATE.md` is the detailed build log. Never reset, truncate or replace it. The roadmap file does not override recorded history.
+- One slice per session. Do not start a second slice or expand scope because another slice looks convenient.
+- The active B2.8f.3 live presentation QA is owner-gated. Do not mark it complete from harness evidence.
+- Production migrations, deployment, push, real-money flows and social backend authorization remain approval-gated.
