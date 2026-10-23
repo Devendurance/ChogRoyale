@@ -2,6 +2,13 @@
 
 Last updated: 2026-10-23
 
+## B5.1c rehearsal pre-flight (2026-10-23), STOPPED at approval gate
+
+- Pre-flight done read-only: HEAD `f0a4162`; TEST/PROD endpoints distinct; PROD journal holds ids 1-7 (0000-0006), missing exactly 0007-0009; PROD has `players` only.
+- Safety finding: `drizzle.config.ts` points `db:migrate` at `DATABASE_URL` (PROD), so the stock migrate command must never run except at the approved PROD moment. The clone rehearsal needs a TEST-runner-style script with a fail-closed guard, not yet written.
+- BLOCKED: no explicit owner approval evidenced to provision a disposable PROD-clone Neon branch. Per the slice's own stop rule, nothing was provisioned, migrated, or written. PROD and TEST untouched.
+- Next: owner either authorizes the clone (then run the B5.1c rehearsal plan from the session report) or defers; fresh-install 0000-0009 rehearsal is a separate outstanding prerequisite either way.
+
 ## B5.1b TEST persistence verification (2026-10-23), diagnostic only
 
 - Safety: HEAD `df6bb1d`; TEST/PROD endpoints distinct; runner uses `DATABASE_URL_TEST` with a fail-closed guard that refuses PROD endpoints. No migration re-run; no TEST reset.
