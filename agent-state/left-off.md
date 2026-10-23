@@ -2,6 +2,14 @@
 
 Last updated: 2026-10-23
 
+## B5.3a settlement readiness: CONDITIONAL GO (2026-10-23), no activation
+
+- Runtime: no deployed battle server exists (no deploy configs; script is localhost-only, refuses NODE_ENV=production). Controlled match = local battle:server + local dev, two designated accounts, private room.
+- PROD: journal 1-10, 9 players (2 onboarding complete, 5 with verified wallets), snapshot present. Exactly 2 onboardable accounts exist; owner must designate them.
+- Gates: flags OFF (no BATTLE_* in env/.env, no outbox dir, running server predates migration with null service). Post-migration the to_regclass gate now passes, so a flag+restart would activate: control is procedural until B5.3b.
+- Leaderboard safe: private rooms excluded (matchmaking-only). Stats/history will honestly show one private match each.
+- Next: owner authorization for B5.3b (set BATTLE_SETTLEMENT=1 + restart + live two-account match + read-only DB verification). Legacy stays OFF.
+
 ## B5.2b PROD migration COMPLETE (2026-10-23), flags still OFF
 
 - Pre-gate: PROD branch approved, journal 1-7, tables absent, 9 players = snapshot baseline, snapshot present, no BATTLE_* in env or .env. No drift.
