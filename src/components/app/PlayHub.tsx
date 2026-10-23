@@ -9,6 +9,7 @@ import { useLogin, usePrivy } from "@privy-io/react-auth";
 import AppHud from "./AppHud";
 import AppNav from "./AppNav";
 import Icon from "./icons";
+import { RANKED_SEASON } from "@/lib/ranked";
 
 function Gate({ onSignIn }: { onSignIn: () => void }) {
   return (
@@ -85,7 +86,9 @@ export default function PlayHub() {
               <div className="app-play-card__body">
                 <p className="app-play-card__eyebrow">Competitive queue</p>
                 <h2>Ranked</h2>
-                <p>Ranked matchmaking and persisted trophy standings are not enabled in this build.</p>
+                <p>Season {RANKED_SEASON} is being prepared for the competitive launch. Read-only standings appear in Progress when the ranked service is available.</p>
+                <span className="app-play-card__detail">Eligibility: server check · matchmaking: closed</span>
+                <Link href="/app/progress#ranked-season" className="app-btn app-btn--ghost app-play-card__secondary">View ranked record</Link>
                 <span className="app-play-card__disabled">Unavailable in closed alpha</span>
               </div>
               <span className="app-play-card__status">Coming later</span>

@@ -33,6 +33,8 @@ import {
   type StatsPayloadLike,
 } from "./progress-model";
 import type { LeaderboardSummary, MatchHistory, ProgressPhase, StatsSummary } from "./progress-types";
+import { failureRanked, failureRankedBoard, resolveRankedBoard, resolveRankedSummary } from "./ranked-model";
+import type { RankedBoardPayload, RankedBoardView, RankedProgressPayload, RankedSummaryView } from "./ranked-types";
 import { useMedia, useSaveData } from "@/components/site/use-media";
 
 const MATCH_PAGE_SIZE = 6;
@@ -152,6 +154,8 @@ interface Reads {
   stats: Result<StatsPayloadLike>;
   matches: Result<MatchesPayloadLike>;
   board: Result<BoardPayloadLike>;
+  ranked: Result<RankedProgressPayload>;
+  rankedBoard: Result<RankedBoardPayload>;
 }
 
 /** A verified stats payload as the identity fallback when the profile read fails. */
@@ -189,6 +193,10 @@ export default function ProgressScreen() {
   const [historyBusy, setHistoryBusy] = useState(false);
   const [boardData, setBoardData] = useState<LeaderboardSummary | null>(null);
   const [boardError, setBoardError] = useState<ApiError | null>(null);
+  const [rankedData, setRankedData] = useState<RankedSummaryView | null>(null);
+  const [rankedBoardData, setRankedBoardData] = useState<RankedBoardView | null>(null);
+  const [rankedError, setRankedError] = useState<ApiError | null>(null);
+  const [rankedBoardError, setRankedBoardError] = useState<ApiError | null>(null);
   const [boardPageError, setBoardPageError] = useState<string | null>(null);
   const [boardBusy, setBoardBusy] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -210,17 +218,21 @@ export default function ProgressScreen() {
   }, [catalog]);
 
   const readAll = useCallback(async (token: string): Promise<Reads> => {
-    const [profileResult, statsResult, matchesResult, boardResult] = await Promise.all([
+    const [profileResult, statsResult, matchesResult, boardResult, rankedResult, rankedBoardResult] = await Promise.all([
       getJson<{ player: ProfilePayload }>("/api/players/me", token),
       getJson<StatsPayloadLike>("/api/players/me/stats", token),
       getJson<MatchesPayloadLike>(`/api/players/me/matches?limit=${MATCH_PAGE_SIZE}`, token),
       getJson<BoardPayloadLike>(`/api/leaderboard/casual?limit=${BOARD_PAGE_SIZE}&offset=0`, token),
+      getJson<RankedProgressPayload>("/api/players/me/ranked", token),
+      getJson<RankedBoardPayload>("/api/leaderboard/ranked?limit=10&offset=0", token),
     ]);
     return {
       profile: profileResult,
       stats: statsResult,
       matches: matchesResult,
       board: boardResult,
+      ranked: rankedResult,
+      rankedBoard: rankedBoardResult,
     };
   }, []);
 
@@ -256,6 +268,22 @@ export default function ProgressScreen() {
       } else {
         setBoardData(null);
         setBoardError(toApiError(reads.board));
+      }
+
+      if (reads.ranked.ok && reads.ranked.data.ranked) {
+        setRankedData(resolveRankedSummary(reads.ranked.data.ranked));
+        setRankedError(null);
+      } else {
+        setRankedData(null);
+        setRankedError(reads.ranked.ok ? { code: "INVALID_RESPONSE", message: "The ranked service returned an unreadable record.", status: 502 } : toApiError(reads.ranked));
+      }
+
+      if (reads.rankedBoard.ok) {
+        setRankedBoardData(resolveRankedBoard(reads.rankedBoard.data));
+        setRankedBoardError(null);
+      } else {
+        setRankedBoardData(null);
+        setRankedBoardError(toApiError(reads.rankedBoard));
       }
     },
     [lookup]
@@ -294,6 +322,10 @@ export default function ProgressScreen() {
             setHistoryError(null);
             setBoardData(null);
             setBoardError(null);
+            setRankedData(null);
+            setRankedBoardData(null);
+            setRankedError(null);
+            setRankedBoardError(null);
             return;
           }
         }
@@ -400,6 +432,18 @@ export default function ProgressScreen() {
     return failureBoard(boardError ? panelStateForCode(boardError.code) : "unavailable");
   }, [boardData, boardError]);
 
+  const ranked = useMemo<RankedSummaryView>(() => {
+    if (rankedData) return rankedData;
+    const state = rankedError ? panelStateForCode(rankedError.code) : "unavailable";
+    return failureRanked(state === "locked" || state === "auth" ? state : "unavailable");
+  }, [rankedData, rankedError]);
+
+  const rankedBoard = useMemo<RankedBoardView>(() => {
+    if (rankedBoardData) return rankedBoardData;
+    const state = rankedBoardError ? panelStateForCode(rankedBoardError.code) : "unavailable";
+    return failureRankedBoard(state === "locked" || state === "auth" ? state : "unavailable");
+  }, [rankedBoardData, rankedBoardError]);
+
   const notices = useMemo(() => {
     const list: LobbyNotice[] = [];
     if (profileError && !player) list.push(profileNotice(profileError));
@@ -408,7 +452,10 @@ export default function ProgressScreen() {
       profileError?.code === "UNAUTHORIZED" ||
       statsError?.code === "UNAUTHORIZED" ||
       historyError?.code === "UNAUTHORIZED" ||
-      boardError?.code === "UNAUTHORIZED";
+      boardError?.code === "UNAUTHORIZED" ||
+      rankedError?.code === "UNAUTHORIZED" ||
+      rankedBoardError?.code === "UNAUTHORIZED";
+
     if (sessionFailed && !(profileError && !player)) {
       list.push(sessionNotice("load your progress"));
     }
@@ -420,7 +467,7 @@ export default function ProgressScreen() {
         text: "Your profile setup is not finished, so your verified record, match history and casual standings stay locked.",
         action: { label: "Finish profile setup", href: "/dev/onboarding" },
       });
-    } else if ([statsError, historyError, boardError].some((error) => error?.code === "FORBIDDEN")) {
+    } else if ([statsError, historyError, boardError, rankedError, rankedBoardError].some((error) => error?.code === "FORBIDDEN")) {
       list.push({
         tone: "warn",
         text: "Your match records are locked until your profile setup is complete.",
@@ -429,7 +476,7 @@ export default function ProgressScreen() {
     }
 
     return list;
-  }, [profileError, statsError, historyError, boardError, profile, player]);
+  }, [profileError, statsError, historyError, boardError, rankedError, rankedBoardError, profile, player]);
 
   const loaded = authenticated && sessionKey !== null && loadedFor === sessionKey;
 
@@ -475,12 +522,28 @@ export default function ProgressScreen() {
       } else {
         parts.push("The casual leaderboard is unavailable.");
       }
+
+      if (ranked.state === "ready") {
+        parts.push(`${ranked.trophies ?? 0} ranked trophies across ${ranked.rankedMatches ?? 0} matches.`);
+      } else if (ranked.state === "empty") {
+        parts.push("No ranked results yet.");
+      } else {
+        parts.push("Ranked progression is unavailable.");
+      }
+
+      if (rankedBoard.state === "ready") {
+        parts.push(`${rankedBoard.entries.length} of ${rankedBoard.total} ranked standings shown.`);
+      } else if (rankedBoard.state === "empty") {
+        parts.push("No ranked qualifiers yet.");
+      } else {
+        parts.push("The ranked leaderboard is unavailable.");
+      }
     }
     if (busy) parts.push("Refreshing your progress.");
     if (historyBusy) parts.push("Loading more matches.");
     if (boardBusy) parts.push("Loading another page of standings.");
     return parts.join(" ");
-  }, [phase, stats, history, board, busy, historyBusy, boardBusy]);
+  }, [phase, stats, history, board, ranked, rankedBoard, busy, historyBusy, boardBusy]);
 
   const onSignIn = useCallback(() => {
     void login();
@@ -497,6 +560,8 @@ export default function ProgressScreen() {
       stats={stats}
       history={history}
       board={board}
+      ranked={ranked}
+      rankedBoard={rankedBoard}
       notices={notices}
       busy={busy}
       historyBusy={historyBusy}

@@ -22,6 +22,8 @@ import {
   type StartMessage,
 } from "@/lib/battle-protocol";
 import { aimPoint, endGesture, moveGesture, placementHint, startGesture, type ArenaPoint, type Gesture } from "@/lib/battle-input";
+import { awardForMatch, resolveRankedSummary } from "@/components/app/ranked-model";
+import type { RankedAwardView, MyRankedResponse } from "@/lib/ranked";
 import type { BoardMapper, CanvasFeed } from "./BattleCanvas";
 import LoadoutPicker from "./LoadoutPicker";
 import BattleHud from "./BattleHud";
@@ -30,6 +32,7 @@ const SERVER = process.env.NEXT_PUBLIC_BATTLE_SERVER_URL ?? "http://127.0.0.1:25
 const ENABLED = process.env.NODE_ENV !== "production" || process.env.NEXT_PUBLIC_ENABLE_DEV_BATTLE === "1";
 
 type Stage = "idle" | "connecting" | "searching" | "lobby" | "active" | "reconnecting" | "ended" | "aborted" | "failed" | "closed";
+type RankedAwardStatus = "idle" | "checking" | "awarded" | "unavailable" | "timeout";
 const RESUME_KEY = "b3.resume";
 
 export function BattlePanel({
@@ -53,6 +56,8 @@ export function BattlePanel({
   const [acks, setAcks] = useState<Array<AckMessage & { label: string }>>([]);
   const [end, setEnd] = useState<EndMessage | null>(null);
   const [settlement, setSettlement] = useState<SettlementMessage | null>(null);
+  const [rankedAward, setRankedAward] = useState<RankedAwardView | null>(null);
+  const [rankedAwardStatus, setRankedAwardStatus] = useState<RankedAwardStatus>("idle");
   const [abort, setAbort] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [dragging, setDragging] = useState<string | null>(null);
@@ -95,6 +100,8 @@ export function BattlePanel({
       }
       if (m.resumed) setNotice("Match restored");
       setPresence(null);
+      setRankedAward(null);
+      setRankedAwardStatus("idle");
       setStart(m);
       setStage("active");
     });
@@ -129,6 +136,57 @@ export function BattlePanel({
     });
     setRoom(r);
   }, []);
+
+  // Ranked awards are read back only after the server confirms settlement.
+  // This bounded read never infers a trophy delta from the battle result.
+  useEffect(() => {
+    if (start?.mode !== "ranked" || !end?.matchId) return;
+    if (!settlement || settlement.status === "pending") return;
+    if (settlement.status !== "settled" && settlement.status !== "already-settled") return;
+
+    let cancelled = false;
+    let attempts = 0;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    const poll = async () => {
+      attempts += 1;
+      const token = await getAccessToken();
+      if (!token || cancelled) {
+        if (!cancelled) setRankedAwardStatus("unavailable");
+        return;
+      }
+      setRankedAwardStatus("checking");
+      try {
+        const response = await fetch("/api/players/me/ranked", { headers: { authorization: `Bearer ${token}` } });
+        const body = (await response.json()) as { success?: boolean; data?: { ranked?: MyRankedResponse } };
+        const recent = body.success && body.data?.ranked ? resolveRankedSummary(body.data.ranked).recent : [];
+        const award = awardForMatch(recent, end.matchId);
+        if (award) {
+          if (!cancelled) {
+            setRankedAward(award);
+            setRankedAwardStatus("awarded");
+          }
+          return;
+        }
+        if (attempts >= 4) {
+          if (!cancelled) setRankedAwardStatus("timeout");
+          return;
+        }
+      } catch {
+        if (attempts >= 4) {
+          if (!cancelled) setRankedAwardStatus("unavailable");
+          return;
+        }
+      }
+      if (!cancelled) timer = setTimeout(() => void poll(), 1500);
+    };
+
+    void poll();
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [end?.matchId, getAccessToken, settlement, start?.mode]);
 
   const connect = useCallback(
     async (mode: "create" | "join") => {
@@ -519,6 +577,8 @@ export function BattlePanel({
           end={end}
           abort={abort}
           settlement={settlement}
+          rankedAward={rankedAward}
+          rankedAwardStatus={rankedAwardStatus}
           presence={presence}
           now={now}
           acks={acks}

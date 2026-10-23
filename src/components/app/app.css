@@ -2844,6 +2844,8 @@
 .app-play-card__status { align-self: flex-start; color: #d7c8ed; font: 700 10px/1.2 var(--font-data); letter-spacing: .1em; text-transform: uppercase; }
 .app-play-card__status--live { color: #9ff5de; }
 .app-play-card__disabled { display: inline-flex; align-self: flex-start; margin-top: auto; padding: 10px 12px; border: 1px solid #77669e; border-radius: 10px; color: #ddd1ee; font: 700 11px/1.2 var(--font-data); }
+.app-play-card__detail { display: block; margin: -8px 0 12px; color: #cfc1e7; font: 600 11px/1.35 var(--font-data); letter-spacing: .02em; }
+.app-play-card__secondary { align-self: flex-start; min-height: 40px !important; margin: 0 0 12px !important; padding: 0 13px !important; font-size: 13px !important; }
 .app-play-truth { margin: 0; color: var(--app-ink-45); font: 500 12px/1.5 var(--font-data); text-align: center; }
 
 .app-play-battle-shell {
@@ -3746,6 +3748,30 @@
   font-size: 9.5px;
   letter-spacing: 0.06em;
   text-align: center;
+}
+
+/* P1c ranked read surfaces. Matchmaking remains release-gated, but the
+   server-owned season record and board can report their own honest state. */
+.app-ranked-summary { border-top-color: #ffc83d; }
+.app-ranked-board { border-top-color: #8f7bff; }
+.app-ranked-summary__tiles { margin-top: 2px; }
+.app-ranked-recent { margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(186, 165, 232, .24); }
+.app-ranked-recent__list { display: grid; gap: 8px; margin: 10px 0 0; padding: 0; list-style: none; }
+.app-ranked-recent__list li { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: center; padding: 9px 11px; border: 1px solid rgba(186, 165, 232, .22); border-radius: 10px; background: rgba(18, 8, 58, .34); color: #f3ecff; font: 600 12px/1.25 var(--font-data); }
+.app-ranked-recent__list li > span:last-child { color: #bfaedc; font-size: 10px; }
+.app-ranked-delta { min-width: 42px; color: #d7c8ed; text-align: right; }
+.app-ranked-delta--up { color: #9ff5de; }
+.app-ranked-delta--down { color: #ffb0bd; }
+.app-ranked-board-row__trophies { display: grid; justify-items: end; gap: 2px; min-width: 64px; color: #fff0ae; font: 700 11px/1.1 var(--font-data); text-align: right; }
+.app-ranked-board-row__trophies strong { font: 400 20px/1 var(--font-game); }
+.app-ranked-board-row__trophies span { color: #bfaedc; font-size: 9px; letter-spacing: .08em; text-transform: uppercase; }
+.app-ranked-board .app-progress-standing { margin: 12px 0 14px; }
+
+@media (max-width: 680px) {
+  .app-ranked-recent__list li { grid-template-columns: 1fr auto; }
+  .app-ranked-recent__list li > span:last-child { grid-column: 1 / -1; }
+  .app-ranked-board-row__trophies { min-width: 54px; }
+  .app-ranked-board-row__trophies strong { font-size: 17px; }
 }
 
 /* ---------------------------------------------------------------- desktop */

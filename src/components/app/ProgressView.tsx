@@ -4,9 +4,9 @@
 // prop, so the same screen renders from the authenticated container and from a
 // bounded presentation fixture.
 //
-// The screen shows only what the stats, match history and casual leaderboard
-// endpoints returned. A failed read is never drawn as zero. It carries no
-// trophies, XP, levels, currencies, streaks or ranked ladder.
+// The screen shows only what the stats, match history and leaderboard
+// endpoints returned. A failed read is never drawn as zero. Ranked values are
+// server-owned read-only standings while public matchmaking remains gated.
 
 import Image from "next/image";
 import Link from "next/link";
@@ -25,6 +25,7 @@ import type {
   ProgressViewProps,
   StatsSummary,
 } from "./progress-types";
+import type { RankedBoardEntryView, RankedReadState, RankedSummaryView } from "./ranked-types";
 
 interface HeroMetric {
   value: string;
@@ -436,12 +437,103 @@ function StandingBlock({
   );
 }
 
+function rankedStateCopy(state: RankedReadState): { label: string; title: string; body: string } {
+  if (state === "empty") {
+    return {
+      label: "No ranked results",
+      title: "Your ranked record starts here",
+      body: "Season 1 is ready for read-only standings. Your first verified ranked result will appear here after public activation.",
+    };
+  }
+  if (state === "locked") {
+    return { label: "Locked", title: "Ranked record is locked", body: "Finish profile setup before the server can read your ranked standing." };
+  }
+  if (state === "auth") {
+    return { label: "Session expired", title: "Sign in again to load ranked", body: "Your session is no longer valid, so the ranked record could not be read." };
+  }
+  return {
+    label: "Unavailable",
+    title: "Ranked data is unavailable",
+    body: "The ranked service or its production tables are not available. No balance or result is inferred.",
+  };
+}
+
+function RankedBoardRow({ entry }: { entry: RankedBoardEntryView }) {
+  return (
+    <li className={`app-progress-board-row app-ranked-board-row${entry.isYou ? " app-progress-board-row--you" : ""}`}>
+      <span className={`app-progress-board-row__pos${entry.position !== null && entry.position <= 3 ? " app-progress-board-row__pos--top" : ""}`}>
+        {entry.position ?? "-"}
+      </span>
+      <span className="app-progress-board-row__avatar">
+        {entry.avatarUrl ? (
+          <Image src={entry.avatarUrl} alt={entry.avatarName ? `${entry.avatarName} avatar` : "Player avatar"} width={34} height={34} className="app-progress-board-row__img" unoptimized />
+        ) : (
+          <Icon name="user" size={16} />
+        )}
+      </span>
+      <span className="app-progress-board-row__names">
+        <span className="app-progress-board-row__name">
+          <span className="app-progress-board-row__name-text">{entry.displayName ?? entry.username}</span>
+          {entry.isYou && <span className="app-progress-board-row__you">You</span>}
+        </span>
+        <span className="app-progress-board-row__meta">{entry.wins}W {entry.losses}L {entry.draws}D · {entry.matches} match{entry.matches === 1 ? "" : "es"}</span>
+      </span>
+      <span className="app-ranked-board-row__trophies">
+        <strong>{entry.trophies}</strong>
+        <span>trophies</span>
+      </span>
+    </li>
+  );
+}
+
+function RankedSummary({ ranked }: { ranked: RankedSummaryView }) {
+  const state = ranked.state;
+  if (state !== "ready") {
+    const copy = rankedStateCopy(state);
+    return <StatePlate tone={state === "empty" || state === "auth" || state === "locked" ? state : "unavailable"} label={copy.label} title={copy.title} body={copy.body} />;
+  }
+
+  return (
+    <>
+      <dl className="app-progress-tiles app-ranked-summary__tiles">
+        <div className="app-progress-tile app-progress-tile--gold"><dt>Trophies</dt><dd>{ranked.trophies ?? "n/a"}</dd></div>
+        <div className="app-progress-tile"><dt>Position</dt><dd>{ranked.position ? `#${ranked.position}` : "Pending"}</dd></div>
+        <div className="app-progress-tile app-progress-tile--win"><dt>Wins</dt><dd>{ranked.wins ?? "n/a"}</dd></div>
+        <div className="app-progress-tile app-progress-tile--loss"><dt>Losses</dt><dd>{ranked.losses ?? "n/a"}</dd></div>
+        <div className="app-progress-tile app-progress-tile--draw"><dt>Draws</dt><dd>{ranked.draws ?? "n/a"}</dd></div>
+        <div className="app-progress-tile app-progress-tile--muted"><dt>Season</dt><dd>{ranked.season ? `S${ranked.season}` : "n/a"}</dd></div>
+      </dl>
+      <p className="app-progress-note">
+        {ranked.eligible ? "Server-verified ranked standing." : "No ranked eligibility has been granted yet."} Ranked matchmaking remains closed while the public release gates are pending.
+      </p>
+      <div className="app-ranked-recent" aria-labelledby="app-ranked-recent-title">
+        <p className="app-progress-kicker" id="app-ranked-recent-title">Recent awards</p>
+        {ranked.recent.length > 0 ? (
+          <ul className="app-ranked-recent__list">
+            {ranked.recent.map((award) => (
+              <li key={award.matchId}>
+                <span>{award.result === "win" ? "Victory" : award.result === "loss" ? "Defeat" : "Draw"}</span>
+                <strong className={award.delta > 0 ? "app-ranked-delta app-ranked-delta--up" : award.delta < 0 ? "app-ranked-delta app-ranked-delta--down" : "app-ranked-delta"}>{award.delta > 0 ? "+" : ""}{award.delta}</strong>
+                <span>{award.finishedAt ? formatRecordDate(award.finishedAt) ?? "Recorded" : "Recorded"}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="app-progress-caption">No awarded ranked results yet.</p>
+        )}
+      </div>
+    </>
+  );
+}
+
 export default function ProgressView({
   phase,
   player,
   stats,
   history,
   board,
+  ranked,
+  rankedBoard,
   notices,
   busy,
   historyBusy,
@@ -721,6 +813,21 @@ export default function ProgressView({
               </section>
 
               <section
+                id="ranked-season"
+                className="app-panel app-progress-record app-ranked-summary app-rise"
+                aria-labelledby="app-ranked-summary-title"
+                style={{ animationDelay: "100ms" }}
+              >
+                <PanelHead
+                  eyebrow="Season 1 · competitive record"
+                  title="Ranked progression"
+                  titleId="app-ranked-summary-title"
+                  aside={<span className="app-badge app-badge--gold">Read only</span>}
+                />
+                <RankedSummary ranked={ranked} />
+              </section>
+
+              <section
                 className="app-panel app-progress-legacy app-rise"
                 aria-labelledby="app-progress-legacy-title"
                 style={{ animationDelay: "120ms" }}
@@ -802,6 +909,40 @@ export default function ProgressView({
                       ) : undefined
                     }
                   />
+                )}
+              </section>
+
+              <section
+                id="ranked-leaderboard"
+                className="app-panel app-progress-board app-ranked-board app-rise"
+                aria-labelledby="app-ranked-board-title"
+                style={{ animationDelay: "160ms" }}
+              >
+                <PanelHead
+                  eyebrow={`Season ${rankedBoard.season ?? 1} · ranked standings`}
+                  title="Ranked leaderboard"
+                  titleId="app-ranked-board-title"
+                />
+                <p className="app-progress-board__note">
+                  Ranked rows come from the server&apos;s trophy ledger. Ties keep the server order. Public ranked matchmaking is closed until the production release gates are approved.
+                </p>
+                {rankedBoard.state === "ready" ? (
+                  <>
+                    <div className="app-progress-standing">
+                      <span className="app-progress-standing__label">Your position</span>
+                      <strong>{rankedBoard.me?.position ? `#${rankedBoard.me.position}` : "Pending"}</strong>
+                      <span className="app-progress-standing__text">
+                        {rankedBoard.me?.eligible ? `${rankedBoard.me.trophies} trophies · ${rankedBoard.me.rankedMatches} ranked match${rankedBoard.me.rankedMatches === 1 ? "" : "es"}` : "no ranked results yet"}
+                      </span>
+                    </div>
+                    <ol className="app-progress-board__list">
+                      {rankedBoard.entries.map((entry) => <RankedBoardRow key={`${entry.position ?? "x"}-${entry.username}`} entry={entry} />)}
+                    </ol>
+                  </>
+                ) : rankedBoard.state === "empty" ? (
+                  <StatePlate tone="empty" label="No ranked qualifiers" title="The season board is waiting" body="No server-awarded ranked trophies have been recorded yet." />
+                ) : (
+                  <StatePlate tone={rankedBoard.state === "auth" || rankedBoard.state === "locked" ? rankedBoard.state : "unavailable"} label={rankedBoard.state === "auth" ? "Session expired" : rankedBoard.state === "locked" ? "Locked" : "Unavailable"} title={rankedBoard.state === "auth" ? "Sign in again to load the board" : rankedBoard.state === "locked" ? "Ranked standings are locked" : "Ranked standings are unavailable"} body={rankedBoard.state === "locked" ? "Finish profile setup before the server can read this board." : "No ranked positions are inferred while the service or production schema is unavailable."} />
                 )}
               </section>
             </div>

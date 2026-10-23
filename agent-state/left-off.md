@@ -2,6 +2,12 @@
 
 Last updated: 2026-10-23
 
+## P1c ranked frontend integration, complete pending checkpoint
+
+- Added Season 1 ranked identity and closed matchmaking state to `/app/play`. Read-only personal progression and ranked leaderboard now load from the existing authenticated APIs on `/app/progress` with server-owned trophy, rank, W/L/D, avatar, position and recent award values.
+- Blocked player-facing `?mode=ranked` URLs before `BattlePanel` mounts. Ranked settlement result feedback is bounded and only displays an award returned for the exact match after settlement confirmation.
+- Focused ranked model and API tests, typecheck, lint and production build are green. Browser fixtures verified signed-out `/app/play`, the ranked URL gate and signed-out `/app/progress` with no console errors. Next: create the P1c checkpoint and commit only scoped files. Live authenticated ranked QA remains blocked by public deployment and pending PROD migrations.
+
 ## P1b.2 ranked trophies and persistent leaderboard, complete (local commit, no push)
 
 - Season 1 policy (TEST provisional): start 0, win +25, loss -20 floored at 0, draw 0. No placement, decay, reset or Elo.

@@ -1,5 +1,11 @@
 # Project State
 
+## P1c ranked frontend integration (2026-10-23)
+
+- `/app/play` now identifies Season 1, eligibility as a server check and the closed ranked queue, with a read-only Progress link. `/app/play/battle?mode=ranked` is blocked by `RANKED_PUBLIC_MATCHMAKING_ENABLED=false` and never mounts the player battle session.
+- `/app/progress` reads `/api/players/me/ranked` and `/api/leaderboard/ranked`, renders server trophies, rank, W/L/D, recent deltas, public identities and the current position, and keeps casual standings separate. Empty, locked, auth and unavailable states stay distinct.
+- Ranked result feedback only polls a match-specific award after `settled` or `already-settled`, with four bounded reads. No combat, Colyseus, database or migration changes. Checkpoint pending local commit.
+
 ## P1b.2 ranked trophies and persistent leaderboard (2026-10-23)
 
 - Season 1 provisional policy on TEST: start 0, win +25, loss -20 with floor at 0, draw 0. No placement, decay, reset, Elo, XP, gold or $CHOG.

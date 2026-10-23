@@ -88,6 +88,7 @@
 .chud-result-score-divider { color: #ffe08a; font: 400 24px/1 var(--font-lilita), sans-serif; }
 .chud-result-context { position: relative; z-index: 1; display: inline-flex; flex-wrap: wrap; justify-content: center; gap: 6px; color: #f2e9ff; font: 600 11px/1.25 var(--font-georama), sans-serif; }
 .chud-result-settlement { position: relative; z-index: 1; max-width: 100%; color: #d8c9ed; font: 500 10px/1.35 var(--font-georama), sans-serif; }
+.chud-result-ranked { position: relative; z-index: 1; max-width: 100%; margin-top: 7px; padding: 8px 10px; border: 1px solid rgba(255, 200, 61, .55); border-radius: 10px; background: rgba(44, 20, 91, .7); color: #fff0ae; font: 700 11px/1.35 var(--font-georama), sans-serif; }
 .chud-result-action { position: relative; z-index: 1; min-height: 44px; margin-top: 2px; padding: 7px 18px; border: 1px solid #ffe08a; border-bottom: 3px solid #3d1e67; border-radius: 8px; background: linear-gradient(180deg, #8a55c5, #52289b); color: #fff7d6; font: 700 12px/1 var(--font-georama), sans-serif; cursor: pointer; box-shadow: inset 0 1px #ffffff4d, 0 3px 0 #12082f; }
 .chud-result-action:hover { filter: brightness(1.08); }
 .chud-result-action:focus-visible { outline: 3px solid #fff1af; outline-offset: 3px; }

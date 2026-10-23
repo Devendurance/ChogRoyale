@@ -5,6 +5,7 @@
 // test without pulling server-only code into the client bundle.
 
 import type { LobbyNotice, LobbyPlayer } from "./lobby-types";
+import type { RankedBoardView, RankedSummaryView } from "./ranked-types";
 
 export type ProgressPhase = "booting" | "login" | "profile" | "ready";
 
@@ -119,6 +120,8 @@ export interface ProgressViewProps {
   stats: StatsSummary;
   history: MatchHistory;
   board: LeaderboardSummary;
+  ranked: RankedSummaryView;
+  rankedBoard: RankedBoardView;
   notices: LobbyNotice[];
   /** A full refresh is in flight. */
   busy: boolean;

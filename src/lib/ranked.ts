@@ -3,6 +3,13 @@
 // These are provisional TEST constants, not approved
 // production economy rules. No Elo/MMR, placement, decay or season reset.
 export const RANKED_SEASON = 1;
+/**
+ * Public ranked matchmaking is a release-gated feature. Keep this closed
+ * until the approved production migrations, settlement runtime and public
+ * battle deployment are live. Read-only progression endpoints may still be
+ * rendered when the server makes them available.
+ */
+export const RANKED_PUBLIC_MATCHMAKING_ENABLED = false;
 export const RANKED_START_TROPHIES = 0;
 export const RANKED_WIN_DELTA = 25;
 export const RANKED_LOSS_DELTA = -20;

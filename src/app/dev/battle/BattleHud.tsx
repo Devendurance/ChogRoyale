@@ -16,6 +16,7 @@ import type {
   StartMessage,
 } from "@/lib/battle-protocol";
 import type { ArenaPoint } from "@/lib/battle-input";
+import type { RankedAwardView } from "@/lib/ranked";
 import type { BoardMapper, CanvasFeed } from "./BattleCanvas";
 
 // Phaser must stay client-only, same as page.tsx's original dynamic import.
@@ -56,6 +57,8 @@ export interface BattleHudProps {
   end: EndMessage | null;
   abort: string | null;
   settlement: SettlementMessage | null;
+  rankedAward?: RankedAwardView | null;
+  rankedAwardStatus?: "idle" | "checking" | "awarded" | "unavailable" | "timeout";
   presence: PresenceMessage | null;
   now: number;
   acks: Array<AckMessage & { label: string }>;
@@ -506,6 +509,17 @@ export default function BattleHud(props: BattleHudProps) {
                     <span>{secs(end.ticks)}</span>
                   </div>
                   <div className="chud-result-settlement">{settlementText(settlement)}</div>
+                  {start.mode === "ranked" && (
+                    <div className="chud-result-ranked" aria-live="polite">
+                      {props.rankedAward
+                        ? `Ranked award confirmed: ${props.rankedAward.delta > 0 ? "+" : ""}${props.rankedAward.delta} trophies · balance ${props.rankedAward.balanceAfter}`
+                        : props.rankedAwardStatus === "checking" || props.rankedAwardStatus === "idle"
+                          ? "Ranked award is being confirmed by the server"
+                          : props.rankedAwardStatus === "timeout"
+                            ? "Ranked award is still pending. Check Progress after the ledger catches up."
+                            : "No ranked award was confirmed for this match."}
+                    </div>
+                  )}
                   {props.onExit && <button type="button" className="chud-result-action" onClick={props.onExit}>Back to lobby</button>}
                 </div>
               ) : (
