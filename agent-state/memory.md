@@ -1,7 +1,7 @@
 # Memory
 
 - P1a play routing keeps one battle session implementation in `src/app/dev/battle/BattlePanel.tsx`. `/dev/battle` only supplies its development Privy wrapper, while `/app/play/battle` consumes the shared app-shell provider.
-- P1b.1 ranked queue exists server-side (`battle_queue_ranked`, mode-aware coordinator, `match_type` ranked on TEST via migration 0011). The player hub must still say unavailable and must not route Ranked to any queue until P1b.2 trophies land. PROD still lacks the 0011 check.
+- P1b.1 ranked queue exists server-side (`battle_queue_ranked`, mode-aware coordinator, `match_type` ranked on TEST via migration 0011). P1b.2 adds Season 1 trophies (win +25, loss -20 floored, draw 0) via migration 0012 ledger+balances on TEST only, with GET /api/leaderboard/ranked and GET /api/players/me/ranked. The player hub must still say unavailable and must not route Ranked anywhere until P1c. PROD lacks 0011/0012 and takes no trophy writes by construction.
 
 - UI polish keeps the app progress identity flex child shrinkable with `overflow-wrap: break-word`, while battle card names use a bounded two-line label and the existing card cost remains data-bound. Result presentation reads only `EndMessage`, `StartMessage.opponent`, and settlement state.
 

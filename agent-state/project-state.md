@@ -1,5 +1,13 @@
 # Project State
 
+## P1b.2 ranked trophies and persistent leaderboard (2026-10-23)
+
+- Season 1 provisional policy on TEST: start 0, win +25, loss -20 with floor at 0, draw 0. No placement, decay, reset, Elo, XP, gold or $CHOG.
+- Migration 0012 (TEST only): `ranked_trophy_balances` and `ranked_trophy_awards` ledger with applied-delta + balance_after audit trail. Awards run only over settled replay-verified ranked rows; private/unranked/aborted/refused never award.
+- Exact-once per (match, player) via ledger PK; stage+apply statements with advisory locks; reconcile finishes NULL-balance_after rows and never-settled awards. Settlement status never depends on trophy success.
+- Read APIs: ranked leaderboard (trophies desc, wins desc, username_key; RANK() positions; season-isolated) and my-ranked (trophies, rank, WLD, recent deltas). Casual board and stats untouched.
+- Delivery: 15 new tests + 12 casual/progression regressions green, typecheck/lint/build green. Committed locally, no push, no deploy, no PROD writes.
+
 ## P1b.1 ranked queue and match provenance (2026-10-23)
 
 - Separate ranked matchmaking on the existing battle server: `BATTLE_RANKED_QUEUE_ROOM`, mode-aware `MatchCoordinator`, `RankedQueueRoom` sharing the one coordinator. Deck/commander validation, seats, lifecycle and battle room reused; no new combat.

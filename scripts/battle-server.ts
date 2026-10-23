@@ -48,8 +48,23 @@ async function settlementService() {
   } else {
     console.log("legacy disabled");
   }
+  // P1b.2 ranked trophies ride on the settlement lifecycle: no new flags.
+  // They stay disabled unless the ranked trophy migration is applied to
+  // the same database, so an unmigrated database (including PROD until
+  // the owner approves 0011/0012) can never take trophy writes.
+  let trophies = null;
+  {
+    const check = await sql`select to_regclass('public.ranked_trophy_awards') as t`;
+    if (!check[0]?.t) {
+      console.log("trophies disabled (ranked_trophy_awards missing)");
+    } else {
+      const { TrophyService } = await import("@/server/battle/trophies");
+      trophies = new TrophyService();
+      console.log("trophies enabled");
+    }
+  }
   console.log("settlement enabled");
-  return new SettlementService({ legacy });
+  return new SettlementService({ legacy, trophies });
 }
 
 void settlementService()

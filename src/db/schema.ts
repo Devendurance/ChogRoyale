@@ -574,6 +574,58 @@ export type MatchParticipant = typeof matchParticipants.$inferSelect;
 export type MatchEvidence = typeof matchEvidence.$inferSelect;
 export type MatchLegacyRun = typeof matchLegacyRuns.$inferSelect;
 
+// P1b.2 ranked trophies (Season 1 provisional policy). The ledger is
+// authoritative: one row per (match, player) records the applied delta and
+// the balance after it. balance_after NULL means the award was staged but
+// the balance pass never completed, so reconciliation can finish it.
+// Balances carry floored trophies plus W/L/D counters for the board.
+export const rankedTrophyBalances = pgTable(
+  "ranked_trophy_balances",
+  {
+    playerId: uuid("player_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "restrict" }),
+    season: integer("season").notNull(),
+    trophies: integer("trophies").notNull().default(0),
+    rankedMatches: integer("ranked_matches").notNull().default(0),
+    rankedWins: integer("ranked_wins").notNull().default(0),
+    rankedLosses: integer("ranked_losses").notNull().default(0),
+    rankedDraws: integer("ranked_draws").notNull().default(0),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ name: "ranked_trophy_balances_pk", columns: [t.playerId, t.season] }),
+    index("ranked_trophy_balances_season_trophies_idx").on(t.season, t.trophies),
+    check("ranked_trophy_balances_trophies_check", sql`${t.trophies} >= 0`),
+    check("ranked_trophy_balances_counters_check", sql`${t.rankedMatches} >= 0 and ${t.rankedWins} >= 0 and ${t.rankedLosses} >= 0 and ${t.rankedDraws} >= 0`),
+  ]
+);
+
+export const rankedTrophyAwards = pgTable(
+  "ranked_trophy_awards",
+  {
+    matchId: uuid("match_id")
+      .notNull()
+      .references(() => matches.id, { onDelete: "restrict" }),
+    playerId: uuid("player_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "restrict" }),
+    season: integer("season").notNull(),
+    result: text("result").notNull(),
+    delta: integer("delta").notNull(),
+    balanceAfter: integer("balance_after"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ name: "ranked_trophy_awards_pk", columns: [t.matchId, t.playerId] }),
+    index("ranked_trophy_awards_player_season_idx").on(t.playerId, t.season),
+    check("ranked_trophy_awards_result_check", sql`${t.result} in ('win','loss','draw')`),
+  ]
+);
+
+export type RankedTrophyBalance = typeof rankedTrophyBalances.$inferSelect;
+export type RankedTrophyAward = typeof rankedTrophyAwards.$inferSelect;
+
 // B4.1 friendships. One row per player pair with canonical id ordering
 // (user_a < user_b), so a pair can never hold two rows in either
 // direction. requested_by records who sent the request and must be one of

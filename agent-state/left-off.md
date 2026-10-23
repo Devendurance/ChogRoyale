@@ -2,6 +2,14 @@
 
 Last updated: 2026-10-23
 
+## P1b.2 ranked trophies and persistent leaderboard, complete (local commit, no push)
+
+- Season 1 policy (TEST provisional): start 0, win +25, loss -20 floored at 0, draw 0. No placement, decay, reset or Elo.
+- Schema: migration 0012 `ranked_trophy_balances` (PK player+season, floored trophies + W/L/D counters) and `ranked_trophy_awards` ledger (PK match+player, result, applied delta, balance_after NULL = pending). Applied to TEST only; PROD verified read-only without both tables.
+- Award path: reads settled ranked rows only, two-statement stage+apply with advisory locks and FOR UPDATE guards (idempotent, concurrent-safe, restart-safe). SettlementService runs trophies post-settle like legacy; failures never change settlement status. Battle script enables trophies only when settlement is on and the tables exist (PROD-safe).
+- APIs: GET /api/leaderboard/ranked and GET /api/players/me/ranked (auth, server-calculated, no private data). PlayHub unchanged, ranked stays hub-disabled.
+- Checks: 15 new trophy tests + 12 casual/progression regressions green, typecheck/lint/build green. Next: P1c frontend integration requirements in the report. No push, no deploy, no PROD writes.
+
 ## P1b.1 ranked queue and match provenance, complete (local commit, no push)
 
 - Separate ranked queue on existing Colyseus infra: `battle_queue_ranked` + mode-aware `MatchCoordinator` (ranked pairs only ranked, one ticket per player across both queues, cancel/timeout/disconnect reuse the existing lifecycle). No new combat engine.

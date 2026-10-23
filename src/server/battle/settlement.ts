@@ -276,6 +276,18 @@ export interface SettlementServiceDeps {
    * reconciliation in every sweep; failures never change the settlement
    * result already reported to clients. */
   legacy?: LegacyProcessor | null;
+  /** Optional P1b.2 ranked trophy pass. Same decoupling contract as
+   * legacy: runs after a durable settle and via reconciliation in every
+   * sweep; failures never change the reported settlement status and never
+   * invalidate the settled battle record. */
+  trophies?: TrophyProcessor | null;
+}
+
+/** Structural contract for the trophy pass; keeps settlement.ts free of a
+ * hard import on the trophy module. */
+export interface TrophyProcessor {
+  processMatch(matchId: string): Promise<void>;
+  reconcile(limit?: number): Promise<void>;
 }
 
 export type SubmitStatus = "settled" | "already-settled" | "pending" | "conflict" | "failed" | "refused";
@@ -289,6 +301,7 @@ export class SettlementService {
   private readonly sleep: (ms: number) => Promise<void>;
   private readonly sweepMs: number;
   private readonly legacy: LegacyProcessor | null;
+  private readonly trophies: TrophyProcessor | null;
   private sweeper: ReturnType<typeof setInterval> | null = null;
   private readonly inFlight = new Set<string>();
 
@@ -299,6 +312,7 @@ export class SettlementService {
     this.sleep = deps.sleep ?? ((ms) => new Promise((r) => setTimeout(r, ms)));
     this.sweepMs = deps.sweepMs ?? 60_000;
     this.legacy = deps.legacy ?? null;
+    this.trophies = deps.trophies ?? null;
   }
 
   /** Legacy writes are decoupled: settlement is already durable, and a
@@ -350,6 +364,7 @@ export class SettlementService {
           }
           logger.info("match settled", { matchId: record.matchId, status });
           await this.runLegacy(record.matchId);
+          await this.runTrophies(record.matchId);
           return status;
         } catch (err) {
           if (err instanceof SettlementConflictError) {
@@ -419,6 +434,26 @@ export class SettlementService {
       } catch (err) {
         logger.error("legacy reconcile failed", { reason: err instanceof Error ? err.message : String(err) });
       }
+    }
+    // Finishes ranked matches whose trophy awards are missing or were
+    // interrupted. Trophy failures never touch the settled records above.
+    if (this.trophies) {
+      try {
+        await this.trophies.reconcile();
+      } catch (err) {
+        logger.error("trophy reconcile failed", { reason: err instanceof Error ? err.message : String(err) });
+      }
+    }
+  }
+
+  /** Trophy writes are decoupled: settlement is already durable, and an
+   * interrupted pass leaves balance_after NULL so reconcile can finish it. */
+  private async runTrophies(matchId: string): Promise<void> {
+    if (!this.trophies) return;
+    try {
+      await this.trophies.processMatch(matchId);
+    } catch (err) {
+      logger.error("trophy processing failed", { matchId, reason: err instanceof Error ? err.message : String(err) });
     }
   }
 
