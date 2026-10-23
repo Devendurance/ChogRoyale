@@ -11,6 +11,7 @@ import type {
   CardCostFilter,
   CardRoleFilter,
   CommanderChoiceLike,
+  DeckCardProgression,
   DecksCatalogCard,
   DeckSaveState,
 } from "./decks-types";
@@ -305,4 +306,34 @@ export function cardInDeck(catalog: LobbyCatalog, cards: string[], slot: number)
   const id = cards[slot];
   if (!id) return null;
   return catalog.cards[id] ?? null;
+}
+
+/** The server response is the only source of level, XP and upgrade state. */
+export type CardProgressionDisplayState = "ready" | "xp-locked" | "gold-locked" | "maxed" | "unavailable";
+
+export function progressionDisplayState(
+  entry: DeckCardProgression | null,
+  goldBalance: number | null,
+  phase: "ready" | "unavailable" = "ready"
+): CardProgressionDisplayState {
+  if (phase !== "ready" || !entry) return "unavailable";
+  if (entry.maxed || entry.purchasedLevel >= 10) return "maxed";
+  if (entry.xpTarget !== null && entry.xp < entry.xpTarget) return "xp-locked";
+  if (entry.goldCost !== null && (goldBalance === null || goldBalance < entry.goldCost)) return "gold-locked";
+  return entry.eligible ? "ready" : "unavailable";
+}
+
+/** A restrained bar value. The target is cumulative XP supplied by the API. */
+export function progressionPercent(entry: DeckCardProgression | null): number {
+  if (!entry || entry.maxed || entry.xpTarget === null || entry.xpTarget <= 0) return entry?.maxed ? 100 : 0;
+  return Math.min(100, Math.max(0, Math.round((entry.xp / entry.xpTarget) * 100)));
+}
+
+export function progressionStatusText(state: CardProgressionDisplayState, entry: DeckCardProgression | null): string {
+  if (state === "unavailable") return "Progression unavailable";
+  if (!entry) return "Progression unavailable";
+  if (state === "maxed") return "MAX level 10";
+  if (state === "ready") return "Ready to upgrade";
+  if (state === "gold-locked") return `Need ${entry.goldCost ?? 0} Gold`;
+  return `${Math.max(0, (entry.xpTarget ?? 0) - entry.xp)} XP to unlock`;
 }

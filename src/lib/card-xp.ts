@@ -1,7 +1,8 @@
 // P2a authoritative card XP, Season policy v1. Client-safe: no engine, DB
 // or server imports. Provisional TEST numbers, not approved economy rules.
 //Higher levels need more XP; reaching a requirement only unlocks eligibility
-// to spend Gold (P2b). Stat scaling (P2c) and upgrade UI (P2d) are later.
+// to spend Gold (P2b). The player-facing progression surface reads these
+// server values without deriving combat stats in the browser.
 export const CARD_XP_POLICY_VERSION = 1;
 export const CARD_XP_MAX_LEVEL = 10;
 /** XP per verified accepted deployment of an ordinary card. */
@@ -63,5 +64,7 @@ export function goldCostForLevel(purchasedLevel: number): number | null {
 export interface MyCardXpResponse {
   policyVersion: number;
   maxLevel: number;
+  /** Derived Gold balance used when the progression read answers. */
+  gold: number;
   cards: CardXpEntry[];
 }

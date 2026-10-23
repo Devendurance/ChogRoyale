@@ -141,7 +141,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - "Saved to your account" may only appear after the server confirms the save. Loading, unsaved, no saved deck, service unavailable, revision conflict and save failed are separate states, and an unsaved deck must stay on the device instead of being discarded.
 - A saved NFT token id is a claim, not proof of ownership. The battle server re-checks ownership at ready and at match start. Commander class art is shared by every commander of that class and must be labelled as class art.
 - Ranked public matchmaking stays closed behind `RANKED_PUBLIC_MATCHMAKING_ENABLED` until the approved production migrations, settlement runtime and public deployment are live. Ranked read endpoints may render server-owned values, but clients never calculate trophy deltas or use URL parameters to bypass the gate.
-- The ruleset has no levels, upgrades, card XP, upgrade currencies or rarities. A reference screen that shows them is a composition guide, not a feature list.
+- Card progression is account state, not ruleset copy. The decks screen may show only server-returned purchased level, XP, Gold and upgrade eligibility. It must never calculate combat stat previews, advance a level optimistically, or treat a schema-unavailable response as zero progress.
 
 ## PROGRESS
 

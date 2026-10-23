@@ -2,6 +2,13 @@
 
 Last updated: 2026-10-23
 
+## P2d card inventory and upgrade experience, complete
+
+- `/app/decks` now reads existing card-XP and Gold routes and keeps progression separate from the deck draft. Collection tiles show server-backed level/XP state for all 20 ordinary cards. Detail sheets show the ten-level track, purchased level, XP potential, lifetime XP, target, Gold cost and eligibility.
+- Upgrade requests use `expectedLevel` and one UUID idempotency key per intended retry. The client waits for the response, rereads progression and Gold, and never advances or charges optimistically. Domain errors remain visible and preserve server state.
+- Focused model tests (30), card-XP/Gold route contract tests (9), typecheck, lint and build are green. Browser fixtures at 390x844 and 1366x768 show the honest schema-unavailable state with no horizontal overflow. External screenshots: `C:/Users/USER/Documents/ChogRoyale-Assets/p2d-card-progression-20261023/`.
+- Local commit: `fd3fbcb` (`Add card progression inventory and upgrades`). Preserve pre-existing `.fast-build/STATE.md`, `DESIGN.md` and `docs/Chog Royale messaging.md` changes. Next work requires a separately approved slice.
+
 ## P2c server-authoritative card stat scaling, complete (local commit, no push)
 
 - Policy v1: tanks +4% HP, damage roles +3% damage, horn buff +3%, all per level above 1 with round-half-up integer math; speed, costs, ranges, cadence, targeting, durations, radii, counts, slows, vs-%s, commanders, towers/Core pinned. Mobility gets no profile (integer speeds never cross a threshold in 10 levels). Spawner scrappers unscaled. Documented in code.

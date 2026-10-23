@@ -47,10 +47,14 @@ import type {
   CardRoleFilter,
   CommanderChoiceLike,
   DecksCatalogCard,
+  DeckCardProgression,
   DecksCommanderOption,
   DecksNotices,
   DecksTab,
+  ProgressionPhase,
+  UpgradeStatus,
 } from "./decks-types";
+import type { CardXpEntry } from "@/lib/card-xp";
 import { useMedia, useSaveData } from "@/components/site/use-media";
 
 /** The local draft key. A convenience store on this device, never an account. */
@@ -92,6 +96,54 @@ interface ApiError {
 }
 
 type Result<T> = { ok: true; data: T } | { ok: false; code: string; message: string; bootstrap?: boolean };
+
+interface CardXpReadData {
+  cards?: {
+    policyVersion?: number;
+    maxLevel?: number;
+    gold?: number;
+    cards?: CardXpEntry[];
+  };
+}
+
+interface GoldReadData {
+  gold?: { balance?: number };
+}
+
+interface UpgradeReadData {
+  status?:
+    | "upgraded"
+    | "duplicate"
+    | "invalid-card"
+    | "level-mismatch"
+    | "maxed"
+    | "insufficient-xp"
+    | "insufficient-gold"
+    | "conflict-retry";
+  purchasedLevel?: number;
+  balance?: number;
+}
+
+function upgradeOutcomeMessage(status: NonNullable<UpgradeReadData["status"]>): string {
+  switch (status) {
+    case "upgraded":
+      return "Upgrade confirmed. Reading the new level from the server.";
+    case "duplicate":
+      return "This upgrade was already processed. Reading the confirmed level from the server.";
+    case "insufficient-xp":
+      return "More verified XP is required before this card can be upgraded.";
+    case "insufficient-gold":
+      return "You need more Gold for this upgrade.";
+    case "level-mismatch":
+      return "This card changed elsewhere. Refreshing its server level.";
+    case "maxed":
+      return "This card is already at level 10.";
+    case "invalid-card":
+      return "That card is not part of the current ruleset.";
+    case "conflict-retry":
+      return "The upgrade is being reconciled. Retry with the same request shortly.";
+  }
+}
 
 async function getJson<T>(path: string, token: string): Promise<Result<T>> {
   try {
@@ -161,6 +213,15 @@ function DecksShell() {
   const [commanderOpen, setCommanderOpen] = useState(false);
   const [swapping, setSwapping] = useState(false);
 
+  const [progression, setProgression] = useState<Record<string, DeckCardProgression>>({});
+  const [progressionPhase, setProgressionPhase] = useState<ProgressionPhase>("loading");
+  const [progressionMessage, setProgressionMessage] = useState<string | null>(null);
+  const [goldBalance, setGoldBalance] = useState<number | null>(null);
+  const [goldHistoryAvailable, setGoldHistoryAvailable] = useState(false);
+  const [upgradeCardId, setUpgradeCardId] = useState<string | null>(null);
+  const [upgradeStatus, setUpgradeStatus] = useState<UpgradeStatus>("idle");
+  const [upgradeMessage, setUpgradeMessage] = useState<string | null>(null);
+
   // The draft starts empty on both the server and the client, so the first
   // render matches the server HTML. The account copy and the local draft are
   // applied once the reads resolve, after hydration.
@@ -171,6 +232,7 @@ function DecksShell() {
 
   /** Edits made before the account copy arrives must not be clobbered. */
   const touched = useRef(false);
+  const upgradeIntent = useRef<{ cardId: string; expectedLevel: number; key: string } | null>(null);
   const sessionKey = user?.id ?? null;
   const [loadedFor, setLoadedFor] = useState<string | null>(null);
 
@@ -238,13 +300,85 @@ function DecksShell() {
     }
   }, [getAccessToken, catalog, sessionKey]);
 
+  const loadProgression = useCallback(async () => {
+    setProgressionPhase("loading");
+    setProgressionMessage(null);
+    const token = await getAccessToken();
+    if (!token) {
+      setProgression({});
+      setGoldBalance(null);
+      setGoldHistoryAvailable(false);
+      setProgressionPhase("session");
+      setProgressionMessage("Sign in again to read card progression and Gold.");
+      return;
+    }
+
+    const [xpResult, goldResult] = await Promise.all([
+      getJson<CardXpReadData>("/api/players/me/card-xp", token),
+      getJson<GoldReadData>("/api/players/me/gold", token),
+    ]);
+
+    if (!xpResult.ok) {
+      setProgression({});
+      setGoldBalance(null);
+      setGoldHistoryAvailable(false);
+      const phase: ProgressionPhase = xpResult.code === "UNAUTHORIZED" ? "session" : xpResult.code === "FORBIDDEN" ? "locked" : "unavailable";
+      setProgressionPhase(phase);
+      setProgressionMessage(
+        phase === "locked"
+          ? "Card progression unlocks after your profile setup is complete."
+          : phase === "session"
+            ? "Sign in again to read card progression and Gold."
+            : xpResult.code === "NETWORK"
+              ? "The progression service could not be reached. Your deck remains editable."
+              : "The progression service is unavailable in this environment. No level or Gold values are shown."
+      );
+      return;
+    }
+
+    const payload = xpResult.data.cards;
+    if (!payload || !Array.isArray(payload.cards)) {
+      setProgression({});
+      setGoldBalance(null);
+      setGoldHistoryAvailable(false);
+      setProgressionPhase("unavailable");
+      setProgressionMessage("Card progression is unavailable because the server response was incomplete.");
+      return;
+    }
+
+    const next: Record<string, DeckCardProgression> = {};
+    for (const entry of payload.cards) {
+      if (!entry || typeof entry.cardId !== "string") continue;
+      next[entry.cardId] = {
+        cardId: entry.cardId,
+        purchasedLevel: entry.level,
+        xpLevel: entry.xpLevel,
+        xp: entry.xp,
+        xpTarget: entry.xpTarget,
+        goldCost: entry.goldCost,
+        eligible: entry.eligible,
+        maxed: entry.maxed,
+      };
+    }
+    setProgression(next);
+    const cardXpGold = typeof payload.gold === "number" ? payload.gold : null;
+    const routeGold = goldResult.ok && typeof goldResult.data.gold?.balance === "number" ? goldResult.data.gold.balance : null;
+    setGoldBalance(routeGold ?? cardXpGold);
+    setGoldHistoryAvailable(goldResult.ok);
+    setProgressionPhase("ready");
+    setProgressionMessage(goldResult.ok ? null : "Gold history is unavailable. Upgrade eligibility still follows the card progression response.");
+  }, [getAccessToken]);
+
   useEffect(() => {
     if (!ready || !authenticated) return;
     // The reads start on the next tick, so the effect body itself never sets
     // state and the first render of a new session stays on the loading gate.
-    const timer = setTimeout(() => void load(), 0);
+    const timer = setTimeout(() => {
+      void load();
+      void loadProgression();
+    }, 0);
     return () => clearTimeout(timer);
-  }, [ready, authenticated, load]);
+  }, [ready, authenticated, load, loadProgression]);
 
   const player: LobbyPlayer | null = useMemo(() => (profile ? resolvePlayer(profile) : null), [profile]);
 
@@ -460,6 +594,61 @@ function DecksShell() {
     void save(conflict.revision);
   }, [conflict, save]);
 
+  const onUpgrade = useCallback(
+    async (cardId: string) => {
+      const entry = progression[cardId];
+      if (progressionPhase !== "ready" || !entry || !entry.eligible || upgradeCardId) return;
+
+      const current = upgradeIntent.current;
+      const intent =
+        current && current.cardId === cardId && current.expectedLevel === entry.purchasedLevel
+          ? current
+          : {
+              cardId,
+              expectedLevel: entry.purchasedLevel,
+              key: crypto.randomUUID(),
+            };
+      upgradeIntent.current = intent;
+      setUpgradeCardId(cardId);
+      setUpgradeStatus("working");
+      setUpgradeMessage(null);
+
+      try {
+        const token = await getAccessToken();
+        if (!token) {
+          upgradeIntent.current = null;
+          setUpgradeStatus("error");
+          setUpgradeMessage("Your session is no longer valid. Sign in again to upgrade cards.");
+          return;
+        }
+        const res = await fetch("/api/players/me/card-xp/upgrade", {
+          method: "POST",
+          headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+          body: JSON.stringify({ cardId: intent.cardId, expectedLevel: intent.expectedLevel, idempotencyKey: intent.key }),
+        });
+        const body = (await res.json()) as Envelope<UpgradeReadData>;
+        if (!body.success || !body.data?.status) {
+          setUpgradeStatus("error");
+          setUpgradeMessage(body.error?.message ?? `The upgrade server answered ${res.status}. Your card level was not changed in the browser.`);
+          if (res.status < 500) upgradeIntent.current = null;
+          return;
+        }
+
+        const status = body.data.status;
+        setUpgradeMessage(upgradeOutcomeMessage(status));
+        setUpgradeStatus(status === "upgraded" || status === "duplicate" ? "success" : "error");
+        await loadProgression();
+        if (status !== "conflict-retry") upgradeIntent.current = null;
+      } catch {
+        setUpgradeStatus("error");
+        setUpgradeMessage("The upgrade could not be confirmed. Retry to send the same request safely.");
+      } finally {
+        setUpgradeCardId(null);
+      }
+    },
+    [getAccessToken, loadProgression, progression, progressionPhase, upgradeCardId]
+  );
+
   // The account service being unreachable is not the same as an empty account.
   const unavailable = Boolean(loadoutError) && loadoutError?.code !== "FORBIDDEN" && loadoutError?.code !== "UNAUTHORIZED";
   const saveState = deckSaveState({
@@ -530,6 +719,7 @@ function DecksShell() {
     `Deck on screen: ${draft.cards.length} of ${DECK_CARD_COUNT} ordinary cards.`,
     average.sentence,
     saveStatus,
+    progressionPhase === "ready" ? `Card progression loaded for ${Object.keys(progression).length} cards.` : progressionMessage ?? "",
     busy ? "Refreshing." : "",
   ]
     .filter(Boolean)
@@ -574,6 +764,8 @@ function DecksShell() {
       onSelectCard={(id) => {
         setSwapping(false);
         setSelectedCardId(id);
+        setUpgradeStatus("idle");
+        setUpgradeMessage(null);
       }}
       onOpenCommander={() => {
         setSwapping(false);
@@ -583,8 +775,19 @@ function DecksShell() {
         setSelectedCardId(null);
         setCommanderOpen(false);
         setSwapping(false);
+        setUpgradeStatus("idle");
+        setUpgradeMessage(null);
       }}
       onCardAction={onCardAction}
+      progression={progression}
+      progressionPhase={progressionPhase}
+      progressionMessage={progressionMessage}
+      goldBalance={goldBalance}
+      goldHistoryAvailable={goldHistoryAvailable}
+      upgradeCardId={upgradeCardId}
+      upgradeStatus={upgradeStatus}
+      upgradeMessage={upgradeMessage}
+      onUpgrade={onUpgrade}
       saveState={saveState}
       saveLabel={saveStateLabel(saveState)}
       saveStatus={saveStatus}
@@ -602,7 +805,10 @@ function DecksShell() {
       status={status}
       onSignIn={() => void login()}
       onSignOut={() => void logout()}
-      onRefresh={() => void load()}
+      onRefresh={() => {
+        void load();
+        void loadProgression();
+      }}
     />
   );
 }

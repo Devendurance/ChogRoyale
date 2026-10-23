@@ -1,5 +1,11 @@
 # Project State
 
+## P2d card inventory and upgrade experience (2026-10-23)
+
+- `/app/decks` collection now renders all 20 ordinary cards with server-backed progression badges, XP readout and max/locked/ready states. Card detail shows purchased level, XP potential, lifetime XP, target, Gold cost and a ten-level track.
+- Gold balance is read from the existing card-XP and Gold endpoints. The upgrade POST uses a UUID idempotency key, expected purchased level, server eligibility, bounded retry behavior and a reread after every domain response. Deck editing and save state remain separate.
+- PROD/schema-unavailable responses stay explicit and render no invented values. Focused model tests, card-XP/Gold route contract tests, typecheck, lint and build are green. Browser fixtures verified 390x844 and 1366x768 with no horizontal overflow. Local checkpoint: `fd3fbcb`.
+
 ## P2c server-authoritative card stat scaling (2026-10-23)
 
 - 20-card profile map (tank-HP, damage, horn-buff), rate table, round-half-up integer math anchored to authored base stats every time. Unscalable stats pinned with reported reasons; no invented mechanics.

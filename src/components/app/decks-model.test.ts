@@ -15,6 +15,9 @@ import {
   filterCards,
   removeCard,
   replaceCard,
+  progressionDisplayState,
+  progressionPercent,
+  progressionStatusText,
   sameDraft,
   saveStateLabel,
   saveStateStatus,
@@ -22,6 +25,7 @@ import {
   type DeckDraft,
 } from "./decks-model";
 import type { LobbyCatalog, LobbyCatalogCard, LobbyCatalogCommander } from "./lobby-types";
+import type { DeckCardProgression } from "./decks-types";
 
 function card(id: string, name: string, cost: number, kind: LobbyCatalogCard["kind"] = "troop"): LobbyCatalogCard {
   return { id, name, cost, kind, typeLabel: "Troop", traits: [], description: "", stats: [], art: null };
@@ -60,6 +64,18 @@ const catalog: LobbyCatalog = {
 
 const seven = ["choglings", "chaos_archer", "boulderback", "frostshell", "rift_runner", "sparkcaster", "chaos_bolt"];
 
+const progression = (overrides: Partial<DeckCardProgression> = {}): DeckCardProgression => ({
+  cardId: "boulderback",
+  purchasedLevel: 1,
+  xpLevel: 2,
+  xp: 5,
+  xpTarget: 5,
+  goldCost: 100,
+  eligible: true,
+  maxed: false,
+  ...overrides,
+});
+
 describe("deck contract", () => {
   it("accepts exactly seven distinct ordinary cards", () => {
     expect(validateDeckDraft(catalog, seven)).toEqual([]);
@@ -95,6 +111,33 @@ describe("deck contract", () => {
     expect(removeCard(seven, "choglings")).toEqual(seven.slice(1));
     expect(replaceCard(seven, 0, "rift_sentry")).toEqual(["rift_sentry", ...seven.slice(1)]);
     expect(replaceCard(seven, 0, "chaos_archer")).toEqual(seven);
+  });
+});
+
+describe("card progression display", () => {
+  it("keeps purchased level distinct from the XP-unlocked level", () => {
+    const entry = progression({ purchasedLevel: 1, xpLevel: 3, xp: 12, xpTarget: 5 });
+    expect(entry.purchasedLevel).toBe(1);
+    expect(entry.xpLevel).toBe(3);
+    expect(progressionDisplayState(entry, 100)).toBe("ready");
+  });
+
+  it("reports XP and Gold locks from server values", () => {
+    expect(progressionDisplayState(progression({ xp: 2, xpTarget: 5, eligible: false }), 100)).toBe("xp-locked");
+    expect(progressionDisplayState(progression({ eligible: false }), 20)).toBe("gold-locked");
+    expect(progressionStatusText("gold-locked", progression({ eligible: false }))).toBe("Need 100 Gold");
+  });
+
+  it("reports max level and clamps the XP bar", () => {
+    const entry = progression({ purchasedLevel: 10, xpLevel: 10, xp: 999, xpTarget: null, maxed: true, eligible: false, goldCost: null });
+    expect(progressionDisplayState(entry, 0)).toBe("maxed");
+    expect(progressionPercent(entry)).toBe(100);
+  });
+
+  it("keeps missing progression unavailable instead of inventing a level", () => {
+    expect(progressionDisplayState(null, 100, "unavailable")).toBe("unavailable");
+    expect(progressionPercent(null)).toBe(0);
+    expect(progressionStatusText("unavailable", null)).toBe("Progression unavailable");
   });
 });
 

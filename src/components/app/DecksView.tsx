@@ -7,9 +7,8 @@
 // The composition follows the DESIGN.md lobby spec and the C and D reference
 // clips: a Decks/Collection switcher, a Battle Deck ribbon, a four by two
 // card grid with energy badges, an average cost chip, a card detail panel and
-// a filterable collection grid. Nothing in the reference that Chog Royale does
-// not have is shown here: no levels, no upgrades, no currencies and no
-// rarities.
+// a filterable collection grid. Server-backed card progression appears in the
+// collection without changing the deck contract.
 
 import { useEffect, useRef } from "react";
 import Image from "next/image";
@@ -18,8 +17,8 @@ import AppNav from "./AppNav";
 import AppNotice from "./AppNotice";
 import Icon from "./icons";
 import { dedupeNotices } from "./feedback-model";
-import { DECK_CARD_COUNT } from "./decks-model";
-import type { DecksCatalogCard, DecksCommanderOption, DecksViewProps } from "./decks-types";
+import { DECK_CARD_COUNT, progressionDisplayState, progressionPercent, progressionStatusText } from "./decks-model";
+import type { DeckCardProgression, DecksCatalogCard, DecksCommanderOption, DecksViewProps, ProgressionPhase, UpgradeStatus } from "./decks-types";
 import type { LobbyArt } from "./lobby-types";
 
 /** The energy cost badge, read from the real card cost. */
@@ -95,16 +94,41 @@ function DeckSlot({
   );
 }
 
+function ProgressionBadge({
+  entry,
+  goldBalance,
+  phase,
+}: {
+  entry: DeckCardProgression | null;
+  goldBalance: number | null;
+  phase: ProgressionPhase;
+}) {
+  const state = progressionDisplayState(entry, goldBalance, phase === "ready" ? "ready" : "unavailable");
+  if (state === "unavailable") return <span className="app-progression__badge app-progression__badge--muted" title="Card progression unavailable">Unavailable</span>;
+  if (!entry) return <span className="app-progression__badge app-progression__badge--muted" title="Card progression unavailable">Unavailable</span>;
+  return (
+    <span className={`app-progression__badge app-progression__badge--${state}`}>
+      {state === "maxed" ? "MAX" : `Lv ${entry.purchasedLevel}`}
+    </span>
+  );
+}
+
 /** One card in the collection grid. */
 function CollectionTile({
   card,
   inDeck,
   selected,
+  progression,
+  goldBalance,
+  progressionPhase,
   onSelect,
 }: {
   card: DecksCatalogCard;
   inDeck: boolean;
   selected: boolean;
+  progression: DeckCardProgression | null;
+  goldBalance: number | null;
+  progressionPhase: ProgressionPhase;
   onSelect: (id: string) => void;
 }) {
   return (
@@ -122,6 +146,7 @@ function CollectionTile({
           <span className="app-sr">Energy cost {card.cost}</span>
         </span>
         {inDeck && <span className="app-tile__indeck">In deck</span>}
+        <ProgressionBadge entry={progression} goldBalance={goldBalance} phase={progressionPhase} />
         <span className="app-tile__art">
           {card.art ? (
             <Plate art={card.art} alt="" className="app-tile__img" sizes="(max-width: 639px) 76px, 110px" />
@@ -133,6 +158,11 @@ function CollectionTile({
         </span>
         <span className="app-tile__name">{card.name}</span>
         <span className="app-tile__type">{card.typeLabel}</span>
+        {progression && progressionPhase === "ready" && (
+          <span className="app-tile__xp" aria-label={`${progression.xp} lifetime XP`}>
+            {progression.xp} XP
+          </span>
+        )}
       </button>
     </li>
   );
@@ -170,12 +200,26 @@ function DetailSheet({
   card,
   inDeck,
   deckFull,
+  progression,
+  progressionPhase,
+  goldBalance,
+  upgradeCardId,
+  upgradeStatus,
+  upgradeMessage,
+  onUpgrade,
   onAction,
   onClose,
 }: {
   card: DecksCatalogCard;
   inDeck: boolean;
   deckFull: boolean;
+  progression: DeckCardProgression | null;
+  progressionPhase: ProgressionPhase;
+  goldBalance: number | null;
+  upgradeCardId: string | null;
+  upgradeStatus: UpgradeStatus;
+  upgradeMessage: string | null;
+  onUpgrade: (id: string) => void;
   onAction: (id: string) => void;
   onClose: () => void;
 }) {
@@ -191,6 +235,10 @@ function DetailSheet({
     node.focus();
     return () => document.removeEventListener("keydown", onKey);
   }, [onClose]);
+
+  const displayState = progressionDisplayState(progression, goldBalance, progressionPhase === "ready" ? "ready" : "unavailable");
+  const percent = progressionPercent(progression);
+  const canUpgrade = displayState === "ready" && progression !== null && upgradeCardId === null;
 
   return (
     <section className="app-sheet" role="dialog" aria-labelledby="app-sheet-title" ref={panel} tabIndex={-1}>
@@ -231,6 +279,50 @@ function DetailSheet({
           </div>
         ))}
       </dl>
+      <section className="app-progression" aria-labelledby="app-progression-title">
+        <div className="app-progression__head">
+          <div>
+            <p className="app-progression__eyebrow" id="app-progression-title">Card progression</p>
+            <p className="app-progression__headline">
+              {progressionPhase === "ready" && progression ? `Purchased level ${progression.purchasedLevel}` : "Server progression"}
+            </p>
+          </div>
+          <ProgressionBadge entry={progression} goldBalance={goldBalance} phase={progressionPhase} />
+        </div>
+
+        {progressionPhase === "ready" && progression ? (
+          <>
+            <div className="app-progression__levels" aria-label={`Purchased level ${progression.purchasedLevel} of 10, XP potential level ${progression.xpLevel}`}>
+              {Array.from({ length: 10 }, (_, index) => {
+                const level = index + 1;
+                const purchased = level <= progression.purchasedLevel;
+                const potential = !purchased && level <= progression.xpLevel;
+                return <span key={level} className={`app-progression__level${purchased ? " app-progression__level--purchased" : potential ? " app-progression__level--potential" : ""}`} />;
+              })}
+            </div>
+            <div className="app-progression__meter" role="progressbar" aria-label="Lifetime XP toward the next purchased level" aria-valuemin={0} aria-valuemax={progression.xpTarget ?? progression.xp} aria-valuenow={progression.xp}>
+              <span style={{ width: `${percent}%` }} />
+            </div>
+            <div className="app-progression__facts">
+              <span><strong>{progression.xp}</strong> lifetime XP</span>
+              <span><strong>Lv {progression.xpLevel}</strong> XP potential</span>
+              <span>{progression.xpTarget === null ? "Max level reached" : `${progression.xpTarget} XP target`}</span>
+            </div>
+            <div className="app-progression__upgrade">
+              <div>
+                <span className="app-progression__cost-label">Next upgrade</span>
+                <strong>{progression.goldCost === null ? "MAX" : `${progression.goldCost} Gold`}</strong>
+              </div>
+              <button type="button" className="app-btn app-btn--battle" onClick={() => onUpgrade(card.id)} disabled={!canUpgrade}>
+                {upgradeCardId === card.id && upgradeStatus === "working" ? "Confirming" : displayState === "maxed" ? "Max level" : displayState === "ready" ? "Upgrade card" : progressionStatusText(displayState, progression)}
+              </button>
+            </div>
+            {upgradeMessage && <p className={`app-progression__message${upgradeStatus === "error" ? " app-progression__message--error" : ""}`} role="status">{upgradeMessage}</p>}
+          </>
+        ) : (
+          <p className="app-progression__message">{progressionPhase === "loading" ? "Reading server progression…" : "Card progression is unavailable. No level or Gold is shown until the server responds."}</p>
+        )}
+      </section>
       <div className="app-sheet__actions">
         <button type="button" className={`app-btn ${inDeck ? "app-btn--danger" : "app-btn--battle"}`} onClick={() => onAction(card.id)}>
           {inDeck ? "Remove from deck" : deckFull ? "Replace a deck card" : "Add to deck"}
@@ -388,6 +480,15 @@ export default function DecksView(props: DecksViewProps) {
     onOpenCommander,
     onCloseDetail,
     onCardAction,
+    progression,
+    progressionPhase,
+    progressionMessage,
+    goldBalance,
+    goldHistoryAvailable,
+    upgradeCardId,
+    upgradeStatus,
+    upgradeMessage,
+    onUpgrade,
     saveState,
     saveLabel,
     saveStatus,
@@ -633,9 +734,19 @@ export default function DecksView(props: DecksViewProps) {
             >
               <div className="app-ribbon">
                 <h1 className="app-ribbon__title">Card Collection</h1>
-                <span className="app-state app-state--info">
-                  {visibleCards.length} of {cards.length} cards
-                </span>
+                <div className="app-ribbon__right">
+                  <span className="app-state app-state--info">{visibleCards.length} of {cards.length} cards</span>
+                  <span className="app-gold" title={goldHistoryAvailable ? "Server-confirmed Gold balance" : "Gold balance unavailable"}>
+                    <span className="app-gold__coin" aria-hidden="true">G</span>
+                    <span className="app-gold__value">{goldBalance === null ? "—" : goldBalance}</span>
+                    <span className="app-gold__label">Gold</span>
+                  </span>
+                </div>
+              </div>
+
+              <div className={`app-progression-notice app-progression-notice--${progressionPhase}`} role={progressionPhase === "unavailable" || progressionPhase === "session" || progressionPhase === "locked" ? "status" : undefined}>
+                <span className="app-progression-notice__mark" aria-hidden="true">✦</span>
+                <span>{progressionPhase === "ready" ? "Server progression" : progressionPhase === "loading" ? "Reading card progression…" : progressionMessage ?? "Card progression is unavailable."}</span>
               </div>
 
               <div className="app-filters">
@@ -689,6 +800,9 @@ export default function DecksView(props: DecksViewProps) {
                       card={card}
                       inDeck={deckCards.some((c) => c?.id === card.id)}
                       selected={selectedCardId === card.id}
+                      progression={progression[card.id] ?? null}
+                      goldBalance={goldBalance}
+                      progressionPhase={progressionPhase}
                       onSelect={onSelectCard}
                     />
                   ))}
@@ -703,6 +817,13 @@ export default function DecksView(props: DecksViewProps) {
             card={selectedCard}
             inDeck={deckCards.some((c) => c?.id === selectedCard.id)}
             deckFull={deckFull}
+            progression={progression[selectedCard.id] ?? null}
+            progressionPhase={progressionPhase}
+            goldBalance={goldBalance}
+            upgradeCardId={upgradeCardId}
+            upgradeStatus={upgradeStatus}
+            upgradeMessage={upgradeMessage}
+            onUpgrade={onUpgrade}
             onAction={onCardAction}
             onClose={onCloseDetail}
           />

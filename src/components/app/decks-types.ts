@@ -79,6 +79,22 @@ export interface DecksCardDetail {
   stats: LobbyStat[];
 }
 
+/** Server-authoritative progression for one ordinary card. */
+export interface DeckCardProgression {
+  cardId: string;
+  purchasedLevel: number;
+  xpLevel: number;
+  xp: number;
+  xpTarget: number | null;
+  goldCost: number | null;
+  eligible: boolean;
+  maxed: boolean;
+}
+
+export type ProgressionPhase = "loading" | "ready" | "unavailable" | "session" | "locked";
+
+export type UpgradeStatus = "idle" | "working" | "success" | "error";
+
 /** The card the detail panel is showing. */
 export interface DecksSelection {
   /** Card id in the collection, or the commander marker. */
@@ -148,6 +164,17 @@ export interface DecksViewProps {
   onOpenCommander: () => void;
   onCloseDetail: () => void;
   onCardAction: (cardId: string) => void;
+
+  /** Card progression is separate from the editable deck draft. */
+  progression: Record<string, DeckCardProgression>;
+  progressionPhase: ProgressionPhase;
+  progressionMessage: string | null;
+  goldBalance: number | null;
+  goldHistoryAvailable: boolean;
+  upgradeCardId: string | null;
+  upgradeStatus: UpgradeStatus;
+  upgradeMessage: string | null;
+  onUpgrade: (cardId: string) => void;
 
   saveState: DeckSaveState;
   /** Short state token for the ribbon badge. */
