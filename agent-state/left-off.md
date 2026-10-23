@@ -2,6 +2,14 @@
 
 Last updated: 2026-10-23
 
+## B5.1c rehearsal COMPLETE (2026-10-23), branch kept, PROD untouched
+
+- Clone `b51c-rehearsal` (br-dawn-darkness-b5zzujuy) from PROD branch br-snowy-star-b5ftxkro at LSN 0/44F7338. Branch kept per authorization; no deletion without owner approval.
+- Migration 0007-0009 applied to clone only via guarded script (fail-closed endpoint check, pre-state assert, never stock db:migrate). Journal 1-10, all 6 tables present, checks 5/1/5/6/1, players preserved and nonempty.
+- Full 7-file clone run hung (~8min, died with its shell, no residue process, nothing committing). Not retried per correction. Minimal rerun: loadouts DAL 10/10 on the clone in 66s. Other 6 files unverified on clone; TEST 65/65 stands as prior evidence only.
+- PROD re-verified read-only after: journal still 7 entries, no persistence tables. TEST untouched. No flags, deploy, or push.
+- Still outstanding: fresh-install 0000-0009 on an empty DB; PROD backup review; owner approval for the PROD run.
+
 ## B5.1c rehearsal pre-flight (2026-10-23), STOPPED at approval gate
 
 - Pre-flight done read-only: HEAD `f0a4162`; TEST/PROD endpoints distinct; PROD journal holds ids 1-7 (0000-0006), missing exactly 0007-0009; PROD has `players` only.
