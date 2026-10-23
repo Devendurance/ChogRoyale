@@ -2,6 +2,13 @@
 
 Last updated: 2026-10-23
 
+## Phase 5 closure resumption (2026-10-23), post-demo truth re-established
+
+- HEAD 44823c2; tree holds only pre-existing unrelated items. Legacy/settlement code untouched since B3.3-era commits; B5.1 review findings stand.
+- PROD re-verified read-only: journal 10, 9 players, 2 replay-verified private matches (Endychog 1-0 and 3-0 over Blossom), 4 participant rows, 2 evidence rows, 0 matchmaking, 0 legacy runs, no duplicates. No demo-added rows beyond the two B5.3b matches.
+- Worker: battle server running disarmed (flags OFF in env and .env, outbox empty). No restart performed.
+- B5.3b stands complete on actual evidence. Only legacy activation remains; recommended next: approval-gated B5.3c (enable legacy + one NFT-holder match + verify + disarm). Phase 8 may start if it does not depend on legacy rows.
+
 ## B5.3b COMPLETE: controlled settlement proven on PROD (2026-10-23), disarmed
 
 - Blossom driven via isolated agent Chromium (direct owner-tab control unavailable: no CDP). Lobby verified, room B4YeJf3ZO joined, swarm preset + free commander confirmed, Choglings selected, legal own-territory tap issued; match ended concurrently, no forced outcome.
