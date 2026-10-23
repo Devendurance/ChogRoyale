@@ -2,6 +2,14 @@
 
 Last updated: 2026-10-23
 
+## B5.1 persistence preflight (2026-10-23), diagnostic only
+
+- PROD has `players` only; `player_loadouts`, `matches`, `match_participants`, `match_evidence`, `match_legacy_runs` all absent. TEST has all six. Endpoints distinct. Read-only `to_regclass` check, no writes, no secrets printed.
+- Required PROD set: 0007 (loadouts), 0008 (matches/participants/evidence), 0009 (legacy runs + entitlement_owner), in journal order. No 0010 exists or is needed.
+- `format_version` column pinned to 1 by design; v1/v2 discriminant lives in evidence jsonb. Prior mismatch note resolved, not a blocker.
+- Settlement/legacy/loadout code paths reviewed read-only; idempotency, conflict, dedupe and eligibility guards present in code. Nothing enabled, nothing applied. Full runbook in session report.
+- Next: owner approval checkpoint, then TEST rehearsal and the gated PROD runbook from the B5.1 report.
+
 ## UI polish pass (2026-10-23)
 
 - Doing: finalizing one bounded UI-only polish slice on `aa52dc7`.
