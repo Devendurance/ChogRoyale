@@ -2,6 +2,16 @@
 
 Last updated: 2026-10-23
 
+## A4.5 app-shell integration completed (2026-10-23)
+
+- Done: every public game-entry link on the landing page now goes to `/app` instead of `/dev/battle`: desktop header, mobile menu, hero, bento battle tile, closing CTA and footer. In-page anchors and external links are unchanged. The lobby Battle action remains the explicit battle entry behind its existing gate.
+- Shell check: all five primary tabs resolve, Commanders is enabled, Legacy keeps Progress context, Settings keeps Profile context and the Play Guide has no sixth tab. Settings stays in the HUD and the guide stays a lobby entry.
+- Checks: focused copy tests 6/6, typecheck clean, lint 0 errors with the one pre-existing `/dev/progress` warning, production build green.
+- Browser: landing intro plays and clears; six Play links all target `/app`; hero Play reaches `/app`; the login gate appears with one h1; one `.app-root`; all eight app routes return 200; no overflow at 390, 1366 or 360; no console errors or page exceptions. Evidence at `C:/Users/USER/Documents/ChogRoyale-Assets/app-a4.5-review/`.
+- Pending: authenticated active-tab, HUD, sign-out and lobby-entry clicks need a real Privy login.
+- Checkpoint: `.fast-build/A4.5-CHECKPOINT.md`. `.fast-build/STATE.md` still holds unrelated dirty B2.8f history and was not staged.
+- Next: owner acceptance for the A4 surface. Do not start B2.8g, B4 or B5.
+
 ## A4.4 play guide completed (2026-10-23)
 
 - Done: `/app/guide` explains the real objective, crowns, arena, towers and Core, energy, deployment, deck and hand cycle, commander abilities, Chaos Pulses, the Arena Patron and supported unranked modes. Ruleset values are projected on the server from `combat.ts`, `chaos.ts` and `commanders.ts`. The 20-card roster uses the same catalog as the deck builder. The lobby deck header links to the guide.

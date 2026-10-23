@@ -15,9 +15,9 @@ export const HERO = {
   lead: "Chog Royale is a fast 1v1 card battler where a verified Chog NFT sets the match’s first Chaos Pulse. Build your deck, read the arena and break the Core.",
 };
 
-// /dev/battle is the only working play surface (Privy login, then matchmaking).
-// It is gated off in production builds, so this is not a public launch path yet.
-export const PLAY: SiteNavLink = { href: "/dev/battle", label: "Play the first match" }; // 5.1 primary CTA
+// /app is the public entry into the authenticated shell. The lobby's Battle
+// action remains the explicit route into the gated battle surface.
+export const PLAY: SiteNavLink = { href: "/app", label: "Play the first match" }; // 5.1 primary CTA
 export const EXPLORE: SiteNavLink = { href: "#how-the-chog-matters", label: "See how the Chog matters" }; // 5.1 secondary CTA
 export const NAV: SiteNavLink[] = [{ href: EXPLORE.href, label: "How the Chog matters" }];
 
@@ -186,7 +186,7 @@ export const BENTO = {
       title: "Play a match.",
       // NEW, adapted from 1.3 and 7.1: real-time 1v1, energy, deploys, a Core.
       body: "Real-time 1v1. Deploy troops and spells, spend energy, and break the Core before your opponent breaks yours.",
-      link: { href: "/dev/battle", label: "Play the first match" }, // 5.1 primary CTA
+      link: { href: "/app", label: "Play the first match" }, // 5.1 primary CTA, enters the app shell
       art: { kind: "tableau" },
     },
     {
@@ -271,13 +271,13 @@ export const ABOUT = {
 
 // L7. The closing CTA. Every line is sourced: the handoff Scene 07 title,
 // messaging 4.3, messaging 1.7 and messaging 5.1. The note is the honest gate
-// and it matches the L5 section note, because /dev/battle is the only working
-// play surface and it is closed off in production builds.
+// and it matches the L5 section note, because the battle surface remains
+// closed off in production builds.
 export const CTA = {
   eyebrow: "Enter the arena", // handoff Scene 07 title
   heading: "Read. React. Break.", // 4.3 three-beat calls to action
   lead: "Build an eight-card deck, defend your Core and react to a Chaos Pulse derived from a verified Chog NFT.", // 1.7, first sentence
-  primary: { href: "/dev/battle", label: "Play the first match" }, // 5.1 primary CTA
+  primary: { href: "/app", label: "Play the first match" }, // 5.1 primary CTA, enters the app shell
   secondary: { href: "#how-the-chog-matters", label: "See how the Chog matters" }, // 5.1 secondary CTA
   note: {
     label: "Closed alpha",
@@ -317,7 +317,7 @@ export const FOOTER: FooterContent = {
     "Every Chog changes the arena.", // 1.1 primary line
     "A 1v1 card battler where a real Chog changes the match.", // 1.2 product descriptor
   ],
-  playLink: { label: "Play the closed alpha", href: "/dev/battle" },
+  playLink: { label: "Play the closed alpha", href: "/app" },
   columns: [
     {
       heading: "Explore",
