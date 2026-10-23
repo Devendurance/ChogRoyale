@@ -2,6 +2,13 @@
 
 Last updated: 2026-10-23
 
+## B5.2a.1 snapshot + restore PROVEN (2026-10-23), all artifacts kept
+
+- Snapshot `snap-calm-hall-b5xke2bw` (b52a-pre-migration) of PROD at 13:40:26Z. Manual, no auto-expiry; storage accrues until deleted. No other snapshots exist.
+- Restore test: new branch `b52a-restore-verify` (br-plain-bird-b5nfe7ke) from snapshot (finalize:false required for realtime branches). Verified: journal 1-7, players present, 5 tables absent, 9 players = pre-snapshot PROD count, endpoint distinct from PROD/TEST/rehearsal.
+- PROD unchanged after: journal 1-7, 9 players, tables absent. Rehearsal branch kept. No migrations, flags, deploy, or push.
+- Backup verdict: GO for B5.2b checkpoint. Freshness rule: B5.2b must re-verify PROD player count immediately before migrating; any drift needs a fresh approved snapshot.
+
 ## B5.2a backup/migration readiness: NO-GO (2026-10-23), pre-execution only
 
 - Backup: zero snapshots on project; PITR window is 24h (history_retention 86400). Rehearsal branch is diverged, not a backup. Restorability unproven (restore = new branch, prohibited this slice). Owner must authorize a pre-migration snapshot or formally accept PITR-only risk.
