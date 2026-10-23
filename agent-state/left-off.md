@@ -2,6 +2,14 @@
 
 Last updated: 2026-10-23
 
+## P2a authoritative card XP and persistence, complete (local commit, no push)
+
+- XP from verified usage only: deploy commands carry seat+card, replay reproduces the rejected set, only accepted ordinary-card deploys count. Deck membership alone earns nothing; no cross-attribution; commanders earn nothing.
+- TEST policy v1: +1 per accepted deploy, 5/match/card cap, 20/match/player cap, levels 1-10 on cumulative thresholds. Unranked+ranked eligible, private disabled. Draws count usage; aborts/refusals award nothing.
+- Schema: migration 0013 `card_xp_progress` + `card_xp_awards` ledger + `card_xp_runs` markers (TEST only; PROD verified without all three). Award = idempotent stage + single-statement recompute apply; reconcile heals interruptions. Settlement runs XP post-settle like trophies; script gates on table presence.
+- API: GET /api/players/me/card-xp (auth, 20 cards with level/xp/target/eligible/maxed). No write surface, no Gold, no stat changes.
+- Checks: 13 new tests + 19 settlement/ranked regressions green, typecheck/lint/build green. Next: P2b prerequisites in the report. No push, no deploy, no PROD writes.
+
 ## P1c ranked frontend integration, complete pending checkpoint
 
 - Added Season 1 ranked identity and closed matchmaking state to `/app/play`. Read-only personal progression and ranked leaderboard now load from the existing authenticated APIs on `/app/progress` with server-owned trophy, rank, W/L/D, avatar, position and recent award values.

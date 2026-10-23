@@ -92,6 +92,13 @@
       "when": 1792771897720,
       "tag": "0012_long_vector",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1792775431381,
+      "tag": "0013_awesome_bastion",
+      "breakpoints": true
     }
   ]
 }

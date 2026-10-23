@@ -1,5 +1,12 @@
 # Project State
 
+## P2a authoritative card XP and persistence (2026-10-23)
+
+- Verified-usage XP foundation on TEST: accepted deploy commands per player per card from replay evidence (rejected/ability/commander/unknown excluded), caps 5/card/match and 20/player/match, levels 1-10 on cumulative policy thresholds. Unranked and ranked eligible; private excluded.
+- Migration 0013 (TEST only): progress + awards ledger + run markers. Idempotent stage, single-statement recompute apply, reconcile heals interruptions. SettlementService runs XP post-settle; script gates on table presence (PROD-safe).
+- Read API only: GET /api/players/me/card-xp returns all 20 cards with level/xp/target/eligible/maxed. No Gold, upgrades, stat changes, or combat edits.
+- Delivery: 13 new tests + 19 settlement/ranked regressions green, typecheck/lint/build green. Committed locally, no push, no deploy, no PROD writes.
+
 ## P1c ranked frontend integration (2026-10-23)
 
 - `/app/play` now identifies Season 1, eligibility as a server check and the closed ranked queue, with a read-only Progress link. `/app/play/battle?mode=ranked` is blocked by `RANKED_PUBLIC_MATCHMAKING_ENABLED=false` and never mounts the player battle session.

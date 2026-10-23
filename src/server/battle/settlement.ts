@@ -281,6 +281,15 @@ export interface SettlementServiceDeps {
    * sweep; failures never change the reported settlement status and never
    * invalidate the settled battle record. */
   trophies?: TrophyProcessor | null;
+  /** Optional P2a card XP pass. Same decoupling contract as trophies. */
+  cardXp?: CardXpProcessor | null;
+}
+
+/** Structural contract for the card XP pass; keeps settlement.ts free of a
+ * hard import on the card XP module. */
+export interface CardXpProcessor {
+  processMatch(matchId: string): Promise<void>;
+  reconcile(limit?: number): Promise<void>;
 }
 
 /** Structural contract for the trophy pass; keeps settlement.ts free of a
@@ -302,6 +311,7 @@ export class SettlementService {
   private readonly sweepMs: number;
   private readonly legacy: LegacyProcessor | null;
   private readonly trophies: TrophyProcessor | null;
+  private readonly cardXp: CardXpProcessor | null;
   private sweeper: ReturnType<typeof setInterval> | null = null;
   private readonly inFlight = new Set<string>();
 
@@ -313,6 +323,7 @@ export class SettlementService {
     this.sweepMs = deps.sweepMs ?? 60_000;
     this.legacy = deps.legacy ?? null;
     this.trophies = deps.trophies ?? null;
+    this.cardXp = deps.cardXp ?? null;
   }
 
   /** Legacy writes are decoupled: settlement is already durable, and a
@@ -365,6 +376,7 @@ export class SettlementService {
           logger.info("match settled", { matchId: record.matchId, status });
           await this.runLegacy(record.matchId);
           await this.runTrophies(record.matchId);
+          await this.runCardXp(record.matchId);
           return status;
         } catch (err) {
           if (err instanceof SettlementConflictError) {
@@ -444,6 +456,15 @@ export class SettlementService {
         logger.error("trophy reconcile failed", { reason: err instanceof Error ? err.message : String(err) });
       }
     }
+    // Finishes settled eligible matches whose card XP runs are missing or
+    // were interrupted. Same decoupling contract as trophies.
+    if (this.cardXp) {
+      try {
+        await this.cardXp.reconcile();
+      } catch (err) {
+        logger.error("card xp reconcile failed", { reason: err instanceof Error ? err.message : String(err) });
+      }
+    }
   }
 
   /** Trophy writes are decoupled: settlement is already durable, and an
@@ -454,6 +475,17 @@ export class SettlementService {
       await this.trophies.processMatch(matchId);
     } catch (err) {
       logger.error("trophy processing failed", { matchId, reason: err instanceof Error ? err.message : String(err) });
+    }
+  }
+
+  /** Card XP writes are decoupled the same way: an interrupted pass leaves
+   * an unapplied run marker so reconcile can finish it. */
+  private async runCardXp(matchId: string): Promise<void> {
+    if (!this.cardXp) return;
+    try {
+      await this.cardXp.processMatch(matchId);
+    } catch (err) {
+      logger.error("card xp processing failed", { matchId, reason: err instanceof Error ? err.message : String(err) });
     }
   }
 

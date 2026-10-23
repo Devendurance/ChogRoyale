@@ -63,8 +63,22 @@ async function settlementService() {
       console.log("trophies enabled");
     }
   }
+  // P2a card XP rides on the settlement lifecycle: no new flags. It stays
+  // disabled unless the card XP migration is applied to the same database,
+  // so an unmigrated database (including PROD) can never take XP writes.
+  let cardXp = null;
+  {
+    const check = await sql`select to_regclass('public.card_xp_runs') as t`;
+    if (!check[0]?.t) {
+      console.log("card xp disabled (card_xp_runs missing)");
+    } else {
+      const { CardXpService } = await import("@/server/battle/card-xp");
+      cardXp = new CardXpService();
+      console.log("card xp enabled");
+    }
+  }
   console.log("settlement enabled");
-  return new SettlementService({ legacy, trophies });
+  return new SettlementService({ legacy, trophies, cardXp });
 }
 
 void settlementService()

@@ -1,0 +1,205 @@
+// P2a card XP persistence. Awards flow over settled replay-verified
+// matchmaking/ranked rows only; private rooms never award (farming gate).
+// The ledger is authoritative and recompute-based: progress.xp always
+// equals the sum of its ledger rows, and the level is re-derived from the
+// single policy ladder on every apply, so XP and level can never disagree
+// and concurrent applies converge instead of losing updates.
+import { sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
+import { getDb } from "@/db/client";
+import { cardXpAwards, cardXpProgress, cardXpRuns, matchEvidence, matchParticipants, matches } from "@/db/schema";
+import { CARDS_V1 } from "@/lib/combat";
+import {
+  CARD_XP_LEVEL_REQUIREMENTS,
+  CARD_XP_MAX_LEVEL,
+  CARD_XP_POLICY_VERSION,
+  cardLevelForXp,
+  cardUpgradeEligible,
+  type CardXpEntry,
+} from "@/lib/card-xp";
+
+export const CARD_XP_ELIGIBLE_TYPES = ["matchmaking", "ranked"] as const;
+
+export interface CardUsageUnit {
+  playerId: string;
+  cardId: string;
+  deployments: number;
+  xp: number;
+}
+
+/** Canonical ordinary card ids: the 20 deckable non-commander cards. */
+export function ordinaryCardIds(): string[] {
+  return Object.keys(CARDS_V1).sort();
+}
+
+interface SettledMatch {
+  matchId: string;
+  matchType: string;
+  verification: string;
+  players: [{ playerId: string }, { playerId: string }];
+  evidence: { formatVersion: number; config: unknown; commands: unknown };
+}
+
+export async function getAwardableMatch(matchId: string): Promise<
+  { ok: false; reason: string } | { ok: true; match: SettledMatch }
+> {
+  const db = getDb();
+  const mrows = await db
+    .select({ matchType: matches.matchType, verification: matches.verification })
+    .from(matches)
+    .where(eq(matches.id, matchId))
+    .limit(1);
+  const m = mrows[0];
+  if (!m) return { ok: false, reason: "unknown-match" };
+  if (!(CARD_XP_ELIGIBLE_TYPES as readonly string[]).includes(m.matchType)) {
+    return { ok: false, reason: `ineligible-type:${m.matchType}` };
+  }
+  if (m.verification !== "replay-verified") return { ok: false, reason: `unverified:${m.verification}` };
+  const parts = await db
+    .select({ playerId: matchParticipants.playerId })
+    .from(matchParticipants)
+    .where(eq(matchParticipants.matchId, matchId));
+  if (parts.length !== 2 || !parts[0] || !parts[1] || parts[0].playerId === parts[1].playerId) {
+    return { ok: false, reason: "seats-not-distinct" };
+  }
+  const ev = await db.select({ evidence: matchEvidence.evidence }).from(matchEvidence).where(eq(matchEvidence.matchId, matchId)).limit(1);
+  const stored = ev[0]?.evidence as SettledMatch["evidence"] | undefined;
+  if (!stored || !Array.isArray(stored.commands) || typeof stored.config !== "object" || stored.config === null) {
+    return { ok: false, reason: "evidence-missing" };
+  }
+  return { ok: true, match: { matchId, matchType: m.matchType, verification: m.verification, players: [{ playerId: parts[0].playerId }, { playerId: parts[1].playerId }], evidence: stored } };
+}
+
+/**
+ * Stage ledger rows plus the run marker, idempotently. Returns true when
+ * this call staged the marker (fresh work), false when already staged.
+ */
+export async function stageCardXp(matchId: string, usage: CardUsageUnit[], status: "done" | "no-eligible", details: Record<string, unknown> = {}): Promise<{ fresh: boolean; units: number }> {
+  const db = getDb();
+  if (usage.length > 0) {
+    await db
+      .insert(cardXpAwards)
+      .values(usage.map((u) => ({ matchId, playerId: u.playerId, cardId: u.cardId, deployments: u.deployments, xp: u.xp, policyVersion: CARD_XP_POLICY_VERSION })))
+      .onConflictDoNothing({ target: [cardXpAwards.matchId, cardXpAwards.playerId, cardXpAwards.cardId] });
+  }
+  const marker = await db
+    .insert(cardXpRuns)
+    .values({ matchId, status, applied: false, awardsCreated: usage.length, details })
+    .onConflictDoNothing({ target: [cardXpRuns.matchId] })
+    .returning({ matchId: cardXpRuns.matchId });
+  return { fresh: marker.length > 0, units: usage.length };
+}
+
+/**
+ * Apply one staged (or interrupted) run: recompute every affected
+ * (player, card) total from the full ledger, upsert progress with the
+ * policy level ladder, stamp the marker. Single statement, re-runnable:
+ * only applied=false markers move. Absolute-set upserts recompute from
+ * the whole ledger, so concurrent applies converge instead of
+ * double-counting (no row locks needed: re-running can only rewrite the
+ * same totals, and every run re-derives from all committed ledger rows).
+ */
+export async function applyCardXp(matchId: string): Promise<{ applied: boolean; units: number }> {
+  const db = getDb();
+  const t = CARD_XP_LEVEL_REQUIREMENTS;
+  const res = await db.execute(sql`
+    with run as (
+      select r.match_id
+      from card_xp_runs r
+      where r.match_id = ${matchId}::uuid and r.applied = false
+    ),
+    affected as (
+      select distinct a.player_id, a.card_id
+      from card_xp_awards a join run on run.match_id = a.match_id
+    ),
+    totals as (
+      select a.player_id, a.card_id, coalesce(sum(a.xp), 0)::int as xp
+      from card_xp_awards a
+      where (a.player_id, a.card_id) in (select player_id, card_id from affected)
+      group by a.player_id, a.card_id
+    ),
+    computed as (
+      select
+        t.player_id, t.card_id, t.xp,
+        (1
+          + (t.xp >= ${t[1]}::int)::int + (t.xp >= ${t[2]}::int)::int + (t.xp >= ${t[3]}::int)::int
+          + (t.xp >= ${t[4]}::int)::int + (t.xp >= ${t[5]}::int)::int + (t.xp >= ${t[6]}::int)::int
+          + (t.xp >= ${t[7]}::int)::int + (t.xp >= ${t[8]}::int)::int + (t.xp >= ${t[9]}::int)::int
+        ) as level
+      from totals t
+    ),
+    up as (
+      insert into card_xp_progress (player_id, card_id, xp, level, updated_at)
+      select player_id, card_id, xp, least(level, ${CARD_XP_MAX_LEVEL})::smallint, now() from computed
+      on conflict (player_id, card_id) do update set
+        xp = excluded.xp,
+        level = excluded.level,
+        updated_at = now()
+      returning player_id
+    ),
+    fin as (
+      update card_xp_runs r
+      set applied = true
+      where r.match_id = ${matchId}::uuid and r.applied = false
+      returning r.match_id
+    )
+    select (select count(*)::int from fin) as runs, (select count(*)::int from affected) as units
+  `);
+  const row = (res.rows as Array<{ runs: number; units: number }>)[0] ?? { runs: 0, units: 0 };
+  return { applied: row.runs > 0, units: Number(row.units) };
+}
+
+/**
+ * Finish every settled eligible match whose run marker is missing (never
+ * processed) or unapplied (interrupted). Oldest first, bounded. The caller
+ * supplies usage computation over stored evidence; matches whose evidence
+ * cannot be read are left untouched, never force-awarded.
+ */
+export async function reconcileCardXp(
+  limit: number = 50,
+  award: (matchId: string) => Promise<{ status: string }>
+): Promise<{ processed: number; awarded: number }> {
+  const db = getDb();
+  const res = await db.execute(sql`
+    select m.id as match_id
+    from matches m
+    left join card_xp_runs r on r.match_id = m.id
+    where m.match_type in ('matchmaking', 'ranked')
+      and m.verification = 'replay-verified'
+      and (r.match_id is null or r.applied = false)
+    order by m.settled_at asc
+    limit ${Math.min(Math.max(limit, 1), 200)}
+  `);
+  const ids = (res.rows as Array<{ match_id: string }>).map((r) => String(r.match_id));
+  let awarded = 0;
+  for (const id of ids) {
+    const r = await award(id);
+    if (r.status === "awarded") awarded += 1;
+  }
+  return { processed: ids.length, awarded };
+}
+
+/** Server-owned progression for one player across all 20 ordinary cards. */
+export async function getMyCardXp(playerId: string): Promise<{ policyVersion: number; maxLevel: number; cards: CardXpEntry[] }> {
+  const db = getDb();
+  const rows = await db.select().from(cardXpProgress).where(eq(cardXpProgress.playerId, playerId));
+  const byCard = new Map(rows.map((r) => [r.cardId, r]));
+  return {
+    policyVersion: CARD_XP_POLICY_VERSION,
+    maxLevel: CARD_XP_MAX_LEVEL,
+    cards: ordinaryCardIds().map((cardId) => {
+      const row = byCard.get(cardId);
+      const xp = row?.xp ?? 0;
+      const level = row ? Number(row.level) : cardLevelForXp(0);
+      const maxed = level >= CARD_XP_MAX_LEVEL;
+      return {
+        cardId,
+        level,
+        xp,
+        xpTarget: maxed ? null : CARD_XP_LEVEL_REQUIREMENTS[level]!,
+        eligible: cardUpgradeEligible(level, xp),
+        maxed,
+      };
+    }),
+  };
+}

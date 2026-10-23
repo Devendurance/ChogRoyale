@@ -574,6 +574,71 @@ export type MatchParticipant = typeof matchParticipants.$inferSelect;
 export type MatchEvidence = typeof matchEvidence.$inferSelect;
 export type MatchLegacyRun = typeof matchLegacyRuns.$inferSelect;
 
+// P2a card XP. Progress holds floored cumulative XP plus the derived level
+// (recomputed from the single policy ladder on every award, so XP and
+// level can never disagree). The awards ledger is authoritative: one row
+// per (match, player, card) with the counted deployments. Runs markers
+// mirror legacy: a settled eligible match with no marker is due; applied
+// false means an interrupted run that reconcile must finish.
+export const cardXpProgress = pgTable(
+  "card_xp_progress",
+  {
+    playerId: uuid("player_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "restrict" }),
+    cardId: text("card_id").notNull(),
+    xp: integer("xp").notNull().default(0),
+    level: smallint("level").notNull().default(1),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ name: "card_xp_progress_pk", columns: [t.playerId, t.cardId] }),
+    index("card_xp_progress_player_idx").on(t.playerId),
+    check("card_xp_progress_xp_check", sql`${t.xp} >= 0`),
+    check("card_xp_progress_level_check", sql`${t.level} >= 1 and ${t.level} <= 10`),
+  ]
+);
+
+export const cardXpAwards = pgTable(
+  "card_xp_awards",
+  {
+    matchId: uuid("match_id")
+      .notNull()
+      .references(() => matches.id, { onDelete: "restrict" }),
+    playerId: uuid("player_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "restrict" }),
+    cardId: text("card_id").notNull(),
+    deployments: integer("deployments").notNull(),
+    xp: integer("xp").notNull(),
+    policyVersion: integer("policy_version").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ name: "card_xp_awards_pk", columns: [t.matchId, t.playerId, t.cardId] }),
+    index("card_xp_awards_player_card_idx").on(t.playerId, t.cardId),
+    check("card_xp_awards_counts_check", sql`${t.deployments} > 0 and ${t.xp} >= 0`),
+  ]
+);
+
+export const cardXpRuns = pgTable(
+  "card_xp_runs",
+  {
+    matchId: uuid("match_id")
+      .primaryKey()
+      .references(() => matches.id, { onDelete: "restrict" }),
+    status: text("status").notNull(),
+    applied: boolean("applied").notNull().default(false),
+    awardsCreated: integer("awards_created").notNull().default(0),
+    details: jsonb("details").notNull().default({}),
+  },
+  (t) => [check("card_xp_runs_status_check", sql`${t.status} in ('done','no-eligible')`)]
+);
+
+export type CardXpProgress = typeof cardXpProgress.$inferSelect;
+export type CardXpAward = typeof cardXpAwards.$inferSelect;
+export type CardXpRun = typeof cardXpRuns.$inferSelect;
+
 // P1b.2 ranked trophies (Season 1 provisional policy). The ledger is
 // authoritative: one row per (match, player) records the applied delta and
 // the balance after it. balance_after NULL means the award was staged but
