@@ -3640,3 +3640,886 @@
     font-size: 9px;
   }
 }
+
+/* ===========================================================================
+   A3.2b Genesis legacy and achievements vault
+   Deep violet trophy vault: gold plaques, dimensional plates, verified counts,
+   a token trail and awarded achievements. Legacy is token-centric. A commander
+   appearance carries a match-start ownership check; an Arena Patron appearance
+   is a separate server-selected relationship. Holdings are cached observations.
+   ========================================================================= */
+
+.app-stage--legacy {
+  --legacy-gold: var(--coin-gold);
+  --legacy-gold-soft: rgba(255, 200, 61, 0.1);
+  --legacy-win: #7fe3a6;
+  --legacy-loss: #ff8b98;
+  --legacy-line: rgba(185, 162, 255, 0.22);
+  --legacy-line-strong: rgba(185, 162, 255, 0.38);
+  --legacy-well: rgba(18, 11, 69, 0.42);
+}
+
+.app-legacy-hero {
+  position: relative;
+  isolation: isolate;
+  padding: 18px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #3b2794 0%, var(--plate-dark) 72%);
+}
+
+.app-legacy-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(110% 100% at 100% 0%, rgba(255, 200, 61, 0.16), transparent 56%),
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 20px);
+}
+
+.app-legacy-hero__crest {
+  position: absolute;
+  z-index: 0;
+  top: -48px;
+  right: -18px;
+  color: rgba(255, 200, 61, 0.09);
+  transform: rotate(-9deg);
+  pointer-events: none;
+}
+
+.app-legacy-hero > :not(.app-legacy-hero__crest) {
+  position: relative;
+  z-index: 1;
+}
+
+.app-legacy-kicker {
+  margin: 0;
+  font-family: var(--font-data);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--app-lilac);
+}
+
+.app-legacy-hero .app-legacy-kicker {
+  color: var(--legacy-gold);
+}
+
+.app-legacy-hero__title {
+  margin: 5px 0 0;
+  font-family: var(--font-game);
+  font-size: clamp(34px, 5.4vw, 52px);
+  line-height: 0.96;
+  letter-spacing: 0.01em;
+  color: transparent;
+  background: linear-gradient(180deg, #fff6cf 0%, #ffd45a 48%, #d58a0b 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-stroke: 3px var(--outline);
+  paint-order: stroke fill;
+  filter: drop-shadow(0 4px 0 rgba(18, 11, 69, 0.7));
+}
+
+.app-legacy-hero__lead {
+  max-width: 58ch;
+  margin: 11px 0 0;
+  font-size: 13px;
+  line-height: 19px;
+  color: var(--app-ink-85);
+}
+
+.app-legacy-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.app-legacy__grid {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.app-legacy__grid--solo {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.app-legacy__detail {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.app-legacy-vault,
+.app-legacy-record,
+.app-legacy-history,
+.app-legacy-achievements {
+  padding: 15px;
+}
+
+.app-legacy-panel__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.app-legacy-title {
+  margin: 2px 0 0;
+  font-family: var(--font-game);
+  font-size: 22px;
+  line-height: 25px;
+  color: #fff;
+  -webkit-text-stroke: 2.5px var(--outline);
+  paint-order: stroke fill;
+  overflow-wrap: anywhere;
+}
+
+.app-legacy-title--token {
+  font-size: 27px;
+  line-height: 30px;
+}
+
+.app-legacy-section-title {
+  margin: 2px 0 0;
+  font-family: var(--font-game);
+  font-size: 19px;
+  line-height: 22px;
+  color: #fff;
+  -webkit-text-stroke: 2.2px var(--outline);
+  paint-order: stroke fill;
+  overflow-wrap: anywhere;
+}
+
+.app-legacy-note {
+  margin: 9px 0 0;
+  font-size: 11.5px;
+  line-height: 16px;
+  color: var(--app-ink-65);
+}
+
+.app-legacy-note--warn {
+  color: #ffe7a3;
+}
+
+.app-legacy-caption {
+  margin: 0;
+  font-size: 11px;
+  line-height: 15px;
+  color: var(--app-ink-65);
+}
+
+.app-legacy-inline-error {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(229, 56, 74, 0.45);
+  border-radius: 9px;
+  background: rgba(229, 56, 74, 0.12);
+  color: #ffc2c7;
+  font-size: 11.5px;
+  line-height: 16px;
+}
+
+/* ------------------------------------------------------------- token art */
+
+.app-legacy-art {
+  display: block;
+  min-width: 0;
+}
+
+.app-legacy-art--list {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+}
+
+.app-legacy-art--hero {
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+}
+
+.app-legacy-crest {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 2px solid var(--outline);
+  background: linear-gradient(180deg, var(--plate-light), var(--plate-dark));
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.16);
+}
+
+.app-legacy-crest--list {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+}
+
+.app-legacy-crest--hero {
+  width: 108px;
+  height: 108px;
+  border-radius: 18px;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.18),
+    0 6px 0 rgba(18, 11, 69, 0.72),
+    0 0 28px rgba(255, 200, 61, 0.2);
+}
+
+.app-legacy-crest__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.app-legacy-crest--empty {
+  color: var(--legacy-gold);
+  background: var(--legacy-well);
+}
+
+.app-legacy-art__note {
+  max-width: 150px;
+  text-align: center;
+  font-size: 9.5px;
+  line-height: 13px;
+  color: var(--app-ink-65);
+}
+
+/* ----------------------------------------------------------- vault list */
+
+.app-legacy-vault__list {
+  display: grid;
+  gap: 7px;
+  max-height: 460px;
+  margin: 11px 0 0;
+  padding: 0 2px 0 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+}
+
+.app-legacy-token {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 56px;
+  padding: 7px 8px;
+  border: 1px solid var(--legacy-line);
+  border-radius: 12px;
+  background: var(--legacy-well);
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 120ms var(--app-ease-out),
+    background-color 120ms var(--app-ease-out),
+    transform 120ms var(--app-ease-out);
+}
+
+@media (hover: hover) {
+  .app-legacy-token:hover {
+    border-color: var(--legacy-line-strong);
+    background: rgba(90, 68, 217, 0.22);
+  }
+}
+
+.app-legacy-token:active {
+  transform: translateY(1px);
+}
+
+.app-legacy-token--selected {
+  border-color: rgba(255, 200, 61, 0.75);
+  background: var(--legacy-gold-soft);
+  box-shadow:
+    inset 3px 0 0 var(--legacy-gold),
+    0 0 0 1px rgba(255, 200, 61, 0.18);
+}
+
+.app-legacy-token__names {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.app-legacy-token__name {
+  overflow: hidden;
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 15px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-legacy-token__meta {
+  overflow: hidden;
+  color: var(--app-ink-65);
+  font-family: var(--font-data);
+  font-size: 9px;
+  line-height: 12px;
+  letter-spacing: 0.04em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-legacy-token__chip {
+  justify-self: start;
+  margin-top: 2px;
+  padding: 2px 6px;
+  border: 1px solid var(--legacy-line);
+  border-radius: 999px;
+  color: var(--app-ink-65);
+  font-family: var(--font-data);
+  font-size: 7.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.app-legacy-token__chip--eligible {
+  border-color: rgba(255, 200, 61, 0.45);
+  color: var(--legacy-gold);
+}
+
+.app-legacy-token__chip--pending {
+  border-color: var(--legacy-line-strong);
+  color: var(--app-lilac);
+}
+
+/* ----------------------------------------------------------- token hero */
+
+.app-legacy-token-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: 108px minmax(0, 1fr);
+  align-items: start;
+  gap: 14px;
+  padding: 15px;
+  overflow: hidden;
+}
+
+.app-legacy-token-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(90% 120% at 100% 0%, rgba(255, 200, 61, 0.1), transparent 60%);
+}
+
+.app-legacy-token-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+.app-legacy-token-hero__body {
+  min-width: 0;
+}
+
+.app-legacy-token-hero__id {
+  margin: 4px 0 0;
+  color: var(--app-ink-65);
+  font-family: var(--font-data);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.app-legacy-token-hero__note {
+  margin: 10px 0 0;
+  color: var(--app-ink-65);
+  font-size: 11px;
+  line-height: 15px;
+}
+
+/* ------------------------------------------------------------ medallions */
+
+.app-legacy-medallions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.app-legacy-medallion {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--legacy-line);
+  border-radius: 12px;
+  background: var(--legacy-well);
+}
+
+.app-legacy-medallion__label {
+  min-height: 22px;
+  margin: 0;
+  color: var(--app-ink-65);
+  font-family: var(--font-data);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.app-legacy-medallion__value {
+  margin: 4px 0 0;
+  color: #fff;
+  font-family: var(--font-game);
+  font-size: 28px;
+  line-height: 30px;
+}
+
+.app-legacy-medallion--commander .app-legacy-medallion__value {
+  color: var(--legacy-gold);
+}
+
+.app-legacy-medallion--patron .app-legacy-medallion__value {
+  color: var(--app-lilac);
+}
+
+.app-legacy-medallion--win .app-legacy-medallion__value {
+  color: var(--legacy-win);
+}
+
+.app-legacy-medallion--loss .app-legacy-medallion__value {
+  color: var(--legacy-loss);
+}
+
+.app-legacy-record__empty {
+  margin: 10px 0 0;
+  padding: 9px 10px;
+  border: 1px solid var(--legacy-line);
+  border-left: 4px solid var(--legacy-gold);
+  border-radius: 10px;
+  background: var(--legacy-gold-soft);
+  color: var(--app-ink-85);
+  font-size: 11.5px;
+  line-height: 16px;
+}
+
+/* ---------------------------------------------------------------- trail */
+
+.app-legacy-trail {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.app-legacy-event {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  align-items: start;
+  gap: 9px;
+  padding: 9px;
+  border: 1px solid var(--legacy-line);
+  border-radius: 12px;
+  background: var(--legacy-well);
+}
+
+.app-legacy-event--corrected {
+  opacity: 0.72;
+}
+
+.app-legacy-event__seal {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--outline);
+  border-radius: 9px;
+  background: rgba(255, 200, 61, 0.1);
+  color: var(--legacy-gold);
+}
+
+.app-legacy-event--patron .app-legacy-event__seal {
+  background: rgba(185, 162, 255, 0.12);
+  color: var(--app-lilac);
+}
+
+.app-legacy-event--achievement .app-legacy-event__seal {
+  background: rgba(67, 201, 59, 0.12);
+  color: var(--legacy-win);
+}
+
+.app-legacy-event__main {
+  min-width: 0;
+}
+
+.app-legacy-event__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.app-legacy-event__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 17px;
+  overflow-wrap: anywhere;
+}
+
+.app-legacy-result {
+  padding: 2px 6px;
+  border: 1px solid var(--legacy-line);
+  border-radius: 999px;
+  font-family: var(--font-data);
+  font-size: 7.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.app-legacy-result--victory {
+  border-color: rgba(127, 227, 166, 0.45);
+  background: rgba(67, 201, 59, 0.12);
+  color: var(--legacy-win);
+}
+
+.app-legacy-result--defeat {
+  border-color: rgba(255, 139, 152, 0.45);
+  background: rgba(229, 56, 74, 0.12);
+  color: var(--legacy-loss);
+}
+
+.app-legacy-result--draw {
+  border-color: rgba(255, 200, 61, 0.45);
+  background: rgba(255, 200, 61, 0.1);
+  color: var(--legacy-gold);
+}
+
+.app-legacy-result--unknown {
+  color: var(--app-ink-65);
+}
+
+.app-legacy-event__score {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 4px;
+  color: var(--legacy-gold);
+  font-family: var(--font-game);
+  font-size: 14px;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+.app-legacy-event__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin: 3px 0 0;
+  color: var(--app-ink-65);
+  font-family: var(--font-data);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.app-legacy-event__note {
+  margin: 4px 0 0;
+  color: var(--app-ink-65);
+  font-size: 10.5px;
+  line-height: 14px;
+}
+
+.app-legacy-history__foot {
+  margin-top: 10px;
+}
+
+.app-legacy-history__foot .app-btn {
+  width: 100%;
+  min-height: 44px;
+}
+
+/* --------------------------------------------------------- achievements */
+
+.app-legacy-achievements__grid {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.app-legacy-achievement {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  align-items: start;
+  gap: 9px;
+  padding: 10px;
+  border: 1px solid var(--legacy-line);
+  border-radius: 12px;
+  background: var(--legacy-well);
+}
+
+.app-legacy-achievement--earned {
+  border-color: rgba(255, 200, 61, 0.45);
+  background: linear-gradient(180deg, rgba(255, 200, 61, 0.1), rgba(18, 11, 69, 0.42));
+  box-shadow: inset 0 0 0 1px rgba(255, 200, 61, 0.08);
+}
+
+.app-legacy-achievement__seal {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 2px solid var(--outline);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--app-ink-45);
+}
+
+.app-legacy-achievement--earned .app-legacy-achievement__seal {
+  background: rgba(255, 200, 61, 0.12);
+  color: var(--legacy-gold);
+}
+
+.app-legacy-achievement__body {
+  min-width: 0;
+}
+
+.app-legacy-achievement__name {
+  margin: 0;
+  color: #fff;
+  font-family: var(--font-game);
+  font-size: 16px;
+  line-height: 18px;
+  overflow-wrap: anywhere;
+}
+
+.app-legacy-achievement__description {
+  margin: 4px 0 0;
+  color: var(--app-ink-65);
+  font-size: 11px;
+  line-height: 15px;
+}
+
+.app-legacy-achievement__meta {
+  margin: 6px 0 0;
+  color: var(--app-ink-65);
+  font-family: var(--font-data);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.app-legacy-achievement--earned .app-legacy-achievement__meta {
+  color: #ffe7a3;
+}
+
+.app-legacy-achievement__bar {
+  height: 5px;
+  margin-top: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(18, 11, 69, 0.7);
+}
+
+.app-legacy-achievement__bar span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--plate-highlight), var(--legacy-gold));
+}
+
+/* ---------------------------------------------------------- state plates */
+
+.app-legacy-state {
+  position: relative;
+  display: grid;
+  gap: 5px;
+  padding: 13px 13px 13px 14px;
+  border: 1px solid var(--legacy-line);
+  border-left: 4px solid var(--app-lilac);
+  border-radius: 11px;
+  background: var(--legacy-well);
+}
+
+.app-legacy-state--loading,
+.app-legacy-state--empty {
+  border-left-color: var(--legacy-gold);
+}
+
+.app-legacy-state--locked {
+  border-left-color: var(--app-ink-45);
+}
+
+.app-legacy-state--auth {
+  border-left-color: var(--danger);
+}
+
+.app-legacy-state__pulse {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--legacy-gold);
+  animation: app-pulse 1.6s ease-in-out infinite;
+}
+
+.app-legacy-state__label {
+  margin: 0;
+  color: var(--app-ink-65);
+  font-family: var(--font-data);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.app-legacy-state__title {
+  margin: 0;
+  color: #fff;
+  font-family: var(--font-game);
+  font-size: 17px;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+}
+
+.app-legacy-state__body {
+  margin: 0;
+  color: var(--app-ink-65);
+  font-size: 12.5px;
+  line-height: 18px;
+}
+
+.app-legacy-state__action {
+  margin-top: 4px;
+}
+
+/* ----------------------------------------------------- progress vault door */
+
+.app-progress-legacy {
+  position: relative;
+  isolation: isolate;
+  padding: 15px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #3a2a8a 0%, var(--plate-dark) 72%);
+}
+
+.app-progress-legacy::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--coin-gold), transparent);
+}
+
+.app-progress-legacy__crest {
+  position: absolute;
+  z-index: 0;
+  top: -20px;
+  right: -14px;
+  color: rgba(255, 200, 61, 0.1);
+  transform: rotate(-8deg);
+  pointer-events: none;
+}
+
+.app-progress-legacy > :not(.app-progress-legacy__crest) {
+  position: relative;
+  z-index: 1;
+}
+
+.app-progress-legacy .app-progress-title {
+  max-width: 27ch;
+}
+
+.app-progress-legacy__body {
+  max-width: 48ch;
+  margin: 6px 0 0;
+  color: var(--app-ink-65);
+  font-size: 12.5px;
+  line-height: 18px;
+}
+
+.app-progress-legacy__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* -------------------------------------------------------------- desktop */
+
+@media (min-width: 640px) {
+  .app-legacy-vault__list {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    max-height: 420px;
+  }
+
+  .app-legacy-medallions {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .app-legacy-achievements__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .app-legacy__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .app-legacy__grid--solo {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 374px) {
+  .app-legacy-hero {
+    padding: 15px;
+  }
+
+  .app-legacy-token-hero {
+    grid-template-columns: 88px minmax(0, 1fr);
+    gap: 11px;
+  }
+
+  .app-legacy-crest--hero {
+    width: 88px;
+    height: 88px;
+    border-radius: 15px;
+  }
+
+  .app-legacy-title--token {
+    font-size: 23px;
+    line-height: 26px;
+  }
+
+  .app-legacy-token {
+    grid-template-columns: 38px minmax(0, 1fr);
+    gap: 7px;
+  }
+
+  .app-legacy-crest--list {
+    width: 38px;
+    height: 38px;
+  }
+
+  .app-legacy-token__chip {
+    font-size: 7px;
+    letter-spacing: 0.05em;
+  }
+}

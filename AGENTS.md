@@ -145,6 +145,15 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - The profile "Open progress" action and the Progress nav tab both point to `/app/progress`.
 - At 520px and below, the disabled Commanders nav label takes a smaller step with no side padding so it cannot spill into the active tab.
 
+## GENESIS LEGACY
+
+- `/app/progress/legacy` is the token-centric Genesis legacy vault. `/dev/progress` stays the development surface. The five-tab nav does not gain a sixth tab; the Progress tab stays active on the legacy route.
+- Legacy belongs to the Genesis token, not the wallet. Current holdings are cached verified-wallet observations. A commander appearance carries its own match-start direct-owner proof. An Arena Patron appearance is server-selected and is never presented as a player commander choice.
+- The vault reads only `/api/players/me/nfts`, `/api/players/me/commanders`, `/api/nfts/[tokenId]/legacy` and `/api/nfts/[tokenId]/achievements`. Do not add endpoints, tables, backfills or sample records.
+- Only a successful legacy payload with total 0 is empty. A 404 is not indexed, 401/403 is session or account state, and 500/503/network is unavailable. Never turn a failed read into "no legacy".
+- Achievements are earned-only in the read route. Locked progress may use the authored definitions plus the token's verified counts. Never invent tiers, points, rarity, rewards or award dates. A missing award date still shows as earned.
+- Never expose authority keys, match ids, hashes, config or schedule hashes, source/actor, wallets or Privy identifiers. Class art is shared and must be labelled. Genuine token art only when the route resolves an authorized image URL.
+
 ## PUBLIC SITE
 
 - Build the public landing page one handoff phase at a time (L0 to L8) and stop for owner screenshot approval after each phase.

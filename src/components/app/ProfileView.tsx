@@ -298,9 +298,13 @@ export default function ProfileView({
                   <Link href="/app/progress" className="app-btn app-btn--ghost">
                     Open progress
                   </Link>
+                  <Link href="/app/progress/legacy" className="app-btn app-btn--ghost">
+                    Genesis legacy
+                  </Link>
                 </div>
                 <p className="app-profile-caption">
-                  Your full match history and the Casual Alpha Leaderboard live on the progress screen.
+                  Your full match history, the Casual Alpha Leaderboard and the Genesis legacy vault live on the
+                  progress screen.
                 </p>
               </section>
 

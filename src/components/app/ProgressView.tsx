@@ -713,6 +713,29 @@ export default function ProgressView({
               </section>
 
               <section
+                className="app-panel app-progress-legacy app-rise"
+                aria-labelledby="app-progress-legacy-title"
+                style={{ animationDelay: "120ms" }}
+              >
+                <span className="app-progress-legacy__crest" aria-hidden="true">
+                  <CrownGlyph size={120} />
+                </span>
+                <p className="app-progress-kicker">Genesis legacy</p>
+                <h2 className="app-progress-title" id="app-progress-legacy-title">
+                  Every Chog keeps its record.
+                </h2>
+                <p className="app-progress-legacy__body">
+                  Verified commander and Arena Patron appearances are written to the Genesis token, not the wallet.
+                  Achievements stay with the token across transfers.
+                </p>
+                <div className="app-progress-legacy__actions">
+                  <Link href="/app/progress/legacy" className="app-btn app-btn--ghost">
+                    Open legacy vault
+                  </Link>
+                </div>
+              </section>
+
+              <section
                 className="app-panel app-progress-history app-rise"
                 aria-labelledby="app-progress-history-title"
                 style={{ animationDelay: "140ms" }}
