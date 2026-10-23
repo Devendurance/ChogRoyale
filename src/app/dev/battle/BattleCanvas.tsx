@@ -9,6 +9,12 @@
 import { useEffect, useRef } from "react";
 import type { BattleFrame, CardInfo, FrameEvent, StartMessage } from "@/lib/battle-protocol";
 import { deployZones, screenToArena, type ArenaPoint } from "@/lib/battle-input";
+import {
+  battleAnimationCues,
+  interpolateBattlePosition,
+  takeUnseenBattleAnimationCues,
+  type BattleAnimationCue,
+} from "./battle-animation";
 import { chaosFamilyColor, combatEventKey } from "./combat-vfx";
 import {
   byId,
@@ -134,6 +140,8 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
         lastHp: number;
         flashUntil: number;
         lunge: { dx: number; dy: number; start: number } | null;
+        attack: { dx: number; dy: number; start: number } | null;
+        facingX: number;
         gone: number | null;
         rubble: boolean;
         baseScale: number;
@@ -183,6 +191,31 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
       }
       const towerFx: TowerFx[] = [];
       let lastActiveAt = -1;
+      const animationSeenKeys = new Set<string>();
+      let animationTick = -1;
+      let animationPriming = false;
+
+      const clearPresentationPools = () => {
+        for (const e of pool.values()) e.root.destroy(true);
+        pool.clear();
+        for (const img of projPool.values()) img.destroy();
+        projPool.clear();
+        for (const imgs of impactPool.values()) for (const img of imgs) img.destroy();
+        impactPool.clear();
+        for (const img of zonePool.values()) img.destroy();
+        zonePool.clear();
+        for (const fxImg of fxImgs) fxImg.img.destroy();
+        fxImgs.length = 0;
+        for (const mount of mountPool.values()) mount.root.destroy(true);
+        mountPool.clear();
+        for (const label of labels.values()) label.destroy();
+        labels.clear();
+        fx.length = 0;
+        towerFx.length = 0;
+        defenderStates.clear();
+        animationSeenKeys.clear();
+        animationTick = -1;
+      };
 
       class Arena extends Phaser.Scene {
         g!: import("phaser").GameObjects.Graphics;
@@ -219,9 +252,11 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
           if (!f || !f.frame) return;
           const { start, frame, prev } = f;
           if (eventStart !== start) {
+            clearPresentationPools();
             eventStart = start;
             seenEventKeys.clear();
             defenderStates.clear();
+            animationPriming = start.resumed;
           }
           const seat = start.seat;
           const sx = (x: number) => x * S;
@@ -234,7 +269,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
           for (const u of [...(prev?.troops ?? []), ...(prev?.commanders ?? [])]) prevPos.set(u.id, u);
           const lerp = (id: string, x: number, y: number) => {
             const p = prevPos.get(id);
-            return p ? { x: p.x + (x - p.x) * t, y: p.y + (y - p.y) * t } : { x, y };
+            return interpolateBattlePosition(p ?? null, { x, y }, t);
           };
           const geo = start.geometry;
           const bandY = (minY: number, maxY: number) => {
@@ -383,6 +418,8 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                 lastHp: -1,
                 flashUntil: 0,
                 lunge: null,
+                attack: null,
+                facingX: 1,
                 gone: null,
                 rubble: false,
                 baseScale: displayScale(r),
@@ -405,6 +442,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             const Y = sy(py);
             e.root.setPosition(X, Y);
             e.root.setDepth(Y + (e.air ? 500 : 0));
+            const firstSample = e.lastHp < 0;
             if (e.lastHp >= 0 && hp < e.lastHp) {
               e.flashUntil = now + 140;
               fx.push({
@@ -418,9 +456,10 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             }
             e.lastHp = hp;
             // Deploy pop: 0.88 -> 1.04 -> 1 with an alpha ramp, 180 ms.
-            const dp = Math.min(1, (now - e.born) / 180);
+            const dp = reduced ? 1 : Math.min(1, (now - e.born) / 180);
             const pop = dp < 0.7 ? 0.88 + (dp / 0.7) * 0.16 : 1.04 - ((dp - 0.7) / 0.3) * 0.04;
-            e.img.setScale(e.baseScale * pop);
+            let scaleX = e.baseScale * pop;
+            let scaleY = e.baseScale * pop;
             e.img.setAlpha(e.gone === null ? 0.55 + 0.45 * dp : e.img.alpha);
             // Idle bob and move bounce/tilt, all timestamp-driven.
             let ox = 0;
@@ -433,9 +472,26 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                 const dy = py - e.lastY;
                 const len = Math.hypot(dx, dy);
                 oy -= Math.abs(Math.sin((now / 360) * Math.PI * 2)) * 3;
-                if (len > 1e-6) rot = Math.max(-3, Math.min(3, ((dx / len) * 3) * (seat === 0 ? 1 : -1)));
+                if (!firstSample && len > 1e-6) {
+                  e.facingX = dx < 0 ? -1 : 1;
+                  rot = Math.max(-3, Math.min(3, ((dx / len) * 3) * (seat === 0 ? 1 : -1)));
+                }
               }
             }
+            if (e.attack && !reduced) {
+              const ap = (now - e.attack.start) / 180;
+              if (ap >= 1) e.attack = null;
+              else {
+                const windup = ap < 0.32 ? -(ap / 0.32) : ap < 0.52 ? 1 - (ap - 0.32) / 0.2 : 0;
+                const release = ap >= 0.32 && ap < 0.68 ? Math.sin(((ap - 0.32) / 0.36) * Math.PI) : 0;
+                const push = windup * 1.5 + release * 3;
+                ox += e.attack.dx * push;
+                oy += e.attack.dy * push;
+                scaleX *= 1 + release * 0.08;
+                scaleY *= 1 - release * 0.05;
+                rot += e.attack.dx * release * 0.012;
+              }
+            } else if (reduced) e.attack = null;
             // Lunge: 5 px toward the recorded target, out and back in ~160 ms.
             if (e.lunge && !reduced) {
               const lp = (now - e.lunge.start) / 160;
@@ -448,12 +504,17 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             } else e.lunge = null;
             // Death fade, 220 ms then destroy.
             if (e.gone !== null) {
-              const gp = Math.min(1, (now - e.gone) / 220);
+              const gp = Math.min(1, (now - e.gone) / (reduced ? 110 : 220));
               e.img.setAlpha(1 - gp);
-              e.img.setScale(e.baseScale * pop * (1 - 0.1 * gp));
+              if (!reduced) {
+                scaleX *= 1 - 0.16 * gp;
+                scaleY *= 1 + 0.08 * gp;
+                rot += 0.08 * gp;
+              }
               e.root.setAlpha(1 - gp * 0.6);
             }
             e.img.setPosition(ox, oy + (e.air ? -10 : 0));
+            e.img.setScale(scaleX, scaleY).setFlipX(e.facingX < 0);
             e.img.setRotation((rot * Math.PI) / 180);
             if (e.flashUntil > now) e.img.setTint(0xff6666);
             else if (!e.rubble) e.img.clearTint();
@@ -835,6 +896,39 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             const len = Math.hypot(dx, dy) || 1;
             e.lunge = { dx: dx / len, dy: dy / len, start: now };
           };
+          const beginAttack = (cue: BattleAnimationCue) => {
+            const e = pool.get(cue.entityId);
+            if (!e) return;
+            const at = all.get(cue.entityId) ?? prevAll.get(cue.entityId);
+            const target = cue.targetId ? all.get(cue.targetId) ?? prevAll.get(cue.targetId) : null;
+            let dx = 0;
+            let dy = 0;
+            if (at && target) {
+              dx = sx(target.x) - sx(at.x);
+              dy = sy(target.y) - sy(at.y);
+              const length = Math.hypot(dx, dy) || 1;
+              dx /= length;
+              dy /= length;
+              if (Math.abs(dx) > 0.01) e.facingX = dx < 0 ? -1 : 1;
+            }
+            e.attack = { dx, dy, start: now };
+          };
+          const applyAnimationCue = (cue: BattleAnimationCue) => {
+            const e = pool.get(cue.entityId);
+            if (!e) return;
+            if (cue.kind === "spawn") {
+              e.born = now;
+              e.gone = null;
+              e.rubble = false;
+              e.root.setAlpha(1);
+            } else if (cue.kind === "attack") {
+              beginAttack(cue);
+            } else if (cue.kind === "hit") {
+              e.flashUntil = Math.max(e.flashUntil, now + 140);
+            } else if (cue.kind === "death") {
+              e.gone ??= now;
+            }
+          };
           for (const e of frame.events as FrameEvent[]) {
             const key = combatEventKey(e);
             if (seenEventKeys.has(key)) continue;
@@ -901,6 +995,19 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                 if (prim) spawnFx(prim, p.x, p.y, 2.6, 300);
               }
             }
+          }
+          // Apply presentation cues once per authoritative tick. A resumed
+          // seat primes these keys so historical events never replay after a
+          // reconnect. The cue source is event/HP state only, never a client
+          // prediction.
+          if (frame.tick !== animationTick) {
+            const cues = battleAnimationCues(frame, prev);
+            const unseen = animationPriming
+              ? (cues.forEach((cue) => animationSeenKeys.add(cue.key)), [])
+              : takeUnseenBattleAnimationCues(cues, animationSeenKeys);
+            animationPriming = false;
+            animationTick = frame.tick;
+            for (const cue of unseen) applyAnimationCue(cue);
           }
           for (let i = fx.length - 1; i >= 0; i--) {
             const e = fx[i]!;

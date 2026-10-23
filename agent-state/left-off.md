@@ -2,6 +2,13 @@
 
 Last updated: 2026-10-23
 
+## P4b character animation and battlefield motion, complete (local commit)
+
+- Added authoritative animation cue projection and tests. Existing v001 static art now gets responsive spawn pop, movement interpolation with correction snap, directional facing, attack windup/release, HP hit emphasis, bounded death collapse/fade, event dedupe, reconnect priming and pooled cleanup on match reset.
+- Preserved arena/HUD/audio/VFX/input/gameplay. No new animation assets or dependencies. Runtime manifest inspection found no animation frames or sheets.
+- Verification: focused animation/render suites 54/54, typecheck green, full lint green, production build green. Localhost smoke reached the unauthenticated `/dev/battle` gate only. No live authenticated gameplay claim.
+- Local checkpoint is committed with the scoped BattleCanvas, battle-animation helper/tests and state-log updates. Do not start P5.
+
 ## P4a essential battle audio, complete (local commit, no push)
 
 - Added `battle-audio.ts` procedural cue engine and pure event projection tests. Cues use authoritative deploy/spawn, spell, tower/siege fire, impact, structure HP, death/destruction, commander ability, Chaos pulse, ack and result signals.

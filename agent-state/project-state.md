@@ -1,5 +1,11 @@
 # Project State
 
+## P4b character animation and battlefield motion (2026-10-23)
+
+- The v001 runtime manifest contains 59 static PNG assets and no sprite sheets or animation frames. Reused the existing Phaser sprites with lightweight procedural tween-like transforms.
+- Added `battle-animation.ts` for authoritative spawn, attack, hit and death cue projection, duplicate suppression, reconnect priming support and snap-safe interpolation. `BattleCanvas` now adds directional facing, attack windup/release, hit emphasis, spawn/death motion, pooled match-reset cleanup and reduced-motion handling.
+- No combat protocol, entity coordinates, VFX, audio, HUD or server code changed. Focused animation/rendering tests 54 passed, typecheck, lint and production build passed. Local authenticated QA remains pending.
+
 ## P4a essential battle audio (2026-10-23)
 
 - Battle audio is presentation-only and driven by existing authoritative frame events, command acks and the end message. `BattleAudio` uses short procedural Web Audio tones because the targeted battle paths contain no audio files.
