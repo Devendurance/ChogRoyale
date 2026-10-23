@@ -2,6 +2,12 @@
 
 Last updated: 2026-10-23
 
+## B5.2a backup/migration readiness: NO-GO (2026-10-23), pre-execution only
+
+- Backup: zero snapshots on project; PITR window is 24h (history_retention 86400). Rehearsal branch is diverged, not a backup. Restorability unproven (restore = new branch, prohibited this slice). Owner must authorize a pre-migration snapshot or formally accept PITR-only risk.
+- Runner: `db:migrate` targets DATABASE_URL = PROD (verified today); pending = 0007-0009 in order; journal still 1-7, tables absent. Fail-closed procedure + post-checks + recovery prepared, no execution.
+- Verdict NO-GO until backup artifact exists. Next: owner backup decision, then B5.2b execution slice.
+
 ## B5.1c rehearsal COMPLETE (2026-10-23), branch kept, PROD untouched
 
 - Clone `b51c-rehearsal` (br-dawn-darkness-b5zzujuy) from PROD branch br-snowy-star-b5ftxkro at LSN 0/44F7338. Branch kept per authorization; no deletion without owner approval.
