@@ -2318,6 +2318,14 @@
   white-space: nowrap;
 }
 
+.app-deck__links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 6px 12px;
+}
+
 .app-deck__meta {
   margin: 0 0 8px;
 }
@@ -5210,5 +5218,574 @@
 
   .app-gallery-roster {
     grid-column: 1 / -1;
+  }
+}
+
+/* ===========================================================================
+   A4.4 play guide
+   A field manual on the same deep violet plates. Rules values arrive from the
+   server-built guide data, and the roster is the same catalog the deck builder
+   uses. The map is CSS only and reuses the app icon language.
+   ========================================================================= */
+
+.app-guide-head {
+  display: grid;
+  gap: 8px;
+  padding: 2px 2px 0;
+}
+
+.app-guide-head__eyebrow {
+  margin: 0;
+  font-family: var(--font-data);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--app-lilac);
+}
+
+.app-guide-head__title {
+  margin: 0;
+  font-family: var(--font-game);
+  font-size: clamp(30px, 7vw, 42px);
+  line-height: 1;
+  color: #fff;
+  -webkit-text-stroke: 3px var(--outline);
+  paint-order: stroke fill;
+  overflow-wrap: anywhere;
+}
+
+.app-guide-head__lead {
+  margin: 0;
+  max-width: 72ch;
+  font-size: 13px;
+  line-height: 19px;
+  color: var(--app-ink-65);
+}
+
+.app-guide-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.app-guide-fact {
+  padding: 4px 9px;
+  border: 1px solid rgba(185, 162, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(18, 11, 69, 0.4);
+  font-family: var(--font-data);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--app-ink-85);
+}
+
+.app-guide-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.app-guide-panel {
+  min-width: 0;
+  padding: 15px;
+}
+
+.app-guide-lead {
+  margin: 0 0 10px;
+  font-size: 13.5px;
+  line-height: 20px;
+  color: var(--app-ink-85);
+}
+
+.app-guide-rules {
+  display: grid;
+  gap: 7px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.app-guide-rules li {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  min-width: 0;
+  font-size: 12.5px;
+  line-height: 18px;
+  color: var(--app-ink-85);
+}
+
+.app-guide-rules li > span:last-child {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.app-guide-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-width: 48px;
+  min-height: 28px;
+  padding: 2px 7px;
+  border: 1px solid rgba(255, 200, 61, 0.5);
+  border-radius: 8px;
+  background: rgba(255, 200, 61, 0.12);
+  font-family: var(--font-game);
+  font-size: 13px;
+  line-height: 1;
+  color: var(--coin-gold);
+}
+
+/* ------------------------------------------------------------------ map */
+
+.app-guide-map {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 12px;
+  padding: 10px;
+  border: 1px solid rgba(185, 162, 255, 0.24);
+  border-radius: 14px;
+  background:
+    radial-gradient(80% 70% at 50% 10%, rgba(143, 123, 255, 0.22), transparent 70%),
+    rgba(18, 11, 69, 0.48);
+}
+
+.app-guide-map__side {
+  display: grid;
+  gap: 5px;
+}
+
+.app-guide-map__side-label {
+  font-family: var(--font-data);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--app-ink-65);
+}
+
+.app-guide-map__line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 5px;
+}
+
+.app-guide-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+  min-height: 42px;
+  padding: 4px;
+  border: 1px solid rgba(185, 162, 255, 0.28);
+  border-radius: 9px;
+  background: rgba(90, 68, 217, 0.3);
+  color: var(--app-ink-85);
+  font-family: var(--font-data);
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.app-guide-node--core {
+  border-color: rgba(255, 200, 61, 0.45);
+  background: rgba(255, 200, 61, 0.1);
+  color: #ffe4a3;
+}
+
+.app-guide-node svg {
+  color: var(--app-lilac);
+}
+
+.app-guide-node--core svg {
+  color: var(--coin-gold);
+}
+
+.app-guide-map__river {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 5px;
+  padding: 5px 4px;
+  border-top: 1px solid rgba(61, 217, 255, 0.3);
+  border-bottom: 1px solid rgba(61, 217, 255, 0.3);
+  background: rgba(61, 217, 255, 0.08);
+}
+
+.app-guide-map__crossing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  font-family: var(--font-data);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-transform: uppercase;
+  color: #c9f2ff;
+  overflow-wrap: anywhere;
+}
+
+.app-guide-map__crossing--ford {
+  color: var(--app-lilac);
+}
+
+.app-guide-map__caption {
+  margin: 0;
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--app-ink-65);
+}
+
+.app-guide-stats {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+}
+
+.app-guide-stats > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  padding: 6px 9px;
+  border: 1px solid rgba(185, 162, 255, 0.2);
+  border-radius: 9px;
+  background: rgba(18, 11, 69, 0.38);
+}
+
+.app-guide-stats dt {
+  font-family: var(--font-data);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--app-ink-65);
+}
+
+.app-guide-stats dd {
+  margin: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 11px;
+  line-height: 15px;
+  text-align: right;
+  color: var(--app-ink-85);
+  overflow-wrap: anywhere;
+}
+
+/* --------------------------------------------------------------- timeline */
+
+.app-guide-timeline {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.app-guide-timeline li {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  min-width: 0;
+  font-size: 12.5px;
+  line-height: 18px;
+  color: var(--app-ink-85);
+}
+
+.app-guide-timeline li > span:last-child {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.app-guide-time {
+  flex: 0 0 auto;
+  min-width: 42px;
+  font-family: var(--font-data);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--coin-gold);
+}
+
+/* -------------------------------------------------------------- abilities */
+
+.app-guide-abilities {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.app-guide-ability {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  padding: 7px 9px;
+  border: 1px solid rgba(185, 162, 255, 0.2);
+  border-radius: 10px;
+  background: rgba(18, 11, 69, 0.38);
+}
+
+.app-guide-ability__art {
+  display: grid;
+  place-items: center;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  overflow: hidden;
+  border: 2px solid var(--outline);
+  border-radius: 10px;
+  background: linear-gradient(180deg, var(--plate-light), var(--plate-mid));
+  color: var(--app-ink-45);
+}
+
+.app-guide-ability__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.app-guide-ability__body {
+  min-width: 0;
+}
+
+.app-guide-ability__class {
+  margin: 0;
+  font-family: var(--font-data);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--app-ink-65);
+}
+
+.app-guide-ability__name {
+  margin: 1px 0 0;
+  font-family: var(--font-game);
+  font-size: 15px;
+  line-height: 18px;
+  color: #fff;
+  -webkit-text-stroke: 1.5px var(--outline);
+  paint-order: stroke fill;
+  overflow-wrap: anywhere;
+}
+
+.app-guide-ability__meta {
+  margin: 1px 0 0;
+  font-size: 10.5px;
+  line-height: 15px;
+  color: var(--app-ink-65);
+}
+
+/* ------------------------------------------------------------------ chaos */
+
+.app-guide-chaos {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.app-guide-chaos__item {
+  display: grid;
+  gap: 2px;
+  padding: 7px 9px;
+  border: 1px solid rgba(185, 162, 255, 0.2);
+  border-radius: 9px;
+  background: rgba(18, 11, 69, 0.38);
+}
+
+.app-guide-chaos__name {
+  font-family: var(--font-game);
+  font-size: 14px;
+  line-height: 17px;
+  color: #fff;
+}
+
+.app-guide-chaos__effect {
+  font-size: 11.5px;
+  line-height: 16px;
+  color: var(--app-ink-65);
+  overflow-wrap: anywhere;
+}
+
+/* ------------------------------------------------------------------ modes */
+
+.app-guide-modes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 9px;
+  margin-bottom: 10px;
+}
+
+.app-guide-mode {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid rgba(185, 162, 255, 0.24);
+  border-radius: 11px;
+  background: rgba(18, 11, 69, 0.4);
+}
+
+.app-guide-mode__name {
+  margin: 6px 0 0;
+  font-family: var(--font-game);
+  font-size: 17px;
+  line-height: 20px;
+  color: #fff;
+  -webkit-text-stroke: 1.5px var(--outline);
+  paint-order: stroke fill;
+}
+
+.app-guide-mode__summary {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 17px;
+  color: var(--app-ink-85);
+}
+
+.app-guide-alpha {
+  margin: 0;
+  padding: 9px 11px;
+  border: 1px solid rgba(255, 163, 24, 0.4);
+  border-radius: 10px;
+  background: rgba(255, 163, 24, 0.1);
+  font-size: 11.5px;
+  line-height: 16px;
+  color: #ffd7a3;
+}
+
+/* ----------------------------------------------------------------- roster */
+
+.app-guide-roster {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.app-guide-card-group {
+  display: grid;
+  gap: 7px;
+}
+
+.app-guide-card-group__title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  font-family: var(--font-data);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--app-lilac);
+}
+
+.app-guide-card-group__count {
+  padding: 1px 6px;
+  border: 1px solid rgba(185, 162, 255, 0.28);
+  border-radius: 999px;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  color: var(--app-ink-65);
+}
+
+.app-guide-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.app-guide-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(185, 162, 255, 0.2);
+  border-radius: 10px;
+  background: rgba(18, 11, 69, 0.4);
+}
+
+.app-guide-card__cost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
+  border: 1px solid rgba(255, 200, 61, 0.55);
+  border-radius: 999px;
+  background: rgba(255, 200, 61, 0.12);
+  font-family: var(--font-game);
+  font-size: 14px;
+  line-height: 1;
+  color: var(--coin-gold);
+}
+
+.app-guide-card__body {
+  min-width: 0;
+}
+
+.app-guide-card__name {
+  margin: 0;
+  font-family: var(--font-game);
+  font-size: 15px;
+  line-height: 18px;
+  color: #fff;
+  -webkit-text-stroke: 1.5px var(--outline);
+  paint-order: stroke fill;
+  overflow-wrap: anywhere;
+}
+
+.app-guide-card__type {
+  margin: 1px 0 0;
+  font-family: var(--font-data);
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--app-ink-65);
+}
+
+.app-guide-card__text {
+  margin: 3px 0 0;
+  font-size: 11px;
+  line-height: 15px;
+  color: var(--app-ink-65);
+  overflow-wrap: anywhere;
+}
+
+.app-guide-source {
+  margin: 0;
+  padding: 4px 2px 0;
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--app-ink-45);
+}
+
+@media (min-width: 900px) {
+  .app-guide-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
   }
 }

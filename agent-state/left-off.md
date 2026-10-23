@@ -2,6 +2,15 @@
 
 Last updated: 2026-10-23
 
+## A4.4 play guide completed (2026-10-23)
+
+- Done: `/app/guide` explains the real objective, crowns, arena, towers and Core, energy, deployment, deck and hand cycle, commander abilities, Chaos Pulses, the Arena Patron and supported unranked modes. Ruleset values are projected on the server from `combat.ts`, `chaos.ts` and `commanders.ts`. The 20-card roster uses the same catalog as the deck builder. The lobby deck header links to the guide.
+- Checks: focused guide tests 13/13, production build green with `/app/guide` static, final typegen and typecheck clean, lint 0 errors with the one pre-existing `/dev/progress` warning.
+- Browser: labelled fixture at 390x844, 1366x768 and 360x800. One h1, 7 panels, 5 abilities, 5 Chaos families, 2 modes, 20 cards, two columns at 1366 and one at 390/360, no overflow or console errors. `/app/guide` login gate at 390 is clean. Fixture deleted before commit.
+- Pending: signed-in guide QA needs a real Privy login. Real session identity and the lobby-to-guide click were not exercised.
+- Checkpoint: `.fast-build/A4.4-CHECKPOINT.md`. `.fast-build/STATE.md` still holds unrelated dirty B2.8f history and was not staged.
+- Next: A4.5 only. Not started.
+
 ## A4.3 feedback layer completed (2026-10-23)
 
 - Done: shared `feedback-model.ts` maps auth, setup, conflict, validation, service and network failures to consistent notices. `AppNotice` now supports real Sign in and Try again actions, all authenticated views deduplicate notices by message, and session expiry is actionable on lobby, decks, profile, progress, legacy, settings and commanders. Failed reads still stay unavailable or locked, and deck conflicts keep local work.

@@ -10,6 +10,7 @@ export type IconName =
   | "collection"
   | "commanders"
   | "progress"
+  | "guide"
   | "user"
   | "settings"
   | "wallet"
@@ -49,6 +50,12 @@ const PATHS: Record<IconName, ReactNode> = {
       <path d="M7 20v-6" />
       <path d="M12 20V6" />
       <path d="M17 20v-9" />
+    </>
+  ),
+  guide: (
+    <>
+      <path d="M4.4 5.4c2.8-.8 5.2-.2 7.6 1.2 2.4-1.4 4.8-2 7.6-1.2v12.6c-2.8-.8-5.2-.2-7.6 1.2-2.4-1.4-4.8-2-7.6-1.2z" />
+      <path d="M12 6.6v12.6" />
     </>
   ),
   user: (

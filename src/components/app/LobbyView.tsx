@@ -157,9 +157,14 @@ export default function LobbyView({
               <h2 className="app-deck__label" id="app-deck-title">
                 Battle deck
               </h2>
-              <Link href="/app/decks" className="app-deck__edit">
-                Edit deck
-              </Link>
+              <div className="app-deck__links">
+                <Link href="/app/guide" className="app-deck__edit">
+                  Play guide
+                </Link>
+                <Link href="/app/decks" className="app-deck__edit">
+                  Edit deck
+                </Link>
+              </div>
             </div>
 
             <p className="app-deck__meta">
