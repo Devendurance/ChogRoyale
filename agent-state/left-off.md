@@ -2,6 +2,12 @@
 
 Last updated: 2026-10-23
 
+## B5.3b accounts verified, awaiting live sessions (2026-10-23)
+
+- Designated accounts confirmed on PROD: Endychog and Blossom, both onboarding complete, both active. No accounts created or modified.
+- Per authorization, settlement stays OFF until both live sessions are ready. Server left running; nothing activated, no matches played.
+- Next: owner confirms both browsers logged in at /dev/battle lobby; then stop server, restart with BATTLE_SETTLEMENT=1 (legacy unset), play one private match, verify, disarm.
+
 ## B5.3b PRECHECK DONE, stopped for live session (2026-10-23)
 
 - Precheck green: journal 1-10, snapshot present, 9 players / 0 matches (clean baseline), flags OFF (env + .env), battle server running since 11:34 pre-migration with null settlement service. Server left running; nothing activated.
