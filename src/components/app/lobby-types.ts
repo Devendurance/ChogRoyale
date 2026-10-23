@@ -8,11 +8,19 @@ export type LobbyCommanderOrigin = "free" | "nft" | "preview";
 
 export type LobbyNoticeTone = "info" | "ok" | "warn" | "error";
 
+export interface LobbyNoticeAction {
+  label: string;
+  /** A plain link action, used by setup and documentation links. */
+  href?: string;
+  /** A button action handled by the screen that renders the notice. */
+  kind?: "signin" | "retry";
+}
+
 export interface LobbyNotice {
   tone: LobbyNoticeTone;
   text: string;
-  /** Optional honest escape hatch, e.g. the existing onboarding flow. */
-  action?: { label: string; href: string };
+  /** Optional honest escape hatch, e.g. sign in or retry the failed read. */
+  action?: LobbyNoticeAction;
 }
 
 export interface LobbyCatalogCard {

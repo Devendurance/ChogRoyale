@@ -14,6 +14,7 @@ import type { ReactNode } from "react";
 import AppHud, { AppHudBackLink } from "./AppHud";
 import AppNav from "./AppNav";
 import AppNotice from "./AppNotice";
+import { dedupeNotices } from "./feedback-model";
 import Icon from "./icons";
 import { winRateLabel } from "./profile-model";
 import { formatRecordDate, matchesToQualify, resolveStanding } from "./progress-model";
@@ -455,8 +456,15 @@ export default function ProgressView({
   onLoadMoreMatches,
   onBoardPage,
 }: ProgressViewProps) {
-  const noticeList = notices.map((n, i) => (
-    <AppNotice key={`${n.tone}-${i}`} tone={n.tone} text={n.text} action={n.action} />
+  const noticeList = dedupeNotices(notices).map((n, i) => (
+    <AppNotice
+      key={`${n.tone}-${i}`}
+      tone={n.tone}
+      text={n.text}
+      action={n.action}
+      onSignIn={onSignIn}
+      onRetry={onRefresh}
+    />
   ));
 
   if (phase === "booting") {

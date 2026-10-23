@@ -14,6 +14,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePrivy, useLogin } from "@privy-io/react-auth";
 import ProfileView from "./ProfileView";
+import { sessionNotice } from "./feedback-model";
 import { useLobbyCatalog } from "./catalog-context";
 import { formatMemberSince, resolveRecord, type StatsPayloadLike } from "./profile-model";
 import {
@@ -99,7 +100,7 @@ function profileNotice(error: ApiError): LobbyNotice {
     };
   }
   if (error.code === "UNAUTHORIZED") {
-    return { tone: "error", text: "Your session is no longer valid. Sign in again to open your profile." };
+    return sessionNotice("open your profile");
   }
   if (error.code === "FORBIDDEN") {
     return { tone: "error", text: error.message };
@@ -341,7 +342,7 @@ function ProfileShell() {
       // A session problem is wider than the deck panel, so it is stated here.
       // Every other deck read failure and the setup lock are stated once, in
       // the deck panel itself.
-      list.push({ tone: "error", text: "Your session is no longer valid. Sign in again to open your profile." });
+      list.push(sessionNotice("open your profile"));
     }
     // A failed stats read is stated once, in the record panel. It is not
     // repeated here as a second service notice.

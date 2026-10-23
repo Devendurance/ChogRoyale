@@ -15,6 +15,7 @@ import { useState, type ReactNode } from "react";
 import AppHud from "./AppHud";
 import AppNav from "./AppNav";
 import AppNotice from "./AppNotice";
+import { dedupeNotices } from "./feedback-model";
 import Icon from "./icons";
 import { eligibilityLabel, visibleTrail } from "./legacy-model";
 import type {
@@ -400,8 +401,15 @@ export default function LegacyView({
   onSelectToken,
   onLoadMore,
 }: LegacyViewProps) {
-  const noticeList = notices.map((notice, index) => (
-    <AppNotice key={`${notice.tone}-${index}`} tone={notice.tone} text={notice.text} action={notice.action} />
+  const noticeList = dedupeNotices(notices).map((notice, index) => (
+    <AppNotice
+      key={`${notice.tone}-${index}`}
+      tone={notice.tone}
+      text={notice.text}
+      action={notice.action}
+      onSignIn={onSignIn}
+      onRetry={onRefresh}
+    />
   ));
 
   if (phase === "booting") {

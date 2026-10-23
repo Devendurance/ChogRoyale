@@ -14,6 +14,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePrivy, useLogin } from "@privy-io/react-auth";
 import DecksView from "./DecksView";
+import { sessionNotice } from "./feedback-model";
 import { useLobbyCatalog } from "./catalog-context";
 import { resolvePlayer, type ProfilePayload } from "./lobby-model";
 import type { LobbyPlayer } from "./lobby-types";
@@ -493,7 +494,7 @@ function DecksShell() {
       if (loadoutError.code === "FORBIDDEN") {
         list.push({ tone: "warn", text: "Your saved deck unlocks once your profile setup is complete." });
       } else if (loadoutError.code === "UNAUTHORIZED") {
-        list.push({ tone: "error", text: "Your session is no longer valid. Sign in again to open your deck." });
+        list.push(sessionNotice("open your deck"));
       }
       // Every other read or write failure is the same account-save outage.
       // The save strip states it once, so it is not repeated here.

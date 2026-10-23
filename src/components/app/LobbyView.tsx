@@ -9,6 +9,7 @@ import Image from "next/image";
 import AppHud from "./AppHud";
 import AppNav from "./AppNav";
 import AppNotice from "./AppNotice";
+import { dedupeNotices } from "./feedback-model";
 import CommanderStage from "./CommanderStage";
 import Icon from "./icons";
 import type { LobbyArt, LobbyViewProps } from "./lobby-types";
@@ -59,8 +60,15 @@ export default function LobbyView({
   onSignOut,
   onRefresh,
 }: LobbyViewProps) {
-  const noticeList = notices.map((n, i) => (
-    <AppNotice key={`${n.tone}-${i}`} tone={n.tone} text={n.text} action={n.action} />
+  const noticeList = dedupeNotices(notices).map((n, i) => (
+    <AppNotice
+      key={`${n.tone}-${i}`}
+      tone={n.tone}
+      text={n.text}
+      action={n.action}
+      onSignIn={onSignIn}
+      onRetry={onRefresh}
+    />
   ));
 
   if (phase === "booting") {

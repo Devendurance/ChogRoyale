@@ -15,6 +15,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePrivy, useLogin } from "@privy-io/react-auth";
 import LegacyView from "./LegacyView";
+import { sessionNotice } from "./feedback-model";
 import { useLobbyCatalog } from "./catalog-context";
 import { resolvePlayer, type ProfilePayload } from "./lobby-model";
 import type { LobbyNotice, LobbyPlayer } from "./lobby-types";
@@ -143,7 +144,7 @@ function profileNotice(error: ApiError): LobbyNotice {
     };
   }
   if (error.code === "UNAUTHORIZED") {
-    return { tone: "error", text: "Your session is no longer valid. Sign in again to open your legacy vault." };
+    return sessionNotice("open your legacy vault");
   }
   if (error.code === "FORBIDDEN") {
     return { tone: "error", text: error.message };
@@ -406,10 +407,7 @@ export default function LegacyScreen() {
 
     const authFailed = vaultView.state === "auth" || commandersError?.code === "UNAUTHORIZED";
     if (authFailed && !(profileError && !player)) {
-      list.push({
-        tone: "error",
-        text: "Your session is no longer valid. Sign out and sign back in to load your legacy vault.",
-      });
+      list.push(sessionNotice("load your legacy vault"));
     }
 
     if (profile && !profile.onboarding.complete && vaultView.state !== "no-wallet") {

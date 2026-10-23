@@ -2,6 +2,15 @@
 
 Last updated: 2026-10-23
 
+## A4.3 feedback layer completed (2026-10-23)
+
+- Done: shared `feedback-model.ts` maps auth, setup, conflict, validation, service and network failures to consistent notices. `AppNotice` now supports real Sign in and Try again actions, all authenticated views deduplicate notices by message, and session expiry is actionable on lobby, decks, profile, progress, legacy, settings and commanders. Failed reads still stay unavailable or locked, and deck conflicts keep local work.
+- Checks: focused feedback, settings, commanders and decks tests 80/80, typecheck clean, lint 0 errors with the one pre-existing `/dev/progress` warning, production build green.
+- Browser: labelled feedback fixture at 390x844, 1366x768 and 360x800. Three unique notices from four, working Sign in and Try again, 44px actions, setup link resolves, no overflow or console errors. Settings gate at 390 and commanders gate at 1366 also clean. Fixture deleted before commit.
+- Pending: authenticated failure states need a real Privy session. Live token expiry, 403, 409, 500, 503 and network failures were not exercised.
+- Checkpoint: `.fast-build/A4.3-CHECKPOINT.md`. `.fast-build/STATE.md` still holds unrelated dirty B2.8f history and was not staged.
+- Next: A4.4 only. Not started.
+
 ## A4.2 commanders gallery completed (2026-10-23)
 
 - Done: activated `/app/commanders`. The five real free classes come from the server catalog, with a featured `CommanderStage`, class details, authored abilities and counters, and real combat rows. Genesis entries come from the existing eligibility route and stay separate, labelled as cached observations rather than ownership proof. The screen never reads or writes a loadout and links to `/app/decks` for selection.

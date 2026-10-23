@@ -7,6 +7,7 @@
 
 import type { LobbyCatalog, LobbyNotice } from "./lobby-types";
 import type { CommanderChoiceLike, Eligibility } from "./lobby-model";
+import { feedbackNoticeFor, sessionNotice } from "./feedback-model";
 import type {
   GalleryClass,
   GalleryGenesis,
@@ -175,33 +176,13 @@ export function genesisFromError(code: string): GenesisCatalog {
 }
 
 export function galleryProfileNotice(error: ApiError): LobbyNotice {
-  if (error.code === "NOT_FOUND") {
-    return {
-      tone: "warn",
-      text: "This sign-in has no player profile yet, so the commanders gallery cannot open it.",
-      action: { label: "Finish profile setup", href: "/dev/onboarding" },
-    };
-  }
-  if (error.code === "BOOTSTRAP_FAILED") {
-    return {
-      tone: "error",
-      text: `Your player profile could not be created. ${error.message}`,
-      action: { label: "Open the setup tools", href: "/dev/onboarding" },
-    };
-  }
-  if (error.code === "UNAUTHORIZED") {
-    return { tone: "error", text: "Your session is no longer valid. Sign in again to open the commanders gallery." };
-  }
-  if (error.code === "FORBIDDEN") {
-    return { tone: "error", text: `This account cannot open the commanders gallery. ${error.message}` };
-  }
-  return { tone: "error", text: `Your profile could not be read. ${error.message}` };
+  return feedbackNoticeFor(error, "open the commanders gallery");
 }
 
 /** Only auth and setup locks get a notice; other failures stay in the section. */
 export function eligibilityNotice(error: ApiError): LobbyNotice | null {
   if (error.code === "UNAUTHORIZED") {
-    return { tone: "error", text: "Your session is no longer valid. Sign in again to check Genesis commanders." };
+    return sessionNotice("check Genesis commanders");
   }
   if (error.code === "FORBIDDEN") {
     return { tone: "error", text: `Genesis eligibility is locked for this account. ${error.message}` };

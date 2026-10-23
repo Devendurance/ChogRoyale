@@ -13,6 +13,7 @@ import AppNav from "./AppNav";
 import AppNotice from "./AppNotice";
 import Icon from "./icons";
 import { accountStatusLabel, onboardingLabel } from "./profile-model";
+import { dedupeNotices } from "./feedback-model";
 import { DISPLAY_NAME_MAX, saveStatusText } from "./settings-model";
 import type { SettingsViewProps } from "./settings-types";
 
@@ -41,8 +42,15 @@ export default function SettingsView({
   onAvatarSelect,
   onSave,
 }: SettingsViewProps) {
-  const noticeList = notices.map((n, i) => (
-    <AppNotice key={`${n.tone}-${i}`} tone={n.tone} text={n.text} action={n.action} />
+  const noticeList = dedupeNotices(notices).map((n, i) => (
+    <AppNotice
+      key={`${n.tone}-${i}`}
+      tone={n.tone}
+      text={n.text}
+      action={n.action}
+      onSignIn={onSignIn}
+      onRetry={onRefresh}
+    />
   ));
 
   if (phase === "booting") {

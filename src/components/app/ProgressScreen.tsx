@@ -14,6 +14,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePrivy, useLogin } from "@privy-io/react-auth";
 import ProgressView from "./ProgressView";
+import { sessionNotice } from "./feedback-model";
 import { useLobbyCatalog } from "./catalog-context";
 import { resolvePlayer, type ProfilePayload } from "./lobby-model";
 import type { LobbyNotice, LobbyPlayer } from "./lobby-types";
@@ -137,7 +138,7 @@ function profileNotice(error: ApiError): LobbyNotice {
     };
   }
   if (error.code === "UNAUTHORIZED") {
-    return { tone: "error", text: "Your session is no longer valid. Sign in again to open your progress." };
+    return sessionNotice("open your progress");
   }
   if (error.code === "FORBIDDEN") {
     return { tone: "error", text: error.message };
@@ -409,10 +410,7 @@ export default function ProgressScreen() {
       historyError?.code === "UNAUTHORIZED" ||
       boardError?.code === "UNAUTHORIZED";
     if (sessionFailed && !(profileError && !player)) {
-      list.push({
-        tone: "error",
-        text: "Your session is no longer valid. Sign out and sign back in to load your progress.",
-      });
+      list.push(sessionNotice("load your progress"));
     }
 
     const onboardingIncomplete = profile ? !profile.onboarding.complete : false;

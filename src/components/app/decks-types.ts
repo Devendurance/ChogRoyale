@@ -4,7 +4,7 @@
 // rendered from the authenticated container, from a static preview or from a
 // test without pulling server-only code into the client bundle.
 
-import type { LobbyArt, LobbyCatalogCard, LobbyPlayer, LobbyStat } from "./lobby-types";
+import type { LobbyArt, LobbyCatalogCard, LobbyPlayer, LobbyStat, LobbyNoticeAction } from "./lobby-types";
 
 /** The commander claim stored on a saved loadout. */
 export interface CommanderChoiceLike {
@@ -90,6 +90,7 @@ export interface DecksSelection {
 export interface DecksNotices {
   tone: "info" | "ok" | "warn" | "error";
   text: string;
+  action?: LobbyNoticeAction;
 }
 
 /** A problem with the deck the player is editing. */

@@ -6,6 +6,7 @@
 // the authority on every save.
 
 import type { LobbyNotice } from "./lobby-types";
+import { feedbackNoticeFor } from "./feedback-model";
 import type {
   AvatarCatalog,
   AvatarChoice,
@@ -180,27 +181,7 @@ export function walletsNote(state: SettingsReadState): string | null {
 }
 
 export function settingsNoticeFor(error: ApiError): LobbyNotice {
-  if (error.code === "NOT_FOUND") {
-    return {
-      tone: "warn",
-      text: "This sign-in has no player profile yet, so settings cannot open it.",
-      action: { label: "Finish profile setup", href: "/dev/onboarding" },
-    };
-  }
-  if (error.code === "BOOTSTRAP_FAILED") {
-    return {
-      tone: "error",
-      text: `Your player profile could not be created. ${error.message}`,
-      action: { label: "Open the setup tools", href: "/dev/onboarding" },
-    };
-  }
-  if (error.code === "UNAUTHORIZED") {
-    return { tone: "error", text: "Your session is no longer valid. Sign in again to open settings." };
-  }
-  if (error.code === "FORBIDDEN") {
-    return { tone: "error", text: `This account cannot open settings. ${error.message}` };
-  }
-  return { tone: "error", text: `Settings could not be read. ${error.message}` };
+  return feedbackNoticeFor(error, "open settings");
 }
 
 /** Save copy per failure. Nothing claims a save the server did not confirm. */

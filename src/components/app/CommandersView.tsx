@@ -16,6 +16,7 @@ import AppNav from "./AppNav";
 import AppNotice from "./AppNotice";
 import CommanderStage from "./CommanderStage";
 import Icon from "./icons";
+import { dedupeNotices } from "./feedback-model";
 import type { GalleryClass, GalleryGenesis, CommandersViewProps } from "./commanders-types";
 
 function GenesisArt({ entry }: { entry: GalleryGenesis }) {
@@ -244,8 +245,15 @@ export default function CommandersView({
   onRefresh,
   onSelect,
 }: CommandersViewProps) {
-  const noticeList = notices.map((n, i) => (
-    <AppNotice key={`${n.tone}-${i}`} tone={n.tone} text={n.text} action={n.action} />
+  const noticeList = dedupeNotices(notices).map((n, i) => (
+    <AppNotice
+      key={`${n.tone}-${i}`}
+      tone={n.tone}
+      text={n.text}
+      action={n.action}
+      onSignIn={onSignIn}
+      onRetry={onRefresh}
+    />
   ));
 
   if (phase === "booting") {

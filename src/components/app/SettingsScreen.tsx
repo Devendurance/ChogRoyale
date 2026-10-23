@@ -15,6 +15,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePrivy, useLogin } from "@privy-io/react-auth";
 import SettingsView from "./SettingsView";
 import { useMedia, useSaveData } from "@/components/site/use-media";
+import { sessionNotice } from "./feedback-model";
 import { formatMemberSince } from "./profile-model";
 import { resolvePlayer, type ProfilePayload } from "./lobby-model";
 import {
@@ -283,7 +284,7 @@ function SettingsShell() {
     if (profileError) list.push(settingsNoticeFor(profileError));
     if (avatarsError?.code === "UNAUTHORIZED" || walletsError?.code === "UNAUTHORIZED") {
       if (!profileError) {
-        list.push({ tone: "error", text: "Your session is no longer valid. Sign in again to open settings." });
+        list.push(sessionNotice("open settings"));
       }
     }
     if (profile && !profile.onboarding.complete) {

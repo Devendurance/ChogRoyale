@@ -10,6 +10,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePrivy, useLogin } from "@privy-io/react-auth";
 import LobbyView from "./LobbyView";
+import { sessionNotice } from "./feedback-model";
 import { useLobbyCatalog } from "./catalog-context";
 import {
   resolveCommander,
@@ -95,7 +96,7 @@ function profileNotice(error: ApiError): LobbyNotice {
     };
   }
   if (error.code === "UNAUTHORIZED") {
-    return { tone: "error", text: "Your session is no longer valid. Sign in again to open the lobby." };
+    return sessionNotice("open the lobby");
   }
   if (error.code === "FORBIDDEN") {
     return { tone: "error", text: error.message };
@@ -118,7 +119,7 @@ function loadoutNotice(error: ApiError): LobbyNotice {
     };
   }
   if (error.code === "UNAUTHORIZED") {
-    return { tone: "error", text: "Your session is no longer valid. Sign in again to open the lobby." };
+    return sessionNotice("open the lobby");
   }
   return { tone: "error", text: `Your saved deck could not be read. ${error.message}` };
 }

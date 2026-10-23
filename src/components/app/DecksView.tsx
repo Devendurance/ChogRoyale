@@ -15,7 +15,9 @@ import { useEffect, useRef } from "react";
 import Image from "next/image";
 import AppHud, { AppHudBackLink } from "./AppHud";
 import AppNav from "./AppNav";
+import AppNotice from "./AppNotice";
 import Icon from "./icons";
+import { dedupeNotices } from "./feedback-model";
 import { DECK_CARD_COUNT } from "./decks-model";
 import type { DecksCatalogCard, DecksCommanderOption, DecksViewProps } from "./decks-types";
 import type { LobbyArt } from "./lobby-types";
@@ -36,14 +38,6 @@ function CostBadge({ cost, size = "md" }: { cost: number; size?: "sm" | "md" | "
 /** Approved art rendered at its own intrinsic size. */
 function Plate({ art, alt, className, sizes }: { art: LobbyArt; alt: string; className: string; sizes?: string }) {
   return <Image src={art.src} alt={alt} width={art.width} height={art.height} className={className} sizes={sizes} unoptimized />;
-}
-
-function Notice({ tone, text }: { tone: string; text: string }) {
-  return (
-    <div className={`app-notice app-notice--${tone}`}>
-      <p className="app-notice__text">{text}</p>
-    </div>
-  );
 }
 
 /** One slot of the battle deck. Empty slots show where a card goes. */
@@ -414,7 +408,16 @@ export default function DecksView(props: DecksViewProps) {
     onRefresh,
   } = props;
 
-  const noticeList = notices.map((n, i) => <Notice key={`${n.tone}-${i}`} tone={n.tone} text={n.text} />);
+  const noticeList = dedupeNotices(notices).map((n, i) => (
+    <AppNotice
+      key={`${n.tone}-${i}`}
+      tone={n.tone}
+      text={n.text}
+      action={n.action}
+      onSignIn={onSignIn}
+      onRetry={onRefresh}
+    />
+  ));
 
   if (phase === "booting") {
     return (
