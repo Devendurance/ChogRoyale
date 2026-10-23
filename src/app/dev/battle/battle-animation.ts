@@ -114,4 +114,4 @@ export const interpolateBattlePosition = (
     x: previous.x + (current.x - previous.x) * t,
     y: previous.y + (current.y - previous.y) * t,
   };
-};\n
+};

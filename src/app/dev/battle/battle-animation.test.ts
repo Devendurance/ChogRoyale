@@ -66,4 +66,4 @@ describe("battle presentation animation cues", () => {
     expect(interpolateBattlePosition({ x: 0, y: 0 }, { x: 20, y: 0 }, 0.2)).toEqual({ x: 20, y: 0 });
     expect(interpolateBattlePosition({ x: 0, y: 0 }, { x: 4, y: 8 }, 4)).toEqual({ x: 4, y: 8 });
   });
-});\n
+});
