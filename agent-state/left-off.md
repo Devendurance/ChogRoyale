@@ -2,6 +2,14 @@
 
 Last updated: 2026-10-23
 
+## B5.1b TEST persistence verification (2026-10-23), diagnostic only
+
+- Safety: HEAD `df6bb1d`; TEST/PROD endpoints distinct; runner uses `DATABASE_URL_TEST` with a fail-closed guard that refuses PROD endpoints. No migration re-run; no TEST reset.
+- TEST journal holds all 10 entries (0000-0009); check-constraint counts match contracts exactly (loadouts 5, matches 6, participants 5, evidence 1, legacy_runs 1). No drift.
+- Focused suites on TEST: 65/65 across 7 files (loadouts DAL + route, settlement + settlement-room, legacy DAL + battle legacy, matches route). One run, no repeats.
+- PROD re-checked read-only after: `players` only, all five persistence tables still absent.
+- Next: owner approval for the PROD migration run; fresh-install rehearsal still needs a separate disposable branch plus approval. It is not covered by this slice.
+
 ## B5.1 persistence preflight (2026-10-23), diagnostic only
 
 - PROD has `players` only; `player_loadouts`, `matches`, `match_participants`, `match_evidence`, `match_legacy_runs` all absent. TEST has all six. Endpoints distinct. Read-only `to_regclass` check, no writes, no secrets printed.
