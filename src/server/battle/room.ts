@@ -29,6 +29,7 @@ import { productionPatronSource, type PatronSource } from "@/server/battle/patro
 import type { MatchCoordinator, PendingMatch } from "@/server/battle/matchmaking";
 import type { MatchMode } from "@/lib/battle-protocol";
 import { recordFromReplay, type SettlementService } from "@/server/battle/settlement";
+import { getPurchasedLevels } from "@/db/card-xp";
 
 export interface BattleRoomDeps {
   /** Test-only injection points; production passes none and uses Privy + Neon. */
@@ -52,6 +53,10 @@ export interface BattleRoomDeps {
   settlement?: SettlementService | null;
   /** Arena Patron source; defaults to the indexed Genesis pool. */
   patrons?: PatronSource;
+  /** P2c card stat scaling. Off by default: without it (and without the
+   * card XP migration) every match simulates at Level 1, exactly the
+   * pre-scaling baseline. Enable explicitly per environment. */
+  cardScaling?: boolean;
 }
 
 type BattleClient = Client & { auth: SeatPlayer };
@@ -350,10 +355,19 @@ export class BattleRoom extends Room {
     }
     // Lock one authentic indexed patron for the match. Fails closed: no
     // synthetic fallback, and both players are un-readied and told why.
-    let patron;
-    try {
-      patron = await patronSource().lock(randomBytes(16).toString("hex"));
-    } catch (e) {
+    // Purchased card levels freeze here too: the room reads them once from
+    // verified server progression (never the client), clamps them, and the
+    // session deep-copies them into the config before start. Disabled by
+    // default; without the flag every match is Level 1, exactly baseline.
+    const pids = [this.session.slots[0]?.playerId, this.session.slots[1]?.playerId];
+    const [patronResult, levelsResult] = await Promise.allSettled([
+      patronSource().lock(randomBytes(16).toString("hex")),
+      // A missing migration or DB outage rejects here and falls back to
+      // Level 1 below; the match always starts, never on partial levels.
+      BattleRoom.deps.cardScaling ? getPurchasedLevels(pids.filter((id): id is string => !!id)) : Promise.resolve({}),
+    ]);
+    if (patronResult.status === "rejected") {
+      const e = patronResult.reason;
       if (this.session.lockEpoch !== epoch || this.session.phase !== "waiting") return;
       this.session.clearReady(0);
       this.session.clearReady(1);
@@ -363,6 +377,14 @@ export class BattleRoom extends Room {
       }
       this.sendLobby();
       return;
+    }
+    const patron = patronResult.value;
+    if (levelsResult.status === "fulfilled") {
+      this.session.cardLevelsByPlayer = levelsResult.value as Record<string, Record<string, number>>;
+    } else {
+      // Missing table or DB outage: fail closed to Level 1, keep the match.
+      logger.info("card levels unavailable, starting at Level 1", { roomId: this.roomId });
+      this.session.cardLevelsByPlayer = {};
     }
     if (this.earlyAbort || this.session.lockEpoch !== epoch || this.session.phase !== "waiting") return;
     try {

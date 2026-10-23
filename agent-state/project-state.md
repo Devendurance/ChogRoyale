@@ -1,5 +1,12 @@
 # Project State
 
+## P2c server-authoritative card stat scaling (2026-10-23)
+
+- 20-card profile map (tank-HP, damage, horn-buff), rate table, round-half-up integer math anchored to authored base stats every time. Unscalable stats pinned with reported reasons; no invented mechanics.
+- Engine resolves scaled defs at troop/building spawn, bolt/horn cast and comet/snare/mortar impact; everything else untouched. Config/state carry frozen per-seat snapshots; old evidence (no snapshot) runs at L1 identically. No migration, no format bump.
+- Snapshot loaded once from verified progression at match-start lock, deep-copied, client-blind, mid-match-proof; behind cardScaling flag defaulting off with fail-closed L1. Commander parity, settlement, trophy/XP/Gold paths intact.
+- Delivery: 17 P2c tests + 258 regression tests green sequentially, typecheck/lint/build green. Committed locally, no push, no deploy, no PROD writes.
+
 ## P2b Gold economy and card level upgrades (2026-10-23)
 
 - TEST policy: earn win 60/loss 30/draw 40 (matchmaking+ranked; private 0); upgrade costs L2-L10 100/180/300/480/750/1100/1600/2300/3200. XP thresholds reused from P2a. No $CHOG, blockchain, or real-money flows.

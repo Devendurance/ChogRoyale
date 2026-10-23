@@ -4,7 +4,7 @@
 // equals the sum of its ledger rows, and the level is re-derived from the
 // single policy ladder on every apply, so XP and level can never disagree
 // and concurrent applies converge instead of losing updates.
-import { sql } from "drizzle-orm";
+import { inArray, sql } from "drizzle-orm";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { cardXpAwards, cardXpProgress, cardXpRuns, matchEvidence, matchParticipants, matches } from "@/db/schema";
@@ -177,6 +177,25 @@ export async function reconcileCardXp(
     if (r.status === "awarded") awarded += 1;
   }
   return { processed: ids.length, awarded };
+}
+
+/**
+ * Purchased levels for a set of players, for the P2c match-start snapshot.
+ * Missing rows mean Level 1; values are clamped to 1..10 so no stored or
+ * forged value can escape the policy range. Never throws for a missing
+ * table: callers treat a rejection as all-Level-1 (fail-closed).
+ */
+export async function getPurchasedLevels(playerIds: string[]): Promise<Record<string, Record<string, number>>> {
+  const db = getDb();
+  const out: Record<string, Record<string, number>> = {};
+  for (const pid of playerIds) out[pid] = {};
+  if (playerIds.length === 0) return out;
+  const rows = await db.select().from(cardXpProgress).where(inArray(cardXpProgress.playerId, playerIds as [string, ...string[]]));
+  for (const r of rows) {
+    const lv = Number(r.purchasedLevel);
+    out[r.playerId]![r.cardId] = Number.isInteger(lv) && lv >= 1 && lv <= 10 ? lv : 1;
+  }
+  return out;
 }
 
 /**

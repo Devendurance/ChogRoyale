@@ -35,6 +35,7 @@ import {
   type PlayerIndex,
   type MoveType,
 } from "@/lib/combat";
+import type { CardLevels } from "@/lib/card-levels";
 import { derivePatronConfig } from "@/lib/patrons";
 import { deriveChaosSchedule, type ChaosSchedule } from "@/lib/chaos";
 import type { CommanderClass } from "@/lib/commanders";
@@ -84,9 +85,12 @@ export function scenarioConfig(
   p1: string[],
   chaos: ChaosSchedule | null = null,
   seed = "arena",
-  commanders?: [CommanderSlotInput | null, CommanderSlotInput | null]
+  commanders?: [CommanderSlotInput | null, CommanderSlotInput | null],
+  cardLevels?: CardLevels
 ): CombatConfig {
-  return { rulesetVersion: COMBAT_RULESET_VERSION, seed, decks: [p0, p1], chaos, commanders: commanders ?? [slotForDeck(p0), slotForDeck(p1)] };
+  const cfg: CombatConfig = { rulesetVersion: COMBAT_RULESET_VERSION, seed, decks: [p0, p1], chaos, commanders: commanders ?? [slotForDeck(p0), slotForDeck(p1)] };
+  if (cardLevels) cfg.cardLevels = [{ ...cardLevels[0] }, { ...cardLevels[1] }];
+  return cfg;
 }
 
 /** Run tick by tick through the real stepper, sampling every ground/air unit. */

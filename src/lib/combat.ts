@@ -14,6 +14,7 @@
 
 import { createHash } from "crypto";
 import { AppError } from "@/lib/errors";
+import { buildingStatsFor, levelFor, shellDamageFor, spellMagnitudeFor, troopStatsFor, type CardLevels } from "@/lib/card-levels";
 import { CLASS_ROSTER, freeCommanderTemplates } from "@/lib/commanders";
 import type { CommanderDefinition, CommanderAbility, CommanderClass } from "@/lib/commanders";
 import type { ChaosSchedule, ChaosEffect } from "@/lib/chaos";
@@ -284,6 +285,38 @@ export function spawnWavesFor(def: BuildingCardDef): number {
 export const BUILDING_RULES_V1 = { clearance: 2, crossingMouthRows: 6, maxLivePerPlayer: 3 } as const;
 
 export const CARDS_V1: Record<string, TroopCardDef | SpellCardDef | BuildingCardDef> = { ...TROOP_CARDS_V1, ...SPELL_CARDS_V1, ...BUILDING_CARDS_V1 };
+
+/**
+ * P2c level-aware def resolution for live simulation. Returns a shallow
+ * copy with only the profile-scaled combat numbers overridden; costs,
+ * ranges, cadence, targeting and every other authored field stay exactly
+ * as authored. Commander, spawned-only and unknown ids, and Level 1,
+ * resolve to the untouched baseline object, so unscaled matches simulate
+ * bit-identically to the pre-scaling engine.
+ */
+export function scaledDefFor(cardId: string, level: number): TroopCardDef | SpellCardDef | BuildingCardDef {
+  const base = CARDS_V1[cardId];
+  if (!base) throw new AppError("BAD_REQUEST", `Card not playable: ${cardId}`);
+  // Callers pass clamped 1..10 levels; anything at or below 1, and any
+  // commander/spawned id that never reaches this lookup, stays baseline.
+  if (level <= 1) return base;
+  const lv = level;
+  if (cardId in TROOP_CARDS_V1) {
+    const t = base as TroopCardDef;
+    return { ...t, ...troopStatsFor(cardId, t, lv) };
+  }
+  if (cardId in BUILDING_CARDS_V1) {
+    const b = base as BuildingCardDef;
+    return { ...b, ...buildingStatsFor(cardId, b, lv) };
+  }
+  const s = base as SpellCardDef;
+  const m = spellMagnitudeFor(
+    cardId,
+    { damage: s.damage, buffPct: s.buffPct, unitDamage: s.impact?.unitDamage ?? 0, buildingDamage: s.impact?.buildingDamage ?? 0, structureDamage: s.impact?.structureDamage ?? 0 },
+    lv
+  );
+  return { ...s, damage: m.damage, buffPct: m.buffPct };
+}
 
 // ---------------------------------------------------------------------------
 // B2.6a commander card economy.
@@ -642,6 +675,9 @@ export interface CombatConfig {
   commanders?: [CommanderSlotInput | null, CommanderSlotInput | null];
   chaosScheduleHash?: string | null;
   chaos?: ChaosSchedule | null;
+  /** P2c frozen purchased levels per seat then card id. Absent (all old
+   * evidence) resolves to Level 1, exactly the pre-scaling baseline. */
+  cardLevels?: CardLevels;
 }
 
 export interface CombatState {
@@ -659,6 +695,10 @@ export interface CombatState {
   structures: StructureEntity[];
   buildings: BuildingEntity[];
   pendingImpacts: PendingImpact[];
+  /** Frozen per-seat purchased levels. Deliberately outside the state hash:
+   * levels manifest through entity stats, so baseline matches hash
+   * identically with or without the snapshot present. */
+  cardLevels: CardLevels;
   chaos: null | {
     schedule: ChaosSchedule;
     warned: boolean[];
@@ -791,6 +831,8 @@ export function initMatch(config: CombatConfig): CombatState {
   }
   const state: CombatState = {
     ruleset: config.rulesetVersion,
+    // Deep copy: mid-match progression writes must never move a live match.
+    cardLevels: [{ ...(config.cardLevels?.[0] ?? {}) }, { ...(config.cardLevels?.[1] ?? {}) }],
     tick: 0,
     phase: "active",
     energy: [ENERGY_V1.start, ENERGY_V1.start],
@@ -1518,8 +1560,9 @@ function applyDeploy(state: CombatState, cmd: DeployCommand, counter: { n: numbe
   if (cmd.tick < state.tick) throw new AppError("UNPROCESSABLE", `Stale command tick ${cmd.tick} < ${state.tick}`);
   if (cmd.player !== 0 && cmd.player !== 1) throw new AppError("BAD_REQUEST", "Invalid player");
   if (typeof cmd.cardId === "string" && isCommanderCard(cmd.cardId)) return deployCommander(state, cmd);
-  const def = CARDS_V1[cmd.cardId];
-  if (!def) throw new AppError("BAD_REQUEST", `Card not playable: ${cmd.cardId}`);
+  // P2c: combat numbers resolve through the frozen per-seat snapshot.
+  // Costs, legality and placement rules read the identical authored copy.
+  const def = scaledDefFor(cmd.cardId, levelFor(state.cardLevels, cmd.player, cmd.cardId));
   const hand = state.hands[cmd.player];
   if (!hand.includes(cmd.cardId)) throw new AppError("UNPROCESSABLE", `Card ${cmd.cardId} not in hand`);
   if (state.energy[cmd.player] < def.cost) throw new AppError("UNPROCESSABLE", "Insufficient energy");
@@ -1654,17 +1697,36 @@ function footprintGap2(x: number, y: number, s: Solid): number {
 /** Pending impacts come from spells and from v16 siege shells. Spells keep
  * their authored ImpactSpec and radius; a shell maps to an equivalent spec
  * derived from the building def. */
-export function impactSpecFor(cardId: string): { spec: ImpactSpec; radius: number } {
+export function impactSpecFor(cardId: string, level: number = 1): { spec: ImpactSpec; radius: number } {
   const spell = SPELL_CARDS_V1[cardId];
-  if (spell) return { spec: spell.impact!, radius: spell.radius };
+  // Bolt and horn spells carry no impact spec: they resolve at cast time
+  // through the scaled cast def, so this path returns them untouched.
+  // Only impact spells and siege shells land here. P2c: impact damage
+  // scales; radii, slows and delays stay pinned.
+  if (spell) {
+    if (!spell.impact) return { spec: spell.impact!, radius: spell.radius };
+    const m = spellMagnitudeFor(
+      cardId,
+      {
+        damage: spell.damage,
+        buffPct: spell.buffPct,
+        unitDamage: spell.impact.unitDamage,
+        buildingDamage: spell.impact.buildingDamage,
+        structureDamage: spell.impact.structureDamage,
+      },
+      level
+    );
+    return { spec: { ...spell.impact, unitDamage: m.unitDamage, buildingDamage: m.buildingDamage, structureDamage: m.structureDamage }, radius: spell.radius };
+  }
   const shell = BUILDING_CARDS_V1[cardId]?.shell;
   if (shell) {
+    const m = shellDamageFor(cardId, shell, level);
     return {
       spec: {
         delayTicks: shell.flightTicks,
-        unitDamage: shell.unitDamage,
-        buildingDamage: shell.buildingDamage,
-        structureDamage: shell.structureDamage,
+        unitDamage: m.unitDamage,
+        buildingDamage: m.buildingDamage,
+        structureDamage: m.structureDamage,
         slowPct: 0,
         slowDurationTicks: 0,
         hitsAir: false,
@@ -1683,7 +1745,8 @@ export function impactSpecFor(cardId: string): { spec: ImpactSpec; radius: numbe
  * the tick's simultaneous damage map; slows apply immediately.
  */
 function resolveImpact(state: CombatState, p: PendingImpact, fighters: Fighter[], hit: (id: string, amount: number) => void): void {
-  const { spec, radius } = impactSpecFor(p.cardId);
+  // P2c: shells and impact spells land with the casting seat's frozen level.
+  const { spec, radius } = impactSpecFor(p.cardId, levelFor(state.cardLevels, p.owner, p.cardId));
   const r2 = radius * radius;
   let units = 0;
   let buildings = 0;

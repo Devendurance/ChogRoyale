@@ -2,6 +2,13 @@
 
 Last updated: 2026-10-23
 
+## P2c server-authoritative card stat scaling, complete (local commit, no push)
+
+- Policy v1: tanks +4% HP, damage roles +3% damage, horn buff +3%, all per level above 1 with round-half-up integer math; speed, costs, ranges, cadence, targeting, durations, radii, counts, slows, vs-%s, commanders, towers/Core pinned. Mobility gets no profile (integer speeds never cross a threshold in 10 levels). Spawner scrappers unscaled. Documented in code.
+- Engine: level-aware def resolution at spawn/cast/impact/fire sites only; role percentages, spawner, towers, commanders untouched. CombatConfig.cardLevels optional (absent = L1 baseline); old evidence replays byte-identically (v15 goldens verified). No format bump, no migration.
+- Session freezes per-seat purchased levels from the server DB at lockAndStart (deep-copied; client labels never trusted; mid-match writes inert). Room gated by cardScaling flag (default off; script sets from CARD_LEVEL_SCALING). Fail-closed to L1 on missing table/rows.
+- Checks: 17 P2c tests + 133 combat + 125 battle/progression tests green sequentially, typecheck/lint/build green. Matchup L1/5/10 documented (faster, more decisive), mirror-swap symmetry proven, WS test covers snapshot->evidence + drop/resume + downgrade freeze. Next: P2d contract in the report. No push, no deploy, no PROD writes.
+
 ## P2b Gold economy and card level upgrades, complete (local commit, no push)
 
 - TEST policy: win +60, loss +30, draw +40 (matchmaking/ranked only, private 0); upgrade costs L2-L10 100/180/300/480/750/1100/1600/2300/3200. No blockchain, no $CHOG, no real money.

@@ -5,6 +5,7 @@
 - P1c ranked frontend reads the existing personal and leaderboard contracts in Progress. `RANKED_PUBLIC_MATCHMAKING_ENABLED` is a closed release gate, and `/app/play/battle?mode=ranked` renders a gate without mounting BattlePanel. Ranked award polling is bounded and only reads a match-specific server award after confirmed settlement.
 - P2a card XP (TEST only, migration 0013): usage from verified replay evidence, policy v1 caps, GET /api/players/me/card-xp. Private rooms earn nothing. PROD has no card XP tables and takes no XP writes.
 - P2b Gold and paid upgrades (TEST only, migration 0014): earn 60/30/40 on matchmaking/ranked, private zero; single-statement upgrades with idempotency keys; GET /api/players/me/gold and POST upgrade. Balances derived, never negative by construction. PROD has no gold tables or purchased_level and takes no writes.
+- P2c stat scaling (no migration): per-card HP/damage/buff profiles, integer math, snapshot-to-evidence authority, CARD_LEVEL_SCALING gate default off. Old evidence replays identically; PROD behavior unchanged by construction.
 
 - UI polish keeps the app progress identity flex child shrinkable with `overflow-wrap: break-word`, while battle card names use a bounded two-line label and the existing card cost remains data-bound. Result presentation reads only `EndMessage`, `StartMessage.opponent`, and settlement state.
 

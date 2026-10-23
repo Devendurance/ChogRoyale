@@ -23,14 +23,16 @@ async function settlementService() {
   if (process.env.BATTLE_SETTLEMENT !== "1") {
     console.log("settlement disabled");
     if (process.env.BATTLE_LEGACY === "1") console.log("legacy disabled");
-    return null;
+    console.log("card scaling disabled");
+    return { settlement: null, cardScaling: false };
   }
   const { neon } = await import("@neondatabase/serverless");
   const sql = neon(process.env.DATABASE_URL!);
   const rows = await sql`select to_regclass('public.matches') as t`;
   if (!rows[0]?.t) {
     console.error("BATTLE_SETTLEMENT=1 but public.matches is missing; apply the approved migration first. Settlement disabled.");
-    return null;
+    console.log("card scaling disabled");
+    return { settlement: null, cardScaling: false };
   }
   const { SettlementService } = await import("@/server/battle/settlement");
   // B3.3b NFT legacy is opt-in via BATTLE_LEGACY=1 and requires both
@@ -92,9 +94,16 @@ async function settlementService() {
     }
   }
   console.log("settlement enabled");
-  return new SettlementService({ legacy, trophies, cardXp, gold });
+  // P2c card stat scaling is an explicit per-environment activation, off
+  // by default. Without it every match simulates at Level 1, exactly the
+  // pre-scaling baseline, even where the card XP migration is applied.
+  // The room additionally fails closed to Level 1 when the progress table
+  // or rows are missing, so PROD behavior cannot change by accident.
+  const cardScaling = process.env.CARD_LEVEL_SCALING === "1";
+  console.log(`card scaling ${cardScaling ? "enabled" : "disabled"}`);
+  return { settlement: new SettlementService({ legacy, trophies, cardXp, gold }), cardScaling };
 }
 
 void settlementService()
-  .then((settlement) => import("@/server/battle/server").then(({ startBattleServer }) => startBattleServer(port, { settlement }, process.env.BATTLE_SERVER_HOST ?? "127.0.0.1")))
+  .then(({ settlement, cardScaling }) => import("@/server/battle/server").then(({ startBattleServer }) => startBattleServer(port, { settlement, cardScaling }, process.env.BATTLE_SERVER_HOST ?? "127.0.0.1")))
   .then(() => console.log(`battle server listening on ws://127.0.0.1:${port}`));

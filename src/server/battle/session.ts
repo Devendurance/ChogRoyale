@@ -5,6 +5,7 @@
 
 import { randomBytes, randomInt } from "crypto";
 import { scenarioConfig } from "@/lib/arena-scenarios";
+import { clampCardLevel, type CardLevels } from "@/lib/card-levels";
 import { describeCard, describeCommander } from "@/lib/card-details";
 import { DECKS_V13 } from "@/lib/bot-economy";
 import { deriveChaosSchedule } from "@/lib/chaos";
@@ -153,6 +154,10 @@ export class BattleSession {
   phase: SessionPhase = "waiting";
   /** Authoritative match identity, set by the room (server) before start. Engine-neutral. */
   mode: MatchMode = "private";
+  /** P2c purchased levels by player id, set by the room before start.
+   * Only this frozen copy reaches the engine; client loadouts carry no
+   * levels and later progression writes cannot move a live match. */
+  cardLevelsByPlayer: Record<string, Record<string, number>> = {};
   /** Join order slots; seats are assigned by the server at start. */
   readonly slots: Array<SeatPlayer | null> = [null, null];
   /** Confirmed loadouts per join slot; a non-null entry means ready. */
@@ -300,7 +305,19 @@ export class BattleSession {
     const schedule = deriveChaosSchedule({ patron: this.patron.config, serverSeed: seed, matchKey: `arena:${this.patron.tokenId}` });
     const deckOf = (seat: PlayerIndex) => deckFor(rechecked[this.seatOfSlot.indexOf(seat)]!);
     const slotOf = (seat: PlayerIndex) => rechecked[this.seatOfSlot.indexOf(seat)]!.grant.slot;
-    this.config = scenarioConfig(deckOf(0), deckOf(1), schedule, seed, [slotOf(0), slotOf(1)]);
+    // Freeze per-seat purchased levels into the config (hence evidence and
+    // every replay). Clamped, deep-copied, keyed by seat: the authoritative
+    // server snapshot, never a client label.
+    const levelsFor = (seat: PlayerIndex): Record<string, number> => {
+      const slot = this.seatOfSlot.indexOf(seat);
+      const pid = this.slots[slot]?.playerId ?? "";
+      const src = this.cardLevelsByPlayer[pid] ?? {};
+      const out: Record<string, number> = {};
+      for (const [cardId, lv] of Object.entries(src)) out[cardId] = clampCardLevel(lv);
+      return out;
+    };
+    const cardLevels: CardLevels = [levelsFor(0), levelsFor(1)];
+    this.config = scenarioConfig(deckOf(0), deckOf(1), schedule, seed, [slotOf(0), slotOf(1)], cardLevels);
     this.state = initMatch(this.config);
     this.phase = "active";
   }
