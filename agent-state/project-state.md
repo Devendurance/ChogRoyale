@@ -1,5 +1,11 @@
 # Project State
 
+## P3a real Arena Patron NFT sourcing (2026-10-23)
+
+- Battle already locked genuine indexed Genesis patrons (productionPatronSource + lockedPatronFromNft, fail-closed room lock, v2 evidence, legacy re-verification, v1 synthetic exclusion, Paragon at 10 distinct patron_appearances). The fabricated surface was the public read path.
+- `/api/arena/patrons/[tokenId]` and its chaos preview now derive through lockedPatronFromNft, so wrong-collection or unresolved rows fail closed (404/422) instead of serving ad-hoc traits. Provenance adds source, chainId, contractAddress and the filtered attribute snapshot. createPatronAssignment adds the chainId check for parity.
+- testLockedPatron is now labelled an offline fixture; genuine acceptance goes through the real indexer write/read path. New route test file covers genuine acceptance, wrong-collection/unresolved/malformed rejection, query-trait injection ignored, and preview behavior. Focused suites (7 new + 12 patron-source + 4 patrons DB), typecheck, lint and build green. No combat, Paragon, migration or PROD changes. Local commit pending.
+
 ## P2d card inventory and upgrade experience (2026-10-23)
 
 - `/app/decks` collection now renders all 20 ordinary cards with server-backed progression badges, XP readout and max/locked/ready states. Card detail shows purchased level, XP potential, lifetime XP, target, Gold cost and a ten-level track.

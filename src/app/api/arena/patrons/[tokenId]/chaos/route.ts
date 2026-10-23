@@ -1,6 +1,6 @@
 import { getRequestId, success, failure, AppError } from "@/lib/errors";
 import { getNftByTokenId } from "@/db/nfts";
-import { derivePatronConfig } from "@/lib/patrons";
+import { lockedPatronFromNft, PatronUnavailableError } from "@/server/battle/patron-source";
 import { deriveChaosSchedule } from "@/lib/chaos";
 import { logger } from "@/lib/logger";
 
@@ -18,18 +18,21 @@ export async function GET(request: Request, context: { params: Promise<{ tokenId
     if (!nft) {
       throw new AppError("NOT_FOUND", `Genesis NFT ${tokenId} not found`);
     }
-    if (!nft.metadata || nft.metadata.status !== "resolved") {
-      throw new AppError("UNPROCESSABLE", `Genesis NFT ${tokenId} chaos preview pending`);
+    // Preview derives from the same genuine locked snapshot the battle
+    // uses; wrong-collection or unresolved rows fail closed, never previewed.
+    let locked;
+    try {
+      locked = lockedPatronFromNft(nft);
+    } catch (err) {
+      if (err instanceof PatronUnavailableError) {
+        if (/metadata not resolved|unresolved/i.test(err.message)) {
+          throw new AppError("UNPROCESSABLE", `Genesis NFT ${tokenId} chaos preview pending`);
+        }
+        throw new AppError("NOT_FOUND", `Genesis NFT ${tokenId} not found`);
+      }
+      throw err;
     }
-    const patron = derivePatronConfig({
-      tokenId,
-      attributes: (nft.metadata.attributesOriginal ?? null) as Array<{
-        trait_type: string;
-        value: string | number;
-      }> | null,
-      metadataContentHash: nft.metadata.contentHash,
-      name: nft.metadata.name,
-    });
+    const patron = locked.config;
     const schedule = deriveChaosSchedule({ patron, serverSeed: `preview-v1:${tokenId}` });
     return success(
       {
@@ -37,7 +40,8 @@ export async function GET(request: Request, context: { params: Promise<{ tokenId
         patron: { tokenId: patron.tokenId, theme: patron.theme, tier: patron.tier },
         schedule,
         provenance: {
-          metadataContentHash: nft.metadata.contentHash,
+          source: locked.source,
+          metadataContentHash: locked.metadataContentHash,
           patronRulesetVersion: patron.rulesetVersion,
         },
       },

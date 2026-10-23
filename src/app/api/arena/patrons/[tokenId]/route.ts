@@ -1,6 +1,6 @@
 import { getRequestId, success, failure, AppError } from "@/lib/errors";
 import { getNftByTokenId } from "@/db/nfts";
-import { derivePatronConfig } from "@/lib/patrons";
+import { lockedPatronFromNft, PatronUnavailableError } from "@/server/battle/patron-source";
 import { logger } from "@/lib/logger";
 
 export async function GET(request: Request, context: { params: Promise<{ tokenId: string }> }) {
@@ -14,25 +14,31 @@ export async function GET(request: Request, context: { params: Promise<{ tokenId
     if (!nft) {
       throw new AppError("NOT_FOUND", `Genesis NFT ${tokenId} not found`);
     }
-    if (!nft.metadata || nft.metadata.status !== "resolved") {
-      throw new AppError("UNPROCESSABLE", `Genesis NFT ${tokenId} patron derivation pending`);
+    // The locked snapshot is the only patron authority: wrong-collection
+    // or unresolved rows fail closed here, never served as patron traits.
+    let locked;
+    try {
+      locked = lockedPatronFromNft(nft);
+    } catch (err) {
+      if (err instanceof PatronUnavailableError) {
+        if (/metadata not resolved|unresolved/i.test(err.message)) {
+          throw new AppError("UNPROCESSABLE", `Genesis NFT ${tokenId} patron derivation pending`);
+        }
+        throw new AppError("NOT_FOUND", `Genesis NFT ${tokenId} not found`);
+      }
+      throw err;
     }
-    const config = derivePatronConfig({
-      tokenId,
-      attributes: (nft.metadata.attributesOriginal ?? null) as Array<{
-        trait_type: string;
-        value: string | number;
-      }> | null,
-      metadataContentHash: nft.metadata.contentHash,
-      name: nft.metadata.name,
-    });
     return success(
       {
-        patron: config,
+        patron: locked.config,
         provenance: {
+          source: locked.source,
+          chainId: locked.chainId,
+          contractAddress: locked.contractAddress,
           tokenUri: nft.token.tokenUriOriginal,
-          metadataContentHash: nft.metadata.contentHash,
-          metadataFetchedAt: nft.metadata.fetchedAt,
+          attributes: locked.attributes,
+          metadataContentHash: locked.metadataContentHash,
+          metadataFetchedAt: nft.metadata?.fetchedAt ?? null,
         },
       },
       { requestId }

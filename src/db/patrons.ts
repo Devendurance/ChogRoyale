@@ -9,7 +9,7 @@
 import { eq, sql } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { arenaPatronRulesets, patronAssignments, type PatronAssignment } from "@/db/schema";
-import { CHOG_GENESIS_ADDRESS } from "@/lib/chain";
+import { CHOG_GENESIS_ADDRESS, MONAD_CHAIN_ID } from "@/lib/chain";
 import { COMMANDER_RULESET_VERSION } from "@/lib/commanders";
 import { getNftByTokenId } from "@/db/nfts";
 import {
@@ -67,7 +67,11 @@ export async function createPatronAssignment(
   if (existing[0]) return { assignment: existing[0], created: false };
 
   const nft = await getNftByTokenId(tokenId);
-  if (!nft || nft.token.contractAddress.toLowerCase() !== CHOG_GENESIS_ADDRESS.toLowerCase()) {
+  if (
+    !nft ||
+    nft.token.chainId !== MONAD_CHAIN_ID ||
+    nft.token.contractAddress.toLowerCase() !== CHOG_GENESIS_ADDRESS.toLowerCase()
+  ) {
     throw new AppError("NOT_FOUND", `Genesis NFT ${tokenId} not found`);
   }
   if (!nft.metadata || nft.metadata.status !== "resolved") {

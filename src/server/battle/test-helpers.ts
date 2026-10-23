@@ -67,9 +67,13 @@ export function makeLoadoutWithGrant(cards: string[], grant: CommanderGrant): Tr
 }
 
 /**
- * A LockedPatron built through the same derivation as the production source
- * (real derivePatronConfig over plausible trait inputs, 64-hex content hash),
- * without any DB. Distinct tokenIds/traits produce distinct schedules.
+ * OFFLINE FIXTURE, not an indexed record: a LockedPatron built through the
+ * same derivation as the production source (real derivePatronConfig over
+ * placeholder trait inputs, 64-hex content hash), without any DB. It verifies
+ * under verifyLockedPatron by construction, so it exercises battle plumbing
+ * only. Genuine-source acceptance must go through the indexed DB path
+ * (productionPatronSource + lockedPatronFromNft over upserted rows).
+ * Distinct tokenIds/traits produce distinct schedules.
  */
 export function testLockedPatron(tokenId = "42"): LockedPatron {
   const attributes: PatronTraitInput[] = [
