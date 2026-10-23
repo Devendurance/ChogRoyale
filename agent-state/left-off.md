@@ -2,6 +2,13 @@
 
 Last updated: 2026-10-23
 
+## B5.2b PROD migration COMPLETE (2026-10-23), flags still OFF
+
+- Pre-gate: PROD branch approved, journal 1-7, tables absent, 9 players = snapshot baseline, snapshot present, no BATTLE_* in env or .env. No drift.
+- Ran `npm run db:migrate` once: success. Journal 1-10; all 5 tables + FKs/PKs/checks verified (5/1/5/6/1 profile + f-counts); 9 players preserved; 0 matches, 0 loadouts; flags OFF.
+- DAL read path on PROD: unknown id -> null loadout, zero stats (no missing-schema 500). Temp script removed.
+- Snapshot, restore branch, rehearsal branch, TEST all preserved. No push, deploy, settlement, or legacy. Next: B5.3 activation needs its own approval (settlement first, then legacy) plus two-account and NFT-holder live acceptance.
+
 ## B5.2a.1 snapshot + restore PROVEN (2026-10-23), all artifacts kept
 
 - Snapshot `snap-calm-hall-b5xke2bw` (b52a-pre-migration) of PROD at 13:40:26Z. Manual, no auto-expiry; storage accrues until deleted. No other snapshots exist.
