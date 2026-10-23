@@ -1,5 +1,11 @@
 # Project State
 
+## B2.8g.2 combat VFX and gameplay feedback (2026-10-23)
+
+- `BattleCanvas` now gives authoritative HP drops a short team-colored hit burst, strengthens destruction and ability cues, and adds existing aura feedback for building and spawned-unit events. Recorded deploy, projectile, spell, tower-fire and structure effects remain bound to their existing events.
+- Chaos warning, active and expiry events now add bounded family-colored board-edge feedback. Event identities are deduplicated across refreshed snapshots and reset for a new match. Reduced motion shortens and removes scale changes from primitive cues.
+- Scoped delivery and fixture evidence: `.fast-build/B2.8g.2-CHECKPOINT.md`. No combat, Colyseus, HUD, arena or database code changed.
+
 ## B2.8g.1 visual correction (2026-10-23)
 
 - The approved B2.8g.1 environment pass now keeps all six V002 structures inside the authored canvas presentation. Top Core art and its health label use a visual-only Y offset, while ground points, camera mapping, deployment bounds and weapon anchors stay authoritative.

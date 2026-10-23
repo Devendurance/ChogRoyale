@@ -2,6 +2,13 @@
 
 Last updated: 2026-10-23
 
+## B2.8g.2 combat VFX and gameplay feedback (2026-10-23)
+
+- Doing: finalizing one bounded combat feedback pass on the f449893 arena correction.
+- Done: added authoritative HP hit bursts for units, buildings and structures, brighter impact and destruction readability, ability activation flash, building and spawned-unit aura cues, Chaos transition edge cues, bounded event deduplication, match reset handling and reduced-motion shortening. Existing V002/V001 art bindings and projectile paths remain in use.
+- Checks: focused battle suites 60/60 passed, typecheck passed, lint passed with the existing `/dev/progress` image warning, and production build passed with 38 static pages. Recorded event fixtures at 390x844, 1366x768, 360x800 and 1920x1080 show no overflow or console/page errors.
+- Next: owner review of the bounded fixture evidence, then stop after B2.8g.2. Live authenticated interaction remains unverified, and no audio or character animation is planned.
+
 ## B2.8g.1 visual correction (2026-10-23)
 
 - Doing: finalizing the bounded correction against the approved desktop and mobile target images.

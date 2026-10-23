@@ -9,6 +9,7 @@
 import { useEffect, useRef } from "react";
 import type { BattleFrame, CardInfo, FrameEvent, StartMessage } from "@/lib/battle-protocol";
 import { deployZones, screenToArena, type ArenaPoint } from "@/lib/battle-input";
+import { chaosFamilyColor, combatEventKey } from "./combat-vfx";
 import {
   byId,
   displayScale,
@@ -42,7 +43,6 @@ const FOE = 0xf27978;
 const FRIENDLY_STRUCTURE = 0x36dbe8;
 const OPPONENT_STRUCTURE = 0xf27978;
 const KIT_URL = "/assets/chog-kit/v001";
-const FAMILY_COLOR: Record<string, number> = { ember_rift: 0xf97316, frost_crossing: 0x67e8f9, energy_surge: 0xfacc15, rift_shift: 0xa855f7, chaos_rally: 0x22c55e };
 
 export interface CanvasFeed {
   start: StartMessage;
@@ -58,12 +58,13 @@ export interface CanvasFeed {
 export type BoardMapper = (clientX: number, clientY: number) => ArenaPoint | null;
 
 interface Fx {
-  kind: "ring" | "flash" | "death" | "boom";
+  kind: "ring" | "flash" | "death" | "boom" | "hit" | "pulse";
   x: number;
   y: number;
   r: number;
   color: number;
   until: number;
+  pulseState?: "warning" | "active" | "expired";
 }
 
 interface Props {
@@ -117,7 +118,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
       const W = 100 * S;
       const H = 160 * S;
       const fx: Fx[] = [];
-      let lastEventTick = -1;
+      const seenEventKeys = new Set<string>();
       const labels = new Map<string, import("phaser").GameObjects.Text>();
       const missing = new Set<string>();
       const rec = (id: string): SpriteRecord | null => (manifest && !missing.has(id) ? byId(manifest, id) : null);
@@ -167,6 +168,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
       const envLayers = new Map<string, import("phaser").GameObjects.Image>();
       const mountPool = new Map<string, MountEnt>();
       const defenderStates = new Map<string, DefenderState>();
+      let eventStart: StartMessage | null = null;
       // Instant tower-fire feedback: muzzle flash at the measured weapon
       // anchor plus a tracer to the authoritative target point, ~120 ms.
       interface TowerFx {
@@ -216,6 +218,11 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
           const now = performance.now();
           if (!f || !f.frame) return;
           const { start, frame, prev } = f;
+          if (eventStart !== start) {
+            eventStart = start;
+            seenEventKeys.clear();
+            defenderStates.clear();
+          }
           const seat = start.seat;
           const sx = (x: number) => x * S;
           const sy = (y: number) => (seat === 0 ? 160 - y : y) * S;
@@ -292,7 +299,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
           // Chaos regions: warning outlined, active filled. Board-wide pulses tint the border.
           const activeZones = new Set<string>();
           for (const c of frame.chaos) {
-            const color = FAMILY_COLOR[c.family] ?? 0xffffff;
+            const color = chaosFamilyColor(c.family);
             if (c.zones.length === 0) {
               g.lineStyle(c.state === "active" ? 8 : 3, color, c.state === "active" ? 0.8 : 0.5).strokeRect(2, 2, W - 4, H - 4);
             }
@@ -391,13 +398,24 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             px: number,
             py: number,
             hp: number,
-            moving: boolean
+            moving: boolean,
+            owner: number
           ) => {
             const X = sx(px);
             const Y = sy(py);
             e.root.setPosition(X, Y);
             e.root.setDepth(Y + (e.air ? 500 : 0));
-            if (e.lastHp >= 0 && hp < e.lastHp) e.flashUntil = now + 140;
+            if (e.lastHp >= 0 && hp < e.lastHp) {
+              e.flashUntil = now + 140;
+              fx.push({
+                kind: "hit",
+                x: px,
+                y: py,
+                r: Math.max(1.5, e.rec.proposedDisplaySize.visibleHeight * displayScale(e.rec) * 0.14),
+                color: owner === seat ? 0x9be7ff : 0xffa29a,
+                until: frame.tick + (reduced ? 2 : 4),
+              });
+            }
             e.lastHp = hp;
             // Deploy pop: 0.88 -> 1.04 -> 1 with an alpha ramp, 180 ms.
             const dp = Math.min(1, (now - e.born) / 180);
@@ -458,7 +476,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             if (r) {
               const e = ensure(id, r, air, owner);
               const moving = Math.hypot(x - e.lastX, y - e.lastY) > 0.05;
-              updateEnt(e, id, x, y, hp, moving);
+              updateEnt(e, id, x, y, hp, moving, owner);
               const hpx = sx(x);
               const hpy = sy(y) - r.proposedDisplaySize.visibleHeight * displayScale(r) - (air ? 14 : 4);
               hpBar(hpx, hpy, Math.max(16, r.proposedDisplaySize.visibleHeight * displayScale(r) * 0.6), hp, maxHp, shield);
@@ -539,6 +557,16 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
               me.teamAccent.setPosition(0, artOffsetY).setAlpha(s.alive ? 1 : 0.18);
               const fire = towerFires.get(s.id) ?? null;
               const prevDef = defenderStates.get(s.id) ?? newDefenderState();
+              if (s.alive && prevDef.lastHp >= 0 && s.hp < prevDef.lastHp) {
+                fx.push({
+                  kind: "hit",
+                  x: s.x,
+                  y: s.y,
+                  r: role === "core-keeper" ? 4.5 : 3.5,
+                  color: s.owner === seat ? 0x9be7ff : 0xffa29a,
+                  until: frame.tick + (reduced ? 2 : 4),
+                });
+              }
               const accepted = s.alive && fire !== null && fireFresh({ structureId: s.id, tick: fire.tick }, frame.tick) && !prevDef.firedKeys.includes(fireKey({ structureId: s.id, tick: fire.tick }));
               const st = updateDefender(
                 prevDef,
@@ -593,7 +621,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             } else if (s.alive) {
               if (r) {
                 const e = ensure(s.id, r, false, s.owner);
-                updateEnt(e, s.id, s.x, s.y, s.hp, false);
+                updateEnt(e, s.id, s.x, s.y, s.hp, false, s.owner);
                 const top = y - r.proposedDisplaySize.visibleHeight * displayScale(r);
                 hpBar(x, top - 4, 36, s.hp, s.maxHp);
                 label(`hp:${s.id}`, `${s.hp}`, x, top - 14);
@@ -781,13 +809,13 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
               projPool.delete(id);
             }
           }
-          // Transient event effects, collected once per authoritative tick.
+          // Transient event effects, collected once per authoritative event.
           const spawnFx = (prim: SpriteRecord | undefined, ax: number, ay: number, size: number, dur: number) => {
             if (!prim || missing.has(prim.stableAssetId)) return;
             const img = this.add.image(sx(ax), sy(ay), prim.stableAssetId).setDepth(1600);
             const s = displayScale(prim) * size;
             img.setScale(s * 0.75).setAlpha(0.9);
-            fxImgs.push({ img, born: now, dur, s0: s * 0.75, s1: s * 1.1 });
+            fxImgs.push({ img, born: now, dur: reduced ? Math.min(110, dur) : dur, s0: s * 0.75, s1: reduced ? s * 0.75 : s * 1.1 });
           };
           const nonProjectile = (reqId: string): SpriteRecord[] => {
             if (!manifest) return [];
@@ -796,58 +824,81 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
               .map((id) => byId(manifest, id))
               .filter((r0): r0 is SpriteRecord => r0 !== null);
           };
-          if (frame.tick !== lastEventTick) {
-            lastEventTick = frame.tick;
-            const prevAll = new Map<string, { x: number; y: number }>();
-            for (const u of [...(prev?.troops ?? []), ...(prev?.commanders ?? []), ...(prev?.buildings ?? [])]) prevAll.set(u.id, u);
-            const lungeTo = (entId: unknown, tx: number, ty: number) => {
-              const e = pool.get(String(entId));
-              const at = all.get(String(entId));
-              if (!e || !at) return;
-              const dx = tx - at.x;
-              const dy = ty - at.y;
-              const len = Math.hypot(dx, dy) || 1;
-              e.lunge = { dx: dx / len, dy: dy / len, start: now };
-            };
-            for (const e of frame.events as FrameEvent[]) {
-              const at = (id: unknown) => all.get(String(id)) ?? prevAll.get(String(id));
-              const until = frame.tick + 6;
-              if (e.type === "deploy") {
-                const p = at((e.entityIds as unknown[] | undefined)?.[0]);
-                if (p) fx.push({ kind: "ring", x: p.x, y: p.y, r: 5, color: Number(e.player) === seat ? 0x22c55e : 0xf87171, until: frame.tick + 6 });
-              } else if (e.type === "spell_cast" || e.type === "spell_impact") {
-                fx.push({ kind: "flash", x: Number(e.x), y: Number(e.y), r: start.catalog[String(e.cardId)]?.radius ?? 6, color: 0xfde047, until });
-                if (e.type === "spell_impact") {
-                  const req = String(e.cardId) === "rift_mortar" ? "rift_mortar_shell" : `${e.cardId}_effect`;
-                  for (const prim of nonProjectile(req)) spawnFx(prim, Number(e.x), Number(e.y), 1.4, 260);
-                }
-              } else if (e.type === "ability_fired") {
-                fx.push({ kind: "ring", x: Number(e.x), y: Number(e.y), r: Number(e.radius ?? 4), color: 0xfbbf24, until: frame.tick + 8 });
-                if (manifest) for (const prim of effectForAbility(manifest, String(e.abilityId))) spawnFx(prim, Number(e.x), Number(e.y), 1.2, 260);
-                lungeTo(e.commanderId, Number(e.x), Number(e.y));
-              } else if (e.type === "shockwave") {
-                const p = at(e.entityId);
-                if (p) {
-                  fx.push({ kind: "ring", x: p.x, y: p.y, r: 4, color: 0xf97316, until: frame.tick + 3 });
-                  for (const prim of nonProjectile("ember_mauler_shockwave")) spawnFx(prim, p.x, p.y, 1.2, 220);
-                  const tgt = at(e.primaryId);
-                  if (tgt) lungeTo(e.entityId, tgt.x, tgt.y);
-                }
-              } else if (e.type === "siege_fired") {
-                lungeTo(e.buildingId, Number(e.x), Number(e.y));
-              } else if (e.type === "unit_spawned") {
-                const prim = manifest ? byId(manifest, "effect:aura") : null;
-                if (prim) spawnFx(prim, Number(e.x), Number(e.y), 0.8, 200);
-              } else if (e.type === "death") {
-                const p = at(e.entityId);
-                if (p) fx.push({ kind: "death", x: p.x, y: p.y, r: 2, color: 0xffffff, until: frame.tick + 5 });
-              } else if (e.type === "structure_destroyed") {
-                const p = at(e.entityId);
-                if (p) {
-                  fx.push({ kind: "boom", x: p.x, y: p.y, r: 8, color: 0xf97316, until: frame.tick + 12 });
-                  const prim = manifest ? byId(manifest, "effect:impact") : null;
-                  if (prim) spawnFx(prim, p.x, p.y, 2.6, 300);
-                }
+          const prevAll = new Map<string, { x: number; y: number }>();
+          for (const u of [...(prev?.troops ?? []), ...(prev?.commanders ?? []), ...(prev?.buildings ?? []), ...(prev?.structures ?? [])]) prevAll.set(u.id, u);
+          const lungeTo = (entId: unknown, tx: number, ty: number) => {
+            const e = pool.get(String(entId));
+            const at = all.get(String(entId));
+            if (!e || !at) return;
+            const dx = tx - at.x;
+            const dy = ty - at.y;
+            const len = Math.hypot(dx, dy) || 1;
+            e.lunge = { dx: dx / len, dy: dy / len, start: now };
+          };
+          for (const e of frame.events as FrameEvent[]) {
+            const key = combatEventKey(e);
+            if (seenEventKeys.has(key)) continue;
+            seenEventKeys.add(key);
+            if (seenEventKeys.size > 512) {
+              const oldest = seenEventKeys.values().next().value;
+              if (oldest) seenEventKeys.delete(oldest);
+            }
+            const at = (id: unknown) => all.get(String(id)) ?? prevAll.get(String(id));
+            const until = frame.tick + (reduced ? 3 : 6);
+            if (e.type === "deploy") {
+              const p = at((e.entityIds as unknown[] | undefined)?.[0]);
+              if (p) fx.push({ kind: "ring", x: p.x, y: p.y, r: 5, color: Number(e.player) === seat ? 0x22c55e : 0xf87171, until: frame.tick + (reduced ? 3 : 6) });
+            } else if (e.type === "spell_cast" || e.type === "spell_impact") {
+              const x = Number(e.x);
+              const y = Number(e.y);
+              const radius = start.catalog[String(e.cardId)]?.radius ?? 6;
+              fx.push({ kind: "flash", x, y, r: radius, color: 0xfde047, until });
+              if (e.type === "spell_impact") {
+                const req = String(e.cardId) === "rift_mortar" ? "rift_mortar_shell" : `${e.cardId}_effect`;
+                for (const prim of nonProjectile(req)) spawnFx(prim, x, y, 1.4, 260);
+                const affected = Number(e.units ?? 0) + Number(e.buildings ?? 0) + Number(e.structures ?? 0);
+                if (affected > 0) fx.push({ kind: "hit", x, y, r: Math.max(2, radius * 0.55), color: 0xfff1c1, until: frame.tick + (reduced ? 2 : 4) });
+              }
+            } else if (e.type === "ability_fired") {
+              const x = Number(e.x);
+              const y = Number(e.y);
+              fx.push({ kind: "ring", x, y, r: Number(e.radius ?? 4), color: 0xfbbf24, until: frame.tick + (reduced ? 4 : 8) });
+              fx.push({ kind: "flash", x, y, r: Math.max(3, Number(e.radius ?? 4) * 0.55), color: 0xffe7a1, until });
+              if (manifest) for (const prim of effectForAbility(manifest, String(e.abilityId))) spawnFx(prim, x, y, 1.2, 260);
+              lungeTo(e.commanderId, x, y);
+            } else if (e.type === "shockwave") {
+              const p = at(e.entityId);
+              if (p) {
+                fx.push({ kind: "ring", x: p.x, y: p.y, r: 4, color: 0xf97316, until: frame.tick + (reduced ? 2 : 3) });
+                for (const prim of nonProjectile("ember_mauler_shockwave")) spawnFx(prim, p.x, p.y, 1.2, 220);
+                const tgt = at(e.primaryId);
+                if (tgt) lungeTo(e.entityId, tgt.x, tgt.y);
+              }
+            } else if (e.type === "siege_fired") {
+              lungeTo(e.buildingId, Number(e.x), Number(e.y));
+            } else if (e.type === "building_spawned") {
+              fx.push({ kind: "ring", x: Number(e.x), y: Number(e.y), r: 4, color: Number(e.player) === seat ? 0x36dbe8 : 0xf27978, until: frame.tick + (reduced ? 3 : 5) });
+              const prim = manifest ? byId(manifest, "effect:aura") : null;
+              if (prim) spawnFx(prim, Number(e.x), Number(e.y), 0.9, 220);
+            } else if (e.type === "unit_spawned") {
+              const prim = manifest ? byId(manifest, "effect:aura") : null;
+              if (prim) spawnFx(prim, Number(e.x), Number(e.y), 0.8, 200);
+            } else if (e.type === "pulse_warning" || e.type === "pulse_active" || e.type === "pulse_expired") {
+              const pulseState = e.type === "pulse_warning" ? "warning" : e.type === "pulse_active" ? "active" : "expired";
+              fx.push({ kind: "pulse", x: 0, y: 0, r: 0, color: chaosFamilyColor(String(e.family)), until: frame.tick + (reduced ? 2 : pulseState === "active" ? 8 : 5), pulseState });
+            } else if (e.type === "death") {
+              const p = at(e.entityId);
+              if (p) {
+                fx.push({ kind: "death", x: p.x, y: p.y, r: 2, color: 0xffffff, until: frame.tick + (reduced ? 3 : 5) });
+                const prim = manifest ? byId(manifest, "effect:impact") : null;
+                if (prim) spawnFx(prim, p.x, p.y, 1.35, 180);
+              }
+            } else if (e.type === "structure_destroyed") {
+              const p = at(e.entityId);
+              if (p) {
+                fx.push({ kind: "boom", x: p.x, y: p.y, r: 8, color: 0xf97316, until: frame.tick + (reduced ? 4 : 12) });
+                const prim = manifest ? byId(manifest, "effect:impact") : null;
+                if (prim) spawnFx(prim, p.x, p.y, 2.6, 300);
               }
             }
           }
@@ -861,8 +912,18 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             const y = sy(e.y);
             if (e.kind === "flash") og.fillStyle(e.color, 0.3).fillCircle(x, y, e.r * S);
             else if (e.kind === "ring") og.lineStyle(3, e.color, 0.9).strokeCircle(x, y, e.r * S);
-            else if (e.kind === "boom") og.fillStyle(e.color, 0.5).fillCircle(x, y, e.r * S);
-            else og.lineStyle(2, e.color, 0.9).lineBetween(x - 5, y - 5, x + 5, y + 5).lineBetween(x - 5, y + 5, x + 5, y - 5);
+            else if (e.kind === "boom") {
+              og.fillStyle(e.color, 0.5).fillCircle(x, y, e.r * S);
+              og.lineStyle(3, 0xffe4a8, 0.9).strokeCircle(x, y, e.r * S * 1.25);
+            } else if (e.kind === "hit") {
+              og.fillStyle(0xfff8df, 0.45).fillCircle(x, y, Math.max(4, e.r * S * 0.7));
+              og.lineStyle(2, e.color, 0.95).strokeCircle(x, y, e.r * S);
+              og.lineStyle(2, 0xfff8df, 0.9).lineBetween(x - 5, y, x + 5, y).lineBetween(x, y - 5, x, y + 5);
+            } else if (e.kind === "pulse") {
+              const width = e.pulseState === "active" ? 7 : e.pulseState === "warning" ? 3 : 2;
+              const alpha = e.pulseState === "active" ? 0.7 : e.pulseState === "warning" ? 0.55 : 0.35;
+              og.lineStyle(width, e.color, alpha).strokeRect(4, 4, W - 8, H - 8);
+            } else og.lineStyle(2, e.color, 0.9).lineBetween(x - 5, y - 5, x + 5, y + 5).lineBetween(x - 5, y + 5, x + 5, y - 5);
           }
           // Tower fire feedback: flash at the weapon anchor plus an instant
           // tracer to the authoritative target. Fades over ~120 ms; under
@@ -887,7 +948,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
               fxImgs.splice(i, 1);
               continue;
             }
-            e.img.setScale(e.s0 + (e.s1 - e.s0) * p).setAlpha(0.9 * (1 - p));
+            e.img.setScale(e.s0 + (e.s1 - e.s0) * p).setAlpha(reduced ? 0.78 : 0.9 * (1 - p));
           }
           // Entities absent from the frame begin their death fade.
           for (const [id, e] of pool) {
