@@ -24,6 +24,8 @@ import { Portrait } from "./portrait";
 import { useSpriteManifest } from "./use-sprite-manifest";
 import { portraitForCard, portraitForCommanderClass, type SpriteManifest } from "./sprite-registry";
 import { abilityView, scoreView, timerView } from "./hud-view";
+import { satoshi, georama, lilitaOne } from "@/components/site/fonts";
+import "./battle-hud.css";
 
 // Display-only copy of energyPhaseMult (src/lib/combat.ts). combat.ts imports
 // node crypto so it cannot ship to the client; keep thresholds in sync.
@@ -41,6 +43,10 @@ const abilityLabel = (abilityId: string, cls: string) => {
 const nftImageUrl = (u: string) => (u.startsWith("ipfs://") ? `https://ipfs.filebase.io/ipfs/${u.slice(7)}` : u);
 
 export interface BattleHudProps {
+  connectionStatus?: string;
+  error?: string | null;
+  notice?: string | null;
+  onGiveUp?: () => void;
   start: StartMessage;
   frame: BattleFrame | null;
   me: number;
@@ -116,10 +122,11 @@ function CardButton({
       {...handlers}
       onClick={() => onSelect(id)}
       className="chud-card"
+      data-selected={selected}
+      data-afford={afford}
+      aria-label={`${card?.name ?? id}, ${cost} energy${!afford ? ", not enough energy" : ""}${isCommanderCard(id) ? ", commander class art" : ""}`}
       style={{
-        borderColor: selected ? "#fbbf24" : "#4b5563",
         transform: selected ? "translateY(-4px)" : "none",
-        boxShadow: selected ? "0 0 0 2px #fbbf24" : "none",
         opacity: dragging ? 0.3 : 1,
       }}
     >
@@ -140,21 +147,10 @@ function CardButton({
       {!afford && <div style={{ position: "absolute", inset: 0, background: "#0009" }} />}
       <span
         className="chud-cost"
-        style={{
-          position: "absolute",
-          top: 2,
-          left: 2,
-          background: afford ? "#7c3aed" : "#dc2626",
-          color: "#fff",
-          borderRadius: 999,
-          fontSize: 11,
-          fontWeight: 700,
-          lineHeight: 1,
-          padding: "3px 6px",
-        }}
       >
         {card?.cost ?? "?"}
       </span>
+      {isCommanderCard(id) && <span className="chud-class-art">Class art</span>}
       <span className="chud-name">{card?.name ?? id}</span>
     </button>
   );
@@ -225,7 +221,7 @@ function AbilityButton({
       data-ability={a.abilityId}
       data-state={v.label}
       disabled={v.disabled}
-      title={`${abilityLabel(a.abilityId, start.commander.class)} · ${a.cost}e${a.blockedBy ? ` · ${a.blockedBy}` : ""}`}
+      title={`${abilityLabel(a.abilityId, start.commander.class)} · ${a.cost}e · Commander class art${a.blockedBy ? ` · ${a.blockedBy}` : ""}`}
       onClick={() => send({ type: "ability", abilityId: a.abilityId }, `ability ${a.abilityId}`)}
       style={{ boxShadow: flash ? "0 0 0 2px #4ade80" : undefined }}
     >
@@ -369,9 +365,10 @@ export default function BattleHud(props: BattleHudProps) {
       )}
       <div style={{ fontSize: 11 }}>
         <div>{start.commander.name}</div>
-        <div style={{ color: "#9ca3af" }}>
+        <div className="chud-identity-meta">
           {commanderCls} · {start.commander.variant} · {start.commander.prestige}
-          {start.commander.kind === "nft" ? ` · token ${start.commander.tokenId}` : " · class template"}
+          {start.commander.kind === "nft" ? ` · token ${start.commander.tokenId}` : ""}
+          {!(start.commander.kind === "nft" && start.commander.imageOriginal) && " · class art"}
         </div>
       </div>
     </div>
@@ -379,13 +376,13 @@ export default function BattleHud(props: BattleHudProps) {
 
   const patronChip = (
     <span className="chud-pill" title={`Arena Patron token ${start.patron.tokenId}`}>
-      Patron {start.patron.name ?? `CHOG #${start.patron.tokenId}`} · {start.patron.tier ?? "Unranked"} · {start.patron.theme}
+      Arena Patron · {start.patron.name ?? `CHOG #${start.patron.tokenId}`}
     </span>
   );
 
   const abilityControls = frame && (
     <>
-      {frame.abilities.length === 0 && <span style={{ fontSize: 11, color: "#9ca3af" }}>Commander ability: deploy your commander first.</span>}
+      {frame.abilities.length === 0 && <span className="chud-ability-empty">Deploy your commander to use its ability.</span>}
       {frame.abilities.map((a) => (
         <AbilityButton key={a.abilityId} a={a} frame={frame} start={start} manifest={manifest} acks={acks} send={send} />
       ))}
@@ -393,9 +390,9 @@ export default function BattleHud(props: BattleHudProps) {
   );
 
   return (
-    <div className="chud" data-testid="battle-hud">
-      <style>{HUD_CSS}</style>
+    <div className={`chud ${satoshi.variable} ${georama.variable} ${lilitaOne.variable}`} data-testid="battle-hud">
       <aside className="chud-side chud-side-left">
+        <div className="chud-brand">CHOG <span>ROYALE</span><small>CHAOS CROSSING</small></div>
         <div className="chud-side-block">
           <div className="chud-side-title">Arena Patron</div>
           <div style={{ fontSize: 12 }}>
@@ -409,10 +406,7 @@ export default function BattleHud(props: BattleHudProps) {
           <div className="chud-side-title">Your commander</div>
           {commanderIdentity}
         </div>
-        <div className="chud-side-block">
-          <div className="chud-side-title">Abilities</div>
-          <div className="chud-abilities">{abilityControls}</div>
-        </div>
+        <div className="chud-side-block chud-battle-guide"><div className="chud-side-title">The arena</div><p>Play your hand. Break their towers.</p><span>Drag a card into the arena, or select a card and tap to place it.</span></div>
       </aside>
       <div className="chud-col">
         <header className="chud-top">
@@ -438,6 +432,12 @@ export default function BattleHud(props: BattleHudProps) {
               Dev
             </button>
           </div>
+          {(props.connectionStatus || props.error || props.notice) && <div className="chud-status" aria-live="polite">
+            <span>{props.connectionStatus}</span>
+            {props.error && <span role="alert" className="chud-status-error">{props.error}</span>}
+            {props.notice && <span className="chud-status-notice">{props.notice}</span>}
+            {props.onGiveUp && <button className="chud-giveup" onClick={props.onGiveUp}>Give up</button>}
+          </div>}
           <div className="chud-subrow">
             {patronChip}
             {presence && (
@@ -497,9 +497,9 @@ export default function BattleHud(props: BattleHudProps) {
                     onSelect={select}
                   />
                 ))}
-                <div className="chud-abilities chud-abilities-tray">{abilityControls}</div>
               </div>
               <EnergyMeter frame={frame} />
+              <div className="chud-abilities chud-abilities-tray">{abilityControls}</div>
               <div className="chud-hint" data-testid="placement-hint">
                 {hint ?? (selected ? `Tap the board to play ${card(selected)?.name}, or drag a card onto it.` : "Drag a card onto the board, or select it then tap the board.")}
               </div>
@@ -508,10 +508,9 @@ export default function BattleHud(props: BattleHudProps) {
         </div>
       </div>
       <aside className="chud-side chud-side-right">
-        <div className="chud-side-block chud-side-dev">
-          <div className="chud-side-title">Dev</div>
-          {dev}
-        </div>
+        <div className="chud-side-block"><div className="chud-side-title">Battle status</div><div className="chud-live-label">{end ? "Match complete" : abort ? "Match interrupted" : frame ? "In the arena" : "Entering arena"}</div><p className="chud-status-copy">{props.connectionStatus ?? "Connected"}</p></div>
+        <div className="chud-side-block"><div className="chud-side-title">Commander ability</div><div className="chud-abilities">{abilityControls}</div><span className="chud-class-note">Commander class art</span></div>
+        <div className="chud-side-block"><div className="chud-side-title">Chaos Pulse</div><p className="chud-status-copy">Watch the arena warnings. Each pulse changes the battle for both players.</p><div className="chud-side-chaos">{chaosChips.length ? chaosChips : <span className="chud-status-copy">No active pulse</span>}</div></div>
       </aside>
       {dragging && (
         <div
@@ -528,96 +527,3 @@ export default function BattleHud(props: BattleHudProps) {
     </div>
   );
 }
-
-const HUD_CSS = `
-.chud{position:fixed;inset:0;height:100dvh;display:flex;justify-content:center;gap:12px;overflow:hidden;
-  padding:calc(6px + env(safe-area-inset-top)) calc(8px + env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) calc(8px + env(safe-area-inset-left));
-  background:#0b1210;color:#e5e7eb;font-size:13px;z-index:10}
-.chud-col{display:flex;flex-direction:column;width:100%;max-width:560px;min-height:0;height:100%}
-.chud-top{display:flex;flex-direction:column;gap:2px;padding:1px 0}
-.chud-score{display:flex;align-items:center;gap:8px;min-height:30px}
-.chud-side-tag{display:flex;align-items:center;gap:6px;flex:1;min-width:0;font-size:12px}
-.chud-side-tag[data-side="foe"]{color:#c084fc;justify-content:flex-start}
-.chud-side-tag[data-side="you"]{color:#67e8f9;justify-content:flex-end}
-.chud-player{font-weight:700;color:#e5e7eb;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.chud-crown-num{font-variant-numeric:tabular-nums;font-weight:800;font-size:14px;display:inline-flex;align-items:center;gap:3px}
-.chud-pulse{animation:chud-crown-pulse .9s ease-out}
-@keyframes chud-crown-pulse{0%{transform:scale(1)}25%{transform:scale(1.35);color:#fde68a}100%{transform:scale(1)}}
-@media(prefers-reduced-motion:reduce){.chud-pulse{animation:none}}
-.chud-clock2{font-variant-numeric:tabular-nums;font-size:18px;font-weight:800;text-align:center;min-width:74px}
-.chud-clock-mult{margin-left:5px;vertical-align:2px}
-.chud-ot{color:#fbbf24}
-.chud-subrow{display:flex;gap:4px;align-items:center;flex-wrap:wrap;opacity:.85}
-.chud-pill{background:#1f2937;border:1px solid #374151;border-radius:999px;padding:1px 7px;font-size:10px;white-space:nowrap;max-width:190px;overflow:hidden;text-overflow:ellipsis}
-.chud-pill[data-dead="true"]{opacity:.55;text-decoration:line-through}
-.chud-pill[data-owner="you"]{border-color:#3b82f6}
-.chud-pill[data-owner="foe"]{border-color:#ef4444}
-.chud-devbtn{margin-left:6px;flex:none;align-self:flex-start;font-size:10px;padding:3px 8px;background:#1f2937;border:1px solid #4b5563;border-radius:5px;color:#e5e7eb}
-.chud-dev-inline{font-size:11px;background:#111827;border:1px solid #374151;border-radius:6px;padding:4px 8px;margin-bottom:4px;max-height:120px;overflow-y:auto}
-.chud-dev{font-size:11px;color:#9ca3af}
-.chud-arena{position:relative;flex:1;min-height:0;display:flex;container-type:size}
-.chud-board{display:contents}
-.chud-chaos-stack{position:absolute;top:4px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:3px;align-items:center;pointer-events:none;z-index:3}
-.chud-chaos{font-size:11px;background:#000a;padding:2px 8px;border-radius:999px}
-.chud-chaos.warning{color:#fbbf24}
-.chud-chaos.active{color:#fda4af}
-.chud-phase-banner{position:absolute;top:38%;left:50%;transform:translate(-50%,-50%);font-size:30px;font-weight:800;color:#e9d5ff;
-  text-shadow:0 0 14px #7c3aed;pointer-events:none;z-index:4;animation:chud-banner 2s ease-out forwards}
-@keyframes chud-banner{0%{opacity:0;transform:translate(-50%,-30%) scale(.9)}15%{opacity:1;transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0}}
-@media(prefers-reduced-motion:reduce){.chud-phase-banner{animation:none;opacity:.95}}
-.chud-result{position:absolute;inset:0;background:#000c;display:grid;place-content:center;text-align:center;gap:6px;z-index:5}
-.chud-tray{display:flex;flex-direction:column;gap:4px;padding-top:4px}
-
-.chud-cards{display:grid;grid-template-columns:auto repeat(4,1fr) auto;gap:6px;align-items:stretch}
-@media(max-width:640px){.chud-cards{grid-template-columns:auto repeat(4,1fr)}.chud-abilities{grid-column:1/-1;flex-direction:row;flex-wrap:wrap;min-width:0;max-width:none}}
-.chud-next{position:relative;width:46px;aspect-ratio:3/4;align-self:center;border:1px dashed #4b5563;border-radius:6px;overflow:hidden;opacity:.85}
-.chud-next-tag{position:absolute;bottom:0;left:0;right:0;font-size:8px;text-align:center;background:#000a;color:#9ca3af}
-.chud-card{position:relative;aspect-ratio:3/4;min-width:0;border-radius:8px;overflow:hidden;border:1px solid #4b5563;
-  background:#1f2937;padding:0;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;transition:transform .12s}
-.chud-card:active{transform:translateY(0)}
-.chud-name{position:absolute;bottom:0;left:0;right:0;font-size:9px;line-height:1.2;padding:2px 3px;background:linear-gradient(transparent,#000e 40%);color:#f3f4f6;text-align:center}
-.chud-abilities{display:flex;flex-direction:column;gap:4px;min-width:96px;max-width:150px;justify-content:center}
-.chud-ability{position:relative;display:flex;gap:6px;align-items:center;font-size:10px;padding:4px 5px;background:#1f2937;border:1px solid #4b5563;border-radius:6px;color:#e5e7eb;text-align:left;overflow:hidden;touch-action:manipulation}
-.chud-ability[data-state="READY"]{border-color:#4ade80;box-shadow:0 0 8px #22c55e66}
-.chud-ability:disabled{opacity:.6;cursor:default}
-.chud-ability-info{display:flex;flex-direction:column;min-width:0;flex:1}
-.chud-ability-name{font-weight:700;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.chud-ability-sub{font-size:9px;color:#a5b4fc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.chud-ability-sub[data-ready="true"]{color:#4ade80;font-weight:800}
-.chud-ability-cost{position:absolute;top:2px;right:2px;font-size:9px;font-weight:700;background:#7c3aed;color:#fff;border-radius:999px;line-height:1;padding:2px 5px}
-.chud-ability-cd{position:absolute;left:0;right:0;bottom:0;height:3px;background:#0008}
-.chud-ability-cd-fill{display:block;height:100%;background:#4ade80}
-.chud-ability:disabled .chud-ability-cd-fill{background:#7c3aed}
-.chud-energy{display:flex;align-items:center;gap:8px}
-.chud-energy-cells{flex:1;display:grid;grid-template-columns:repeat(10,1fr);gap:2px;height:16px}
-.chud-cell{background:#111827;border:1px solid #4b5563;border-radius:3px;overflow:hidden}
-.chud-cell-fill{height:100%;background:linear-gradient(90deg,#c026d3,#e879f9);transition:width .15s linear}
-.chud-energy-num{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;min-width:34px;text-align:right}
-.chud-mult{font-size:12px;font-weight:800;background:#7c3aed;border-radius:999px;padding:3px 9px}
-.chud-chaos-mod{background:#0e7490}
-.chud-hint{font-size:11px;min-height:15px;color:#cbd5e1;text-align:center}
-.chud-side{display:none;flex-direction:column;gap:10px;width:230px;min-width:220px;flex:none;padding-top:2px;overflow-y:auto;overflow-x:hidden}
-.chud-dev-towers{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:4px}
-.chud-dev{overflow-wrap:anywhere}
-.chud-side-block{background:#111827;border:1px solid #374151;border-radius:8px;padding:8px}
-.chud-side-title{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;margin-bottom:4px}
-.chud-identity{display:flex;gap:8px;align-items:center}
-.chud-drag-preview{position:fixed;left:0;top:0;pointer-events:none;z-index:50;display:flex;gap:6px;align-items:center;
-  padding:4px 8px;background:#111827e6;border:2px solid #fbbf24;border-radius:6px}
-@media(min-width:1100px){
-  .chud-side{display:flex}
-  .chud-col{max-width:520px}
-  .chud-abilities-tray{display:none}
-  .chud-side .chud-abilities{min-width:0;max-width:none}
-  .chud-energy-cells{height:18px}
-}
-@media(max-height:520px) and (orientation:landscape){
-  .chud-col{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto 1fr;max-width:none}
-  .chud-top{grid-column:2;grid-row:1;width:auto;min-width:0;padding-left:6px}
-  .chud-arena{grid-column:1;grid-row:1/3;flex:none;height:100%;aspect-ratio:100/160}
-  .chud-tray{grid-column:2;grid-row:2;overflow-y:auto;padding-top:0;padding-left:6px;justify-content:center}
-  .chud-cards{grid-template-columns:auto repeat(4,1fr)}
-  .chud-abilities{grid-column:1/-1;flex-direction:row;flex-wrap:wrap;min-width:0;max-width:none}
-  .chud-dev-inline{position:absolute;top:34px;left:8px;z-index:6;max-width:300px}
-}
-`;

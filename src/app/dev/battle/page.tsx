@@ -449,6 +449,10 @@ function BattlePanel() {
 
       {start && (stage === "active" || stage === "reconnecting" || stage === "ended" || stage === "aborted") && (
         <BattleHud
+          connectionStatus={stage === "reconnecting" ? `Reconnecting, ${Math.max(0, Math.ceil((resumeDeadlineAt - now) / 1000))}s left` : stage === "active" ? "Connected" : stage === "ended" ? "Match complete" : "Match interrupted"}
+          error={error}
+          notice={notice}
+          onGiveUp={stage === "reconnecting" ? reset : undefined}
           start={start}
           frame={frame}
           me={me}

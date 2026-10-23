@@ -1,5 +1,9 @@
 # Memory
 
+- Battle shell styles live in `src/app/dev/battle/battle-hud.css`, scoped to `chud-` classes. At 1100px and above the hand docks beside the board. Compact landscape rules exclude desktop widths.
+- Fixed battle HUD must render connection/error/recovery notices itself, since the underlying page controls are covered. Keep canvas mapping and scene lifecycle unchanged during presentation work.
+- Delegated project agents use GPT-6.1 Sol at low or medium reasoning per the owner's 2026-10-23 instruction.
+
 Durable facts, conventions, and gotchas that should survive across sessions.
 
 ## User workflow

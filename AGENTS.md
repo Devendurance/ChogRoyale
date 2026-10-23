@@ -195,3 +195,10 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - One slice per session. Do not start a second slice or expand scope because another slice looks convenient.
 - The active B2.8f.3 live presentation QA is owner-gated. Do not mark it complete from harness evidence.
 - Production migrations, deployment, push, real-money flows and social backend authorization remain approval-gated.
+
+## BATTLEFIELD PRESENTATION
+
+- Use GPT-6.1 Sol at low or medium reasoning for delegated project work unless the owner changes that preference.
+- Keep battle shell styles scoped to `.chud` and `chud-` classes. Desktop hand placement must not reduce the board's height, and compact landscape rules must stay below the desktop breakpoint.
+- Preserve the shared canvas-rectangle pointer mapper and stable Phaser instance. Presentation fixtures prove layout and callback behavior only, never authenticated multiplayer or server acceptance.
+- Connection, error and recovery notices must remain visible inside the fixed HUD. Recovery actions reuse the existing session callbacks.

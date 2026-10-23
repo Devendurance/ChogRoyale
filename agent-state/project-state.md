@@ -1,6 +1,12 @@
 # Project State
 
-Last updated: 2026-10-22
+## B2.8g.0 battlefield shell (2026-10-23)
+
+- Active `/dev/battle` presentation uses scoped violet/gold panels and the shared Satoshi, Georama and Lilita One fonts. Desktop places the hand and energy beside the full-height board. Mobile keeps a bottom dock.
+- `BattleHud.tsx`, `battle-hud.css` and status-only props in `page.tsx` own the slice. `BattleCanvas`, arena assets, coordinate mapping, ruleset v16, networking and persistence are unchanged.
+- Scoped delivery and evidence: `.fast-build/B2.8g.0-CHECKPOINT.md`. Existing dirty `.fast-build/STATE.md` stays untouched. Live authenticated acceptance remains separate.
+
+Last updated: 2026-10-23
 
 ## What this is
 

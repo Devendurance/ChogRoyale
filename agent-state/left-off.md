@@ -2,6 +2,14 @@
 
 Last updated: 2026-10-23
 
+## B2.8g.0 battlefield shell and combat HUD (2026-10-23)
+
+- Doing: one bounded active-battle presentation slice. Stop after B2.8g.0.
+- Done: violet/gold shell, desktop hand dock beside the board, mobile bottom hand/energy/ability dock, game typography, readable cost/selection feedback, secondary diagnostics and visible connection/recovery messages. Canvas, gameplay, server and persistence logic unchanged.
+- Verification and local checkpoint: `.fast-build/B2.8g.0-CHECKPOINT.md`. Labelled presentation-fixture evidence is outside the repository at `C:/Users/USER/Documents/ChogRoyale-Assets/battle-b28g0-review/`.
+- Checks: 67 focused tests, typecheck, lint and one production build passed. Lint retains one pre-existing `/dev/progress` image warning. Four final fixture views fit with no console/page errors. Temporary route removed, unrelated dirty files hash-preserved. Local commit only.
+- Next: owner visual review and live two-account/mobile-device QA. Pointer/deployment interaction verification remains pending a real two-player regression test. The owner chose fixtures only for this pass. No animation, audio, new VFX, settlement, deployment or push authorized by this slice.
+
 ## A4.5 app-shell integration completed (2026-10-23)
 
 - Done: every public game-entry link on the landing page now goes to `/app` instead of `/dev/battle`: desktop header, mobile menu, hero, bento battle tile, closing CTA and footer. In-page anchors and external links are unchanged. The lobby Battle action remains the explicit battle entry behind its existing gate.
