@@ -450,7 +450,7 @@ export default function BattleHud(props: BattleHudProps) {
         {devOpen && <div className="chud-dev-inline">{dev}</div>}
         <div className="chud-arena">
           <div className="chud-board">
-            <BattleCanvas feed={feed} mapRef={mapRef} onBoardTap={onBoardTap} onBoardHover={onBoardHover} hostStyle={{ width: "min(100cqw, 62.5cqh)", height: "auto", aspectRatio: "100 / 160", maxWidth: "none", margin: "auto" }} />
+            <BattleCanvas seat={me === 1 ? 1 : 0} feed={feed} mapRef={mapRef} onBoardTap={onBoardTap} onBoardHover={onBoardHover} hostStyle={{ width: "min(100cqw, 62.5cqh)", height: "auto", aspectRatio: "100 / 160", maxWidth: "none", margin: "auto" }} />
           </div>
           <div className="chud-chaos-stack">{chaosChips}</div>
           {banner !== null && (

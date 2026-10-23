@@ -14,8 +14,10 @@ import {
   masterToArena,
   masterToScreen,
   mountRoleFor,
+  mountVisualOffsetY,
   newDefenderState,
   placementFor,
+  structureTeamFor,
   updateDefender,
   weaponArena,
   weaponScreen,
@@ -86,6 +88,20 @@ describe("mount assembly", () => {
   it("selects sentinel for towers and core-keeper for cores", () => {
     expect(mountRoleFor("tower")).toBe("sentinel");
     expect(mountRoleFor("core")).toBe("core-keeper");
+  });
+
+  it("pads only top Core visuals without moving the ground point", () => {
+    expect(mountVisualOffsetY("core-keeper", 8)).toBe(72);
+    expect(mountVisualOffsetY("core-keeper", 40)).toBe(40);
+    expect(mountVisualOffsetY("core-keeper", 200)).toBe(0);
+    expect(mountVisualOffsetY("sentinel", 40)).toBe(0);
+  });
+
+  it("maps structure accents from the viewing player's seat", () => {
+    expect(structureTeamFor(0, 0)).toBe("friendly");
+    expect(structureTeamFor(1, 0)).toBe("opponent");
+    expect(structureTeamFor(0, 1)).toBe("opponent");
+    expect(structureTeamFor(1, 1)).toBe("friendly");
   });
 
   it("alive assembly is base, socket, defender, rim", () => {

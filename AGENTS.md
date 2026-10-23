@@ -129,6 +129,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 ## BATTLEFIELD PRESENTATION
 
 - B2.8g.1 environment polish stays outside the authoritative board. Non-interactive CSS atmosphere may frame the canvas, and Phaser mount shadows may ground existing structures, but the 100x160 transform, pointer mapper, deployment bounds and V002 layer geometry remain unchanged.
+- Visual Core padding may lower only the authored mount assembly and its presentation labels. Keep the authoritative ground point, health model and weapon anchors fixed. Team accents must derive from `owner === seat` for both perspectives, with decorative pennants and halos kept inside the noninteractive canvas presentation.
 - Fixture screenshots are presentation evidence only. Pointer/deployment delivery and touch behavior remain pending a real two-player regression.
 
 ## GAME APP SHELL

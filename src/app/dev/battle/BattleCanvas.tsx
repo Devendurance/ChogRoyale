@@ -26,8 +26,10 @@ import {
   fireKey,
   layerVisible,
   mountRoleFor,
+  mountVisualOffsetY,
   newDefenderState,
   placementFor,
+  structureTeamFor,
   updateDefender,
   weaponScreen,
   type ArenaManifest,
@@ -35,8 +37,10 @@ import {
 } from "./arena-registry";
 
 const S = 5; // pixels per arena unit
-const OWN = 0x3b82f6;
-const FOE = 0xef4444;
+const OWN = 0x36dbe8;
+const FOE = 0xf27978;
+const FRIENDLY_STRUCTURE = 0x36dbe8;
+const OPPONENT_STRUCTURE = 0xf27978;
 const KIT_URL = "/assets/chog-kit/v001";
 const FAMILY_COLOR: Record<string, number> = { ember_rift: 0xf97316, frost_crossing: 0x67e8f9, energy_surge: 0xfacc15, rift_shift: 0xa855f7, chaos_rally: 0x22c55e };
 
@@ -67,6 +71,7 @@ interface Props {
   mapRef: React.RefObject<BoardMapper | null>;
   onBoardTap: (at: ArenaPoint) => void;
   onBoardHover: (at: ArenaPoint | null) => void;
+  seat?: 0 | 1;
   /** Optional overrides for the host div (e.g. HUD sizes by height). */
   hostStyle?: React.CSSProperties;
 }
@@ -77,7 +82,7 @@ const hashPhase = (id: string) => {
   return h / 1000;
 };
 
-export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, hostStyle }: Props) {
+export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, hostStyle, seat = 0 }: Props) {
   const host = useRef<HTMLDivElement>(null);
   const press = useRef<{ id: number; x: number; y: number } | null>(null);
 
@@ -152,6 +157,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
       interface MountEnt {
         root: import("phaser").GameObjects.Container;
         shadow: import("phaser").GameObjects.Ellipse;
+        teamAccent: import("phaser").GameObjects.Graphics;
         base: import("phaser").GameObjects.Image;
         socket: import("phaser").GameObjects.Image;
         defender: import("phaser").GameObjects.Image;
@@ -214,6 +220,8 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
           const sx = (x: number) => x * S;
           const sy = (y: number) => (seat === 0 ? 160 - y : y) * S;
           const col = (owner: number) => (owner === seat ? OWN : FOE);
+          const structureCol = (owner: number) =>
+            structureTeamFor(owner, seat) === "friendly" ? FRIENDLY_STRUCTURE : OPPONENT_STRUCTURE;
           const t = Math.min(1, (now - f.receivedAt) / 100);
           const prevPos = new Map<string, { x: number; y: number }>();
           for (const u of [...(prev?.troops ?? []), ...(prev?.commanders ?? [])]) prevPos.set(u.id, u);
@@ -495,16 +503,40 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                 const core = role === "core-keeper";
                 const shadow = this.add.ellipse(0, core ? 5 : 3, core ? 116 : 94, core ? 24 : 19, 0x07111a, 0.38);
                 shadow.setStrokeStyle(1, core ? 0xf5c96b : 0x9fe3bf, 0.18).setDepth(-1);
+                const teamAccent = this.add.graphics();
                 const base = mk(`${role}:structure-base`);
                 const socket = mk(`${role}:socket-platform`);
                 const defender = mk(`${role}:defender-idle`);
                 const rim = mk(`${role}:front-rim`);
-                const root = this.add.container(x, y, [shadow, base, socket, defender, rim]);
-                me = { root, shadow, base, socket, defender, rim, rubble: false };
+                const root = this.add.container(x, y, [shadow, base, socket, defender, rim, teamAccent]);
+                me = { root, shadow, teamAccent, base, socket, defender, rim, rubble: false };
                 mountPool.set(s.id, me);
               }
               me.root.setPosition(x, y).setDepth(y);
-              me.shadow.setAlpha(s.alive ? 0.38 : 0.22);
+              const artOffsetY = mountVisualOffsetY(role, y);
+              const partY = (part: import("phaser").GameObjects.Image) => part.setY(artOffsetY);
+              partY(me.base);
+              partY(me.socket);
+              partY(me.defender);
+              partY(me.rim);
+              me.shadow.setPosition(0, artOffsetY + (role === "core-keeper" ? 5 : 3)).setAlpha(s.alive ? 0.38 : 0.22);
+              me.teamAccent.clear();
+              const accent = structureCol(s.owner);
+              const flagTop = role === "core-keeper" ? -47 : -40;
+              const flagHeight = role === "core-keeper" ? 23 : 19;
+              const flagWidth = role === "core-keeper" ? 10 : 8;
+              // Small pennants and a halo make the seat colour legible without
+              // tinting the authored stone and Chog art as one flat sprite.
+              me.teamAccent.fillStyle(accent, 0.96);
+              me.teamAccent.fillRect(-20, flagTop, flagWidth, flagHeight);
+              me.teamAccent.fillTriangle(-20, flagTop + flagHeight, -20 + flagWidth, flagTop + flagHeight, -20 + flagWidth / 2, flagTop + flagHeight + 6);
+              me.teamAccent.fillRect(12, flagTop, flagWidth, flagHeight);
+              me.teamAccent.fillTriangle(12, flagTop + flagHeight, 12 + flagWidth, flagTop + flagHeight, 12 + flagWidth / 2, flagTop + flagHeight + 6);
+              me.teamAccent.lineStyle(1, 0xfff7d6, 0.72);
+              me.teamAccent.strokeRect(-20, flagTop, flagWidth, flagHeight);
+              me.teamAccent.strokeRect(12, flagTop, flagWidth, flagHeight);
+              me.teamAccent.lineStyle(2, accent, 0.88).strokeCircle(0, role === "core-keeper" ? -26 : -23, role === "core-keeper" ? 16 : 13);
+              me.teamAccent.setPosition(0, artOffsetY).setAlpha(s.alive ? 1 : 0.18);
               const fire = towerFires.get(s.id) ?? null;
               const prevDef = defenderStates.get(s.id) ?? newDefenderState();
               const accepted = s.alive && fire !== null && fireFresh({ structureId: s.id, tick: fire.tick }, frame.tick) && !prevDef.firedKeys.includes(fireKey({ structureId: s.id, tick: fire.tick }));
@@ -521,6 +553,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                   me.socket.setVisible(true);
                   me.defender.setVisible(true);
                   me.rim.setVisible(true);
+                  me.teamAccent.setVisible(true);
                 }
                 const placement = arena ? placementFor(arena, s.kind, s.x, s.y) : null;
                 // Defender art stays upright, so the directional stance is
@@ -540,19 +573,21 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                   const poseDef = mrole.poses[pose];
                   if (poseDef && poseDef.firingAllowed) {
                     const [wx, wy] = weaponScreen(placement.groundAnchorPixels, poseDef.weaponAnchorLocalBoardPixels, seat);
-                    towerFx.push({ fx: wx, fy: wy, tx: fire.x, ty: fire.y, born: now, dur: 120 });
+                    towerFx.push({ fx: wx, fy: wy + artOffsetY, tx: fire.x, ty: fire.y, born: now, dur: 120 });
                   }
                 }
                 // HP bar from the authored mount rectangle (master px -> board px).
                 const hb = mrole.healthBarLocalBoardRectangle;
-                hpBar(x + (hb[0] + hb[2] / 2) / 2, y + hb[1] / 2, hb[2] / 2, s.hp, s.maxHp);
-                label(`hp:${s.id}`, `${s.hp}`, x, y + hb[1] / 2 - 10);
+                const visualY = y + artOffsetY;
+                hpBar(x + (hb[0] + hb[2] / 2) / 2, visualY + hb[1] / 2, hb[2] / 2, s.hp, s.maxHp);
+                label(`hp:${s.id}`, `${s.hp}`, x, visualY + hb[1] / 2 - 10);
               } else if (!me.rubble) {
                 // Destroyed: only the dimmed base remains, like rubble.
                 me.rubble = true;
                 me.socket.setVisible(false);
                 me.defender.setVisible(false);
                 me.rim.setVisible(false);
+                me.teamAccent.setVisible(false);
                 me.base.setTint(0x4b5563).setAlpha(0.45);
               }
             } else if (s.alive) {
@@ -908,13 +943,14 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
       cancelled = true;
       game?.destroy(true);
     };
-  }, [feed]);
+  }, [feed, seat]);
 
   // A press that starts and ends on the board without travelling is a tap.
   return (
     <div
       ref={host}
       data-testid="battle-board"
+      data-seat={seat}
       style={{ width: "100%", maxWidth: 500, aspectRatio: "100 / 160", touchAction: "none", ...hostStyle }}
       onPointerDown={(e) => {
         if (e.button === 0) press.current = { id: e.pointerId, x: e.clientX, y: e.clientY };

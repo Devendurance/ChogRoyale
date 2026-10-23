@@ -1,5 +1,6 @@
 # Memory
 
+- B2.8g.1 visual correction keeps the V002 100x160 geometry and pointer mapper fixed. `mountVisualOffsetY` is presentation-only for top Core art and labels, and `structureTeamFor(owner, seat)` drives coral opponent versus cyan friendly accents in both perspectives.
 - Battle shell styles live in `src/app/dev/battle/battle-hud.css`, scoped to `chud-` classes. At 1100px and above the hand docks beside the board. Compact landscape rules exclude desktop widths.
 - B2.8g.1 arena atmosphere is CSS-only outside the board plus low Phaser mount shadows. Keep `.chud-arena` decorative layers pointer-transparent and preserve the canvas rect for `screenToArena`.
 - Fixed battle HUD must render connection/error/recovery notices itself, since the underlying page controls are covered. Keep canvas mapping and scene lifecycle unchanged during presentation work.

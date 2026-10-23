@@ -2,6 +2,13 @@
 
 Last updated: 2026-10-23
 
+## B2.8g.1 visual correction (2026-10-23)
+
+- Doing: finalizing the bounded correction against the approved desktop and mobile target images.
+- Done: copied both target PNGs to `C:/Users/USER/Documents/ChogRoyale-Assets/battle-visual-targets/`, padded top Core visuals without moving gameplay anchors, added seat-relative coral and cyan structure accents, and retained the V002 environment frame plus approved HUD.
+- Checks: 57 focused battle tests passed, typecheck passed, lint passed with the existing `/dev/progress` image warning, and production build passed with 38 static pages. Fixture captures at 390x844, 1366x768, 360x800 and 1920x1080 show both seat perspectives, full structure presentation, no overflow, and no console/page errors.
+- Next: create the scoped correction checkpoint, stage only correction files, commit locally, and stop. Fixture evidence does not establish live pointer/deployment or two-player acceptance.
+
 ## B2.8g.1 arena environment and visual depth (2026-10-23)
 
 - Doing: one bounded environment pass after the approved B2.8g.0 HUD.

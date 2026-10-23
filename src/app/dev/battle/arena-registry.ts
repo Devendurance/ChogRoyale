@@ -125,6 +125,17 @@ export type StructureKind = "tower" | "core";
 
 export const mountRoleFor = (kind: StructureKind): string => (kind === "core" ? "core-keeper" : "sentinel");
 
+export type StructureTeam = "friendly" | "opponent";
+
+export const structureTeamFor = (owner: number, seat: Seat): StructureTeam =>
+  owner === seat ? "friendly" : "opponent";
+
+// The authored Core Keeper extends above the top gameplay edge. Keep the
+// authoritative ground point and weapon anchors fixed, then lower only the
+// visual assembly enough to keep its art and health bar inside the canvas.
+export const mountVisualOffsetY = (role: string, screenY: number): number =>
+  role === "core-keeper" && screenY < 90 ? Math.max(0, 80 - screenY) : 0;
+
 export const placementFor = (m: ArenaManifest, kind: StructureKind, x: number, y: number): MountPlacement | null => {
   const [ax, ay] = boardPoint(x, y, 0);
   // Ground anchors are seat-agnostic master coordinates; match by arena point.

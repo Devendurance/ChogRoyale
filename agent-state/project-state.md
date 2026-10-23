@@ -1,5 +1,11 @@
 # Project State
 
+## B2.8g.1 visual correction (2026-10-23)
+
+- The approved B2.8g.1 environment pass now keeps all six V002 structures inside the authored canvas presentation. Top Core art and its health label use a visual-only Y offset, while ground points, camera mapping, deployment bounds and weapon anchors stay authoritative.
+- Structure accents are seat-relative. Friendly mounts use cyan pennants and halos, and opponent mounts use coral accents in either player perspective. The V002 board remains live Phaser art, with the surrounding frame built from existing layers and pointer-transparent CSS.
+- Scoped delivery and fixture evidence: `.fast-build/B2.8g.1-CORRECTION-CHECKPOINT.md`. Target images are external at `C:/Users/USER/Documents/ChogRoyale-Assets/battle-visual-targets/`. Live authenticated acceptance remains separate.
+
 ## B2.8g.1 arena environment and visual depth (2026-10-23)
 
 - The approved B2.8g.0 HUD remains intact. `battle-hud.css` now gives the fixed shell and arena a restrained green, teal and gold environmental surround with pointer-events disabled on decorative layers.
