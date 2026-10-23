@@ -2747,6 +2747,160 @@
   }
 }
 
+/* ---------------------------------------------------------------- P1a play hub */
+
+.app-stage--play {
+  min-height: calc(100dvh - var(--app-hud-h));
+}
+
+.app-play-column {
+  width: 100%;
+  max-width: 980px;
+  gap: 18px;
+}
+
+.app-play-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: clamp(20px, 4vw, 34px);
+  border: 2px solid #8f7bff;
+  border-top-color: #ffc83d;
+  border-radius: 22px;
+  background: linear-gradient(135deg, rgba(84, 54, 160, .96), rgba(29, 20, 88, .98));
+  box-shadow: inset 0 2px rgba(255,255,255,.18), 0 8px 0 rgba(18,11,69,.64), 0 22px 42px rgba(10,6,40,.34);
+}
+
+.app-play-kicker,
+.app-play-card__eyebrow {
+  margin: 0 0 6px;
+  color: #ffe08a;
+  font: 700 11px/1.2 var(--font-data);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.app-play-title,
+.app-play-battle-head h1 {
+  margin: 0;
+  color: #fff4c7;
+  font: 400 clamp(32px, 7vw, 52px)/.95 var(--font-game);
+  letter-spacing: .01em;
+  text-shadow: 0 4px #1a0d45;
+}
+
+.app-play-lead,
+.app-play-battle-head p {
+  max-width: 620px;
+  margin: 10px 0 0;
+  color: var(--app-ink-85);
+  font: 500 15px/1.5 var(--font-site);
+}
+
+.app-play-hero-mark,
+.app-play-card__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 66px;
+  height: 66px;
+  border: 2px solid #ffc83d;
+  border-radius: 18px;
+  background: #24135e;
+  color: #ffe08a;
+  box-shadow: inset 0 2px #ffffff24, 0 5px #120b45;
+}
+
+.app-play-modes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.app-play-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  min-height: 300px;
+  padding: 18px;
+  border: 2px solid #8f7bff;
+  border-top-color: #c7adff;
+  border-radius: 18px;
+  background: linear-gradient(165deg, rgba(70, 42, 145, .96), rgba(29, 20, 88, .98));
+  box-shadow: inset 0 2px #ffffff1e, 0 6px 0 #120b45aa, 0 18px 30px #0f082f55;
+}
+
+.app-play-card--featured { border-top-color: #ffc83d; }
+.app-play-card--locked { opacity: .82; border-style: dashed; }
+.app-play-card__icon--gold { border-color: #ffc83d; color: #ffc83d; }
+.app-play-card__icon--muted { border-color: #9c8bbd; color: #cbbbe4; }
+.app-play-card__body { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.app-play-card h2 { margin: 0; color: #fff; font: 400 29px/1 var(--font-game); }
+.app-play-card p:not(.app-play-card__eyebrow) { margin: 10px 0 18px; color: var(--app-ink-65); font: 500 14px/1.5 var(--font-site); }
+.app-play-card .app-btn { align-self: flex-start; min-height: 48px; margin-top: auto; padding-inline: 18px; font-size: 17px; }
+.app-play-card__status { align-self: flex-start; color: #d7c8ed; font: 700 10px/1.2 var(--font-data); letter-spacing: .1em; text-transform: uppercase; }
+.app-play-card__status--live { color: #9ff5de; }
+.app-play-card__disabled { display: inline-flex; align-self: flex-start; margin-top: auto; padding: 10px 12px; border: 1px solid #77669e; border-radius: 10px; color: #ddd1ee; font: 700 11px/1.2 var(--font-data); }
+.app-play-truth { margin: 0; color: var(--app-ink-45); font: 500 12px/1.5 var(--font-data); text-align: center; }
+
+.app-play-battle-shell {
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: 22px 16px;
+  color: #fff;
+  background: radial-gradient(ellipse at 50% 10%, #6042ab, transparent 48%), linear-gradient(150deg, #28185f, #1d1248 58%, #352078);
+}
+.app-play-battle-shell > * { width: min(100%, 780px); }
+.app-play-battle-head,
+.app-play-battle-controls {
+  width: min(100%, 780px);
+  padding: 24px;
+  border: 2px solid #8f7bff;
+  border-top-color: #ffc83d;
+  border-radius: 20px;
+  background: linear-gradient(165deg, rgba(70, 42, 145, .98), rgba(29, 20, 88, .98));
+  box-shadow: inset 0 2px #ffffff24, 0 8px 0 #120b45aa, 0 20px 34px #0f082f66;
+}
+.app-play-battle-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.app-play-battle-head .app-btn { flex: none; min-height: 44px; padding-inline: 14px; font-size: 14px; }
+.app-play-battle-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.app-play-battle-actions .app-btn { min-height: 50px; padding-inline: 18px; font-size: 16px; }
+.app-play-battle-controls > div { display: grid; gap: 10px; color: var(--app-ink-85); font: 600 14px/1.5 var(--font-data); }
+.app-play-battle-controls > div + div { margin-top: 12px; }
+.app-play-battle-controls .app-btn { min-height: 44px; padding-inline: 15px; font-size: 14px; }
+.app-play-code { display: flex; min-height: 50px; }
+.app-play-code input { width: 150px; min-width: 0; border: 2px solid #8f7bff; border-radius: 12px; background: #170d45; color: #fff; padding: 0 13px; font: 600 14px/1 var(--font-data); }
+.app-play-code input::placeholder { color: #bcaed8; }
+.app-play-room-code { display: flex !important; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1px solid #ffc83d; border-radius: 12px; background: #1a0d4a; }
+.app-play-room-code strong { color: #fff0ae; font: 400 24px/1 var(--font-game); letter-spacing: .12em; }
+.app-play-battle-error { width: min(100%, 780px); padding: 12px 15px; border: 1px solid #ff9eae; border-radius: 12px; background: #5a1d48; color: #ffe2e8; font: 600 13px/1.4 var(--font-data); }
+.app-play-battle-state { width: min(100%, 780px); padding: 18px; border: 1px solid #8f7bff; border-radius: 14px; background: #29175e; color: #fff1c8; text-align: center; font: 600 14px/1.4 var(--font-data); }
+
+@media (max-width: 800px) {
+  .app-play-modes { grid-template-columns: 1fr; }
+  .app-play-card { min-height: 0; }
+}
+
+@media (max-width: 520px) {
+  .app-play-hero { align-items: flex-start; padding: 20px 17px; }
+  .app-play-hero-mark { width: 52px; height: 52px; }
+  .app-play-card { padding: 16px; }
+  .app-play-battle-shell { place-items: start center; padding: calc(12px + env(safe-area-inset-top)) 10px calc(12px + env(safe-area-inset-bottom)); }
+  .app-play-battle-head { align-items: flex-start; flex-direction: column; padding: 18px; }
+  .app-play-battle-controls { padding: 18px; }
+  .app-play-battle-actions > * { flex: 1 1 140px; }
+  .app-play-code { flex: 1 1 100%; }
+  .app-play-code input { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-play-card, .app-play-hero { transition: none; }
+}
+
 /* ===========================================================================
    A3.2a progress, match history and the Casual Alpha Leaderboard
    The same lobby register: deep violet plates, hard outlines, gold for the

@@ -6,21 +6,21 @@ import { describe, it, expect } from "vitest";
 import { BENTO, CTA, FOOTER, PLAY } from "./copy";
 
 describe("public game entry links", () => {
-  it("sends the header, hero and shared Play action to /app", () => {
-    expect(PLAY.href).toBe("/app");
+  it("sends the header, hero and shared Play action to /app/play", () => {
+    expect(PLAY.href).toBe("/app/play");
   });
 
-  it("sends the closing primary action to /app", () => {
-    expect(CTA.primary.href).toBe("/app");
+  it("sends the closing primary action to /app/play", () => {
+    expect(CTA.primary.href).toBe("/app/play");
   });
 
-  it("sends the footer play link to /app", () => {
-    expect(FOOTER.playLink.href).toBe("/app");
+  it("sends the footer play link to /app/play", () => {
+    expect(FOOTER.playLink.href).toBe("/app/play");
   });
 
-  it("sends the battle tile to /app without touching the in-page link", () => {
+  it("sends the battle tile to /app/play without touching the in-page link", () => {
     const battle = BENTO.tiles.find((tile) => tile.id === "battle");
-    expect(battle?.link?.href).toBe("/app");
+    expect(battle?.link?.href).toBe("/app/play");
   });
 
   it("does not use the battle development route as a public entry", () => {

@@ -15,9 +15,8 @@ export const HERO = {
   lead: "Chog Royale is a fast 1v1 card battler where a verified Chog NFT sets the match’s first Chaos Pulse. Build your deck, read the arena and break the Core.",
 };
 
-// /app is the public entry into the authenticated shell. The lobby's Battle
-// action remains the explicit route into the gated battle surface.
-export const PLAY: SiteNavLink = { href: "/app", label: "Play the first match" }; // 5.1 primary CTA
+// /app/play is the public entry into the authenticated battle hub.
+export const PLAY: SiteNavLink = { href: "/app/play", label: "Play the first match" }; // P1a player-facing battle hub
 export const EXPLORE: SiteNavLink = { href: "#how-the-chog-matters", label: "See how the Chog matters" }; // 5.1 secondary CTA
 export const NAV: SiteNavLink[] = [{ href: EXPLORE.href, label: "How the Chog matters" }];
 
@@ -186,7 +185,7 @@ export const BENTO = {
       title: "Play a match.",
       // NEW, adapted from 1.3 and 7.1: real-time 1v1, energy, deploys, a Core.
       body: "Real-time 1v1. Deploy troops and spells, spend energy, and break the Core before your opponent breaks yours.",
-      link: { href: "/app", label: "Play the first match" }, // 5.1 primary CTA, enters the app shell
+      link: { href: "/app/play", label: "Play the first match" }, // P1a player-facing battle hub
       art: { kind: "tableau" },
     },
     {
@@ -277,11 +276,11 @@ export const CTA = {
   eyebrow: "Enter the arena", // handoff Scene 07 title
   heading: "Read. React. Break.", // 4.3 three-beat calls to action
   lead: "Build an eight-card deck, defend your Core and react to a Chaos Pulse derived from a verified Chog NFT.", // 1.7, first sentence
-  primary: { href: "/app", label: "Play the first match" }, // 5.1 primary CTA, enters the app shell
+  primary: { href: "/app/play", label: "Play the first match" }, // P1a player-facing battle hub
   secondary: { href: "#how-the-chog-matters", label: "See how the Chog matters" }, // 5.1 secondary CTA
   note: {
     label: "Closed alpha",
-    text: "Playing needs a dev login today, so the match is not open to the public yet.",
+    text: "Playing needs a signed-in game session today, so the match is not open to the public yet.",
   },
 };
 
@@ -317,7 +316,7 @@ export const FOOTER: FooterContent = {
     "Every Chog changes the arena.", // 1.1 primary line
     "A 1v1 card battler where a real Chog changes the match.", // 1.2 product descriptor
   ],
-  playLink: { label: "Play the closed alpha", href: "/app" },
+  playLink: { label: "Play the closed alpha", href: "/app/play" },
   columns: [
     {
       heading: "Explore",

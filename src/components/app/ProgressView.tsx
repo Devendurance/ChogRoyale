@@ -796,7 +796,7 @@ export default function ProgressView({
                     body={historyState.body}
                     action={
                       history.state === "empty" ? (
-                        <Link href="/app" className="app-btn app-btn--ghost">
+                        <Link href="/app/play" className="app-btn app-btn--ghost">
                           Play a match
                         </Link>
                       ) : undefined

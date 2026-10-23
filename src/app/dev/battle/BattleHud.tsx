@@ -43,6 +43,8 @@ const abilityLabel = (abilityId: string, cls: string) => {
 const nftImageUrl = (u: string) => (u.startsWith("ipfs://") ? `https://ipfs.filebase.io/ipfs/${u.slice(7)}` : u);
 
 export interface BattleHudProps {
+  /** Keep development-only room diagnostics out of the player-facing route. */
+  showDevDiagnostics?: boolean;
   connectionStatus?: string;
   error?: string | null;
   notice?: string | null;
@@ -444,9 +446,11 @@ export default function BattleHud(props: BattleHudProps) {
                 {score.mine} <CrownIcon color="#67e8f9" />
               </span>
             </span>
-            <button className="chud-devbtn" onClick={() => setDevOpen(!devOpen)} aria-pressed={devOpen} title="Dev diagnostics">
-              Dev
-            </button>
+            {props.showDevDiagnostics !== false && (
+              <button className="chud-devbtn" onClick={() => setDevOpen(!devOpen)} aria-pressed={devOpen} title="Dev diagnostics">
+                Dev
+              </button>
+            )}
           </div>
           {(props.connectionStatus || props.error || props.notice) && <div className="chud-status" aria-live="polite">
             <span>{props.connectionStatus}</span>
@@ -463,7 +467,7 @@ export default function BattleHud(props: BattleHudProps) {
             )}
           </div>
         </header>
-        {devOpen && <div className="chud-dev-inline">{dev}</div>}
+        {props.showDevDiagnostics !== false && devOpen && <div className="chud-dev-inline">{dev}</div>}
         <div className="chud-arena">
           <div className="chud-board">
             <BattleCanvas seat={me === 1 ? 1 : 0} feed={feed} mapRef={mapRef} onBoardTap={onBoardTap} onBoardHover={onBoardHover} hostStyle={{ width: "min(100cqw, 62.5cqh)", height: "auto", aspectRatio: "100 / 160", maxWidth: "none", margin: "auto" }} />

@@ -1,5 +1,13 @@
 # Project State
 
+## P1a production play hub and battle routing (2026-10-23)
+
+- Added `/app/play` with truthful Unranked, Private Room and Ranked unavailable states.
+- Added `/app/play/battle` and moved the existing BattlePanel session into a shared module used by both the player route and `/dev/battle`.
+- Player route keeps the existing Colyseus queue, room-code lifecycle, loadout picker, Phaser canvas, reconnect behavior, combat VFX and result state. Dev diagnostics stay hidden on the player route.
+- Public Play CTAs and app battle entry links now target `/app/play`.
+- Checkpoint: `.fast-build/P1a-PLAY-HUB-CHECKPOINT.md`. Live authenticated QA remains separate.
+
 ## UI polish pass (2026-10-23)
 
 - Progress identity no longer breaks usernames at arbitrary characters. Avatar/name flex sizing and handle ellipsis preserve the verified record layout.

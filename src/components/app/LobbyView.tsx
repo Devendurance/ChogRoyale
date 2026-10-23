@@ -231,7 +231,7 @@ export default function LobbyView({
             </h2>
             <div className="app-battle__row">
               {battleEnabled ? (
-                <Link href="/dev/battle" className="app-btn app-btn--battle">
+                <Link href="/app/play" className="app-btn app-btn--battle">
                   <Icon name="swords" size={26} />
                   Battle
                 </Link>

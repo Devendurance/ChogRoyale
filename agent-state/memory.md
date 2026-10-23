@@ -1,5 +1,8 @@
 # Memory
 
+- P1a play routing keeps one battle session implementation in `src/app/dev/battle/BattlePanel.tsx`. `/dev/battle` only supplies its development Privy wrapper, while `/app/play/battle` consumes the shared app-shell provider.
+- Ranked matchmaking is unsupported in the current server. The player hub must say unavailable and must not route Ranked to the casual queue.
+
 - UI polish keeps the app progress identity flex child shrinkable with `overflow-wrap: break-word`, while battle card names use a bounded two-line label and the existing card cost remains data-bound. Result presentation reads only `EndMessage`, `StartMessage.opponent`, and settlement state.
 
 - B2.8g.2 Phaser feedback is event-driven. `combatEventKey` dedupes public frame events across refreshed snapshots, `eventStart` clears the key set on a new match, and HP drops add short hit cues without changing state. Keep `fx` and `fxImgs` bounded and pointer-transparent.

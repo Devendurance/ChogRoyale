@@ -2,6 +2,12 @@
 
 Last updated: 2026-10-23
 
+## P1a production play hub and battle routing, complete
+
+- Added `/app/play` and `/app/play/battle`, moved the battle session into a shared `BattlePanel`, and updated public and app Play links.
+- Ranked remains an honest unavailable state. Signed-out browser fixtures loaded cleanly. Live authenticated multiplayer QA is deferred.
+- Focused tests, typecheck, lint and production build are complete. P1a is committed locally. Next is owner-led authenticated multiplayer QA when two signed-in sessions are available.
+
 ## B4.1 friends system (2026-10-23), code complete, PROD migration pending
 
 - Migration 0010 `friendships` (canonical pair order, status/requester checks, cascade FKs, pair unique) generated and applied to TEST only (journal 11). PROD untouched (journal 10, no table).
@@ -465,3 +471,8 @@ Last updated: 2026-10-23
 - Done:32 READY_ANIMATED VFX,256 distinct transparent frames,32 matching strips/per-effect GIFs,10 PROVISIONAL child-motion templates. Six unique approved primitives reused through12 role copies. Combined offline proof100frames/10s600x1100 GIF+MP4, not combat replay.
 - QA passed594PNGs,978manifestrefs,15doclinks,641prior-pack files unchanged. Compatible concurrent BattleHud source drift is an explicit provenance warning, captured hashes retained. Unrelated HUD/registry/probe working-tree changes preserved.
 - Next: canonical manifests/presentation-kit.json and README.md. Asset integration can start.18 icons/2 variants need acceptance, six VFX bindings MISSING and26 PROVISIONAL. Ordinary attack/hit and tower/Core fire events absent, projectile snapshots are target positions without source/origin/arrival. Runtime/device/timing/cleanup remain untested. No game/backend/DB edits,Tripo,3D or push.
+# Current task: P1a production play hub and battle routing
+
+- Done: `/app/play` mode hub, `/app/play/battle` route, shared BattlePanel extraction, public CTA updates, Dev diagnostics gate, private room code presentation.
+- Done: focused tests, typecheck, lint, production build, and signed-out browser route checks.
+- Next: review staged diff, commit the scoped P1a files, and report live-auth QA as deferred.
