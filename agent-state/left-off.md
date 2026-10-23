@@ -2,6 +2,12 @@
 
 Last updated: 2026-10-23
 
+## B5.3b PRECHECK DONE, stopped for live session (2026-10-23)
+
+- Precheck green: journal 1-10, snapshot present, 9 players / 0 matches (clean baseline), flags OFF (env + .env), battle server running since 11:34 pre-migration with null settlement service. Server left running; nothing activated.
+- Blocked: the two designated accounts were not named in the authorization, and the match needs live owner play (Privy login is human-only). No accounts invented, no server stopped/started, no synthetic records.
+- To proceed: owner names the two accounts and joins a live session; then activate (BATTLE_SETTLEMENT=1 + restart), play one private match, verify, disarm.
+
 ## B5.3a settlement readiness: CONDITIONAL GO (2026-10-23), no activation
 
 - Runtime: no deployed battle server exists (no deploy configs; script is localhost-only, refuses NODE_ENV=production). Controlled match = local battle:server + local dev, two designated accounts, private room.
