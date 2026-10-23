@@ -113,6 +113,13 @@
       "when": 1792793942312,
       "tag": "0015_silly_blocks",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1792796183890,
+      "tag": "0016_dm_messaging",
+      "breakpoints": true
     }
   ]
 }

@@ -1,5 +1,9 @@
 # Project State
 
+## P5b real private messaging backend (2026-10-23)
+
+- `dm_conversations` (canonical pair, unique) + `dm_messages` (sender-verified, per-sender idempotency key, 1..1000 chars, read_at once-only) via migration 0016, TEST only. Guards at write boundary: accepted friendship + both block directions; block races caught by post-write re-check that removes only a fresh insert. Receipt means stored, never delivered-to-device. Inbox hides blocked pairs, keeps unfriended history; history durable across block/unfriend. Single-instance 20/min send throttle (RATE_LIMITED 429). Routes under `/api/players/me/messages` (list, send, fetch, read). Tests 19/19 new, regressions 33/33, typecheck/lint/build green. No PROD writes, no push, no UI.
+
 ## P5a player blocking and social safety (2026-10-23)
 
 - Directional `player_blocks` (migration 0015, TEST only) with unique blocker/blocked pair and no-self check. `blockPlayer` ends friendship/pending rows then inserts idempotently; unblock never restores. `sendRequest`/`acceptRequest` refuse across blocks with neutral FORBIDDEN; search and list hide blocked pairs. `canSociallyInteract` guards both directions for reuse by messaging/clans/gifting/lending. Blocks APIs under `/api/players/me/blocks`; friends UI gains confirm-to-block and blocked list with unblock. Tests 16/16 new, 17/17 Friends regressions green. No PROD writes, no push.

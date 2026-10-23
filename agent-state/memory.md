@@ -1,5 +1,7 @@
 # Memory
 
+- P5b DMs live in `dm_conversations`/`dm_messages` (TEST migration 0016). Cursor/ack boundaries resolve in-DB at full timestamptz precision because JS Dates truncate microseconds and re-match their own row. Raw `db.execute` SELECTs return snake_case, so alias to camelCase. neon-http binds scalar params fine but not JS arrays: use `sql.join` of `::uuid` literals or `inArray`. DB suites must run with `--fileParallelism=false`; parallel files collide on the shared TEST branch and fail spuriously.
+
 - P5a blocking is directional in `player_blocks` (TEST migration 0015). Block ends friendship/pending rows and refuses new sends/accepts both ways with neutral FORBIDDEN; search/list hide blocked pairs; `canSociallyInteract` in `src/db/blocks.ts` checks both directions. neon-http has no transactions, so the guarantee is ordered delete-then-insert plus the unique pair constraint. Full-project eslint hangs in this environment (single-file pass used); `battle-animation.ts` tsc/build breakage predates P5a.
 
 - P4b animation stays presentation-only in `src/app/dev/battle/BattleCanvas.tsx` and `battle-animation.ts`. The runtime kit is static art only. Snapshot positions remain authoritative, ordinary deltas interpolate, large corrections snap at 12 arena units, and resumed starts prime cue keys so historical events do not replay. Match reset destroys sprite, effect, label and mount pools.

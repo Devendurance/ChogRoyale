@@ -804,3 +804,58 @@ export const playerBlocks = pgTable(
 );
 
 export type PlayerBlock = typeof playerBlocks.$inferSelect;
+
+// P5b direct-message conversations. One canonical row per unordered player
+// pair (user_a < user_b), so simultaneous creation collapses to one
+// conversation via the pair unique index. History is durable: blocks and
+// unfriends never delete rows; reads filter visibility instead.
+export const dmConversations = pgTable(
+  "dm_conversations",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    userA: uuid("user_a")
+      .notNull()
+      .references(() => players.id, { onDelete: "cascade" }),
+    userB: uuid("user_b")
+      .notNull()
+      .references(() => players.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("dm_conversations_pair_unique").on(t.userA, t.userB),
+    check("dm_conversations_canonical_order_check", sql`${t.userA} < ${t.userB}`),
+  ]
+);
+
+export type DmConversation = typeof dmConversations.$inferSelect;
+
+// P5b direct messages. sender is server-verified, never client-supplied.
+// idempotencyKey is client-generated: the (sender, key) unique index makes
+// retries and concurrent duplicate sends collapse to one row. readAt is set
+// once by the recipient's acknowledgement and never rewritten. Content is
+// bounded plain text; the length check is enforced again at the API layer.
+export const dmMessages = pgTable(
+  "dm_messages",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    conversationId: uuid("conversation_id")
+      .notNull()
+      .references(() => dmConversations.id, { onDelete: "cascade" }),
+    sender: uuid("sender").notNull().references(() => players.id, { onDelete: "cascade" }),
+    idempotencyKey: uuid("idempotency_key").notNull(),
+    content: text("content").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    readAt: timestamp("read_at", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("dm_messages_sender_key_unique").on(t.sender, t.idempotencyKey),
+    index("dm_messages_conversation_created_idx").on(t.conversationId, t.createdAt, t.id),
+    check("dm_messages_content_length_check", sql`char_length(${t.content}) between 1 and 1000`),
+  ]
+);
+
+export type DmMessage = typeof dmMessages.$inferSelect;

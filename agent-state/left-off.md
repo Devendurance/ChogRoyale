@@ -2,6 +2,10 @@
 
 Last updated: 2026-10-23
 
+## P5b real private messaging backend, complete (local commit, no push)
+
+- DM conversations/messages (migration 0016, TEST only), idempotent sends, cursor pagination, recipient-only read acks, neutral unavailable errors, no UI. Tests 19/19 new, Friends/block regressions 33/33 green, typecheck/lint/build green. Do not start P5c.
+
 ## P5a player blocking and social safety, complete (local commit, no push)
 
 - Directional blocks with friendship teardown, neutral unavailable errors, hidden search, shared guard, minimal UI, TEST migration 0015 applied to TEST only. Tests 16/16 new plus 17/17 Friends regressions green. Pre-existing battle-animation tsc/build breakage carried over, no new type errors. Do not start P5b.

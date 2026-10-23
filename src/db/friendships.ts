@@ -141,6 +141,13 @@ async function findPair(a: string, b: string): Promise<Friendship | null> {
   return rows[0] ?? null;
 }
 
+/** The accepted friendship row between two players, or null. P5b messaging
+ * uses this as its write/read gate alongside the block guard. */
+export async function getAcceptedFriendship(a: string, b: string): Promise<Friendship | null> {
+  const row = await findPair(a, b);
+  return row && row.status === "accepted" ? row : null;
+}
+
 async function viewOf(row: Friendship, me: string): Promise<FriendshipView> {
   const otherId = row.userA === me ? row.userB : row.userA;
   const profiles = await profilesById([otherId]);
