@@ -32,6 +32,11 @@ export interface FriendsApiError {
   message: string;
 }
 
+export interface BlockedEntry {
+  player: FriendEntry["player"];
+  since: string;
+}
+
 export interface FriendsViewProps {
   phase: FriendsPhase;
   player: LobbyPlayer | null;
@@ -54,4 +59,8 @@ export interface FriendsViewProps {
   onAccept: (friendshipId: string) => void;
   onDecline: (friendshipId: string) => void;
   onRemove: (friendshipId: string) => void;
+  blocked: BlockedEntry[];
+  blockedState: "ready" | "unavailable";
+  onBlock: (playerId: string) => void;
+  onUnblock: (playerId: string) => void;
 }

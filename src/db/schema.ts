@@ -776,3 +776,31 @@ export const friendships = pgTable(
 );
 
 export type Friendship = typeof friendships.$inferSelect;
+
+// P5a player blocks. Directional: blocker blocks blocked. One row per
+// ordered pair keeps repeated blocks idempotent; the reverse pair is a
+// separate row so each direction blocks independently. Blocking ends any
+// friendship row between the pair via application transaction (no FK
+// between the tables). No self rows.
+export const playerBlocks = pgTable(
+  "player_blocks",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    blocker: uuid("blocker")
+      .notNull()
+      .references(() => players.id, { onDelete: "cascade" }),
+    blocked: uuid("blocked")
+      .notNull()
+      .references(() => players.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("player_blocks_pair_unique").on(t.blocker, t.blocked),
+    index("player_blocks_blocked_idx").on(t.blocked),
+    check("player_blocks_no_self_check", sql`${t.blocker} != ${t.blocked}`),
+  ]
+);
+
+export type PlayerBlock = typeof playerBlocks.$inferSelect;

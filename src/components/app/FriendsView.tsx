@@ -7,6 +7,7 @@
 // Rows show only the identity the server returns (username, display name,
 // avatar). No wallet address, player id or Privy identifier is rendered.
 
+import { useState } from "react";
 import AppHud from "./AppHud";
 import AppNav from "./AppNav";
 import AppNotice from "./AppNotice";
@@ -21,14 +22,18 @@ function FriendRow({
   onAccept,
   onDecline,
   onRemove,
+  onBlock,
 }: {
   entry: FriendEntry;
   actionId: string | null;
   onAccept: (id: string) => void;
   onDecline: (id: string) => void;
   onRemove: (id: string) => void;
+  onBlock: (playerId: string) => void;
 }) {
   const busy = actionId === entry.friendshipId;
+  const blockBusy = actionId === `block:${entry.player.id}`;
+  const [confirming, setConfirming] = useState(false);
   return (
     <li className="app-friend">
       <span className="app-friend__avatar" aria-hidden="true">
@@ -69,6 +74,28 @@ function FriendRow({
             {busy ? "Working" : entry.status === "accepted" ? "Remove" : "Cancel"}
           </button>
         )}
+        {confirming ? (
+          <button
+            type="button"
+            className="app-btn app-btn--ghost"
+            disabled={blockBusy}
+            onClick={() => {
+              setConfirming(false);
+              onBlock(entry.player.id);
+            }}
+          >
+            {blockBusy ? "Working" : "Confirm block"}
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="app-btn app-btn--ghost"
+            disabled={blockBusy}
+            onClick={() => setConfirming(true)}
+          >
+            Block
+          </button>
+        )}
       </span>
     </li>
   );
@@ -96,7 +123,12 @@ export default function FriendsView({
   onAccept,
   onDecline,
   onRemove,
+  blocked,
+  blockedState,
+  onBlock,
+  onUnblock,
 }: FriendsViewProps) {
+  const [confirmBlockId, setConfirmBlockId] = useState<string | null>(null);
   const noticeList = dedupeNotices(notices).map((n, i) => (
     <AppNotice
       key={`${n.tone}-${i}`}
@@ -243,6 +275,8 @@ export default function FriendsView({
                       const action = searchAction(hit);
                       const chip = searchChip(hit);
                       const hitBusy = actionId === hit.player.id;
+                      const blockBusy = actionId === `block:${hit.player.id}`;
+                      const confirming = confirmBlockId === hit.player.id;
                       return (
                         <li key={hit.player.id} className="app-friend">
                           <span className="app-friend__avatar" aria-hidden="true">
@@ -253,8 +287,8 @@ export default function FriendsView({
                             <span className="app-friend__handle">{friendHandle({ player: hit.player })}</span>
                           </span>
                           {chip ? <span className="app-badge">{chip}</span> : null}
-                          {action ? (
-                            <span className="app-friend__actions">
+                          <span className="app-friend__actions">
+                            {action ? (
                               <button
                                 type="button"
                                 className="app-btn app-btn--save"
@@ -265,8 +299,30 @@ export default function FriendsView({
                               >
                                 {hitBusy ? "Working" : action}
                               </button>
-                            </span>
-                          ) : null}
+                            ) : null}
+                            {confirming ? (
+                              <button
+                                type="button"
+                                className="app-btn app-btn--ghost"
+                                disabled={busy || blockBusy}
+                                onClick={() => {
+                                  setConfirmBlockId(null);
+                                  onBlock(hit.player.id);
+                                }}
+                              >
+                                {blockBusy ? "Working" : "Confirm block"}
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                className="app-btn app-btn--ghost"
+                                disabled={busy || blockBusy}
+                                onClick={() => setConfirmBlockId(hit.player.id)}
+                              >
+                                Block
+                              </button>
+                            )}
+                          </span>
                         </li>
                       );
                     })}
@@ -296,6 +352,7 @@ export default function FriendsView({
                               onAccept={onAccept}
                               onDecline={onDecline}
                               onRemove={onRemove}
+                              onBlock={onBlock}
                             />
                           ))}
                         </ul>
@@ -313,6 +370,7 @@ export default function FriendsView({
                               onAccept={onAccept}
                               onDecline={onDecline}
                               onRemove={onRemove}
+                              onBlock={onBlock}
                             />
                           ))}
                         </ul>
@@ -342,8 +400,48 @@ export default function FriendsView({
                         onAccept={onAccept}
                         onDecline={onDecline}
                         onRemove={onRemove}
+                        onBlock={onBlock}
                       />
                     ))}
+                  </ul>
+                )}
+              </section>
+
+              <section className="app-panel app-rise" aria-labelledby="app-friends-blocked-title" style={{ animationDelay: "180ms" }}>
+                <h2 className="app-profile-panel__title" id="app-friends-blocked-title">
+                  Blocked players
+                </h2>
+                {blockedState === "unavailable" ? (
+                  <p className="app-profile-note">Blocked players are not available right now. Try again shortly.</p>
+                ) : blocked.length === 0 ? (
+                  <p className="app-profile-note">No blocked players. Blocking ends the friendship and stops new requests.</p>
+                ) : (
+                  <ul className="app-friends-list">
+                    {blocked.map((item) => {
+                      const unblockBusy = actionId === `unblock:${item.player.id}`;
+                      return (
+                        <li key={item.player.id} className="app-friend">
+                          <span className="app-friend__avatar" aria-hidden="true">
+                            <Icon name="user" size={22} />
+                          </span>
+                          <span className="app-friend__names">
+                            <span className="app-friend__name">{friendName({ player: item.player })}</span>
+                            <span className="app-friend__handle">{friendHandle({ player: item.player })}</span>
+                          </span>
+                          <span className="app-badge">Blocked</span>
+                          <span className="app-friend__actions">
+                            <button
+                              type="button"
+                              className="app-btn app-btn--ghost"
+                              disabled={busy || unblockBusy}
+                              onClick={() => onUnblock(item.player.id)}
+                            >
+                              {unblockBusy ? "Working" : "Unblock"}
+                            </button>
+                          </span>
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
               </section>

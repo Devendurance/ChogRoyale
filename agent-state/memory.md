@@ -1,5 +1,7 @@
 # Memory
 
+- P5a blocking is directional in `player_blocks` (TEST migration 0015). Block ends friendship/pending rows and refuses new sends/accepts both ways with neutral FORBIDDEN; search/list hide blocked pairs; `canSociallyInteract` in `src/db/blocks.ts` checks both directions. neon-http has no transactions, so the guarantee is ordered delete-then-insert plus the unique pair constraint. Full-project eslint hangs in this environment (single-file pass used); `battle-animation.ts` tsc/build breakage predates P5a.
+
 - P4b animation stays presentation-only in `src/app/dev/battle/BattleCanvas.tsx` and `battle-animation.ts`. The runtime kit is static art only. Snapshot positions remain authoritative, ordinary deltas interpolate, large corrections snap at 12 arena units, and resumed starts prime cue keys so historical events do not replay. Match reset destroys sprite, effect, label and mount pools.
 
 - P4a battle audio uses no external assets or library. `src/app/dev/battle/battle-audio.ts` maps authoritative frame events, structure transitions, acks and results to throttled procedural cues. Audio stays silent until a gesture unlocks Web Audio, persists only mute/volume in `chog.battle-audio.v1`, and disposes on reset/unmount. Resumed matches prime event keys so old snapshots do not replay.

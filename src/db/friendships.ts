@@ -1,6 +1,7 @@
 import { and, asc, eq, inArray, or, sql } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { friendships, players, type Friendship } from "@/db/schema";
+import { blockBetween, blockedIdsFor } from "@/db/blocks";
 import { AppError } from "@/lib/errors";
 
 export type FriendshipStatus = "pending" | "accepted";
@@ -68,7 +69,9 @@ function viewFor(row: Friendship, me: string, other: FriendPlayer): FriendshipVi
   };
 }
 
-/** All friendship rows touching a player, newest first. */
+/** All friendship rows touching a player, newest first. Blocked pairs are
+ * hidden: a block deletes the friendship row, and this re-check covers the
+ * race where the block lands after the read. */
 export async function listFriendships(playerId: string): Promise<FriendLists> {
   const db = getDb();
   const rows = await db
@@ -76,11 +79,13 @@ export async function listFriendships(playerId: string): Promise<FriendLists> {
     .from(friendships)
     .where(or(eq(friendships.userA, playerId), eq(friendships.userB, playerId)))
     .orderBy(asc(friendships.createdAt));
+  const hidden = await blockedIdsFor(playerId);
   const others = rows.map((r) => (r.userA === playerId ? r.userB : r.userA));
   const profiles = await profilesById(others);
   const lists: FriendLists = { friends: [], incoming: [], outgoing: [] };
   for (const row of rows) {
     const otherId = row.userA === playerId ? row.userB : row.userA;
+    if (hidden.has(otherId)) continue;
     const other = profiles.get(otherId);
     if (!other) continue;
     const view = viewFor(row, playerId, other);
@@ -111,9 +116,11 @@ export async function searchPlayers(playerId: string, query: string, max = 20): 
     .where(or(eq(friendships.userA, playerId), eq(friendships.userB, playerId)));
   const byOther = new Map<string, Friendship>();
   for (const row of mine) byOther.set(row.userA === playerId ? row.userB : row.userA, row);
+  const hidden = await blockedIdsFor(playerId);
   const results: SearchResult[] = [];
   for (const row of rows) {
     if (row.id === playerId) continue;
+    if (hidden.has(row.id)) continue;
     const rel = byOther.get(row.id);
     results.push({
       player: toPlayer(row),
@@ -152,6 +159,8 @@ export async function sendRequest(playerId: string, targetId: string): Promise<F
   const db = getDb();
   const target = await db.select({ id: players.id }).from(players).where(eq(players.id, targetId)).limit(1);
   if (!target[0]) throw new AppError("NOT_FOUND", "Player not found");
+  const blocked = await blockBetween(playerId, targetId);
+  if (blocked.aBlocksB || blocked.bBlocksA) throw new AppError("FORBIDDEN", "This player is unavailable.");
   const existing = await findPair(playerId, targetId);
   if (existing) {
     if (existing.status === "accepted") return viewOf(existing, playerId);
@@ -180,9 +189,14 @@ async function rowFor(playerId: string, friendshipId: string): Promise<Friendshi
   return row;
 }
 
-/** Accepts a pending incoming request. Repeat accepts return the row. */
+/** Accepts a pending incoming request. Repeat accepts return the row.
+ * A block in either direction refuses with a neutral unavailable error and
+ * never reveals who blocked whom. */
 export async function acceptRequest(playerId: string, friendshipId: string): Promise<FriendshipView> {
   const row = await rowFor(playerId, friendshipId);
+  const otherId = row.userA === playerId ? row.userB : row.userA;
+  const blocked = await blockBetween(playerId, otherId);
+  if (blocked.aBlocksB || blocked.bBlocksA) throw new AppError("FORBIDDEN", "This request is no longer available.");
   if (row.status === "accepted") return viewOf(row, playerId);
   if (row.requestedBy === playerId) throw new AppError("BAD_REQUEST", "You cannot accept your own request");
   const updated = await getDb()

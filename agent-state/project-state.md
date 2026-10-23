@@ -1,5 +1,9 @@
 # Project State
 
+## P5a player blocking and social safety (2026-10-23)
+
+- Directional `player_blocks` (migration 0015, TEST only) with unique blocker/blocked pair and no-self check. `blockPlayer` ends friendship/pending rows then inserts idempotently; unblock never restores. `sendRequest`/`acceptRequest` refuse across blocks with neutral FORBIDDEN; search and list hide blocked pairs. `canSociallyInteract` guards both directions for reuse by messaging/clans/gifting/lending. Blocks APIs under `/api/players/me/blocks`; friends UI gains confirm-to-block and blocked list with unblock. Tests 16/16 new, 17/17 Friends regressions green. No PROD writes, no push.
+
 ## P4b character animation and battlefield motion (2026-10-23)
 
 - The v001 runtime manifest contains 59 static PNG assets and no sprite sheets or animation frames. Reused the existing Phaser sprites with lightweight procedural tween-like transforms.

@@ -2,6 +2,10 @@
 
 Last updated: 2026-10-23
 
+## P5a player blocking and social safety, complete (local commit, no push)
+
+- Directional blocks with friendship teardown, neutral unavailable errors, hidden search, shared guard, minimal UI, TEST migration 0015 applied to TEST only. Tests 16/16 new plus 17/17 Friends regressions green. Pre-existing battle-animation tsc/build breakage carried over, no new type errors. Do not start P5b.
+
 ## P4b character animation and battlefield motion, complete (local commit)
 
 - Added authoritative animation cue projection and tests. Existing v001 static art now gets responsive spawn pop, movement interpolation with correction snap, directional facing, attack windup/release, HP hit emphasis, bounded death collapse/fade, event dedupe, reconnect priming and pooled cleanup on match reset.

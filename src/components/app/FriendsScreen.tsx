@@ -18,7 +18,7 @@ import FriendsView from "./FriendsView";
 import { useMedia, useSaveData } from "@/components/site/use-media";
 import { feedbackNoticeFor, sessionNotice } from "./feedback-model";
 import { resolvePlayer, type ProfilePayload } from "./lobby-model";
-import type { FriendLists, FriendSearchHit, FriendsApiError } from "./friends-types";
+import type { BlockedEntry, FriendLists, FriendSearchHit, FriendsApiError } from "./friends-types";
 import type { LobbyNotice, LobbyPlayer } from "./lobby-types";
 
 type Result<T> =
@@ -86,6 +86,9 @@ function FriendsShell() {
   const [searchError, setSearchError] = useState<FriendsApiError | null>(null);
   const [actionId, setActionId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<FriendsApiError | null>(null);
+  const [blocked, setBlocked] = useState<BlockedEntry[]>([]);
+  const [blockedOk, setBlockedOk] = useState(false);
+  const [blockedError, setBlockedError] = useState<FriendsApiError | null>(null);
   const [busy, setBusy] = useState(false);
 
   const sessionKey = user?.id ?? null;
@@ -112,6 +115,19 @@ function FriendsShell() {
     return false;
   }, []);
 
+  const readBlocked = useCallback(async (token: string): Promise<boolean> => {
+    const res = await getJson<{ blocked: BlockedEntry[] }>("/api/players/me/blocks", token);
+    if (res.ok) {
+      setBlocked(res.data.blocked);
+      setBlockedOk(true);
+      setBlockedError(null);
+      return true;
+    }
+    setBlockedOk(false);
+    setBlockedError({ code: res.code, message: res.message });
+    return false;
+  }, []);
+
   const load = useCallback(
     async (token: string | null) => {
       setBusy(true);
@@ -128,17 +144,19 @@ function FriendsShell() {
           setProfile(null);
           setProfileError({ code: profileRes.code, message: profileRes.message });
           await readLists(token);
+          await readBlocked(token);
           return;
         }
         setProfile(profileRes.data.player);
         setProfileError(null);
         await readLists(token);
+        await readBlocked(token);
       } finally {
         setBusy(false);
         setLoadedFor(sessionKey);
       }
     },
-    [readLists, sessionKey]
+    [readLists, readBlocked, sessionKey]
   );
 
   useEffect(() => {
@@ -169,6 +187,7 @@ function FriendsShell() {
           return;
         }
         await readLists(token);
+        await readBlocked(token);
         if (searchHits !== null && searchQuery.trim().length > 0) {
           const again = await getJson<{ results: FriendSearchHit[] }>(
             `/api/players/me/friends/search?q=${encodeURIComponent(searchQuery.trim())}`,
@@ -184,7 +203,7 @@ function FriendsShell() {
         setActionId(null);
       }
     },
-    [getAccessToken, readLists, searchHits, searchQuery]
+    [getAccessToken, readLists, readBlocked, searchHits, searchQuery]
   );
 
   const onSearch = useCallback(async () => {
@@ -239,11 +258,25 @@ function FriendsShell() {
         feedbackNoticeFor({ code: searchError.code, message: searchError.message }, "search players")
       );
     }
+    if (blockedError) {
+      list.push(
+        feedbackNoticeFor(
+          { code: blockedError.code, message: blockedError.message },
+          "load your blocked players"
+        )
+      );
+    }
     if (actionError) {
       if (actionError.code === "NOT_FOUND") {
         list.push({
           tone: "error",
           text: "That request is no longer there. Refresh to see the current list.",
+          action: { label: "Try again", kind: "retry" },
+        });
+      } else if (actionError.code === "FORBIDDEN") {
+        list.push({
+          tone: "error",
+          text: "That player is unavailable. Refresh to see the current list.",
           action: { label: "Try again", kind: "retry" },
         });
       } else {
@@ -256,7 +289,7 @@ function FriendsShell() {
       list.push(sessionNotice("open friends"));
     }
     return list;
-  }, [profileError, listsError, searchError, actionError]);
+  }, [profileError, listsError, searchError, blockedError, actionError]);
 
   const loaded = authenticated && sessionKey !== null && loadedFor === sessionKey;
   const phase = !ready
@@ -270,6 +303,7 @@ function FriendsShell() {
           : "ready";
 
   const listsState = phase !== "ready" ? "unavailable" : !listsOk ? "unavailable" : "ready";
+  const blockedState = phase !== "ready" ? "unavailable" : !blockedOk ? "unavailable" : "ready";
   const searchState =
     searchHits === null ? "idle" : !searchOk ? "unavailable" : searchHits.length === 0 ? "empty" : "ready";
 
@@ -310,6 +344,14 @@ function FriendsShell() {
       onAccept={(fid) => void mutate(fid, (t) => sendJson(`/api/players/me/friends/${fid}/accept`, t, "POST"))}
       onDecline={(fid) => void mutate(fid, (t) => sendJson(`/api/players/me/friends/${fid}/decline`, t, "POST"))}
       onRemove={(fid) => void mutate(fid, (t) => sendJson(`/api/players/me/friends/${fid}`, t, "DELETE"))}
+      blocked={blocked}
+      blockedState={blockedState}
+      onBlock={(playerId) =>
+        void mutate(`block:${playerId}`, (t) => sendJson("/api/players/me/blocks", t, "POST", { playerId }))
+      }
+      onUnblock={(playerId) =>
+        void mutate(`unblock:${playerId}`, (t) => sendJson(`/api/players/me/blocks/${playerId}`, t, "DELETE"))
+      }
     />
   );
 }
