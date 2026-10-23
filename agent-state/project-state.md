@@ -1,5 +1,12 @@
 # Project State
 
+## P3b player, patron and NFT progression integrity (2026-10-23)
+
+- Verification-first pass over settled-match progression. Already correct and left untouched: deployment-independent player stats with draws excluded from wins, private/casual/ranked separation (leaderboard matchmaking-only, trophies ranked-only replay-verified), match history caller-side with per-item matchType, deployment-gated NFT commander appearances, v2-only patron appearances with v1 synthetic exclusion, Paragon at 10 distinct patron matches with idempotent/duplicate-safe processing.
+- One proven gap fixed: settled ranked matches counted in stat totals but in no byType bucket. getPlayerStats now returns a ranked breakdown alongside private/matchmaking; dev progress page shows the Ranked row. Additive key, existing consumers unaffected.
+- Live pool check (read-only patrons:validate): 1969 resolved indexed Genesis tokens, 0 invalid configs, all six themes, 50/50 selection spread; Tier present on all rows, 995 Aura fallbacks by design. No reindex, no writes.
+- Verification: progression 10/10 (incl. new ranked-bucket test), stats route 3/3, progress-model 29/29, typecheck, lint (1 pre-existing warning), build green. No PROD activation, no migrations, no push. Local commit pending.
+
 ## P3a real Arena Patron NFT sourcing (2026-10-23)
 
 - Battle already locked genuine indexed Genesis patrons (productionPatronSource + lockedPatronFromNft, fail-closed room lock, v2 evidence, legacy re-verification, v1 synthetic exclusion, Paragon at 10 distinct patron_appearances). The fabricated surface was the public read path.

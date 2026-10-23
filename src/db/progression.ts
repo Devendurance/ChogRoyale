@@ -46,7 +46,7 @@ export interface PlayerStats {
   winRateBp: number | null;
   crownsEarned: number;
   crownsConceded: number;
-  byType: { private: TypeBreakdown; matchmaking: TypeBreakdown };
+  byType: { private: TypeBreakdown; matchmaking: TypeBreakdown; ranked: TypeBreakdown };
   firstMatchAt: string | null;
   latestMatchAt: string | null;
 }
@@ -69,6 +69,10 @@ export async function getPlayerStats(playerId: string): Promise<PlayerStats> {
       count(*) filter (where m.match_type = 'matchmaking' and me.result = 'win')::int as mm_wins,
       count(*) filter (where m.match_type = 'matchmaking' and me.result = 'loss')::int as mm_losses,
       count(*) filter (where m.match_type = 'matchmaking' and me.result = 'draw')::int as mm_draws,
+      count(*) filter (where m.match_type = 'ranked')::int as ranked_matches,
+      count(*) filter (where m.match_type = 'ranked' and me.result = 'win')::int as ranked_wins,
+      count(*) filter (where m.match_type = 'ranked' and me.result = 'loss')::int as ranked_losses,
+      count(*) filter (where m.match_type = 'ranked' and me.result = 'draw')::int as ranked_draws,
       min(m.finished_at) as first_match_at,
       max(m.finished_at) as latest_match_at
     from match_participants me
@@ -91,6 +95,7 @@ export async function getPlayerStats(playerId: string): Promise<PlayerStats> {
     byType: {
       private: { matches: num("private_matches"), wins: num("private_wins"), losses: num("private_losses"), draws: num("private_draws") },
       matchmaking: { matches: num("mm_matches"), wins: num("mm_wins"), losses: num("mm_losses"), draws: num("mm_draws") },
+      ranked: { matches: num("ranked_matches"), wins: num("ranked_wins"), losses: num("ranked_losses"), draws: num("ranked_draws") },
     },
     firstMatchAt: iso("first_match_at"),
     latestMatchAt: iso("latest_match_at"),

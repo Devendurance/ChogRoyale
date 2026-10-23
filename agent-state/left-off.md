@@ -2,9 +2,9 @@
 
 Last updated: 2026-10-23
 
-## P3a real Arena Patron NFT sourcing, complete (local commit, no push)
+## P3b player, patron and NFT progression integrity, complete (local commit, no push)
 
-- Battle path was already genuine (indexed pool lock, verified snapshot, v2 evidence, fail-closed start, legacy re-verification, v1 excluded, Paragon at 10). The slice hardened the public read path: patron detail and chaos preview routes now verify through `lockedPatronFromNft`, wrong-collection rows 404, unresolved rows 422, client query traits ignored, provenance carries source/chain/contract/attributes. `createPatronAssignment` adds the chainId check.
-- `testLockedPatron` labelled offline fixture; genuine acceptance runs through the real TEST-branch indexer write/read path. New focused route tests 7/7, patron-source 12/12, patrons DB 4/4, typecheck, lint and build green.
-- Local commit: pending (scoped: 2 routes, db/patrons, test-helpers comment, 1 new test file). Pre-existing `.fast-build/STATE.md`, `DESIGN.md` and `docs/Chog Royale messaging.md` changes untouched. No push, no deploy, no PROD writes.
-- Next: owner review. Do not start P3b.
+- Verified by inspection plus existing tests: deployment-independent stats, W/L/D correctness, private/casual/ranked separation, deployment-gated commander appearances, v2-only patron appearances, Paragon 9-vs-10 with idempotent reprocessing, invalid-evidence refusal, ownership checks. Fixed one proven gap: ranked bucket missing from stats byType (ranked rows settled but invisible in the breakdown).
+- Scoped change: `getPlayerStats` ranked breakdown, dev progress Ranked row, new ranked-bucket test. Verification: progression 10/10, stats route 3/3, progress-model 29/29, typecheck, lint (1 pre-existing warning), build green. Live pool read-only: 1969 resolved, 0 invalid.
+- Local commit: pending (scoped: progression.ts, progression.test.ts, dev progress page, agent-state). `.fast-build/STATE.md`, `DESIGN.md`, `docs/Chog Royale messaging.md` untouched. No PROD activation, no migrations 0010-0014, no push, no deploy.
+- Next: owner review, including the still-gated live NFT-holder acceptance match. Do not start P4.

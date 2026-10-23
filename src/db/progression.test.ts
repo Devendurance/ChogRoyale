@@ -106,7 +106,7 @@ async function settleReal(a: Player, b: Player, matchType: "private" | "matchmak
 async function seedMatch(opts: {
   a: Player;
   b: Player;
-  type: "private" | "matchmaking";
+  type: "private" | "matchmaking" | "ranked";
   winnerSeat?: 0 | 1 | null;
   crowns?: [number, number];
   settledAt?: Date;
@@ -159,6 +159,26 @@ describe("getPlayerStats", () => {
     expect(s.byType.private).toEqual({ matches: 2, wins: 1, losses: 0, draws: 1 });
     expect(s.firstMatchAt).not.toBeNull();
     expect(s.latestMatchAt).not.toBeNull();
+  });
+
+  it("keeps ranked matches distinct: counted in totals, never in casual buckets", async () => {
+    const me = await mkPlayer("s1r");
+    const them = await mkPlayer("s1ro");
+    await seedMatch({ a: me, b: them, type: "ranked", winnerSeat: 0, crowns: [3, 2] });
+    await seedMatch({ a: me, b: them, type: "matchmaking", winnerSeat: null, crowns: [1, 1] });
+    const s = await getPlayerStats(me.id);
+    expect(s).toMatchObject({ total: 2, wins: 1, losses: 0, draws: 1 });
+    expect(s.byType.ranked).toEqual({ matches: 1, wins: 1, losses: 0, draws: 0 });
+    expect(s.byType.matchmaking).toEqual({ matches: 1, wins: 0, losses: 0, draws: 1 });
+    expect(s.byType.private).toEqual({ matches: 0, wins: 0, losses: 0, draws: 0 });
+    // Buckets always reconcile to the totals.
+    const sum = (k: "matches" | "wins" | "losses" | "draws") => s.byType.private[k] + s.byType.matchmaking[k] + s.byType.ranked[k];
+    expect({ total: sum("matches"), wins: sum("wins"), losses: sum("losses"), draws: sum("draws") }).toEqual({
+      total: s.total,
+      wins: s.wins,
+      losses: s.losses,
+      draws: s.draws,
+    });
   });
 
   it("returns zeros and null rate/dates for a player with no matches", async () => {

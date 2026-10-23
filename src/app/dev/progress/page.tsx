@@ -22,6 +22,7 @@ interface PlayerStats {
   byType: {
     private: { matches: number; wins: number; losses: number; draws: number };
     matchmaking: { matches: number; wins: number; losses: number; draws: number };
+    ranked: { matches: number; wins: number; losses: number; draws: number };
   };
   firstMatchAt: string | null;
   latestMatchAt: string | null;
@@ -159,6 +160,7 @@ function ProgressPanel() {
               {row("Crowns", `${s!.crownsEarned} earned / ${s!.crownsConceded} conceded`)}
               {row("Private", `${s!.byType.private.wins}W ${s!.byType.private.losses}L ${s!.byType.private.draws}D (${s!.byType.private.matches})`)}
               {row("Matchmaking", `${s!.byType.matchmaking.wins}W ${s!.byType.matchmaking.losses}L ${s!.byType.matchmaking.draws}D (${s!.byType.matchmaking.matches})`)}
+              {row("Ranked", `${s!.byType.ranked.wins}W ${s!.byType.ranked.losses}L ${s!.byType.ranked.draws}D (${s!.byType.ranked.matches})`)}
               {row("First match", dt(s!.firstMatchAt))}
               {row("Latest match", dt(s!.latestMatchAt))}
             </div>
