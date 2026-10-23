@@ -1,5 +1,7 @@
 # Memory
 
+- P4a battle audio uses no external assets or library. `src/app/dev/battle/battle-audio.ts` maps authoritative frame events, structure transitions, acks and results to throttled procedural cues. Audio stays silent until a gesture unlocks Web Audio, persists only mute/volume in `chog.battle-audio.v1`, and disposes on reset/unmount. Resumed matches prime event keys so old snapshots do not replay.
+
 - P2d card progression stays inside the existing `/app/decks` boundary. The card-XP read answers as `data.cards` with nested `policyVersion`, `maxLevel`, `gold` and `cards`, while Gold history answers as `data.gold`. Upgrade domain outcomes are HTTP 200 and require the expected purchased level plus a client UUID idempotency key.
 - The P2d UI must keep loadout editing independent from progression. It renders all 20 catalog cards, server-only level/XP/Gold values, and explicit schema-unavailable state. It never previews scaled combat stats or changes levels optimistically.
 

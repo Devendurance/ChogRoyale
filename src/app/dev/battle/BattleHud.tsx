@@ -26,6 +26,7 @@ import { useSpriteManifest } from "./use-sprite-manifest";
 import { portraitForCard, portraitForCommanderClass, type SpriteManifest } from "./sprite-registry";
 import { abilityView, scoreView, timerView } from "./hud-view";
 import { satoshi, georama, lilitaOne } from "@/components/site/fonts";
+import type { BattleCue } from "./battle-audio";
 import "./battle-hud.css";
 
 // Display-only copy of energyPhaseMult (src/lib/combat.ts). combat.ts imports
@@ -74,6 +75,12 @@ export interface BattleHudProps {
   onCardPointerEnd: (cancelled: boolean) => (e: React.PointerEvent<HTMLButtonElement>) => void;
   suppressClickUntil: React.RefObject<number>;
   onSelectCard: (id: string | null) => void;
+  audioMuted: boolean;
+  audioVolume: number;
+  onAudioUnlock: () => void;
+  onAudioCue: (cue: BattleCue) => void;
+  onToggleAudio: () => void;
+  onAudioVolumeChange: (volume: number) => void;
   send: (cmd: Record<string, unknown>, label: string) => void;
   /** Drag ghost element plumbing owned by page.tsx gesture state. */
   previewRef: React.RefObject<HTMLDivElement | null>;
@@ -199,6 +206,7 @@ function AbilityButton({
   manifest,
   acks,
   send,
+  onAudioUnlock,
 }: {
   a: AbilityView;
   frame: BattleFrame;
@@ -206,6 +214,7 @@ function AbilityButton({
   manifest: SpriteManifest | null;
   acks: Array<AckMessage & { label: string }>;
   send: BattleHudProps["send"];
+  onAudioUnlock: BattleHudProps["onAudioUnlock"];
 }) {
   const [flash, setFlash] = useState(false);
   const seen = useRef<string | null>(null);
@@ -228,7 +237,10 @@ function AbilityButton({
       data-state={v.label}
       disabled={v.disabled}
       title={`${abilityLabel(a.abilityId, start.commander.class)} · ${a.cost}e · Commander class art${a.blockedBy ? ` · ${a.blockedBy}` : ""}`}
-      onClick={() => send({ type: "ability", abilityId: a.abilityId }, `ability ${a.abilityId}`)}
+      onClick={() => {
+        onAudioUnlock();
+        send({ type: "ability", abilityId: a.abilityId }, `ability ${a.abilityId}`);
+      }}
       style={{ boxShadow: flash ? "0 0 0 2px #4ade80" : undefined }}
     >
       <Portrait src={manifest ? portraitForCommanderClass(manifest, start.commander.class) : null} name={start.commander.class} style={{ width: 38, height: 38, borderRadius: 5, flex: "none" }} />
@@ -365,7 +377,12 @@ export default function BattleHud(props: BattleHudProps) {
     onContextMenu: (e: React.MouseEvent<HTMLButtonElement>) => e.preventDefault(),
   });
   const select = (id: string | null) => {
-    if (performance.now() >= props.suppressClickUntil.current) props.onSelectCard(id === selected ? null : id);
+    if (performance.now() >= props.suppressClickUntil.current) {
+      props.onAudioUnlock();
+      const next = id === selected ? null : id;
+      if (next) props.onAudioCue("select");
+      props.onSelectCard(next);
+    }
   };
 
   const chaosChips = (frame?.chaos ?? []).map((c) => (
@@ -405,7 +422,7 @@ export default function BattleHud(props: BattleHudProps) {
     <>
       {frame.abilities.length === 0 && <span className="chud-ability-empty">Deploy your commander to use its ability.</span>}
       {frame.abilities.map((a) => (
-        <AbilityButton key={a.abilityId} a={a} frame={frame} start={start} manifest={manifest} acks={acks} send={send} />
+        <AbilityButton key={a.abilityId} a={a} frame={frame} start={start} manifest={manifest} acks={acks} send={send} onAudioUnlock={props.onAudioUnlock} />
       ))}
     </>
   );
@@ -468,6 +485,34 @@ export default function BattleHud(props: BattleHudProps) {
                 {presence.opponentConnected ? "Opponent back" : `Opp. offline ${Math.max(0, Math.ceil(((presence.reconnectDeadlineAt ?? 0) - now) / 1000))}s`}
               </span>
             )}
+            <div className="chud-audio" role="group" aria-label="Battle audio">
+              <button
+                type="button"
+                className="chud-audio-toggle"
+                aria-pressed={!props.audioMuted}
+                onClick={() => {
+                  props.onAudioUnlock();
+                  props.onToggleAudio();
+                }}
+                title={props.audioMuted ? "Unmute battle sounds" : "Mute battle sounds"}
+              >
+                <span aria-hidden="true">{props.audioMuted ? "×" : "♪"}</span>
+                {props.audioMuted ? "Muted" : "Sound"}
+              </button>
+              <input
+                className="chud-audio-volume"
+                aria-label="Battle sound volume"
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                value={props.audioVolume}
+                onChange={(event) => {
+                  props.onAudioUnlock();
+                  props.onAudioVolumeChange(Number(event.currentTarget.value));
+                }}
+              />
+            </div>
           </div>
         </header>
         {props.showDevDiagnostics !== false && devOpen && <div className="chud-dev-inline">{dev}</div>}

@@ -1,5 +1,11 @@
 # Project State
 
+## P4a essential battle audio (2026-10-23)
+
+- Battle audio is presentation-only and driven by existing authoritative frame events, command acks and the end message. `BattleAudio` uses short procedural Web Audio tones because the targeted battle paths contain no audio files.
+- Added browser-gesture unlock, persisted mute/volume preferences, cue throttling, event identity dedupe, resume priming, and cleanup on reset/unmount. The approved HUD gains a compact Sound toggle and volume range.
+- Focused audio/VFX/HUD tests pass, typecheck and lint pass, and production build completes with existing static-page timeout retries. Live authenticated audio QA remains pending. Local checkpoint committed, no push.
+
 ## P3b player, patron and NFT progression integrity (2026-10-23)
 
 - Verification-first pass over settled-match progression. Already correct and left untouched: deployment-independent player stats with draws excluded from wins, private/casual/ranked separation (leaderboard matchmaking-only, trophies ranked-only replay-verified), match history caller-side with per-item matchType, deployment-gated NFT commander appearances, v2-only patron appearances with v1 synthetic exclusion, Paragon at 10 distinct patron matches with idempotent/duplicate-safe processing.

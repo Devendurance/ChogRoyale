@@ -27,6 +27,18 @@ import type { RankedAwardView, MyRankedResponse } from "@/lib/ranked";
 import type { BoardMapper, CanvasFeed } from "./BattleCanvas";
 import LoadoutPicker from "./LoadoutPicker";
 import BattleHud from "./BattleHud";
+import {
+  BattleAudio,
+  DEFAULT_BATTLE_AUDIO_PREFERENCES,
+  cueForAck,
+  cueForResult,
+  cuesForBattleFrame,
+  readBattleAudioPreferences,
+  takeUnseenBattleAudioCues,
+  writeBattleAudioPreferences,
+  type BattleCue,
+  type BattleAudioPreferences,
+} from "./battle-audio";
 const APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID ?? "";
 const SERVER = process.env.NEXT_PUBLIC_BATTLE_SERVER_URL ?? "http://127.0.0.1:2567";
 const ENABLED = process.env.NODE_ENV !== "production" || process.env.NEXT_PUBLIC_ENABLE_DEV_BATTLE === "1";
@@ -80,6 +92,64 @@ export function BattlePanel({
   const suppressClickUntil = useRef(0);
   const preview = useRef<HTMLDivElement>(null);
   const sentLabels = useRef(new Map<string, string>());
+  const audioSeen = useRef(new Set<string>());
+  const audioPriming = useRef(false);
+  const audioResultSeen = useRef<string | null>(null);
+  const [audioPreferences, setAudioPreferences] = useState<BattleAudioPreferences>(() => ({ ...DEFAULT_BATTLE_AUDIO_PREFERENCES }));
+  const [audio] = useState(() => new BattleAudio(DEFAULT_BATTLE_AUDIO_PREFERENCES));
+
+  const unlockAudio = useCallback(() => {
+    void audio.unlock();
+  }, [audio]);
+
+  const playAudioCue = useCallback((cue: BattleCue) => {
+    audio.play(cue);
+  }, [audio]);
+
+  const updateAudio = useCallback((next: BattleAudioPreferences) => {
+    setAudioPreferences(next);
+    audio.setPreferences(next);
+    try {
+      writeBattleAudioPreferences(next, window.localStorage);
+    } catch {
+      /* Storage is optional. The in-memory preference still applies. */
+    }
+  }, [audio]);
+
+  const toggleAudio = useCallback(() => {
+    const next = { ...audioPreferences, muted: !audioPreferences.muted };
+    updateAudio(next);
+    if (!next.muted) void audio.unlock();
+  }, [audio, audioPreferences, updateAudio]);
+
+  const setAudioVolume = useCallback(
+    (volume: number) => updateAudio({ ...audioPreferences, volume }),
+    [audioPreferences, updateAudio]
+  );
+
+  useEffect(() => {
+    audio.setPreferences(audioPreferences);
+  }, [audio, audioPreferences]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        setAudioPreferences(readBattleAudioPreferences(window.localStorage));
+      } catch {
+        /* Storage is optional. The deterministic default remains active. */
+      }
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [audio]);
+
+  useEffect(() => () => audio.dispose(), [audio]);
+
+  useEffect(() => {
+    const syncVisibility = () => audio.setPageHidden(document.hidden);
+    syncVisibility();
+    document.addEventListener("visibilitychange", syncVisibility);
+    return () => document.removeEventListener("visibilitychange", syncVisibility);
+  }, [audio]);
 
   // One handler set shared by room-code create/join, matched reservations
   // and resume re-joins. SDK auto-reconnect is disabled: our resume flow owns
@@ -89,6 +159,9 @@ export function BattlePanel({
     r.onMessage("lobby", (m: LobbyMessage) => (setLobby(m), setStage((s) => (s === "connecting" || s === "searching" ? "lobby" : s))));
     r.onMessage("start", (m: StartMessage) => {
       feed.current = { start: m, frame: null, prev: null, receivedAt: performance.now(), selected: null, ghost: null };
+      audioSeen.current.clear();
+      audioResultSeen.current = null;
+      audioPriming.current = m.resumed;
       setSelected(null);
       setDragging(null);
       gesture.current = null;
@@ -108,15 +181,35 @@ export function BattlePanel({
     r.onMessage("frame", (f: BattleFrame) => {
       const cur = feed.current;
       if (!cur || (cur.frame && f.tick <= cur.frame.tick)) return; // never apply older snapshots
+      const previous = cur.frame;
       feed.current = { ...cur, prev: cur.frame, frame: f, receivedAt: performance.now() };
+      const cues = cuesForBattleFrame(f, previous);
+      if (audioPriming.current) {
+        for (const cue of cues) audioSeen.current.add(cue.key);
+        audioPriming.current = false;
+      } else {
+        for (const cue of takeUnseenBattleAudioCues(cues, audioSeen.current)) audio.play(cue.cue);
+      }
       setFrame(f);
     });
     r.onMessage("ack", (a: AckMessage) => {
       const label = sentLabels.current.get(a.cid) ?? a.cid;
       sentLabels.current.delete(a.cid);
+      const cue = cueForAck(a, label);
+      if (cue) for (const next of takeUnseenBattleAudioCues([cue], audioSeen.current)) audio.play(next.cue);
       setAcks((xs) => [{ ...a, label }, ...xs].slice(0, 5));
     });
-    r.onMessage("end", (e: EndMessage) => (resumeInfo.current = null, sessionStorage.removeItem(RESUME_KEY), setEnd(e), setStage("ended")));
+    r.onMessage("end", (e: EndMessage) => {
+      resumeInfo.current = null;
+      sessionStorage.removeItem(RESUME_KEY);
+      const cue = cueForResult(e.result);
+      if (audioResultSeen.current !== cue.key) {
+        audioResultSeen.current = cue.key;
+        audio.play(cue.cue);
+      }
+      setEnd(e);
+      setStage("ended");
+    });
     r.onMessage("settlement", (m: SettlementMessage) => setSettlement(m));
     r.onMessage("aborted", (a: { reason: string }) => (resumeInfo.current = null, sessionStorage.removeItem(RESUME_KEY), setAbort(a.reason), setStage("aborted")));
     r.onMessage("presence", (m: PresenceMessage) => setPresence(m));
@@ -135,7 +228,7 @@ export function BattlePanel({
       });
     });
     setRoom(r);
-  }, []);
+  }, [audio]);
 
   // Ranked awards are read back only after the server confirms settlement.
   // This bounded read never infers a trophy delta from the battle result.
@@ -264,8 +357,12 @@ export function BattlePanel({
     setNotice(null);
     setQueueStatus(null);
     feed.current = null;
+    audio.dispose();
+    audioSeen.current.clear();
+    audioResultSeen.current = null;
+    audioPriming.current = false;
     setStage("idle");
-  }, [room, queueRoom]);
+  }, [audio, room, queueRoom]);
 
   useEffect(() => () => void room?.leave(), [room]);
   useEffect(() => () => void queueRoom?.leave(), [queueRoom]);
@@ -390,10 +487,11 @@ export function BattlePanel({
   const onBoardTap = useCallback(
     (at: ArenaPoint) => {
       if (!selected) return;
+      unlockAudio();
       deploy(selected, at);
       showGhost(null, null);
     },
-    [selected, deploy, showGhost]
+    [selected, deploy, showGhost, unlockAudio]
   );
   const onBoardHover = useCallback(
     (at: ArenaPoint | null) => {
@@ -408,6 +506,7 @@ export function BattlePanel({
 
   const onCardPointerDown = (id: string) => (e: React.PointerEvent<HTMLButtonElement>) => {
     if (e.button !== 0 || stage !== "active") return;
+    unlockAudio();
     // A new press always replaces a stale gesture (e.g. one whose button unmounted).
     if (gesture.current?.dragging) {
       setDragging(null);
@@ -594,6 +693,12 @@ export function BattlePanel({
           onCardPointerEnd={onCardPointerEnd}
           suppressClickUntil={suppressClickUntil}
           onSelectCard={setSelected}
+          audioMuted={audioPreferences.muted}
+          audioVolume={audioPreferences.volume}
+          onAudioUnlock={unlockAudio}
+          onAudioCue={playAudioCue}
+          onToggleAudio={toggleAudio}
+          onAudioVolumeChange={setAudioVolume}
           send={send}
           previewRef={preview}
           lastAim={lastAim}
