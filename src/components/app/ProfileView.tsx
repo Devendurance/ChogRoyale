@@ -337,6 +337,10 @@ export default function ProfileView({
                 </dl>
 
                 <div className="app-profile-account__actions">
+                  <Link href="/app/settings" className="app-btn app-btn--ghost">
+                    <Icon name="settings" size={16} />
+                    Settings
+                  </Link>
                   <button type="button" className="app-btn app-btn--ghost" onClick={onRefresh} disabled={busy}>
                     <Icon name="refresh" size={16} />
                     {busy ? "Refreshing" : "Refresh"}

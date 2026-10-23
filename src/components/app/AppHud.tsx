@@ -55,6 +55,14 @@ export default function AppHud({
       <div className="app-hud__utils">
         {extra}
         <Link
+          href="/app/settings"
+          className="app-iconbtn"
+          aria-label="Settings"
+          title="Settings"
+        >
+          <Icon name="settings" />
+        </Link>
+        <Link
           href="/app/profile"
           className="app-iconbtn"
           aria-label="Profile"

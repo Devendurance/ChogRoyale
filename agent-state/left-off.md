@@ -2,6 +2,15 @@
 
 Last updated: 2026-10-23
 
+## A4.1 settings completed (2026-10-23)
+
+- Done: finished the partial `/app/settings` slice. Display name and avatar save through `POST /api/players/onboard`, then reconcile from `GET /api/players/me`. Wallet addresses, row ids and Privy identifiers stay out of the UI. Settings is linked from the HUD and the profile account panel.
+- Checks: focused settings model tests 23/23, typecheck clean, lint 0 errors with the one pre-existing `/dev/progress` warning, production build green with `/app/settings` prerendered static.
+- Browser: `/app/settings` 200 at 390x844, 1366x768 and 360x800. Login gate renders one h1, the Privy dialog opens, no overflow, no console errors, no page exceptions.
+- Pending: authenticated settings QA needs a real Privy login. Real profile load, name save, avatar save, wallet summary and post-save reconciliation were not exercised.
+- Checkpoint: `.fast-build/A4.1-CHECKPOINT.md`. `.fast-build/STATE.md` still holds unrelated dirty B2.8f history and was not staged.
+- Next: A4.2 only. Not started.
+
 ## Fast-Build roadmap registered (2026-10-23)
 
 - Doing: roadmap intake only. No product code, tests, database writes, deploy or push.

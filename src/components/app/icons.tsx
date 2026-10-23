@@ -11,6 +11,7 @@ export type IconName =
   | "commanders"
   | "progress"
   | "user"
+  | "settings"
   | "wallet"
   | "logout"
   | "refresh"
@@ -54,6 +55,20 @@ const PATHS: Record<IconName, ReactNode> = {
     <>
       <circle cx="12" cy="8.2" r="3.6" />
       <path d="M4.8 20c0-3.5 3.2-5.6 7.2-5.6s7.2 2.1 7.2 5.6" />
+    </>
+  ),
+  settings: (
+    <>
+      <circle cx="12" cy="12" r="6.2" />
+      <circle cx="12" cy="12" r="2.8" />
+      <path d="M12 3.4v2.2" />
+      <path d="M12 18.4v2.2" />
+      <path d="M3.4 12h2.2" />
+      <path d="M18.4 12h2.2" />
+      <path d="M5.9 5.9l1.6 1.6" />
+      <path d="M16.5 16.5l1.6 1.6" />
+      <path d="M18.1 5.9l-1.6 1.6" />
+      <path d="M7.5 16.5l-1.6 1.6" />
     </>
   ),
   wallet: (
