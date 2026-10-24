@@ -44,6 +44,8 @@
 
 - P6a (design only): `docs/P6-economy-gifting-contract.md` is the implementation contract. Truth: no $CHOG, store, orders, or receipt code exists; chain surface is read-only; B4.6 is NOT AUTHORIZED. Recommendation: Model B Gold sponsorship for card gifts, $CHOG for cosmetics/deck slots/sponsorship, never Gold/XP/trophies for sale. P6b starts only after owner signs catalog, payment details, and the B4.6 gate.
 
+- P6b preflight STOP: B4.6, legal, merchant, SKU/price, and finality threshold are all absent, so migration 0022 and payment code were not written. Read-only probe confirmed chain 143 and candidate token metadata (18 decimals, CHOG, 1B supply) and flagged a possible 45-byte proxy needing implementation review. Full ordering and P6c frontend contract in `docs/P6b-preflight-report.md`.
+
 - Delegated project agents use GPT-6.1 Sol at low or medium reasoning per the owner's 2026-10-23 instruction.
 
 Durable facts, conventions, and gotchas that should survive across sessions.

@@ -1,5 +1,9 @@
 # Left Off
 
+## P6b $CHOG purchase lifecycle: PREFLIGHT FAILED, stopped before implementation (local commit, no push)
+
+- Mandatory preflight found 5 of 9 dependencies missing: no B4.6 authorization, no legal review, no merchant recipient, no SKU/price, no finality threshold. No migration 0022, no payment code, no orders, no entitlements, no tests. Only chain contact was read-only viem metadata on the candidate token (143, bytecode present, 18 decimals, CHOG, 1B supply) plus a proxy-shape flag. Evidence in `docs/P6b-preflight-report.md`. Nothing to implement until the owner unblocks in the listed order.
+
 ## P6a economy and card-gifting design contract, complete (local commit, no push)
 
 - Wrote `docs/P6-economy-gifting-contract.md`: truth table, $CHOG catalog (cosmetic, deck slots, $CHOG sponsorship), Model B gift recommendation, payment/receipt architecture, anti-abuse minimums, slices P6b-P6g, 7 owner decisions, exact P6b contract. Design only: no code, migrations, purchases, mints, or PROD writes.
