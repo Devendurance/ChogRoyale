@@ -121,7 +121,7 @@
 - `BattleCanvas` keeps the V002 100x160 board, seat mirror, camera mapping and mount coordinates unchanged. Existing mounted towers and Cores gain low contact shadows only, with dimmed shadows for destroyed bases.
 - Scoped delivery and fixture evidence: `.fast-build/B2.8g.1-CHECKPOINT.md`. The temporary QA route was deleted. Live authenticated acceptance remains separate.
 
-Last updated: 2026-10-23
+Last updated: 2026-10-24
 
 ## B2.8g.0 battlefield shell (2026-10-23)
 

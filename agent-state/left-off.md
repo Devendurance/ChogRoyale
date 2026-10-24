@@ -6,7 +6,7 @@
 - Focused tests: 36/36 across model, Friends, opener and messaging DAL suites. Typecheck, scoped lint and production build pass. Full lint still has the pre-existing P5b `route.test.ts` explicit-any error and existing `/dev/progress` image warning.
 - Browser fixture smoke is honest service-unavailable at 390x844 and desktop, with no console errors. No authenticated messaging or production schema claim. Next: review staged diff, commit scoped files only, then report the forward-oldest pagination limitation and PROD migration blocker.
 
-Last updated: 2026-10-23
+Last updated: 2026-10-24
 
 ## P5b real private messaging backend, complete (local commit, no push)
 
