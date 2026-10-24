@@ -1,4 +1,7 @@
-## LAUNCH DAY: BLOCKED on endy-vps SSH, aws-hermes still live (state committed locally)
+## LAUNCH DAY: BLOCKED on endy-vps SSH key, aws-hermes still live (state committed locally)
+
+- `ssh endy-vps` STILL denied after owner added old pubkey. Root cause is client-side: ~/.ssh/id_ed25519 is passphrase-encrypted and BatchMode cannot unlock it (server log sequence proves it: key accepted, then signature never produced). Fix: generated passphrase-less ~/.ssh/id_chogdeploy; owner must authorize the NEW pubkey (below). Old key untouched.
+- NEW PUBKEY TO AUTHORIZE: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINzoJKMxSYP+9SmNCELTe2RhN0oXvtGOy0YjK8AX/j3B chog-royale-deploy
 
 - `ssh endy-vps` (and ubuntu@38.49.217.165) rejected for this machine's key (ED25519 SHA256:7xIzlAp...). Owner must append the client pubkey (in docs/endy-vps-cutover.md §0) or grant access another way. Nothing deployed to endy-vps yet; no guessing, no other-host changes.
 - aws-hermes battle verified healthy (single clean start, NRestarts=0, gates correct) and remains the live endpoint until cutover.
