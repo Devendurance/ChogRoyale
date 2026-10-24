@@ -1,5 +1,11 @@
 # Left Off
 
+## LAUNCH DAY: battle server LIVE, frontend/smoke owner-gated (no push pending except state)
+
+- Battle server PUBLIC: https://63-183-2-78.nip.io (WSS same host). VPS aws-hermes 63.183.2.78: Caddy auto-HTTPS + reverse proxy, systemd `chog-royale-battle` (enabled, restart-on-failure), code @65e19e4, settlement ON, legacy OFF, scaling OFF, ranked closed. /healthz verified locally and from outside.
+- Vercel prerender fix pushed (65e19e4): dev /battle|onboarding|progress render honestly without Privy app ID; build passes with empty env.
+- OWNER ACTIONS LEFT: (1) set Vercel prod env (NEXT_PUBLIC_PRIVY_APP_ID + PRIVY_APP_SECRET + DATABASE_URL/POOLED + NEXT_PUBLIC_BATTLE_SERVER_URL=https://63-183-2-78.nip.io) and confirm deploy green; (2) two-login private-match smoke; (3) optional DNS battle.chogroyale.xyz -> 63.183.2.78 to replace nip.io.
+
 ## LAUNCH DAY (owner directive, in progress)
 
 - Vercel ERESOLVE fixed: `@types/node` 20 -> ^24.19.2 (package.json + lock together), lock-only resolve exit 0, typecheck + production build green, committed 60bf4f6 and pushed to origin main (was 2bce8e5). Vercel auto-build expected.
