@@ -1,5 +1,10 @@
 # Left Off
 
+## P5d.2 clan UI and social integration, complete (local commit, no push)
+
+- Added `/app/clans`, server-backed create/edit, pending invite accept/decline, accepted-friend invite picker, roster and role management, transfer, remove, leave and archive confirmations. Profile account actions link into clans without adding a sixth nav tab or changing the HUD.
+- Verification: clan model tests 4/4, typecheck, scoped ESLint and production build pass. Browser route returned 200, but the unauthenticated fixture rendered the truthful unavailable state after a Privy app-config abort. Responsive checks at 390x844, 360x800 and 1366x768 had no horizontal overflow. No authenticated clan acceptance claim. Local checkpoint is committed, with no push.
+
 ## P5d.1 clan membership and governance backend, complete (local commit, no push)
 
 - Clans, memberships, invites (migrations 0017-0019, TEST only), 11 explicit routes, no UI. Tests 20/20 clan plus 52/52 social regressions green sequential. Typecheck/lint/build green. Full-file reruns flake under sustained TEST-branch load (19/20 then 20/20, no code change). Do not start clan UI.

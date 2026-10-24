@@ -1,5 +1,8 @@
 # Memory
 
+- P5d.2 clan UI lives in `/app/clans` and consumes only the P5d.1 `/api/players/me/clans` routes plus accepted `/api/players/me/friends`. The server remains authoritative for membership, role changes, invitations, capacity, transfer and archive. Mutations reread before success copy; a failed reread preserves the last verified state and disables membership controls.
+- Clan client models use type-only aliases to `src/db/clans.ts` so route payloads stay aligned without bundling the DB module. Clan invites are only selectable from accepted friends, and confirmation dialogs use native `showModal()` with focus restoration. No clan backend, migration or PROD write was added.
+
 - P5d.1 clans: `players.activeClanId` must stay a plain uuid. Adding `.references(() => clans.id)` closes a TS inference cycle with `clans.ownerId` and breaks tsc across schema/players. No FK constraint as a result; pointer lifecycle is app-managed and reads self-heal. Concurrent clan transitions rely on conditional single-statement updates with returning-row-count checks, never transactions (neon-http has none).
 
 - P5c messaging UI is in `/app/messages` and uses only the existing message routes plus `POST /api/players/me/messages/conversations`. The opener takes `{ peerId }`, returns a canonical conversation id, and keeps unavailable peers neutral. The client preserves draft and UUID across uncertain send failures, acknowledges only fully visible received rows, and polls only while visible/focused with a five-minute cap. The current P5b message cursor walks forward from the oldest page, so long histories need explicit Load more and this is a backend contract limitation, not a client fixture.

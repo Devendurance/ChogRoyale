@@ -1,5 +1,10 @@
 # Project State
 
+## P5d.2 clan UI and social integration (2026-10-24)
+
+- Added `/app/clans` using the P5d.1 server-owned clan, roster, invite and governance routes. Clan creation/editing, pending invitations, accepted-friend invites, roster roles, leave/archive, removal and transfer all reread authoritative state after mutations and preserve verified state on failed refreshes.
+- Added accessible native confirmation dialogs, role-gated controls, neutral auth/service/conflict errors, capacity display and a Profile account action. Five-tab navigation and HUD width remain unchanged. Focused model tests 4/4, typecheck, scoped lint and production build pass. Browser fixture is unauthenticated and Privy app-config fetch aborted, so no live clan acceptance claim.
+
 ## P5d.1 clan membership and governance backend (2026-10-24)
 
 - `clans` (name/tag/tagKey-unique/description/owner/status), `clan_members` (PK pair, roles), `clan_invites` (partial unique pending per clan+target, 7-day expiry) via migrations 0017-0019, TEST only. One-active-clan via `players.activeClanId` plain uuid (no FK: FK closed a tsc inference cycle) with conditional single-statement claims. Owner/officer/member matrix, neutral errors, history retained on archive. 11 routes under `/api/players/me/clans`. Tests 20/20, regressions 52/52, typecheck/lint/build green. No PROD writes, no push, no UI.

@@ -13,6 +13,7 @@ export type IconName =
   | "guide"
   | "user"
   | "friends"
+  | "clans"
   | "messages"
   | "settings"
   | "wallet"
@@ -73,6 +74,12 @@ const PATHS: Record<IconName, ReactNode> = {
       <path d="M2.8 19.4c0-3 2.6-4.8 5.8-4.8 1 0 2 .2 2.8.7" />
       <circle cx="16.4" cy="9.6" r="2.4" />
       <path d="M14.6 14.9c2.9.3 5.2 2 5.2 4.5" />
+    </>
+  ),
+  clans: (
+    <>
+      <path d="M12 3.4 19 6v5.2c0 4.2-2.8 7.7-7 9.4-4.2-1.7-7-5.2-7-9.4V6l7-2.6Z" />
+      <path d="m8.2 11.4 2.2 2.2 5.4-5.4" />
     </>
   ),
   settings: (

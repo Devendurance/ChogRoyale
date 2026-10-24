@@ -1,0 +1,48 @@
+.app-clans { max-width:1080px; padding-bottom:24px; }
+.app-clans__heading { display:flex; justify-content:space-between; align-items:center; gap:16px; margin:24px 0 12px; }
+.app-clans h1,.app-clans h2,.app-clans h3,.app-clans__dialog h2 { font-family:var(--font-game),sans-serif; font-weight:400; color:var(--color-white,#fff); margin:0 0 8px; overflow-wrap:anywhere; }
+.app-clans h1 { font-size:36px; }
+.app-clans h2,.app-clans__dialog h2 { font-size:25px; }
+.app-clans h3 { font-size:21px; }
+.app-clans p,.app-clans__dialog p { color:#e1d8ff; line-height:1.6; margin:0 0 12px; }
+.app-clans a { color:#ffe0a7; }
+.app-clans__links { display:flex; flex-wrap:wrap; gap:8px 20px; margin-bottom:20px; }
+.app-clans__links a { display:inline-flex; align-items:center; min-height:44px; }
+.app-clans__panel { padding:22px; margin-bottom:20px; min-width:0; }
+.app-clans__summary { display:flex; gap:20px; align-items:center; }
+.app-clans__summary > div:last-child { min-width:0; }
+.app-clans__crest { flex-shrink:0; display:grid; place-items:center; width:84px; min-height:84px; padding:8px; border:3px solid var(--outline); border-radius:20px 20px 32px 32px; background:linear-gradient(var(--plate-light),var(--plate-mid)); color:#ffe0a7; font-family:var(--font-game),sans-serif; font-size:20px; box-shadow:inset 0 2px var(--plate-highlight),0 4px var(--outline); }
+.app-clans__description { white-space:pre-wrap; overflow-wrap:anywhere; }
+.app-clans__badge { font-family:var(--font-data),sans-serif; font-size:12px; color:#ffe0a7; text-transform:capitalize; }
+.app-clans p.app-clans__badge { margin:0 0 4px; color:#ffe0a7; }
+.app-clans__grid { display:grid; grid-template-columns:minmax(0,1.2fr) minmax(0,1fr); gap:20px; align-items:start; }
+.app-clans__membership { border:0; padding:0; margin:0; min-inline-size:0; }
+.app-clans__stack { min-width:0; }
+.app-clans__membership { min-width:0; padding:0; margin:0; border:0; }
+.app-clans__form { display:grid; gap:10px; }
+.app-clans__form p { margin:0; }
+.app-clans__form label { display:grid; gap:6px; color:white; font-weight:700; }
+.app-clans__form input,.app-clans__form textarea { width:100%; min-width:0; }
+.app-clans__form textarea { resize:vertical; }
+.app-clans__form small,.app-clans p.app-clans__hint { font-size:12px; line-height:1.5; color:#e1d8ff; }
+.app-clans__form .app-btn { margin-top:8px; justify-self:start; }
+.app-clans__list { list-style:none; padding:0; margin:16px 0 0; }
+.app-clans__list li { padding:16px 0; border-top:1px solid #7764bd; }
+.app-clans__list li > .app-btn { margin-top:10px; }
+.app-clans__row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.app-clans__peer { display:flex; min-width:0; align-items:center; gap:10px; color:white; }
+.app-clans__peer img,.app-clans__avatar { flex-shrink:0; border-radius:10px; }
+.app-clans__avatar { display:grid; place-items:center; width:40px; height:40px; background:var(--plate-mid); }
+.app-clans__peer > div { min-width:0; }
+.app-clans__peer span,.app-clans__peer small { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.app-clans__peer small { color:#e1d8ff; font-size:12px; }
+.app-clans__actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+.app-clans__error { padding:16px; margin:12px 0; background:#36164b; border:1px solid #e6a8bf; border-radius:12px; }
+.app-clans__error p { color:#ffe3ee; }
+.app-clans__error .app-btn + .app-btn { margin-left:8px; }
+.app-clans p.app-clans__notice { padding:14px; border:1px solid #b8dba7; border-radius:12px; background:#243b35; color:#efffe9; }
+.app-clans .app-btn,.app-clans__dialog .app-btn { min-height:44px; font-size:14px; }
+.app-clans :is(a,button,input,textarea):focus-visible,.app-clans__dialog button:focus-visible { outline:3px solid #ffc878; outline-offset:3px; }
+.app-clans__dialog { max-width:460px; width:calc(100% - 32px); padding:24px; border:3px solid var(--outline); border-radius:18px; background:var(--plate-dark); color:white; box-shadow:0 10px 48px var(--outline); }
+.app-clans__dialog::backdrop { background:rgba(18,11,69,.8); }
+@media(max-width:700px) { .app-clans__grid { grid-template-columns:minmax(0,1fr); gap:0; } .app-clans__panel { padding:16px; } .app-clans__heading { align-items:flex-start; flex-wrap:wrap; } .app-clans__summary { gap:12px; } .app-clans__crest { width:66px; min-height:70px; font-size:17px; } .app-clans__row { align-items:flex-start; } .app-clans__row > .app-clans__badge { flex-shrink:0; } }
