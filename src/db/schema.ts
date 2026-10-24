@@ -700,6 +700,44 @@ export const goldSpendLedger = pgTable(
 export type GoldEarnRow = typeof goldEarnLedger.$inferSelect;
 export type GoldSpendRow = typeof goldSpendLedger.$inferSelect;
 
+// P6c gift sponsorship receipts. One row per sponsored upgrade, keyed by
+// the client-supplied idempotency key. The sponsor's Gold debit lives in
+// gold_spend_ledger under the SAME idempotency key, so the two writes
+// share fate inside one statement and the receipt attributes the spend.
+// No XP, card copies, levels or Gold move between accounts: the server
+// debits the sponsor ledger and advances the recipient's purchased level.
+export const giftSponsorships = pgTable(
+  "gift_sponsorships",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    idempotencyKey: uuid("idempotency_key").notNull(),
+    sponsorId: uuid("sponsor_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "restrict" }),
+    recipientId: uuid("recipient_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "restrict" }),
+    cardId: text("card_id").notNull(),
+    fromLevel: smallint("from_level").notNull(),
+    toLevel: smallint("to_level").notNull(),
+    cost: integer("cost").notNull(),
+    policyVersion: integer("policy_version").notNull().default(1),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("gift_sponsorships_idempotency_unique").on(t.idempotencyKey),
+    index("gift_sponsorships_sponsor_idx").on(t.sponsorId, t.createdAt),
+    index("gift_sponsorships_recipient_idx").on(t.recipientId, t.createdAt),
+    check("gift_sponsorships_no_self_check", sql`${t.sponsorId} != ${t.recipientId}`),
+    check("gift_sponsorships_levels_check", sql`${t.fromLevel} >= 1 and ${t.toLevel} = ${t.fromLevel} + 1 and ${t.toLevel} <= 10`),
+    check("gift_sponsorships_cost_check", sql`${t.cost} > 0`),
+  ]
+);
+
+export type GiftSponsorship = typeof giftSponsorships.$inferSelect;
+
 // P1b.2 ranked trophies (Season 1 provisional policy). The ledger is
 // authoritative: one row per (match, player) records the applied delta and
 // the balance after it. balance_after NULL means the award was staged but

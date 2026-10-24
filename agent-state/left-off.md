@@ -1,5 +1,9 @@
 # Left Off
 
+## P6c Gold card-upgrade sponsorship, complete (local commit, no push)
+
+- Server-authoritative Model B sponsorship: `gift_sponsorships` receipt table (migration 0022, TEST only), single-statement atomic mutation in `src/db/sponsorships.ts` (advisory locks, idempotency, re-checked eligibility/XP/balance/caps), write/read/quote routes under `/api/players/me/gifts/sponsorships`. Sponsor Gold debits from the existing spend ledger; recipient advances one purchased level with earned XP, untouched XP. TEST caps 1/day, 3/week, 1 pair-card/week. No UI, no $CHOG, no PROD writes.
+
 ## P6b $CHOG purchase lifecycle: PREFLIGHT FAILED, stopped before implementation (local commit, no push)
 
 - Mandatory preflight found 5 of 9 dependencies missing: no B4.6 authorization, no legal review, no merchant recipient, no SKU/price, no finality threshold. No migration 0022, no payment code, no orders, no entitlements, no tests. Only chain contact was read-only viem metadata on the candidate token (143, bytecode present, 18 decimals, CHOG, 1B supply) plus a proxy-shape flag. Evidence in `docs/P6b-preflight-report.md`. Nothing to implement until the owner unblocks in the listed order.
