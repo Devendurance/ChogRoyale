@@ -1,5 +1,10 @@
 # Project State
 
+## P6e.2 economy forensics and recovery safety (2026-10-24)
+
+- Five fixture helpers hardcoded `level: 10`; fixed to `cardLevelForXp(xp)` with a regression test (all test-only, no policy change). Audit gained a `settlement-evidence` coverage check so reconcile candidates are separated from fixture residue.
+- Live TEST now holds 141 evidence-less fixture matches plus stalled-cleanup residue from this slice's own reruns (3 negative-balance players); all flagged as residue, none repaired. Full account in `docs/P6e-forensics-recovery.md`.
+
 ## P6e.1 economy integrity and abuse audit (2026-10-24)
 
 - Pure audit library plus SELECT-only TEST-guarded operator CLI with human and JSON output. Checks settlement coverage, pending Gold/XP/trophy awards, derived Gold balances, sponsorship receipt/spend match, orphans, duplicates, XP/level invariants, ranked delta/balance rules, plus review-only suspect-match and gift-risk signals with documented false positives.

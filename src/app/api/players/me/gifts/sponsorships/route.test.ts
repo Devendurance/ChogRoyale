@@ -19,6 +19,7 @@ import {
   type Player,
 } from "@/db/schema";
 import { AppError } from "@/lib/errors";
+import { cardLevelForXp } from "@/lib/card-xp";
 import { GET as listGet, POST as sponsorPost } from "./route";
 import { GET as quoteGet } from "./quote/route";
 
@@ -80,8 +81,8 @@ async function fundGold(p: Player, wins: number): Promise<void> {
 async function setXp(p: Player, cardId: string, xp: number, level: number): Promise<void> {
   await getDb()
     .insert(cardXpProgress)
-    .values({ playerId: p.id, cardId, xp, level: 10, purchasedLevel: level })
-    .onConflictDoUpdate({ target: [cardXpProgress.playerId, cardXpProgress.cardId], set: { xp, level: 10, purchasedLevel: level } });
+    .values({ playerId: p.id, cardId, xp, level: cardLevelForXp(xp), purchasedLevel: level })
+    .onConflictDoUpdate({ target: [cardXpProgress.playerId, cardXpProgress.cardId], set: { xp, level: cardLevelForXp(xp), purchasedLevel: level } });
 }
 
 beforeAll(() => {

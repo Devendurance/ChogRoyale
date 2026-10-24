@@ -13,7 +13,7 @@ import {
   players,
   type Player,
 } from "@/db/schema";
-import { CARD_UPGRADE_GOLD_COSTS } from "@/lib/card-xp";
+import { CARD_UPGRADE_GOLD_COSTS, cardLevelForXp } from "@/lib/card-xp";
 import {
   getGoldAwardableMatch,
   getGoldBalance,
@@ -92,7 +92,7 @@ async function fund(p: Player, goldMatches: number, xp = 200, cardId = "chogling
   }
   await db
     .insert(cardXpProgress)
-    .values({ playerId: p.id, cardId, xp, level: 10, purchasedLevel: 1 })
+    .values({ playerId: p.id, cardId, xp, level: cardLevelForXp(xp), purchasedLevel: 1 })
     .onConflictDoNothing({ target: [cardXpProgress.playerId, cardXpProgress.cardId] });
 }
 
@@ -198,6 +198,17 @@ describe("P2b paid upgrades", () => {
     }
   });
 
+  it("seeds stored levels from the XP ladder, never a hardcoded level", async () => {
+    const [zero, full] = [await player("lv0"), await player("lvmax")];
+    await fund(zero, 0, 0);
+    await fund(full, 0, 200);
+    const read = async (p: Player) =>
+      (await getDb().select().from(cardXpProgress).where(eq(cardXpProgress.playerId, p.id)))[0]!;
+    expect(Number((await read(zero)).xp)).toBe(0);
+    expect(Number((await read(zero)).level)).toBe(cardLevelForXp(0));
+    expect(Number((await read(full)).level)).toBe(cardLevelForXp(200));
+  });
+
   it("deducts once, advances exactly one level, and replays the same key", async () => {
     const p = await player("ok");
     await fund(p, 2); // 120 gold, XP headroom
@@ -236,7 +247,7 @@ describe("P2b paid upgrades", () => {
       }))
     );
     await db.insert(goldEarnLedger).values(mids.map((id) => ({ matchId: id, playerId: p.id, amount: 60, result: "win" as const, policyVersion: 1 })));
-    await db.insert(cardXpProgress).values({ playerId: p.id, cardId: "choglings", xp: 200, level: 10, purchasedLevel: 1 });
+    await db.insert(cardXpProgress).values({ playerId: p.id, cardId: "choglings", xp: 200, level: cardLevelForXp(200), purchasedLevel: 1 });
     await db.update(cardXpProgress).set({ purchasedLevel: 9 }).where(eq(cardXpProgress.playerId, p.id));
     const key = randomUUID();
     const r = await upgradeCard(p.id, { cardId: "choglings", expectedLevel: 9, idempotencyKey: key });

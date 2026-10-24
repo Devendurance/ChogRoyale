@@ -16,6 +16,7 @@ import {
 } from "@/db/sponsorships";
 import { getGoldTotals, upgradeCard } from "@/db/gold";
 import { ordinaryCardIds } from "@/db/card-xp";
+import { cardLevelForXp } from "@/lib/card-xp";
 import {
   cardXpProgress,
   friendships,
@@ -99,10 +100,10 @@ async function fundGold(p: Player, wins: number): Promise<void> {
 async function setXp(p: Player, cardId: string, xp: number, purchasedLevel: number): Promise<void> {
   await getDb()
     .insert(cardXpProgress)
-    .values({ playerId: p.id, cardId, xp, level: 10, purchasedLevel })
+    .values({ playerId: p.id, cardId, xp, level: cardLevelForXp(xp), purchasedLevel })
     .onConflictDoUpdate({
       target: [cardXpProgress.playerId, cardXpProgress.cardId],
-      set: { xp, level: 10, purchasedLevel },
+      set: { xp, level: cardLevelForXp(xp), purchasedLevel },
     });
 }
 

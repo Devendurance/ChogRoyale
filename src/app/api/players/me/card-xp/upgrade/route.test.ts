@@ -14,6 +14,7 @@ import {
   type Player,
 } from "@/db/schema";
 import { AppError } from "@/lib/errors";
+import { cardLevelForXp } from "@/lib/card-xp";
 import { POST } from "./route";
 
 vi.mock("@/lib/privy-server", async (orig) => {
@@ -75,7 +76,7 @@ async function setupRich(p: Player, wins: number, xp = 200, cardId = "choglings"
     });
     await db.insert(goldEarnLedger).values({ matchId: m, playerId: p.id, amount: 60, result: "win", policyVersion: 1 });
   }
-  await db.insert(cardXpProgress).values({ playerId: p.id, cardId, xp, level: 10, purchasedLevel: 1 });
+  await db.insert(cardXpProgress).values({ playerId: p.id, cardId, xp, level: cardLevelForXp(xp), purchasedLevel: 1 });
 }
 
 async function post(token: string | undefined, body: unknown) {

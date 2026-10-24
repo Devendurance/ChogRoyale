@@ -1,5 +1,6 @@
 # Memory
 
+- P6e.2 forensics: the 2 XP orphans are fixture-shaped (pending, NULL-username players, zero related rows); writer call-site `gold.test.ts fund(noXp, 2, 0)` PROVEN by shape, exact run UNKNOWN. Award/upgrade/sponsor paths exonerated. TEST residue from stalled cleanups needs an owner-approved cleanup pass, never ad-hoc SQL.
 - P6e.1 audit lives in `src/lib/economy-audit.ts` plus `scripts/economy-audit.ts` (`npm run economy:audit`). Read-only by construction; TEST identity verified before any query; `--json` via `npx tsx` stays parseable (npm preamble pollutes stdout). Exit 1 on FAIL, 2 on operational error.
 - P6e.1 thresholds are provisional review signals, never enforcement. Cap-boundary pressure is NOT CHECKABLE (no rejected-attempt log). Null-`accepted_at` friendships stay ineligible, never backfilled.
 

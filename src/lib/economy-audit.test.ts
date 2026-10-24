@@ -23,6 +23,7 @@ import {
   type AuditParticipant,
   type EconomyAuditReport,
   type GoldEarnRow,
+  type GoldSpendRow,
   type RankedAwardRow,
   type SponsorshipRow,
 } from "@/lib/economy-audit";
@@ -60,7 +61,7 @@ describe("P6e.1 economy audit", () => {
     const { matches, participants, earn } = healthyInput();
     expect(pendingGoldEarn(participants, earn)).toEqual([]);
     const report = buildReport({
-      branch: "test-branch", matchesReadable: true,
+      branch: "test-branch", matchesReadable: true, evidenceMatchIds: new Set([M1]),
       matches,
       participants,
       earnRows: earn,
@@ -102,7 +103,7 @@ describe("P6e.1 economy audit", () => {
 
   it("detects negative derived Gold balances", () => {
     const report = buildReport({
-      branch: "t", matchesReadable: true, matches: [], participants: [], earnRows: [{ matchId: M1, playerId: A, amount: 30, result: "loss" }],
+      branch: "t", matchesReadable: true, evidenceMatchIds: new Set(), matches: [], participants: [], earnRows: [{ matchId: M1, playerId: A, amount: 30, result: "loss" }],
       spendRows: [{ idempotencyKey: "k1", playerId: A, cardId: "c", fromLevel: 1, toLevel: 2, cost: 100 }],
       sponsorships: [], knownSponsorshipSpendKeys: new Set(), xpProgress: [], rankedAwards: [],
       rankedBalances: [], cardXpRunIds: new Set(), legacyRunIds: new Set(), knownPlayerIds: null,
@@ -170,13 +171,34 @@ describe("P6e.1 economy audit", () => {
   it("marks missing tables unavailable instead of manufacturing a PASS", () => {
     expect(pendingGoldEarn([], null)).toBeNull();
     const report = buildReport({
-      branch: "t", matchesReadable: false, matches: [], participants: [], earnRows: null, spendRows: null, sponsorships: [],
+      branch: "t", matchesReadable: false, evidenceMatchIds: null, matches: [], participants: [], earnRows: null, spendRows: null, sponsorships: [],
       knownSponsorshipSpendKeys: new Set(), xpProgress: [], rankedAwards: [], rankedBalances: [],
       cardXpRunIds: null, legacyRunIds: null, knownPlayerIds: null,
     });
     const checks = [...report.coverage, ...report.integrity, ...report.pending].map((f) => f.status);
     expect(checks).toContain("NOT_CHECKABLE");
     expect(checks).not.toContain("FAIL");
+  });
+
+  it("treats evidence-less matches as residue, never reconcile candidates", () => {
+    const ms: AuditMatch[] = [
+      { id: M1, matchType: "matchmaking", verification: "replay-verified", finishedAtMs: 1, seats: [] },
+      { id: M2, matchType: "matchmaking", verification: "replay-verified", finishedAtMs: 2, seats: [] },
+    ];
+    const base = {
+      branch: "t", matchesReadable: true, matches: ms, participants: [], earnRows: [] as GoldEarnRow[], spendRows: [] as GoldSpendRow[],
+      sponsorships: [], knownSponsorshipSpendKeys: new Set<string>(), xpProgress: [], rankedAwards: [], rankedBalances: [],
+      cardXpRunIds: new Set<string>(), legacyRunIds: new Set<string>(), knownPlayerIds: new Set<string>(),
+    };
+    const withEvidence = buildReport({ ...base, evidenceMatchIds: new Set([M1, M2]) });
+    expect(withEvidence.coverage.find((f) => f.check === "settlement-evidence")!.status).toBe("PASS");
+    const gapped = buildReport({ ...base, evidenceMatchIds: new Set([M1]) });
+    const ev = gapped.coverage.find((f) => f.check === "settlement-evidence")!;
+    expect(ev.status).toBe("WARNING");
+    expect(ev.samples).toEqual([M2]);
+    expect(gapped.nextActions.some((a) => a.includes("never be awarded"))).toBe(true);
+    const unknown = buildReport({ ...base, evidenceMatchIds: null });
+    expect(unknown.coverage.find((f) => f.check === "settlement-evidence")!.status).toBe("NOT_CHECKABLE");
   });
 
   it("keeps the audit read-only, valid JSON and secret-free", () => {
@@ -188,7 +210,7 @@ describe("P6e.1 economy audit", () => {
     expect(scriptSrc).not.toMatch(/\binsert\s+into\b|\bupdate\s+\w+\s+set\b|\bdelete\s+from\b/i);
     expect(scriptSrc).toMatch(/requireTestDatabaseUrl/);
     const report = buildReport({
-      branch: "test-branch-ep", matchesReadable: true, matches: [], participants: [], earnRows: [], spendRows: [], sponsorships: [],
+      branch: "test-branch-ep", matchesReadable: true, evidenceMatchIds: new Set(), matches: [], participants: [], earnRows: [], spendRows: [], sponsorships: [],
       knownSponsorshipSpendKeys: new Set(), xpProgress: [], rankedAwards: [], rankedBalances: [],
       cardXpRunIds: new Set(), legacyRunIds: new Set(), knownPlayerIds: new Set(),
     });

@@ -509,6 +509,7 @@ const SHORT = (id: string) => (id.length > 8 ? id.slice(0, 8) : id);
 export function buildReport(input: {
   branch: string;
   matchesReadable: boolean;
+  evidenceMatchIds: Set<string> | null;
   matches: AuditMatch[];
   participants: AuditParticipant[];
   earnRows: GoldEarnRow[] | null;
@@ -533,17 +534,38 @@ export function buildReport(input: {
 
   const byType = new Map<string, number>();
   for (const m of matches) byType.set(m.matchType, (byType.get(m.matchType) ?? 0) + 1);
-  coverage.push(
-    !input.matchesReadable
-      ? finding("settlement-records", "NOT_CHECKABLE", "matches table unavailable; no settlement statement possible")
-      : finding(
-          "settlement-records",
-          matches.length > 0 ? "PASS" : "NOT_CHECKABLE",
-          matches.length > 0
-            ? `settled matches scanned: ${matches.length} (${[...byType].map(([k, v]) => `${k}=${v}`).join(", ")})`
-            : "matches table readable but holds no settled rows in scope; no settlement statement possible"
-        )
-  );
+  if (!input.matchesReadable) {
+    coverage.push(finding("settlement-records", "NOT_CHECKABLE", "matches table unavailable; no settlement statement possible"));
+  } else if (matches.length === 0) {
+    coverage.push(
+      finding("settlement-records", "NOT_CHECKABLE", "matches table readable but holds no settled rows in scope; no settlement statement possible")
+    );
+  } else {
+    coverage.push(
+      finding(
+        "settlement-records",
+        "PASS",
+        `settled matches scanned: ${matches.length} (${[...byType].map(([k, v]) => `${k}=${v}`).join(", ")})`,
+      )
+    );
+  }
+  if (input.evidenceMatchIds === null) {
+    coverage.push(finding("settlement-evidence", "NOT_CHECKABLE", "match_evidence unavailable; cannot separate provenanced matches from fixture residue"));
+  } else if (matches.length === 0) {
+    coverage.push(finding("settlement-evidence", "NOT_CHECKABLE", "no settled matches in scope; nothing to provenance-check"));
+  } else {
+    const without = matches.filter((m) => !input.evidenceMatchIds!.has(m.id)).map((m) => m.id);
+    coverage.push(
+      finding(
+        "settlement-evidence",
+        without.length > 0 ? "WARNING" : "PASS",
+        without.length > 0
+          ? `${without.length} settled matches have no match_evidence row: fixture residue or unprovenanced, never reconcile candidates`
+          : "every settled match carries its replay evidence row",
+        without
+      )
+    );
+  }
 
   if (cardXpRunIds === null) {
     coverage.push(finding("card-xp-runs", "NOT_CHECKABLE", "card_xp_runs unavailable; cannot assess XP coverage"));
@@ -750,6 +772,12 @@ export function buildReport(input: {
   ];
 
   const nextActions: string[] = [];
+  const evidenceGaps =
+    input.evidenceMatchIds === null ? null : matches.filter((m) => !input.evidenceMatchIds!.has(m.id)).length;
+  if (evidenceGaps !== null && evidenceGaps > 0)
+    nextActions.push(
+      `Reconcile only matches carrying match_evidence rows; the ${evidenceGaps} evidence-less matches are fixture residue or unprovenanced and must never be awarded.`
+    );
   if (pg !== null && pg.length > 0) nextActions.push("Run reconcileGoldEarn(limit) on TEST after confirming the battle outbox is drained; it is idempotent.");
   if (pr.length > 0 || staged.length > 0) nextActions.push("Run reconcileRankedTrophies(limit) on TEST; already-awarded rows are no-ops.");
   if (cardXpRunIds !== null && pendingCardXpRuns(matches, cardXpRunIds).length > 0)

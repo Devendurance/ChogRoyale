@@ -12,6 +12,7 @@ import { eq, inArray } from "drizzle-orm";
 import { Client, type Room } from "@colyseus/sdk";
 import type { Server } from "@colyseus/core";
 import { getEnv } from "@/lib/env";
+import { cardLevelForXp } from "@/lib/card-xp";
 import { routeDalToTestDb, getDb, resetDbCache } from "@/db/client";
 import { provisionPlayer } from "@/db/players";
 import {
@@ -130,8 +131,8 @@ describe("P2c server snapshot over WS", () => {
     const [a, b] = [await provisioned("la"), await provisioned("lb")];
     const db = getDb();
     await db.insert(cardXpProgress).values([
-      { playerId: a.id, cardId: "boulderback", xp: 200, level: 10, purchasedLevel: 10 },
-      { playerId: a.id, cardId: "choglings", xp: 200, level: 10, purchasedLevel: 10 },
+      { playerId: a.id, cardId: "boulderback", xp: 200, level: cardLevelForXp(200), purchasedLevel: 10 },
+      { playerId: a.id, cardId: "choglings", xp: 200, level: cardLevelForXp(200), purchasedLevel: 10 },
     ]);
     const ca = client(`tok-${a.privyDid.replace("did:privy:", "")}`);
     const ra = await ca.create(BATTLE_ROOM);

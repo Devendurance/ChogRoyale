@@ -66,6 +66,7 @@ async function main(): Promise<void> {
   const tables = [
     "matches",
     "match_participants",
+    "match_evidence",
     "gold_earn_ledger",
     "gold_spend_ledger",
     "gift_sponsorships",
@@ -183,6 +184,16 @@ async function main(): Promise<void> {
       `) as Array<{ pid: string; season: number; t: number; m: number; w: number; l: number; d: number }>)
     : [];
 
+  const evidenceMatchIds = has("match_evidence")
+    ? new Set(
+        (
+          (await query`select match_id as id from match_evidence limit ${limit}`) as Array<{
+            id: string;
+          }>
+        ).map((r) => String(r.id))
+      )
+    : null;
+
   const knownPlayerIds =
     has("players")
       ? new Set(
@@ -198,6 +209,7 @@ async function main(): Promise<void> {
   const report = buildReport({
     branch,
     matchesReadable: has("matches") && has("match_participants"),
+    evidenceMatchIds,
     matches: matches.map((m) => ({
       id: String(m.id),
       matchType: String(m.type),

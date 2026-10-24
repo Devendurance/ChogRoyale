@@ -1,5 +1,12 @@
 # Left Off
 
+## P6e.2 economy forensics and recovery safety (complete, local commit pending, no push)
+
+- Root cause PROVEN: 5 fixture helpers hardcoded `level: 10`; `gold.test.ts fund(noXp, 2, 0)` wrote the exact (choglings, xp=0/level=10) orphan shape. Award/reconcile/derivation/upgrade paths exonerated. All fixed to `cardLevelForXp(xp)` plus a regression test.
+- Cleanup gap PROVEN: in-process id-list cleanup plus TEST stalls orphan rows; today's slice runs also leaked 141 fixture matches and 3 negative-balance players (spends without earns from stalled cleanup). No deletes performed.
+- Safety added: audit `settlement-evidence` coverage splits reconcile candidates (evidence-backed) from fixture residue (never award); reconcilers gate on type/verification/seats but not evidence, so the guard matters. Plan, reconciler map, anti-abuse prerequisites, and rejected-attempt contract in `docs/P6e-forensics-recovery.md`.
+- Verification: pure audit tests 11/11, typecheck/lint/build green. DB suites INCONCLUSIVE (transient TEST Neon stalls; zero assertion failures, regression test passed when reachable). Do not start P7.
+
 ## P6e.1 economy integrity and abuse audit (complete, local commit pending, no push)
 
 - Read-only operator audit: `src/lib/economy-audit.ts` (pure checks) + `scripts/economy-audit.ts` (`npm run economy:audit [-- --json] [--limit N]`). SELECT-only, TEST-guarded via `requireTestDatabaseUrl`, missing tables become NOT_CHECKABLE, no secrets in either rendering.
