@@ -1,5 +1,12 @@
 # Left Off
 
+## LAUNCH DAY (owner directive, in progress)
+
+- Vercel ERESOLVE fixed: `@types/node` 20 -> ^24.19.2 (package.json + lock together), lock-only resolve exit 0, typecheck + production build green, committed 60bf4f6 and pushed to origin main (was 2bce8e5). Vercel auto-build expected.
+- PROD migrations 0010-0022 APPLIED to br-snowy-star-b5ftxkro after snapshot br-red-feather-b5xc380x. Verified: 9 players intact, journal through 0022, all tables present. No destructive ops (all additive; 0019 drops a just-added FK).
+- npm on this Windows box is unusable for full installs (AV/file locks, orphan tsx from a prior session was holding node_modules; killed _diag-battle.ts + next dev). Toolchain repaired surgically (next package); tsc/vitest/tsx/drizzle-kit all work.
+- BLOCKED on owner: (1) battle host target + access, (2) NEXT_PUBLIC_BATTLE_SERVER_URL in Vercel + deploy check, (3) two-player smoke (needs real Privy logins). No deploy, no host, no smoke done yet. Do not start P7b.
+
 ## P7a production-safe multiplayer host (complete, local commit pending, no push, no deploy)
 
 - Fail-closed bootstrap: `resolveBattleHostConfig` (pure, tested) replaces the dev-only production refusal. Prod without `BATTLE_HOSTING_ENABLED=1` refuses; strict mode requires host/port/wss-URL/origins. Dev defaults untouched.

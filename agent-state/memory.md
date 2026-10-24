@@ -1,5 +1,6 @@
 # Memory
 
+- LAUNCH: Vercel fix = @types/node ^24.19.2 (commit 60bf4f6, pushed). PROD = br-snowy-star-b5ftxkro (endpoint ep-frosty-sunset; DATABASE_URL verified via Neon API). Snapshot branch br-red-feather-b5xc380x (pre-migration restore point). PROD now 0000-0022, 9 players intact. Battle env contract in docs/P7a-hosting.md; host still unprovisioned.
 - P7a hosting: `src/server/battle/host-config.ts` (pure) + tests, `/healthz`, SIGTERM/SIGINT drain in `src/server/battle/server.ts`, strict bootstrap in `scripts/battle-server.ts`. One replica only (in-memory coordinator); `wss://` + `https://` origins enforced in prod; `ws://`/`http://` accepted only for localhost. Battle server never serves gifting/$CHOG.
 - P6e.2 forensics: the 2 XP orphans are fixture-shaped (pending, NULL-username players, zero related rows); writer call-site `gold.test.ts fund(noXp, 2, 0)` PROVEN by shape, exact run UNKNOWN. Award/upgrade/sponsor paths exonerated. TEST residue from stalled cleanups needs an owner-approved cleanup pass, never ad-hoc SQL.
 - P6e.1 audit lives in `src/lib/economy-audit.ts` plus `scripts/economy-audit.ts` (`npm run economy:audit`). Read-only by construction; TEST identity verified before any query; `--json` via `npx tsx` stays parseable (npm preamble pollutes stdout). Exit 1 on FAIL, 2 on operational error.
