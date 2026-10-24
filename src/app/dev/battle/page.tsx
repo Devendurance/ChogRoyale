@@ -8,6 +8,16 @@ import { BattlePanel } from "./BattlePanel";
 const APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID ?? "";
 
 export default function DevBattlePage() {
+  if (!APP_ID) {
+    // Build-safe: never initialize the Privy provider with an empty app
+    // ID. Runtime auth is unchanged when the ID is configured.
+    return (
+      <main style={{ padding: 16 }}>
+        <h1 style={{ fontSize: 18 }}>Chog Royale dev battle (B3.1 alpha)</h1>
+        <p>Authentication is not configured for this deployment. This developer route is unavailable.</p>
+      </main>
+    );
+  }
   return (
     <main style={{ padding: 16 }}>
       <h1 style={{ fontSize: 18 }}>Chog Royale dev battle (B3.1 alpha)</h1>

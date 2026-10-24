@@ -288,6 +288,14 @@ function OnboardingPanel() {
 }
 
 export default function DevOnboardingPage() {
+  if (!APP_ID) {
+    return (
+      <main style={{ padding: 24 }}>
+        <h1>Dev onboarding (B0 verification surface)</h1>
+        <p>Authentication is not configured for this deployment. This developer route is unavailable.</p>
+      </main>
+    );
+  }
   return (
     <main style={{ padding: 24 }}>
       <h1>Dev onboarding (B0 verification surface)</h1>

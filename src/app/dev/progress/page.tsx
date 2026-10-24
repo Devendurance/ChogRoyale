@@ -234,6 +234,14 @@ function ProgressPanel() {
 }
 
 export default function DevProgressPage() {
+  if (!APP_ID) {
+    return (
+      <main style={{ padding: 16 }}>
+        <h1 style={{ fontSize: 18 }}>Chog Royale dev progress (B3.3c alpha)</h1>
+        <p>Authentication is not configured for this deployment. This developer route is unavailable.</p>
+      </main>
+    );
+  }
   return (
     <main style={{ padding: 16 }}>
       <h1 style={{ fontSize: 18 }}>Chog Royale dev progress (B3.3c alpha)</h1>
