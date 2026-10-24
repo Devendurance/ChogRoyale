@@ -98,8 +98,10 @@ export interface CommanderIdentity {
   imageOriginal: string | null;
   rulesetVersion: string;
   derivationHash: string;
-  /** "direct-owner" = verified linked wallet holds the token onchain. */
-  basis: "free" | "direct-owner";
+  /** "direct-owner" = verified linked wallet holds the token onchain.
+   * "borrowed" = an active P5f.1 loan delegates use to a friend; the NFT
+   * stays in the owner's wallet and ownership is re-proven at match start. */
+  basis: "free" | "direct-owner" | "borrowed";
   /** ISO time of the last successful ownership check, null for free. */
   verifiedAt: string | null;
 }

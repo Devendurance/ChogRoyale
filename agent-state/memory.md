@@ -36,6 +36,8 @@
 - Fixed battle HUD must render connection/error/recovery notices itself, since the underlying page controls are covered. Keep canvas mapping and scene lifecycle unchanged during presentation work.
 - P5e.1 gifting foundation: `friendships.accepted_at` (nullable, TEST migration 0020) is the only trustworthy gift-age anchor; `updatedAt` is not reused. Legacy accepted rows with null stay ineligible, never backfilled. `canGiftToFriend` uses the DB clock by default (`nowMsOverride` is test-only) and P5e.2 must recheck it inside its write; cached true responses never authorize a transfer. Blocked pairs answer neutral `unavailable` either direction.
 
+- P5f.1 lending: `commander_loans` holds one ACTIVE row per token max (partial unique index + app re-checks). `resolveCommander` grants `basis: "borrowed"` only while the loan is usable, friendship accepted, no blocks, and the lender still owns the token onchain; an active loan freezes the lender's own direct use. Settlement accepts borrowed provenance; legacy skips it (no borrower achievements). Match-start lock re-resolves, so revoke/expiry/transfer fail the next start but never rewrite locked evidence. Room loan wiring degrades to null only on the no-DB harness sentinel; production outages still fail closed at verifiedWallets.
+
 - Delegated project agents use GPT-6.1 Sol at low or medium reasoning per the owner's 2026-10-23 instruction.
 
 Durable facts, conventions, and gotchas that should survive across sessions.

@@ -818,6 +818,64 @@ export const playerBlocks = pgTable(
 
 export type PlayerBlock = typeof playerBlocks.$inferSelect;
 
+// P5f.1 commander loans. Game-scoped delegation of the in-game use right:
+// the NFT never leaves the owner's wallet. One row per loan; history is
+// kept (revoked/returned/expired) for audit. At most one ACTIVE row per
+// token, enforced by the partial unique index below plus application
+// re-checks at create and at every battle entitlement use. Chain/contract
+// are fixed to Chog Genesis; durations are 1-7 days, server-enforced.
+export const commanderLoans = pgTable(
+  "commander_loans",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    chainId: integer("chain_id").notNull().default(143),
+    contract: text("contract").notNull(),
+    tokenId: text("token_id").notNull(),
+    ownerId: uuid("owner_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "cascade" }),
+    borrowerId: uuid("borrower_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "cascade" }),
+    idempotencyKey: uuid("idempotency_key").notNull(),
+    status: text("status").notNull().default("active"),
+    startsAt: timestamp("starts_at", { withTimezone: true }).notNull().defaultNow(),
+    endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
+    terminatedAt: timestamp("terminated_at", { withTimezone: true }),
+    terminationReason: text("termination_reason"),
+    authProof: jsonb("auth_proof").notNull().default({}),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("commander_loans_idempotency_unique").on(t.idempotencyKey),
+    // One active loan per token: the application refuses overlaps first,
+    // this index makes concurrent double-issues impossible.
+    uniqueIndex("commander_loans_active_token_unique")
+      .on(t.chainId, t.contract, t.tokenId)
+      .where(sql`${t.status} = 'active'`),
+    index("commander_loans_owner_idx").on(t.ownerId),
+    index("commander_loans_borrower_idx").on(t.borrowerId),
+    check("commander_loans_chain_check", sql`${t.chainId} = 143`),
+    check(
+      "commander_loans_contract_check",
+      sql`${t.contract} ~ '^0x[0-9a-f]{40}$'`
+    ),
+    check("commander_loans_token_id_check", sql`${t.tokenId} ~ '^[1-9][0-9]{0,77}$'`),
+    check("commander_loans_no_self_check", sql`${t.ownerId} != ${t.borrowerId}`),
+    check("commander_loans_status_check", sql`${t.status} in ('active','expired','revoked','returned')`),
+    check("commander_loans_window_check", sql`${t.endsAt} > ${t.startsAt}`),
+    check(
+      "commander_loans_termination_check",
+      sql`(${t.status} = 'active' and ${t.terminatedAt} is null) or (${t.status} != 'active' and ${t.terminatedAt} is not null)`
+    ),
+  ]
+);
+
+export type CommanderLoan = typeof commanderLoans.$inferSelect;
+
 // P5d.1 clans. tagKey is the normalized (trimmed, uppercased) tag with a
 // database unique index, so case-insensitive duplicates are rejected at the
 // storage layer. Names are intentionally not unique. Status is active or

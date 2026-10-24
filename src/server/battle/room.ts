@@ -66,7 +66,35 @@ const RECONNECT_GRACE_MS = 30_000;
 
 let productionDeps: EntitlementDeps | null = null;
 function entitlement(): EntitlementDeps {
-  return BattleRoom.deps.entitlement ?? (productionDeps ??= productionEntitlementDeps());
+  const base = BattleRoom.deps.entitlement ?? (productionDeps ??= productionEntitlementDeps());
+  if (base.activeTokenLoan && base.borrowSocialCheck) return base;
+  // P5f.1 loan wiring: the NFT path re-verifies any active loan, the
+  // friendship and both block directions on every ready and every
+  // match-start lock. Lazy DB imports keep unit-stubbed tests hermetic.
+  return {
+    ...base,
+    activeTokenLoan: async (tokenId) => {
+      try {
+        const { getActiveLoanForToken } = await import("@/db/lending");
+        const row = await getActiveLoanForToken(tokenId);
+        return row ? { loanId: row.id, ownerId: row.ownerId, borrowerId: row.borrowerId } : null;
+      } catch (err) {
+        // No-DB harnesses (room tests inject stub deps without routing the
+        // DAL): behave as if no loan exists, exactly as before P5f.1.
+        // Production always reaches this only after verifiedWallets proved
+        // the DB reachable, so genuine outages still fail closed there.
+        if (err instanceof Error && err.message.includes("without routeDalToTestDb")) return null;
+        throw err;
+      }
+    },
+    borrowSocialCheck: async (ownerId, borrowerId) => {
+      const { getAcceptedFriendship } = await import("@/db/friendships");
+      const { canSociallyInteract } = await import("@/db/blocks");
+      const verdict = await canSociallyInteract(ownerId, borrowerId);
+      if (!verdict.allowed) return false;
+      return (await getAcceptedFriendship(ownerId, borrowerId)) !== null;
+    },
+  };
 }
 
 let productionPatrons: PatronSource | null = null;

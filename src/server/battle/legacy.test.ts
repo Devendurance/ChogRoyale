@@ -308,6 +308,22 @@ describe("legacy processor", () => {
     expect((await eventsFor("91107")).length).toBe(0);
   }, 240_000);
 
+  it("a borrowed-basis commander earns no appearance and no achievements", async () => {
+    const [a, b] = [await mkPlayer("o2a"), await mkPlayer("o2b")];
+    await makeToken("91201");
+    const { record } = await settleMatch2({ a, b, nftSeat: 0, tokenId: "91201" });
+    const db = getDb();
+    const nftRow = (await db.select().from(matchParticipants).where(eq(matchParticipants.matchId, record.matchId))).find((x) => x.commanderKind === "nft")!;
+    const where = and(eq(matchParticipants.matchId, record.matchId), eq(matchParticipants.seat, nftRow.seat));
+    // A loaned commander settles fine but is never the owner: the legacy
+    // pass must skip it exactly like any other non-direct-owner identity.
+    await db.update(matchParticipants).set({ commanderIdentity: { ...(nftRow.commanderIdentity as object), basis: "borrowed" } }).where(where);
+    const res = await new LegacyProcessor().processMatch(record.matchId);
+    expect(res).toEqual({ status: "no-eligible", eventsCreated: 0 });
+    expect((await eventsFor("91201")).length).toBe(0);
+    expect((await awardsFor("91201")).length).toBe(0);
+  }, 240_000);
+
   it("duplicate and concurrent processMatch calls leave exactly one set of rows", async () => {
     const [a, b] = [await mkPlayer("i1a"), await mkPlayer("i1b")];
     await makeToken("91108");

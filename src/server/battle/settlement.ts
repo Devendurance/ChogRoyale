@@ -154,8 +154,8 @@ export function verifySettlement(record: SettlementRecord): void {
       if (!identity.tokenId || slot.commanderId !== `nft-${identity.tokenId}`) {
         fail(`nft commander token for seat ${seat} does not match evidence slot`);
       }
-      if (identity.basis !== "direct-owner" || !identity.verifiedAt || !owner) {
-        fail(`nft commander for seat ${seat} lacks direct-owner provenance`);
+      if ((identity.basis !== "direct-owner" && identity.basis !== "borrowed") || !identity.verifiedAt || !owner) {
+        fail(`nft commander for seat ${seat} lacks verified ownership provenance`);
       }
     } else {
       if (identity.kind !== "free" || identity.basis !== "free" || owner !== null) {

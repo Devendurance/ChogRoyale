@@ -1,5 +1,9 @@
 # Left Off
 
+## P5f.1 secure NFT commander lending backend, complete (local commit, no push)
+
+- Game-scoped loan delegation: `commander_loans` (migration 0021, TEST only), DAL in `src/db/lending.ts`, loan CRUD routes under `/api/players/me/loans`, borrowed-basis entitlement at ready and match-start lock, settlement accepts borrowed provenance, legacy still owner-only. No UI, no on-chain moves, no PROD writes. Do not start the lending UI.
+
 ## P5e.1 friendship age and card gifting foundation, complete (local commit, no push)
 
 - Server-verified 30-day gift eligibility: `accepted_at` (migration 0020, TEST only), `canGiftToFriend` in `src/db/gifting.ts`, read API `GET /api/players/me/gifts/eligibility`. No transfers, mints, XP/Gold changes, UI or PROD writes.

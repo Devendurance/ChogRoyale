@@ -19,9 +19,9 @@ import type { CollectionVerification } from "@/lib/nft-contract";
 import type { CommanderChoice, CommanderIdentity } from "@/lib/battle-protocol";
 import { CHOG_GENESIS_CHAIN_ID, CHOG_GENESIS_CONTRACT } from "@/lib/battle-protocol";
 
-// B4 extension point: a verified "lease" basis will be added by the lending
-// slice. Not implemented; never infer lease rights.
-export type EntitlementBasis = "free" | "direct-owner";
+// B4 extension point (P5f.1): an active commander_loans row delegates the
+// use right to a friend. Resolved in the NFT path below; never inferred.
+export type EntitlementBasis = "free" | "direct-owner" | "borrowed";
 
 export interface NftCommanderRecord {
   tokenId: string;
@@ -36,6 +36,10 @@ export interface EntitlementDeps {
   ownerOf(tokenId: bigint): Promise<{ owner: string; chainId: number }>;
   /** Current commander ruleset row plus display fields, null when not derived. */
   loadNftCommander(tokenId: string): Promise<NftCommanderRecord | null>;
+  /** The usable ACTIVE loan for a token, or null. Absent when lending is unwired. */
+  activeTokenLoan?(tokenId: string): Promise<{ loanId: string; ownerId: string; borrowerId: string } | null>;
+  /** True when the lending pair may still interact (accepted friends, no blocks). */
+  borrowSocialCheck?(ownerId: string, borrowerId: string): Promise<boolean>;
   timeoutMs?: number;
   now?: () => Date;
 }
@@ -108,12 +112,35 @@ export async function resolveCommander(playerId: string, choice: CommanderChoice
 
   const wallets = await deps.verifiedWallets(playerId);
   const owner = res.owner.trim().toLowerCase();
-  if (!wallets.includes(owner)) {
-    throw new AppError("FORBIDDEN", "NFT is not owned by a verified linked wallet");
+  const tokenStr = tokenId.toString();
+  // An active loan freezes direct use: only the recorded borrower may field
+  // the token, and only while the lender still owns it onchain. Everyone
+  // else, including the lender, is refused so one token never grants two
+  // simultaneous entitlements.
+  const tokenLoan = deps.activeTokenLoan ? await deps.activeTokenLoan(tokenStr) : null;
+  let basis: "direct-owner" | "borrowed";
+  if (wallets.includes(owner)) {
+    if (tokenLoan && tokenLoan.borrowerId !== playerId) {
+      throw new AppError(
+        "FORBIDDEN",
+        playerId === tokenLoan.ownerId ? "This commander is currently on loan" : "NFT is not owned by a verified linked wallet"
+      );
+    }
+    basis = "direct-owner";
+  } else {
+    if (!tokenLoan || tokenLoan.borrowerId !== playerId || !deps.borrowSocialCheck) {
+      throw new AppError("FORBIDDEN", "NFT is not owned by a verified linked wallet");
+    }
+    const social = await deps.borrowSocialCheck(tokenLoan.ownerId, playerId);
+    if (!social) throw new AppError("FORBIDDEN", "This commander is no longer available");
+    const ownerWallets = await deps.verifiedWallets(tokenLoan.ownerId);
+    if (!ownerWallets.includes(owner)) {
+      throw new AppError("FORBIDDEN", "This commander is no longer available");
+    }
+    basis = "borrowed";
   }
 
-  const rec = await deps.loadNftCommander(tokenId.toString());
-  if (!rec) throw new AppError("BAD_REQUEST", "Commander not derived for this token");
+  const rec = await deps.loadNftCommander(tokenId.toString());  if (!rec) throw new AppError("BAD_REQUEST", "Commander not derived for this token");
   const row = rec.commander;
   if (row.tokenId !== tokenId.toString()) {
     throw new AppError("BAD_REQUEST", "Commander not derived for this token");
@@ -155,7 +182,7 @@ export async function resolveCommander(playerId: string, choice: CommanderChoice
     imageOriginal: rec.imageOriginal,
     rulesetVersion: row.rulesetVersion,
     derivationHash: row.contentHash,
-    basis: "direct-owner",
+    basis,
     verifiedAt: (deps.now?.() ?? new Date()).toISOString(),
   };
   return { slot, identity, owner };
