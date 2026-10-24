@@ -367,7 +367,7 @@ export default function PlayGuideView({
                 ))}
               </div>
               <p className="app-guide-alpha">
-                Closed alpha. This build has no levels, card upgrades, currencies, ranked ladder or rewards. The free
+                Closed alpha. This build has no ranked ladder or rewards and no $CHOG purchases. The free
                 classes and Genesis commanders share the same class combat rules.
               </p>
             </section>

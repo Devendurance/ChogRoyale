@@ -39,9 +39,10 @@ import {
   type BattleCue,
   type BattleAudioPreferences,
 } from "./battle-audio";
+import { battleServerUrl, isPublicBattleAvailable } from "@/components/app/battle-availability";
 const APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID ?? "";
-const SERVER = process.env.NEXT_PUBLIC_BATTLE_SERVER_URL ?? "http://127.0.0.1:2567";
-const ENABLED = process.env.NODE_ENV !== "production" || process.env.NEXT_PUBLIC_ENABLE_DEV_BATTLE === "1";
+const SERVER = battleServerUrl() ?? "http://127.0.0.1:2567";
+const DEV_ENABLED = process.env.NODE_ENV !== "production" || process.env.NEXT_PUBLIC_ENABLE_DEV_BATTLE === "1";
 
 type Stage = "idle" | "connecting" | "searching" | "lobby" | "active" | "reconnecting" | "ended" | "aborted" | "failed" | "closed";
 type RankedAwardStatus = "idle" | "checking" | "awarded" | "unavailable" | "timeout";
@@ -540,13 +541,14 @@ export function BattlePanel({
     else if (r.kind === "cancel" && g?.dragging) setHint("Cancelled, nothing sent");
   };
 
+  const ENABLED = publicMode ? isPublicBattleAvailable() : DEV_ENABLED;
   if (!ENABLED) {
     return publicMode ? (
       <main className="app-stage app-stage--gate">
         <div className="app-column app-column--gate">
           <div className="app-panel app-gate">
             <h1 className="app-gate__title">Battle unavailable</h1>
-            <p className="app-gate__lead">The battle server is not enabled in this build. Return to the lobby and try again later.</p>
+            <p className="app-gate__lead">The battle server address is not configured for this deployment. Return to the lobby and try again later.</p>
             <a className="app-btn app-btn--ghost" href="/app/play">Back to battle hall</a>
           </div>
         </div>

@@ -5,11 +5,14 @@
 // existing Colyseus session in /dev/battle.
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useLogin, usePrivy } from "@privy-io/react-auth";
 import AppHud from "./AppHud";
 import AppNav from "./AppNav";
 import Icon from "./icons";
 import { RANKED_SEASON } from "@/lib/ranked";
+import { resolvePlayer, type ProfilePayload } from "./lobby-model";
+import type { LobbyPlayer } from "./lobby-types";
 
 function Gate({ onSignIn }: { onSignIn: () => void }) {
   return (
@@ -28,8 +31,31 @@ function Gate({ onSignIn }: { onSignIn: () => void }) {
 }
 
 export default function PlayHub() {
-  const { ready, authenticated, logout } = usePrivy();
+  const { ready, authenticated, getAccessToken, logout } = usePrivy();
   const { login } = useLogin();
+  const [player, setPlayer] = useState<LobbyPlayer | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      if (!ready || !authenticated) {
+        if (!cancelled) setPlayer(null);
+        return;
+      }
+      const token = await getAccessToken();
+      if (!token || cancelled) return;
+      try {
+        const res = await fetch("/api/players/me", { headers: { authorization: `Bearer ${token}` } });
+        const body = (await res.json()) as { success: boolean; data?: { player: ProfilePayload } };
+        if (!cancelled) setPlayer(body.success && body.data ? resolvePlayer(body.data.player) : null);
+      } catch {
+        if (!cancelled) setPlayer(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, authenticated, getAccessToken]);
 
   if (!ready) {
     return (
@@ -45,7 +71,7 @@ export default function PlayHub() {
 
   return (
     <>
-      <AppHud player={null} onSignOut={() => void logout()} extra={<Link href="/app" className="app-iconbtn" aria-label="Back to lobby" title="Back to lobby"><Icon name="back" /></Link>} />
+      <AppHud player={player} onSignOut={() => void logout()} extra={<Link href="/app" className="app-iconbtn" aria-label="Back to lobby" title="Back to lobby"><Icon name="back" /></Link>} />
       <main className="app-stage app-stage--play">
         <div className="app-column app-play-column">
           <header className="app-play-hero">

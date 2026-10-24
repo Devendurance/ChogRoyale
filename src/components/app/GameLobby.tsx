@@ -11,6 +11,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePrivy, useLogin } from "@privy-io/react-auth";
 import LobbyView from "./LobbyView";
 import { sessionNotice } from "./feedback-model";
+import { isPublicBattleAvailable } from "./battle-availability";
 import { useLobbyCatalog } from "./catalog-context";
 import {
   resolveCommander,
@@ -24,7 +25,7 @@ import {
 import type { LobbyCommander, LobbyDeck, LobbyNotice, LobbyPlayer, LobbyPhase } from "./lobby-types";
 import { useMedia, useSaveData } from "@/components/site/use-media";
 
-const ENABLED = process.env.NODE_ENV !== "production" || process.env.NEXT_PUBLIC_ENABLE_DEV_BATTLE === "1";
+const ENABLED = isPublicBattleAvailable();
 
 interface ApiError {
   code: string;
