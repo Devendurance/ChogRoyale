@@ -1,5 +1,12 @@
 # Left Off
 
+## P6e.1 economy integrity and abuse audit (complete, local commit pending, no push)
+
+- Read-only operator audit: `src/lib/economy-audit.ts` (pure checks) + `scripts/economy-audit.ts` (`npm run economy:audit [-- --json] [--limit N]`). SELECT-only, TEST-guarded via `requireTestDatabaseUrl`, missing tables become NOT_CHECKABLE, no secrets in either rendering.
+- Live TEST run: matches/gold/ranked/sponsorship tables empty, no suspect patterns; real FAIL on 2 `card_xp_progress` rows (xp=0/level=10, choglings) that match direct test-fixture writes, not app flow. No recovery attempted.
+- Reconciliation plan in `docs/P6e.2-requirements.md`. P6e.1 enforcement thresholds are provisional and NOT APPROVED FOR ENFORCEMENT. Do not start P6e.2.
+- Verification: audit tests 10/10, P6c route suite 3/3 on TEST, typecheck/lint/build green. Scoped files only; `.fast-build/STATE.md`, `DESIGN.md`, `docs/Chog Royale messaging.md` untouched.
+
 ## P6d card gifting and upgrade sponsorship UI (complete, local commit)
 
 - Added `/app/gifts` with server-backed accepted-friend eligibility, 20-card catalog selection, quote and Gold reads, confirmation, UUID-safe sponsorship retries, domain-status messaging and sent/received history. Friends and Profile link to gifting.

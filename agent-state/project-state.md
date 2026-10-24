@@ -1,5 +1,10 @@
 # Project State
 
+## P6e.1 economy integrity and abuse audit (2026-10-24)
+
+- Pure audit library plus SELECT-only TEST-guarded operator CLI with human and JSON output. Checks settlement coverage, pending Gold/XP/trophy awards, derived Gold balances, sponsorship receipt/spend match, orphans, duplicates, XP/level invariants, ranked delta/balance rules, plus review-only suspect-match and gift-risk signals with documented false positives.
+- Live TEST evidence: no settled matches, no suspect patterns, 2 fixture-shaped XP violations (xp=0/level=10) flagged FAIL with no auto-repair. P6e.2 plan records healers, idempotency, and approval gates.
+
 ## P6d card gifting and upgrade sponsorship UI (2026-10-24)
 
 - Added `/app/gifts` with accepted-friend eligibility, original ordinary-card selection, server quote, Gold balance, confirmation, idempotent sponsorship submission and sent/received receipt history. Domain 200 refusals remain distinct from sponsored or duplicate confirmation.

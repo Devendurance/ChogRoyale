@@ -25,7 +25,8 @@
     "chaos:fairness": "tsx scripts/chaos-fairness.ts",
     "bots:economy": "tsx scripts/bot-economy.ts",
     "balance:calibrate": "tsx scripts/balance-calibration.ts",
-    "battle:server": "tsx scripts/battle-server.ts"
+    "battle:server": "tsx scripts/battle-server.ts",
+    "economy:audit": "tsx scripts/economy-audit.ts"
   },
   "dependencies": {
     "@colyseus/core": "0.18.18",

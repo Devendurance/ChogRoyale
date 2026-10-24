@@ -1,5 +1,8 @@
 # Memory
 
+- P6e.1 audit lives in `src/lib/economy-audit.ts` plus `scripts/economy-audit.ts` (`npm run economy:audit`). Read-only by construction; TEST identity verified before any query; `--json` via `npx tsx` stays parseable (npm preamble pollutes stdout). Exit 1 on FAIL, 2 on operational error.
+- P6e.1 thresholds are provisional review signals, never enforcement. Cap-boundary pressure is NOT CHECKABLE (no rejected-attempt log). Null-`accepted_at` friendships stay ineligible, never backfilled.
+
 - P6d gifting uses `/app/gifts` and P6c routes. Quote `nextLevel` is current purchased level, and well-formed sponsorship POST domain outcomes arrive as HTTP 200. `sponsored` and `duplicate` are confirmed, but both can return null `goldCost` and `receiptId`; refresh party-scoped history instead of inventing values.
 
 - P5f.2 lending UI uses `/app/loans` and the existing loan routes only. Loan lists expose server loan IDs/dates and internal party IDs, but the client never renders those IDs. Public peer labels come only from current accepted friends; former peers stay neutral.
