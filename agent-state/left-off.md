@@ -1,3 +1,10 @@
+## HOTFIX live: entry journey unblocked, pushed 0666669 (state local)
+
+- Fixes: landing Play CTAs -> /app; PlayHub real player via /api/players/me + resolvePlayer (was null); public battle gate = HTTPS WSS configured in prod (GameLobby + BattlePanel publicMode), dev gate untouched; PlayGuide stale currency line corrected.
+- Verified: gate tests 3/3, typecheck, lint, prod build WITH tunnel URL and with EMPTY env (Vercel failure mode) both green.
+- Live: chogroyale.vercel.app serves the hotfix (Play href="/app"); WSS healthy; PROD holds 2 replay-verified private matches + evidence (settlement proven live) and 10 players.
+- Owner-gated: Vercel prod env values (Privy pair, DATABASE_URLs, NEXT_PUBLIC_BATTLE_SERVER_URL=tunnel URL), deploy green check, two-login private-match smoke + PROD settlement confirm.
+
 ## LAUNCH DAY: endy-vps LIVE, frontend+smoke owner-gated (state committed, runbook pushed)
 
 - endy-vps (hermes.endyos.xyz, 4 CPU/7.8G/98G free, Node 24 via nvm) DEPLOYED: ~/apps/chog-royale @65e19e4, user-systemd battle+tunnel (enabled, lingering on), NO root used (no sudo). Quick-tunnel URL is ephemeral: CURRENT https://blacks-dish-sublime-clinic.trycloudflare.com (wss same). Settlement ON, ranked closed, legacy/scaling off. Health verified locally + externally + WSS 101.
