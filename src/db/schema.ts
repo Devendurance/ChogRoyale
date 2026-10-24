@@ -771,6 +771,12 @@ export const friendships = pgTable(
       .references(() => players.id, { onDelete: "cascade" }),
     status: text("status").notNull(),
     requestedBy: uuid("requested_by").notNull(),
+    // P5e.1 gift-eligibility anchor. Set once when a request becomes an
+    // accepted friendship (acceptRequest or reverse-send auto-accept).
+    // Pending rows stay null; removed rows are deleted so re-friending
+    // writes a fresh timestamp. Legacy accepted rows with null stay
+    // ineligible: never backfilled or grandfathered.
+    acceptedAt: timestamp("accepted_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

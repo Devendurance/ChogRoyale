@@ -1,5 +1,10 @@
 # Left Off
 
+## P5e.1 friendship age and card gifting foundation, complete (local commit, no push)
+
+- Server-verified 30-day gift eligibility: `accepted_at` (migration 0020, TEST only), `canGiftToFriend` in `src/db/gifting.ts`, read API `GET /api/players/me/gifts/eligibility`. No transfers, mints, XP/Gold changes, UI or PROD writes.
+- Card ownership finding: no transferable card inventory exists. Cards are global definitions plus account-bound XP/purchased levels and deck-slot claims. Minimal giftable-copy model proposed without an issuing source. Do not start P5e.2 transfers.
+
 ## P5d.2 clan UI and social integration, complete (local commit, no push)
 
 - Added `/app/clans`, server-backed create/edit, pending invite accept/decline, accepted-friend invite picker, roster and role management, transfer, remove, leave and archive confirmations. Profile account actions link into clans without adding a sixth nav tab or changing the HUD.

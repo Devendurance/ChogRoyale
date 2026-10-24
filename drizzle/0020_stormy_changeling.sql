@@ -1,0 +1,1 @@
+ALTER TABLE "friendships" ADD COLUMN "accepted_at" timestamp with time zone;

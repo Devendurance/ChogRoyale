@@ -34,6 +34,8 @@
 - Battle shell styles live in `src/app/dev/battle/battle-hud.css`, scoped to `chud-` classes. At 1100px and above the hand docks beside the board. Compact landscape rules exclude desktop widths.
 - B2.8g.1 arena atmosphere is CSS-only outside the board plus low Phaser mount shadows. Keep `.chud-arena` decorative layers pointer-transparent and preserve the canvas rect for `screenToArena`.
 - Fixed battle HUD must render connection/error/recovery notices itself, since the underlying page controls are covered. Keep canvas mapping and scene lifecycle unchanged during presentation work.
+- P5e.1 gifting foundation: `friendships.accepted_at` (nullable, TEST migration 0020) is the only trustworthy gift-age anchor; `updatedAt` is not reused. Legacy accepted rows with null stay ineligible, never backfilled. `canGiftToFriend` uses the DB clock by default (`nowMsOverride` is test-only) and P5e.2 must recheck it inside its write; cached true responses never authorize a transfer. Blocked pairs answer neutral `unavailable` either direction.
+
 - Delegated project agents use GPT-6.1 Sol at low or medium reasoning per the owner's 2026-10-23 instruction.
 
 Durable facts, conventions, and gotchas that should survive across sessions.

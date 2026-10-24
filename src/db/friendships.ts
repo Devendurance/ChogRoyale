@@ -174,7 +174,7 @@ export async function sendRequest(playerId: string, targetId: string): Promise<F
     if (existing.requestedBy === playerId) return viewOf(existing, playerId);
     const accepted = await db
       .update(friendships)
-      .set({ status: "accepted", updatedAt: new Date() })
+      .set({ status: "accepted", acceptedAt: new Date(), updatedAt: new Date() })
       .where(eq(friendships.id, existing.id))
       .returning();
     return viewOf(accepted[0], playerId);
@@ -208,7 +208,7 @@ export async function acceptRequest(playerId: string, friendshipId: string): Pro
   if (row.requestedBy === playerId) throw new AppError("BAD_REQUEST", "You cannot accept your own request");
   const updated = await getDb()
     .update(friendships)
-    .set({ status: "accepted", updatedAt: new Date() })
+    .set({ status: "accepted", acceptedAt: new Date(), updatedAt: new Date() })
     .where(eq(friendships.id, row.id))
     .returning();
   return viewOf(updated[0], playerId);
