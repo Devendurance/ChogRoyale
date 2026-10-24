@@ -1,4 +1,8 @@
-## LAUNCH DAY: BLOCKED on endy-vps SSH key, aws-hermes still live (state committed locally)
+## LAUNCH DAY: endy-vps LIVE, frontend+smoke owner-gated (state committed, runbook pushed)
+
+- endy-vps (hermes.endyos.xyz, 4 CPU/7.8G/98G free, Node 24 via nvm) DEPLOYED: ~/apps/chog-royale @65e19e4, user-systemd battle+tunnel (enabled, lingering on), NO root used (no sudo). Quick-tunnel URL is ephemeral: CURRENT https://blacks-dish-sublime-clinic.trycloudflare.com (wss same). Settlement ON, ranked closed, legacy/scaling off. Health verified locally + externally + WSS 101.
+- aws-hermes chog-royale-battle stopped + disabled (host/files/Caddy untouched). No migrations repeated. No unrelated services touched.
+- OWNER LEFT: Vercel prod env (Privy pair + DATABASE_URLs + NEXT_PUBLIC_BATTLE_SERVER_URL=https://blacks-dish-sublime-clinic.trycloudflare.com), deploy green check, two-login private-match smoke, optional battle.chogroyale.xyz DNS to replace tunnel URL.
 
 - `ssh endy-vps` STILL denied after owner added old pubkey. Root cause is client-side: ~/.ssh/id_ed25519 is passphrase-encrypted and BatchMode cannot unlock it (server log sequence proves it: key accepted, then signature never produced). Fix: generated passphrase-less ~/.ssh/id_chogdeploy; owner must authorize the NEW pubkey (below). Old key untouched.
 - NEW PUBKEY TO AUTHORIZE: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINzoJKMxSYP+9SmNCELTe2RhN0oXvtGOy0YjK8AX/j3B chog-royale-deploy
