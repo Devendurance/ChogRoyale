@@ -120,6 +120,27 @@
       "when": 1792796183890,
       "tag": "0016_dm_messaging",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1792827312616,
+      "tag": "0017_clan_membership",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1792827736392,
+      "tag": "0018_clan_active_clan_index",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1792830874291,
+      "tag": "0019_clan_pointer_no_fk",
+      "breakpoints": true
     }
   ]
 }

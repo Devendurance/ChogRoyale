@@ -1,5 +1,7 @@
 # Memory
 
+- P5d.1 clans: `players.activeClanId` must stay a plain uuid. Adding `.references(() => clans.id)` closes a TS inference cycle with `clans.ownerId` and breaks tsc across schema/players. No FK constraint as a result; pointer lifecycle is app-managed and reads self-heal. Concurrent clan transitions rely on conditional single-statement updates with returning-row-count checks, never transactions (neon-http has none).
+
 - P5c messaging UI is in `/app/messages` and uses only the existing message routes plus `POST /api/players/me/messages/conversations`. The opener takes `{ peerId }`, returns a canonical conversation id, and keeps unavailable peers neutral. The client preserves draft and UUID across uncertain send failures, acknowledges only fully visible received rows, and polls only while visible/focused with a five-minute cap. The current P5b message cursor walks forward from the oldest page, so long histories need explicit Load more and this is a backend contract limitation, not a client fixture.
 
 - P5b DMs live in `dm_conversations`/`dm_messages` (TEST migration 0016). Cursor/ack boundaries resolve in-DB at full timestamptz precision because JS Dates truncate microseconds and re-match their own row. Raw `db.execute` SELECTs return snake_case, so alias to camelCase. neon-http binds scalar params fine but not JS arrays: use `sql.join` of `::uuid` literals or `inArray`. DB suites must run with `--fileParallelism=false`; parallel files collide on the shared TEST branch and fail spuriously.

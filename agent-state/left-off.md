@@ -1,5 +1,9 @@
 # Left Off
 
+## P5d.1 clan membership and governance backend, complete (local commit, no push)
+
+- Clans, memberships, invites (migrations 0017-0019, TEST only), 11 explicit routes, no UI. Tests 20/20 clan plus 52/52 social regressions green sequential. Typecheck/lint/build green. Full-file reruns flake under sustained TEST-branch load (19/20 then 20/20, no code change). Do not start clan UI.
+
 ## P5c private messaging UI and social integration, complete pending commit
 
 - Added the conversation opener route and neutral social-safety handling, plus `/app/messages`, Friends Message links, shared HUD Messages link, avatar/timestamp inbox rows, cursor paging, bounded visible polling, read acks and retry-safe sends.

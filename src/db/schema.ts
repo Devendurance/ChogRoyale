@@ -33,12 +33,19 @@ export const players = pgTable(
     avatarId: varchar("avatar_id", { length: 64 }),
     accountStatus: text("account_status").notNull().default("active"),
     onboardingStatus: text("onboarding_status").notNull().default("pending"),
+    // P5d.1 active clan pointer. A plain uuid with no foreign key: a
+    // players->clans reference would close a type-inference cycle with
+    // clans.ownerId and break tsc. Set only through conditional
+    // single-statement updates at the membership boundary; reads treat a
+    // dangling pointer as clanless, and clans are never deleted.
+    activeClanId: uuid("active_clan_id"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     uniqueIndex("players_privy_did_unique").on(t.privyDid),
     uniqueIndex("players_username_key_unique").on(t.usernameKey),
+    index("players_active_clan_idx").on(t.activeClanId),
     index("players_account_status_idx").on(t.accountStatus),
     check("players_account_status_check", sql`${t.accountStatus} in ('active','suspended','banned')`),
     check("players_onboarding_status_check", sql`${t.onboardingStatus} in ('pending','complete')`),
@@ -804,6 +811,95 @@ export const playerBlocks = pgTable(
 );
 
 export type PlayerBlock = typeof playerBlocks.$inferSelect;
+
+// P5d.1 clans. tagKey is the normalized (trimmed, uppercased) tag with a
+// database unique index, so case-insensitive duplicates are rejected at the
+// storage layer. Names are intentionally not unique. Status is active or
+// archived; rows are never deleted so archived clans keep auditable history.
+export const clans = pgTable(
+  "clans",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    name: text("name").notNull(),
+    tag: text("tag").notNull(),
+    tagKey: text("tag_key").notNull(),
+    description: text("description"),
+    ownerId: uuid("owner_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "cascade" }),
+    status: text("status").notNull().default("active"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("clans_tag_key_unique").on(t.tagKey),
+    index("clans_owner_idx").on(t.ownerId),
+    check("clans_status_check", sql`${t.status} in ('active','archived')`),
+  ]
+);
+
+export type Clan = typeof clans.$inferSelect;
+
+// P5d.1 clan membership. One row per (clan, player); the (clan,player) PK
+// makes duplicate membership impossible. The one-active-clan rule is held
+// by players.activeClanId (unique, nulls allowed) set through conditional
+// single-statement updates; rows of archived clans are kept as history.
+export const clanMembers = pgTable(
+  "clan_members",
+  {
+    clanId: uuid("clan_id")
+      .notNull()
+      .references(() => clans.id, { onDelete: "cascade" }),
+    playerId: uuid("player_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "cascade" }),
+    role: text("role").notNull(),
+    joinedAt: timestamp("joined_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ name: "clan_members_pk", columns: [t.clanId, t.playerId] }),
+    index("clan_members_player_idx").on(t.playerId),
+    check("clan_members_role_check", sql`${t.role} in ('owner','officer','member')`),
+  ]
+);
+
+export type ClanMember = typeof clanMembers.$inferSelect;
+
+// P5d.1 clan invitations. One pending invite per (clan, target) via a
+// partial unique index; accepted/declined/expired rows stay for audit.
+// expiresAt defaults to 7 days (provisional TEST policy).
+export const clanInvites = pgTable(
+  "clan_invites",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    clanId: uuid("clan_id")
+      .notNull()
+      .references(() => clans.id, { onDelete: "cascade" }),
+    inviter: uuid("inviter")
+      .notNull()
+      .references(() => players.id, { onDelete: "cascade" }),
+    target: uuid("target")
+      .notNull()
+      .references(() => players.id, { onDelete: "cascade" }),
+    status: text("status").notNull().default("pending"),
+    expiresAt: timestamp("expires_at", { withTimezone: true })
+      .notNull()
+      .default(sql`now() + interval '7 days'`),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("clan_invites_pending_unique").on(t.clanId, t.target).where(sql`${t.status} = 'pending'`),
+    index("clan_invites_target_idx").on(t.target),
+    check("clan_invites_status_check", sql`${t.status} in ('pending','accepted','declined','expired')`),
+  ]
+);
+
+export type ClanInvite = typeof clanInvites.$inferSelect;
 
 // P5b direct-message conversations. One canonical row per unordered player
 // pair (user_a < user_b), so simultaneous creation collapses to one

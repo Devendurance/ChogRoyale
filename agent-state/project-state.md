@@ -1,5 +1,9 @@
 # Project State
 
+## P5d.1 clan membership and governance backend (2026-10-24)
+
+- `clans` (name/tag/tagKey-unique/description/owner/status), `clan_members` (PK pair, roles), `clan_invites` (partial unique pending per clan+target, 7-day expiry) via migrations 0017-0019, TEST only. One-active-clan via `players.activeClanId` plain uuid (no FK: FK closed a tsc inference cycle) with conditional single-statement claims. Owner/officer/member matrix, neutral errors, history retained on archive. 11 routes under `/api/players/me/clans`. Tests 20/20, regressions 52/52, typecheck/lint/build green. No PROD writes, no push, no UI.
+
 ## P5c private messaging UI and social integration (2026-10-24)
 
 - Added `POST /api/players/me/messages/conversations` using the existing canonical-pair DAL, accepted-friend check and bidirectional block guard. Unknown, incomplete, pending and blocked peers return one neutral unavailable response. Route tests cover auth, self/invalid input, concurrency, no-message creation and spoof resistance.
