@@ -349,6 +349,10 @@ export default function ProfileView({
                     <Icon name="clans" size={16} />
                     Clans
                   </Link>
+                  <Link href="/app/loans" className="app-btn app-btn--ghost">
+                    <Icon name="commanders" size={16} />
+                    Commander lending
+                  </Link>
                   <Link href="/app/friends" className="app-btn app-btn--ghost">
                     <Icon name="friends" size={16} />
                     Friends

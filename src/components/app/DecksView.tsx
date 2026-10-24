@@ -189,7 +189,7 @@ function CommanderTile({ option, onOpen }: { option: DecksCommanderOption | null
           )}
         </span>
         <span className="app-slot__name">{option?.displayName ?? "Commander"}</span>
-        <span className="app-slot__type">Commander</span>
+        <span className="app-slot__type">{option?.ownership === "lent" ? "Lent, unavailable" : option?.basis === "borrowed" ? "Borrowed commander" : "Commander"}</span>
       </button>
     </li>
   );
@@ -399,7 +399,7 @@ function CommanderSheet({
       <h3 className="app-sheet__sub">Chog Genesis NFT commanders</h3>
       {nfts.length === 0 ? (
         <p className="app-sheet__text">
-          No Chog Genesis NFT commander is linked to a verified wallet on this account. The free starters above are always available.
+          No owned or borrowed Chog Genesis NFT commanders are available on this account. The free starters above are always available.
         </p>
       ) : (
         <ul className="app-cmdrs">
@@ -415,7 +415,7 @@ function CommanderSheet({
                   disabled={blocked}
                   aria-pressed={active}
                 >
-                  <span className="app-cmdr__badge app-cmdr__badge--nft">NFT</span>
+                  <span className="app-cmdr__badge app-cmdr__badge--nft">{option.ownership === "lent" ? "LENT" : option.basis === "borrowed" ? "BORROWED" : "OWNED"}</span>
                   <span className="app-cmdr__name">{option.displayName}</span>
                   <span className="app-cmdr__class">
                     {option.className}
@@ -423,6 +423,7 @@ function CommanderSheet({
                   </span>
                   {active && <Icon name="check" size={16} className="app-cmdr__check" />}
                   {blocked && <span className="app-cmdr__reason">{option.blockedReason}</span>}
+                  {option.loan && <span className="app-cmdr__reason">{option.ownership === "lent" ? "Lent until" : "Borrowed until"} <time dateTime={option.loan.endsAt}>{new Date(option.loan.endsAt).toLocaleString()}</time></span>}
                 </button>
               </li>
             );
@@ -430,7 +431,7 @@ function CommanderSheet({
         </ul>
       )}
       <p className="app-sheet__note">
-        Selecting an NFT commander records a claim. The battle server proves ownership again when you ready up and again at match start.
+        Selecting an NFT commander records a claim. Ownership or active borrowed use is checked again when you ready up and at match start. Borrowing gives in-game use only. The NFT stays in its owner&apos;s wallet.
       </p>
       {current && current.stats.length > 0 && (
         <>

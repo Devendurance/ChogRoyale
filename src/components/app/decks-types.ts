@@ -56,6 +56,10 @@ export interface DecksCommanderOption {
   displayName: string;
   /** Token id for an NFT commander. */
   tokenId: string | null;
+  /** Eligibility basis and availability returned by the commander service. */
+  basis?: "owned" | "borrowed";
+  ownership?: "owned" | "borrowed" | "lent";
+  loan?: { id: string; endsAt: string };
   /** Deploy cost of the class. Free and NFT commanders of one class share it. */
   cost: number | null;
   /** The commander card art for the class. Shared by every commander of it. */

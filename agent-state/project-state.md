@@ -1,5 +1,11 @@
 # Project State
 
+## P5f.2 NFT commander lending UI (2026-10-24)
+
+- Added `/app/loans` with server-backed authenticated loan creation, accepted-friend selection, 1-7 day duration, idempotent retry keys, active lent/borrowed views, history, detail refresh, revoke/return confirmations and neutral auth/conflict/service states.
+- Extended the existing commander eligibility read with loan-aware `basis`, `ownership` and expiry metadata using the existing entitlement resolver for borrowed candidates. Deck selection now labels OWNED, BORROWED and LENT, blocks unavailable or expired choices, and keeps the saved claim contract unchanged.
+- Focused model tests 38/38, typecheck, scoped ESLint and production build pass. Browser fixtures at 390x844 and 1366x768 render the honest unavailable state because local Privy/schema access is unavailable. No live mainnet NFT acceptance or PROD write was performed.
+
 ## P5d.2 clan UI and social integration (2026-10-24)
 
 - Added `/app/clans` using the P5d.1 server-owned clan, roster, invite and governance routes. Clan creation/editing, pending invitations, accepted-friend invites, roster roles, leave/archive, removal and transfer all reread authoritative state after mutations and preserve verified state on failed refreshes.

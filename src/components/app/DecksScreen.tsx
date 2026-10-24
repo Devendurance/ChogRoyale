@@ -16,7 +16,7 @@ import { usePrivy, useLogin } from "@privy-io/react-auth";
 import DecksView from "./DecksView";
 import { sessionNotice } from "./feedback-model";
 import { useLobbyCatalog } from "./catalog-context";
-import { resolvePlayer, type ProfilePayload } from "./lobby-model";
+import { resolvePlayer, type CommandersPayload, type ProfilePayload } from "./lobby-model";
 import type { LobbyPlayer } from "./lobby-types";
 import {
   CHOG_GENESIS_CHAIN_ID,
@@ -32,6 +32,7 @@ import {
   allOrdinaryCards,
   cardAction,
   commanderCostFor,
+  commanderOptionsFor,
   deckAverage,
   deckSaveState,
   filterCards,
@@ -73,20 +74,6 @@ interface Envelope<T> {
 interface LoadoutPayload {
   loadout: SavedLoadout | null;
   invalidSaved?: { revision: number; reason: string };
-}
-
-interface CommandersPayload {
-  nftCommanders: Array<{
-    tokenId: string;
-    name: string | null;
-    status: string;
-    eligible: boolean;
-    reason?: string;
-    commander?: { class: string; variant: string; prestige: string } | null;
-  }>;
-  freeCommanders: Array<{ id: string; name: string; class: string }>;
-  rulesetVersion: string;
-  freshness?: string;
 }
 
 interface ApiError {
@@ -189,10 +176,6 @@ function writeLocalDraft(draft: DeckDraft): void {
   }
 }
 
-function titleCase(value: string): string {
-  return value.charAt(0).toUpperCase() + value.slice(1);
-}
-
 function DecksShell() {
   const catalog = useLobbyCatalog();
   const { ready, authenticated, getAccessToken, logout, user } = usePrivy();
@@ -221,6 +204,7 @@ function DecksShell() {
   const [upgradeCardId, setUpgradeCardId] = useState<string | null>(null);
   const [upgradeStatus, setUpgradeStatus] = useState<UpgradeStatus>("idle");
   const [upgradeMessage, setUpgradeMessage] = useState<string | null>(null);
+  const [nowMs, setNowMs] = useState(0);
 
   // The draft starts empty on both the server and the client, so the first
   // render matches the server HTML. The account copy and the local draft are
@@ -380,6 +364,15 @@ function DecksShell() {
     return () => clearTimeout(timer);
   }, [ready, authenticated, load, loadProgression]);
 
+  useEffect(() => {
+    const initial = window.setTimeout(() => setNowMs(Date.now()), 0);
+    const timer = window.setInterval(() => setNowMs(Date.now()), 60_000);
+    return () => {
+      window.clearTimeout(initial);
+      window.clearInterval(timer);
+    };
+  }, []);
+
   const player: LobbyPlayer | null = useMemo(() => (profile ? resolvePlayer(profile) : null), [profile]);
 
   const allCards = useMemo(() => allOrdinaryCards(catalog), [catalog]);
@@ -387,52 +380,7 @@ function DecksShell() {
 
   const serverDeck: SavedLoadout | null = loadout?.loadout ?? null;
 
-  // The commander the deck is playing with, resolved from the claim.
-  const nftClassOf = useCallback(
-    (tokenId: string): string | null => {
-      const entry = commanders?.nftCommanders.find((n) => n.tokenId === tokenId);
-      return entry?.commander?.class ?? null;
-    },
-    [commanders]
-  );
-
-  const commanderOptions = useMemo<DecksCommanderOption[]>(() => {
-    const options: DecksCommanderOption[] = catalog.commanders.map((c) => ({
-      key: `free:${c.classId}`,
-      kind: "free",
-      classId: c.classId,
-      className: c.className,
-      displayName: c.freeName,
-      tokenId: null,
-      cost: c.cost,
-      art: c.commanderCardArt,
-      stats: c.stats,
-      blockedReason: null,
-      artNote: `${c.className} class art, shared by every ${c.className} commander. It is not a specific NFT.`,
-    }));
-    for (const nft of commanders?.nftCommanders ?? []) {
-      const cls = nft.commander?.class ?? null;
-      const className = cls ? titleCase(cls) : "Unknown";
-      const usable = nft.status === "derived" && nft.eligible && cls !== null;
-      const classEntry = cls ? catalog.commanders.find((c) => c.classId === cls) : undefined;
-      options.push({
-        key: `nft:${nft.tokenId}`,
-        kind: "nft",
-        classId: cls ?? "",
-        className,
-        displayName: nft.name ?? `Chog Genesis #${nft.tokenId}`,
-        tokenId: nft.tokenId,
-        cost: classEntry?.cost ?? null,
-        art: classEntry?.commanderCardArt ?? null,
-        stats: classEntry?.stats ?? [],
-        blockedReason: usable
-          ? null
-          : (nft.reason ?? (nft.eligible ? "This token has no derived commander yet." : "No verified linked wallet holds this token right now.")),
-        artNote: `${className} class art, shared by every ${className} commander. It is not a specific NFT. The battle server proves ownership again when you ready up and again at match start.`,
-      });
-    }
-    return options;
-  }, [catalog, commanders]);
+  const commanderOptions = useMemo(() => commanderOptionsFor(catalog, commanders, nowMs), [catalog, commanders, nowMs]);
 
   const commanderOption = useMemo<DecksCommanderOption | null>(() => {
     const claim = draft.commander;
@@ -445,10 +393,8 @@ function DecksShell() {
   const commanderCost = useMemo(() => {
     const claim = draft.commander;
     if (claim.kind === "free") return commanderCostFor(catalog, claim);
-    const cls = nftClassOf(claim.tokenId);
-    if (!cls) return null;
-    return catalog.commanders.find((c) => c.classId === cls)?.cost ?? null;
-  }, [catalog, draft.commander, nftClassOf]);
+    return commanderOption?.cost ?? null;
+  }, [catalog, draft.commander, commanderOption]);
 
   const deckProblems = useMemo(() => validateDeckDraft(catalog, draft.cards), [catalog, draft.cards]);
   const average = useMemo(
@@ -504,6 +450,10 @@ function DecksShell() {
   const onSelectCommander = useCallback(
     (option: DecksCommanderOption) => {
       if (option.blockedReason) return;
+      if (option.basis === "borrowed" && (!option.loan || Date.parse(option.loan.endsAt) <= Date.now())) {
+        setCommandersError({ code: "LOAN_EXPIRED", message: "This borrowed commander is no longer available. Refresh to check its loan status." });
+        return;
+      }
       if (option.kind === "free") {
         if (!(COMMANDER_CLASS_CHOICES as readonly string[]).includes(option.classId)) return;
         updateDraft({
@@ -698,7 +648,7 @@ function DecksShell() {
       list.push({ tone: "info", text: "Your profile setup is not finished, so the saved deck stays locked until it is." });
     }
     if (commanderClaim.kind === "nft" && commanderOption?.blockedReason) {
-      list.push({ tone: "warn", text: `Token ${commanderClaim.tokenId} is claimed as your commander, but a linked wallet does not prove you hold it right now. The battle server checks ownership when you ready up and again at match start.` });
+      list.push({ tone: "warn", text: `${commanderOption.blockedReason} Choose an available commander. Ownership or borrowed use is checked again when you ready up and at match start.` });
     }
     return list;
   }, [loadoutError, invalidSaved, commandersError, profile, commanderClaim, commanderOption]);

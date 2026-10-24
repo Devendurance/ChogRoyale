@@ -211,3 +211,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Keep battle shell styles scoped to `.chud` and `chud-` classes. Desktop hand placement must not reduce the board's height, and compact landscape rules must stay below the desktop breakpoint.
 - Preserve the shared canvas-rectangle pointer mapper and stable Phaser instance. Presentation fixtures prove layout and callback behavior only, never authenticated multiplayer or server acceptance.
 - Connection, error and recovery notices must remain visible inside the fixed HUD. Recovery actions reuse the existing session callbacks.
+
+## NFT COMMANDER LENDING
+
+- P5f.2 lending UI is server-authoritative. `/app/loans` uses only the existing loan routes, accepted-friend records and authenticated commander read. Never render loan party IDs or wallet data, never optimistically grant borrowed access, and keep `{ kind: "nft", chainId, contract, tokenId }` as the saved loadout claim.
+- Borrowed commander options require server-returned active loan metadata and remain subject to the existing entitlement check at ready and match start. Lent, expired, revoked and returned options stay unavailable in the selector. Schema or service failures remain explicit unavailable states.

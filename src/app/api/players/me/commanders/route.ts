@@ -9,6 +9,11 @@ import {
 import { freeCommanderTemplates } from "@/lib/commanders";
 import { readOwner, parseTokenId } from "@/lib/nft-contract";
 import { getIpfsGateways } from "@/lib/metadata";
+import { getAcceptedFriendship } from "@/db/friendships";
+import { canSociallyInteract } from "@/db/blocks";
+import { getActiveLoanForToken, listLoansForBorrower, listLoansForOwner } from "@/db/lending";
+import { productionEntitlementDeps, resolveCommander } from "@/server/battle/entitlement";
+import type { CommanderChoice } from "@/lib/battle-protocol";
 import { logger } from "@/lib/logger";
 
 // Display URL only; the original URI is also returned verbatim. ipfs://
@@ -33,20 +38,23 @@ export async function GET(request: Request) {
     const wallets = await listWallets(player.id);
     const verified = wallets.filter((w) => w.verifiedAt !== null).map((w) => w.addressNormalized);
 
-    if (verified.length === 0) {
-      return success(
-        {
-          nftCommanders: [],
-          freeCommanders: freeCommanderTemplates().map((t) => ({ ...t, eligible: true })),
-          rulesetVersion: currentRulesetVersion(),
-          walletsChecked: 0,
-          freshness: "cached" as const,
-        },
-        { requestId }
-      );
+    // Lending state is part of the authenticated commander read. This keeps
+    // the deck selector from treating a lent token as owned or hiding a valid
+    // borrowed token. A missing lending schema fails the whole read honestly.
+    const [lentRows, borrowedRows] = await Promise.all([
+      listLoansForOwner(player.id),
+      listLoansForBorrower(player.id),
+    ]);
+    const activeLent = new Map<string, { id: string; endsAt: string }>();
+    for (const loan of lentRows) {
+      const active = await getActiveLoanForToken(loan.tokenId);
+      if (active && active.ownerId === player.id) {
+        activeLent.set(loan.tokenId, { id: active.id, endsAt: active.endsAt.toISOString() });
+      }
     }
 
-    const holdings = await getHoldingsByOwners(verified);
+    const activeBorrowed = borrowedRows.filter((loan) => loan.status === "active");
+    const holdings = verified.length > 0 ? await getHoldingsByOwners(verified) : [];
     let eligibleIds = new Set(holdings.map((h) => h.tokenId));
     if (fresh) {
       const live = new Set<string>();
@@ -61,32 +69,84 @@ export async function GET(request: Request) {
       eligibleIds = live;
     }
 
-    const rows = await getCommanderEligibility(holdings.map((h) => h.tokenId));
+    const borrowedTokenIds = activeBorrowed.map((loan) => loan.tokenId).filter((tokenId) => !eligibleIds.has(tokenId));
+    const rows = await getCommanderEligibility([...holdings.map((h) => h.tokenId), ...borrowedTokenIds]);
     const holdingOf = new Map(holdings.map((h) => [h.tokenId, h]));
-    const nftCommanders = rows.map((r) => {
-      const eligible = eligibleIds.has(r.tokenId);
+    const borrowedByToken = new Map(activeBorrowed.map((loan) => [loan.tokenId, loan]));
+    const entitlement = productionEntitlementDeps();
+    const nftCommanders = await Promise.all(rows.map(async (r) => {
+      const loan = borrowedByToken.get(r.tokenId);
+      const lent = activeLent.get(r.tokenId);
+      const borrowed = Boolean(loan);
+      let eligible = eligibleIds.has(r.tokenId) && !lent;
+      const basis: "owned" | "borrowed" = borrowed ? "borrowed" : "owned";
+      let reason: string | undefined;
+      let borrowedName: string | null = null;
+      let borrowedImageOriginal: string | null = null;
+
+      if (borrowed) {
+        try {
+          const choice: CommanderChoice = {
+            kind: "nft",
+            chainId: loan!.chainId,
+            contract: loan!.contract,
+            tokenId: loan!.tokenId,
+          };
+          const grant = await resolveCommander(player.id, choice, {
+            ...entitlement,
+            activeTokenLoan: async (tokenId) => {
+              const current = await getActiveLoanForToken(tokenId);
+              return current
+                ? { loanId: current.id, ownerId: current.ownerId, borrowerId: current.borrowerId }
+                : null;
+            },
+            borrowSocialCheck: async (ownerId, borrowerId) => {
+              const social = await canSociallyInteract(ownerId, borrowerId);
+              return social.allowed && (await getAcceptedFriendship(ownerId, borrowerId)) !== null;
+            },
+          });
+          eligible = grant.identity.kind === "nft" && grant.identity.basis === "borrowed";
+          borrowedName = grant.identity.name;
+          borrowedImageOriginal = grant.identity.imageOriginal;
+          if (!eligible) reason = "This borrowed commander is not currently available.";
+        } catch {
+          eligible = false;
+          reason = "This borrowed commander could not be verified right now.";
+        }
+      } else if (lent) {
+        eligible = false;
+        reason = "This commander is currently lent and unavailable.";
+      }
+
       const holding = holdingOf.get(r.tokenId);
       const media = {
-        name: holding?.name ?? null,
-        imageOriginal: holding?.image ?? null,
-        imageUrl: displayUrl(holding?.image ?? null),
+        name: holding?.name ?? borrowedName,
+        imageOriginal: holding?.image ?? borrowedImageOriginal,
+        imageUrl: displayUrl(holding?.image ?? borrowedImageOriginal),
       };
       if (!r.commander) {
         return {
           tokenId: r.tokenId,
           ...media,
+          basis,
+          ownership: lent ? ("lent" as const) : basis,
+          loan: loan || lent ? { id: (loan ?? lent)!.id, endsAt: (loan ?? lent)!.endsAt } : null,
           status: "pending" as const,
           metadataStatus: r.metadataStatus ?? "missing",
           eligible: false,
           reason:
-            r.metadataStatus === "resolved"
+            reason ??
+            (r.metadataStatus === "resolved"
               ? "Derived definition not yet persisted; retry after the derive pass"
-              : "NFT metadata has not been resolved yet",
+              : "NFT metadata has not been resolved yet"),
         };
       }
       return {
         tokenId: r.tokenId,
         ...media,
+        basis,
+        ownership: lent ? ("lent" as const) : basis,
+        loan: loan || lent ? { id: (loan ?? lent)!.id, endsAt: (loan ?? lent)!.endsAt } : null,
         status: "derived" as const,
         metadataStatus: r.metadataStatus,
         eligible,
@@ -107,7 +167,7 @@ export async function GET(request: Request) {
           derivedAt: r.commander.derivedAt,
         },
       };
-    });
+    }));
 
     return success(
       {

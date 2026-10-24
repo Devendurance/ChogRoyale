@@ -1,5 +1,9 @@
 # Memory
 
+- P5f.2 lending UI uses `/app/loans` and the existing loan routes only. Loan lists expose server loan IDs/dates and internal party IDs, but the client never renders those IDs. Public peer labels come only from current accepted friends; former peers stay neutral.
+- The authenticated `/api/players/me/commanders` read now adds `basis`, `ownership`, and `{id, endsAt}` loan metadata. It uses the existing `resolveCommander` entitlement path for borrowed candidates, marks actively lent owned tokens unavailable, and fails honestly when the lending schema is unavailable. Saved loadouts remain `{kind:"nft", chainId, contract, tokenId}`.
+- Deck commander options derive OWNED/BORROWED/LENT labels from server data. Borrowed options require derived server eligibility plus a valid future loan expiry. Lent and expired options remain blocked. Client time is only a presentation guard and match-start server validation remains authoritative.
+
 - P5d.2 clan UI lives in `/app/clans` and consumes only the P5d.1 `/api/players/me/clans` routes plus accepted `/api/players/me/friends`. The server remains authoritative for membership, role changes, invitations, capacity, transfer and archive. Mutations reread before success copy; a failed reread preserves the last verified state and disables membership controls.
 - Clan client models use type-only aliases to `src/db/clans.ts` so route payloads stay aligned without bundling the DB module. Clan invites are only selectable from accepted friends, and confirmation dialogs use native `showModal()` with focus restoration. No clan backend, migration or PROD write was added.
 

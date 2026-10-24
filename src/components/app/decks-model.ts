@@ -7,6 +7,7 @@
 
 import type { CommanderChoice } from "@/lib/battle-protocol";
 import type { LobbyCatalog, LobbyCatalogCard } from "./lobby-types";
+import type { CommandersPayload } from "./lobby-model";
 import type {
   CardCostFilter,
   CardRoleFilter,
@@ -14,7 +15,37 @@ import type {
   DeckCardProgression,
   DecksCatalogCard,
   DeckSaveState,
+  DecksCommanderOption,
 } from "./decks-types";
+
+/** Options reflect server entitlement. Loan metadata never enters the saved claim. */
+export function commanderOptionsFor(catalog: LobbyCatalog, payload: CommandersPayload | null, nowMs = 0): DecksCommanderOption[] {
+  const options: DecksCommanderOption[] = catalog.commanders.map((commander) => ({
+    key: `free:${commander.classId}`, kind: "free", classId: commander.classId,
+    className: commander.className, displayName: commander.freeName, tokenId: null,
+    cost: commander.cost, art: commander.commanderCardArt, stats: commander.stats,
+    blockedReason: null,
+    artNote: `${commander.className} class art, shared by every ${commander.className} commander. It is not a specific NFT.`,
+  }));
+  for (const nft of Array.isArray(payload?.nftCommanders) ? payload.nftCommanders : []) {
+    if (!nft || typeof nft.tokenId !== "string") continue;
+    const classEntry = catalog.commanders.find((commander) => commander.classId === nft.commander?.class);
+    const className = classEntry?.className ?? "Unknown";
+    const borrowed = nft.basis === "borrowed" || nft.ownership === "borrowed";
+    const lent = nft.ownership === "lent";
+    const loan = nft.loan && typeof nft.loan.id === "string" && typeof nft.loan.endsAt === "string" && Number.isFinite(Date.parse(nft.loan.endsAt)) ? { id: nft.loan.id, endsAt: nft.loan.endsAt } : undefined;
+    const usable = nft.status === "derived" && nft.eligible === true && !!classEntry && !lent && (!borrowed || (!!loan && Date.parse(loan.endsAt) > nowMs));
+    options.push({
+      key: `nft:${nft.tokenId}`, kind: "nft", classId: classEntry?.classId ?? "", className,
+      displayName: nft.name ?? `Chog Genesis #${nft.tokenId}`, tokenId: nft.tokenId,
+      basis: borrowed ? "borrowed" : "owned", ownership: lent ? "lent" : borrowed ? "borrowed" : "owned", loan,
+      cost: classEntry?.cost ?? null, art: classEntry?.commanderCardArt ?? null, stats: classEntry?.stats ?? [],
+      blockedReason: lent ? "This commander is currently lent and unavailable." : usable ? null : (nft.reason ?? (borrowed ? "This borrowed commander is currently unavailable. Refresh its loan status." : nft.eligible ? "This token has no supported derived commander yet." : "No verified linked wallet holds this token right now.")),
+      artNote: `${className} class art, shared by every ${className} commander. It is not a specific NFT. ${borrowed ? "Borrowed use is checked again" : "Ownership and availability are checked again"} when you ready up and at match start.`,
+    });
+  }
+  return options;
+}
 
 /** Ordinary cards in a deck. The commander is the eighth card. */
 export const DECK_CARD_COUNT = 7;

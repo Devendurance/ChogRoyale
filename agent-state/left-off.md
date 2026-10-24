@@ -1,5 +1,12 @@
 # Left Off
 
+## P5f.2 NFT commander lending UI (complete, local commit)
+
+- Added `/app/loans` with server-backed lend, borrowed, active/history, revoke and return views. Creation uses accepted friends, 1-7 day validation, one UUID idempotency key per intended submission, retry retention, visibility refresh and confirmation dialogs.
+- Extended the existing authenticated commander read with server-owned loan basis metadata. Deck selection labels OWNED, BORROWED and LENT, blocks lent/expired/unavailable choices, and persists the existing NFT claim shape unchanged.
+- Focused model tests 38/38, typecheck, scoped lint and production build pass. Fixture browser QA shows truthful schema/service-unavailable state at 390x844 and 1366x768, with no horizontal overflow and no console errors. No live NFT or production-schema acceptance claim.
+- Scoped checkpoint committed locally. No push or deployment.
+
 ## P5f.1 secure NFT commander lending backend, complete (local commit, no push)
 
 - Game-scoped loan delegation: `commander_loans` (migration 0021, TEST only), DAL in `src/db/lending.ts`, loan CRUD routes under `/api/players/me/loans`, borrowed-basis entitlement at ready and match-start lock, settlement accepts borrowed provenance, legacy still owner-only. No UI, no on-chain moves, no PROD writes. Do not start the lending UI.

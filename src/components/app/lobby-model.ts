@@ -34,6 +34,9 @@ export interface EligibilityEntry {
   reason: string | null;
   prestige: string | null;
   variant: string | null;
+  basis?: "owned" | "borrowed";
+  ownership?: "owned" | "borrowed" | "lent";
+  loan?: { id: string; endsAt: string } | null;
 }
 
 export interface Eligibility {
@@ -79,6 +82,9 @@ export interface CommandersPayload {
     status: string;
     eligible: boolean;
     reason?: string;
+    basis?: "owned" | "borrowed";
+    ownership?: "owned" | "borrowed" | "lent";
+    loan?: { id: string; endsAt: string } | null;
     commander?: {
       class: string;
       variant: string;
@@ -108,6 +114,9 @@ export function toEligibility(payload: CommandersPayload | null): Eligibility | 
       reason: n.reason ?? null,
       prestige: n.commander?.prestige ?? null,
       variant: n.commander?.variant ?? null,
+      basis: n.basis,
+      ownership: n.ownership,
+      loan: n.loan,
     })),
     free: free.map((f) => ({ id: f.id, name: f.name, classId: f.class })),
   };
@@ -247,11 +256,11 @@ export function resolveCommander(
     art: cls.art,
     cardId: `cmdr:${tokenId}`,
     origin: "nft",
-    originLabel: entry.eligible ? "NFT commander" : "NFT commander, ownership unproven",
+    originLabel: entry.ownership === "lent" ? "NFT commander, lent" : entry.basis === "borrowed" || entry.ownership === "borrowed" ? "Borrowed NFT commander" : entry.eligible ? "NFT commander" : "NFT commander, ownership unproven",
     originNote: `This is ${cls.className} class art, shared by every ${cls.className} commander. The NFT portrait is not shown here.${
       entry.eligible
         ? ""
-        : " A linked wallet does not prove ownership of this token yet."
+        : entry.ownership === "lent" ? " This commander is currently lent and unavailable." : entry.basis === "borrowed" || entry.ownership === "borrowed" ? " Borrowed use is currently unavailable." : " A linked wallet does not prove ownership of this token yet."
     }`,
     variant: entry.variant,
     prestige: entry.prestige,

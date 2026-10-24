@@ -10,6 +10,7 @@ import {
   availableCosts,
   cardAction,
   commanderCostFor,
+  commanderOptionsFor,
   deckAverage,
   deckSaveState,
   filterCards,
@@ -26,6 +27,7 @@ import {
 } from "./decks-model";
 import type { LobbyCatalog, LobbyCatalogCard, LobbyCatalogCommander } from "./lobby-types";
 import type { DeckCardProgression } from "./decks-types";
+import type { CommandersPayload } from "./lobby-model";
 
 function card(id: string, name: string, cost: number, kind: LobbyCatalogCard["kind"] = "troop"): LobbyCatalogCard {
   return { id, name, cost, kind, typeLabel: "Troop", traits: [], description: "", stats: [], art: null };
@@ -63,6 +65,39 @@ const catalog: LobbyCatalog = {
 };
 
 const seven = ["choglings", "chaos_archer", "boulderback", "frostshell", "rift_runner", "sparkcaster", "chaos_bolt"];
+
+describe("lending-aware commander options", () => {
+  const now = Date.parse("2026-10-24T12:00:00Z");
+  const borrowed: CommandersPayload["nftCommanders"][number] = {
+    tokenId: "42", name: "Genesis commander", status: "derived", eligible: true,
+    basis: "borrowed", ownership: "borrowed",
+    loan: { id: "loan-42", endsAt: "2026-10-25T12:00:00Z" },
+    commander: { class: "scout", variant: "base", prestige: "base", powerScore: 1 },
+  };
+  const payload = (entry: CommandersPayload["nftCommanders"][number]): CommandersPayload => ({ nftCommanders: [entry], freeCommanders: [], rulesetVersion: "test", walletsChecked: 0 });
+
+  it("allows an eligible borrowed option with its server loan metadata and preserves free options", () => {
+    const options = commanderOptionsFor(catalog, payload(borrowed), now);
+    expect(options.filter((option) => option.kind === "free")).toHaveLength(catalog.commanders.length);
+    expect(options.find((option) => option.tokenId === "42")).toMatchObject({ key: "nft:42", basis: "borrowed", ownership: "borrowed", blockedReason: null, classId: "scout", cost: 4, loan: borrowed.loan });
+  });
+
+  it("blocks a lent owned option even when stale eligibility says true", () => {
+    const option = commanderOptionsFor(catalog, payload({ ...borrowed, basis: "owned", ownership: "lent" }), now).find((entry) => entry.kind === "nft");
+    expect(option).toMatchObject({ basis: "owned", ownership: "lent", blockedReason: "This commander is currently lent and unavailable." });
+  });
+
+  it("blocks borrowed options with missing, malformed or expired loan metadata and server refusals", () => {
+    for (const entry of [
+      { ...borrowed, loan: undefined },
+      { ...borrowed, loan: { id: "loan-42", endsAt: "invalid" } },
+      { ...borrowed, loan: { id: "loan-42", endsAt: "2026-10-24T12:00:00Z" } },
+      { ...borrowed, eligible: false },
+    ]) {
+      expect(commanderOptionsFor(catalog, payload(entry), now).find((option) => option.kind === "nft")?.blockedReason).toBeTruthy();
+    }
+  });
+});
 
 const progression = (overrides: Partial<DeckCardProgression> = {}): DeckCardProgression => ({
   cardId: "boulderback",
