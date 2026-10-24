@@ -1,5 +1,11 @@
 # Left Off
 
+## P6d card gifting and upgrade sponsorship UI (complete, local commit)
+
+- Added `/app/gifts` with server-backed accepted-friend eligibility, 20-card catalog selection, quote and Gold reads, confirmation, UUID-safe sponsorship retries, domain-status messaging and sent/received history. Friends and Profile link to gifting.
+- Focused gifts model tests 7/7, typecheck, scoped ESLint and production build pass. P6c route tests reached 13/14 before a TEST Neon connection timeout. Browser fixtures at 390x844 and 1366x768 show the honest Privy loading gate with no console errors or overflow. No live gifting or PROD claim.
+- Scoped checkpoint committed locally. No push or deployment.
+
 ## P6c Gold card-upgrade sponsorship, complete (local commit, no push)
 
 - Server-authoritative Model B sponsorship: `gift_sponsorships` receipt table (migration 0022, TEST only), single-statement atomic mutation in `src/db/sponsorships.ts` (advisory locks, idempotency, re-checked eligibility/XP/balance/caps), write/read/quote routes under `/api/players/me/gifts/sponsorships`. Sponsor Gold debits from the existing spend ledger; recipient advances one purchased level with earned XP, untouched XP. TEST caps 1/day, 3/week, 1 pair-card/week. No UI, no $CHOG, no PROD writes.

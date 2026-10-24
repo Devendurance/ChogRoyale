@@ -47,6 +47,7 @@ function FriendRow({
       <span className="app-badge">{listChip(entry)}</span>
       <span className="app-friend__actions">
         {entry.status === "accepted" && <Link className="app-btn app-btn--save" href={`/app/messages?player=${encodeURIComponent(entry.player.id)}`}>Message</Link>}
+        {entry.status === "accepted" && <Link className="app-btn app-btn--ghost" href="/app/gifts">Gift</Link>}
         {entry.status === "pending" && entry.incoming ? (
           <>
             <button

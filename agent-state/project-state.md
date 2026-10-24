@@ -1,5 +1,11 @@
 # Project State
 
+## P6d card gifting and upgrade sponsorship UI (2026-10-24)
+
+- Added `/app/gifts` with accepted-friend eligibility, original ordinary-card selection, server quote, Gold balance, confirmation, idempotent sponsorship submission and sent/received receipt history. Domain 200 refusals remain distinct from sponsored or duplicate confirmation.
+- Quote and mutation values remain server-authoritative. The UI never derives friendship age, recipient XP, Gold or caps, and never exposes party identifiers. Friends and Profile link to gifting. No backend or production schema changes.
+- Focused model tests 7/7, typecheck, scoped ESLint and production build pass. P6c route tests reached 13/14 before a TEST Neon connection timeout. Browser fixture route returned 200 with the honest Privy loading gate at 390x844 and 1366x768, with no console errors or overflow. No live gifting claim.
+
 ## P5f.2 NFT commander lending UI (2026-10-24)
 
 - Added `/app/loans` with server-backed authenticated loan creation, accepted-friend selection, 1-7 day duration, idempotent retry keys, active lent/borrowed views, history, detail refresh, revoke/return confirmations and neutral auth/conflict/service states.

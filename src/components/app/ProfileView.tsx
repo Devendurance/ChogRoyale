@@ -345,6 +345,7 @@ export default function ProfileView({
                 </dl>
 
                 <div className="app-profile-account__actions">
+                  <Link href="/app/gifts" className="app-btn app-btn--ghost">Gifting</Link>
                   <Link href="/app/clans" className="app-btn app-btn--ghost">
                     <Icon name="clans" size={16} />
                     Clans

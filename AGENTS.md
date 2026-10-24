@@ -216,3 +216,9 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 - P5f.2 lending UI is server-authoritative. `/app/loans` uses only the existing loan routes, accepted-friend records and authenticated commander read. Never render loan party IDs or wallet data, never optimistically grant borrowed access, and keep `{ kind: "nft", chainId, contract, tokenId }` as the saved loadout claim.
 - Borrowed commander options require server-returned active loan metadata and remain subject to the existing entitlement check at ready and match start. Lent, expired, revoked and returned options stay unavailable in the selector. Schema or service failures remain explicit unavailable states.
+
+## CARD GIFTING
+
+- P6d gifting uses the existing eligibility, quote and sponsorship routes only. Eligibility is server-owned and requires the accepted-friend age check. Never calculate friendship age, recipient XP, recipient Gold or sponsorship caps in the client.
+- Sponsorship quote `nextLevel` is the recipient's current purchased level. Pass it unchanged as `expectedLevel`. Well-formed POST responses use HTTP 200 for domain refusals, and `sponsored` or `duplicate` are the only confirmed outcomes. Success and duplicate responses may omit both `receiptId` and `goldCost`, so the UI refreshes party-scoped history instead of inventing a receipt.
+- Keep the same UUID request key for an uncertain retry, never optimistically deduct Gold or advance a card, and never expose sponsorship party IDs, wallets, private XP, balances or raw ledger data. Test-only cap constants are not production policy.

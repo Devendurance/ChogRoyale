@@ -1,5 +1,7 @@
 # Memory
 
+- P6d gifting uses `/app/gifts` and P6c routes. Quote `nextLevel` is current purchased level, and well-formed sponsorship POST domain outcomes arrive as HTTP 200. `sponsored` and `duplicate` are confirmed, but both can return null `goldCost` and `receiptId`; refresh party-scoped history instead of inventing values.
+
 - P5f.2 lending UI uses `/app/loans` and the existing loan routes only. Loan lists expose server loan IDs/dates and internal party IDs, but the client never renders those IDs. Public peer labels come only from current accepted friends; former peers stay neutral.
 - The authenticated `/api/players/me/commanders` read now adds `basis`, `ownership`, and `{id, endsAt}` loan metadata. It uses the existing `resolveCommander` entitlement path for borrowed candidates, marks actively lent owned tokens unavailable, and fails honestly when the lending schema is unavailable. Saved loadouts remain `{kind:"nft", chainId, contract, tokenId}`.
 - Deck commander options derive OWNED/BORROWED/LENT labels from server data. Borrowed options require derived server eligibility plus a valid future loan expiry. Lent and expired options remain blocked. Client time is only a presentation guard and match-start server validation remains authoritative.
