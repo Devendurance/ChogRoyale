@@ -4,15 +4,23 @@
 // local replay records in .battle-replays/ (gitignored).
 
 import dotenv from "dotenv";
+import { resolveBattleHostConfig, describeBattleHostConfig } from "@/server/battle/host-config";
+import { RANKED_PUBLIC_MATCHMAKING_ENABLED } from "@/lib/ranked";
 
 dotenv.config({ path: ".env" });
 
-if (process.env.NODE_ENV === "production" && process.env.CHOG_ALLOW_DEV_BATTLE !== "1") {
-  console.error("battle:server is a development alpha and refuses to run with NODE_ENV=production");
+const hostResolution = resolveBattleHostConfig(process.env);
+if (!hostResolution.ok) {
+  for (const e of hostResolution.errors) console.error(`battle:server refused: ${e}`);
   process.exit(1);
 }
+const hostConfig = hostResolution.config;
+const hosting = hostConfig.hostingEnabled;
 
-const port = Number(process.env.BATTLE_SERVER_PORT ?? 2567);
+if (hosting && process.env.BATTLE_SETTLEMENT === "1" && !process.env.DATABASE_URL) {
+  console.error("battle:server refused: BATTLE_SETTLEMENT=1 requires DATABASE_URL");
+  process.exit(1);
+}
 
 // B3.3a durable settlement is opt-in via BATTLE_SETTLEMENT=1. Enabling it
 // requires the approved matches/match_participants/match_evidence migration
@@ -105,5 +113,13 @@ async function settlementService() {
 }
 
 void settlementService()
-  .then(({ settlement, cardScaling }) => import("@/server/battle/server").then(({ startBattleServer }) => startBattleServer(port, { settlement, cardScaling }, process.env.BATTLE_SERVER_HOST ?? "127.0.0.1")))
-  .then(() => console.log(`battle server listening on ws://127.0.0.1:${port}`));
+  .then(({ settlement, cardScaling }) =>
+    import("@/server/battle/server").then(({ startBattleServer }) => {
+      console.log(describeBattleHostConfig(hostConfig));
+      console.log(`ranked public matchmaking: ${RANKED_PUBLIC_MATCHMAKING_ENABLED ? "OPEN" : "closed (release gate)"}`);
+      return startBattleServer(hostConfig.port, { settlement, cardScaling }, hostConfig.host, {
+        enableShutdownHooks: hosting,
+      });
+    })
+  )
+  .then(() => console.log(`battle server listening on ws://${hostConfig.host}:${hostConfig.port} (public ${hostConfig.publicUrl}/healthz for probes)`));

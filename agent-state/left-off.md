@@ -1,5 +1,11 @@
 # Left Off
 
+## P7a production-safe multiplayer host (complete, local commit pending, no push, no deploy)
+
+- Fail-closed bootstrap: `resolveBattleHostConfig` (pure, tested) replaces the dev-only production refusal. Prod without `BATTLE_HOSTING_ENABLED=1` refuses; strict mode requires host/port/wss-URL/origins. Dev defaults untouched.
+- Server: `/healthz` liveness on the transport express app, `installShutdownHooks`/`drainBattleServer` (sweeper stop + graceful drain, 15s cap). Windows termination bypasses handlers (verified); drain logic unit-tested.
+- Local acceptance: refusal exits 1; prod-like boot serves `/healthz`; ranked stays closed; settlement/gold/XP/trophies disabled without tables. Auth/queue/modeseat guarantees verified unchanged. Runbook in `docs/P7a-hosting.md` with the exact deployment prerequisites. Do not start P7b.
+
 ## P6e.2 economy forensics and recovery safety (complete, local commit pending, no push)
 
 - Root cause PROVEN: 5 fixture helpers hardcoded `level: 10`; `gold.test.ts fund(noXp, 2, 0)` wrote the exact (choglings, xp=0/level=10) orphan shape. Award/reconcile/derivation/upgrade paths exonerated. All fixed to `cardLevelForXp(xp)` plus a regression test.

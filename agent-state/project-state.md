@@ -1,5 +1,11 @@
 # Project State
 
+## P7a production-safe multiplayer host (2026-10-24)
+
+- Explicit activation replaces the NODE_ENV refusal; dev boot unchanged. Health probe, drain hooks, gate-default table, and single-replica constraint documented in `docs/P7a-hosting.md`. No combat/economy/migration changes, no Ranked activation, no deploy.
+
+## P7a stops here. Remaining owner-gated prerequisites: host selection, WSS domain, TLS proxy, secret env, PROD migrations 0010-0022, Privy prod config, settlement activation, ranked abuse policy, live two-player and NFT-holder acceptance.
+
 ## P6e.2 economy forensics and recovery safety (2026-10-24)
 
 - Five fixture helpers hardcoded `level: 10`; fixed to `cardLevelForXp(xp)` with a regression test (all test-only, no policy change). Audit gained a `settlement-evidence` coverage check so reconcile candidates are separated from fixture residue.
