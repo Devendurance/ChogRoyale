@@ -13,6 +13,7 @@ export type IconName =
   | "guide"
   | "user"
   | "friends"
+  | "messages"
   | "settings"
   | "wallet"
   | "logout"
@@ -26,6 +27,7 @@ export type IconName =
   | "close";
 
 const PATHS: Record<IconName, ReactNode> = {
+  messages: <path d="M4 4h16v12H9l-5 4V4Zm4 5h8M8 12h5" />,
   lobby: (
     <>
       <path d="M3.4 10.6L12 3.8l8.6 6.8" />

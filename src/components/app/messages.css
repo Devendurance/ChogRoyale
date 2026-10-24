@@ -1,0 +1,49 @@
+.app-messages { max-width: 1120px; }
+.app-messages__heading, .app-messages__inbox > header, .app-messages__thread-head, .app-messages__compose-actions { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.app-messages__heading { margin:24px 0; }
+.app-messages h1, .app-messages h2 { font-family:var(--font-game),sans-serif; color:#fff; margin:0 0 8px; text-wrap:balance; }
+.app-messages h1 { font-size:36px; }
+.app-messages h2 { font-size:24px; }
+.app-messages p { color:#ded4ff; margin:0; }
+.app-messages__layout { display:grid; grid-template-columns:minmax(240px, .8fr) minmax(0,1.8fr); gap:20px; align-items:start; }
+.app-messages__inbox, .app-messages__thread, .app-messages__placeholder { min-width:0; padding:20px; }
+.app-messages__inbox > header { margin-bottom:16px; }
+.app-messages__inbox ul, .app-messages__log ol { list-style:none; margin:0; padding:0; }
+.app-messages__inbox li + li { margin-top:8px; }
+.app-messages__conversation { display:grid; grid-template-columns:36px minmax(0,1fr) auto; gap:6px 8px; padding:14px; border:2px solid #120b45; border-radius:12px; background:#32229a; text-decoration:none; color:#fff; }
+.app-messages__avatar { grid-column:1; grid-row:1 / span 3; border-radius:10px; align-self:center; }
+.app-messages__time { grid-column:2; color:#ded4ff; font-size:11px; }
+.app-messages__conversation--active { border-color:#ffc878; background:#4430b4; }
+.app-messages__peer { font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.app-messages__snippet { grid-column:2; color:#ded4ff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; }
+.app-messages__unread { grid-column:3; grid-row:1 / span 3; align-self:center; background:#ffc878; color:#120b45; border-radius:20px; padding:4px 8px; font-size:12px; font-weight:700; }
+.app-messages__thread-head { align-items:flex-start; padding-bottom:16px; border-bottom:1px solid #7764bd; }
+.app-messages__thread-head > div { min-width:0; overflow-wrap:anywhere; }
+.app-messages__thread-head p { font-size:13px; }
+.app-messages__back { display:none; }
+.app-messages__log { max-height:440px; min-height:200px; overflow:auto; overscroll-behavior:contain; padding:16px 4px; scrollbar-gutter:stable; }
+.app-messages__bubble { max-width:88%; width:fit-content; border:1px solid #7462b5; background:#32229a; border-radius:14px 14px 14px 4px; padding:12px; margin-bottom:12px; overflow-wrap:anywhere; }
+.app-messages__bubble--mine { margin-left:auto; background:#4b359f; border-color:#bba170; border-radius:14px 14px 4px 14px; }
+.app-messages__sender { display:block; color:#ffe0a7; font-weight:700; font-size:12px; margin-bottom:4px; }
+.app-messages__bubble p { white-space:pre-wrap; color:white; line-height:1.5; }
+.app-messages__bubble small { display:block; color:#ded4ff; font-size:11px; margin-top:8px; font-variant-numeric:tabular-nums; }
+.app-messages__receipt { font-size:12px; line-height:1.5; color:#ded4ff; padding:10px 0; }
+.app-messages__composer { position:sticky; bottom:calc(var(--app-nav-h) + env(safe-area-inset-bottom)); display:grid; gap:8px; padding-top:12px; border-top:1px solid #7764bd; background:#1d1458; }
+.app-messages__composer label { color:#fff; font-weight:700; }
+.app-messages__composer textarea { width:100%; min-height:90px; resize:vertical; }
+.app-messages__compose-actions { color:#ded4ff; font-size:12px; font-variant-numeric:tabular-nums; }
+.app-messages__error { padding:12px; margin:12px 0; background:#36164b; border:1px solid #e6a8bf; border-radius:10px; }
+.app-messages__error p { color:#ffe3ee; margin-bottom:8px; }
+.app-messages .app-btn { min-height:44px; }
+.app-messages :is(button,a,textarea):focus-visible { outline:3px solid #ffc878; outline-offset:3px; }
+@media(max-width:700px) {
+ .app-messages__layout { grid-template-columns:minmax(0,1fr); }
+ .app-messages__layout--selected .app-messages__inbox { display:none; }
+ .app-messages__layout:not(.app-messages__layout--selected) .app-messages__placeholder { display:none; }
+ .app-messages__heading { align-items:flex-start; flex-wrap:wrap; }
+ .app-messages__inbox, .app-messages__thread { padding:14px; }
+ .app-messages__thread-head { flex-wrap:wrap; }
+ .app-messages__back { display:inline-flex; flex-basis:100%; }
+ .app-messages__log { max-height:40dvh; min-height:140px; }
+ .app-messages__bubble { max-width:94%; }
+}

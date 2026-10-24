@@ -54,6 +54,7 @@ export default function AppHud({
 
       <div className="app-hud__utils">
         {extra}
+        <Link href="/app/messages" className="app-iconbtn" aria-label="Messages" title="Messages"><Icon name="messages" /></Link>
         <Link
           href="/app/settings"
           className="app-iconbtn"

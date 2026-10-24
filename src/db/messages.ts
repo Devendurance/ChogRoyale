@@ -135,9 +135,9 @@ export async function getOrCreateConversation(me: string, peerId: string): Promi
     .from(players)
     .where(eq(players.id, peerId))
     .limit(1);
-  if (!peer[0]) throw new AppError("NOT_FOUND", "Player not found");
+  if (!peer[0]) throw new AppError("FORBIDDEN", "This player is unavailable.");
   if (peer[0].onboardingStatus !== "complete" || !peer[0].usernameKey || !peer[0].avatarId) {
-    throw new AppError("NOT_FOUND", "Player not found");
+    throw new AppError("FORBIDDEN", "This player is unavailable.");
   }
   if (!(await getAcceptedFriendship(me, peerId))) {
     throw new AppError("FORBIDDEN", "This player is unavailable.");
@@ -153,7 +153,7 @@ export async function getOrCreateConversation(me: string, peerId: string): Promi
     .from(dmConversations)
     .where(and(eq(dmConversations.userA, userA), eq(dmConversations.userB, userB)))
     .limit(1);
-  if (!existing[0]) throw new AppError("NOT_FOUND", "Player not found");
+  if (!existing[0]) throw new AppError("FORBIDDEN", "This player is unavailable.");
   return { conversationId: existing[0].id, created: false };
 }
 

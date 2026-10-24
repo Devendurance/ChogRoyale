@@ -1,5 +1,11 @@
 # Left Off
 
+## P5c private messaging UI and social integration, complete pending commit
+
+- Added the conversation opener route and neutral social-safety handling, plus `/app/messages`, Friends Message links, shared HUD Messages link, avatar/timestamp inbox rows, cursor paging, bounded visible polling, read acks and retry-safe sends.
+- Focused tests: 36/36 across model, Friends, opener and messaging DAL suites. Typecheck, scoped lint and production build pass. Full lint still has the pre-existing P5b `route.test.ts` explicit-any error and existing `/dev/progress` image warning.
+- Browser fixture smoke is honest service-unavailable at 390x844 and desktop, with no console errors. No authenticated messaging or production schema claim. Next: review staged diff, commit scoped files only, then report the forward-oldest pagination limitation and PROD migration blocker.
+
 Last updated: 2026-10-23
 
 ## P5b real private messaging backend, complete (local commit, no push)

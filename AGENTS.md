@@ -142,6 +142,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - A saved NFT token id is a claim, not proof of ownership. The battle server re-checks ownership at ready and at match start. Commander class art is shared by every commander of that class and must be labelled as class art.
 - Ranked public matchmaking stays closed behind `RANKED_PUBLIC_MATCHMAKING_ENABLED` until the approved production migrations, settlement runtime and public deployment are live. Ranked read endpoints may render server-owned values, but clients never calculate trophy deltas or use URL parameters to bypass the gate.
 - Card progression is account state, not ruleset copy. The decks screen may show only server-returned purchased level, XP, Gold and upgrade eligibility. It must never calculate combat stat previews, advance a level optimistically, or treat a schema-unavailable response as zero progress.
+- Private messaging is server-authoritative social state. `/app/messages` may open conversations only through `POST /api/players/me/messages/conversations`, keeps 403 peer failures neutral, preserves the same UUID for an uncertain send retry, acknowledges only received messages actually viewed, and never turns service/schema failures into an empty inbox.
 
 ## PROGRESS
 

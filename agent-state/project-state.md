@@ -1,5 +1,11 @@
 # Project State
 
+## P5c private messaging UI and social integration (2026-10-24)
+
+- Added `POST /api/players/me/messages/conversations` using the existing canonical-pair DAL, accepted-friend check and bidirectional block guard. Unknown, incomplete, pending and blocked peers return one neutral unavailable response. Route tests cover auth, self/invalid input, concurrency, no-message creation and spoof resistance.
+- Added `/app/messages` with server-backed inbox, conversation view, mobile back flow, cursor pagination, visible bounded polling, recipient-only read acknowledgement and plain-text 1,000-character composer. Failed sends retain the draft and UUID key for retry. Friends accepted rows and the shared HUD link to the route. No sixth bottom-nav tab was added.
+- Verification: focused messaging plus Friends model tests 15/15, opener route 6/6, messaging DAL 15/15, typecheck and scoped ESLint pass, production build pass. Full lint retains one pre-existing P5b `no-explicit-any` error and one existing `/dev/progress` image warning. Browser fixture smoke at 390x844 and desktop shows truthful service-unavailable state with no console errors. Live authenticated messaging remains pending. Local checkpoint pending.
+
 ## P5b real private messaging backend (2026-10-23)
 
 - `dm_conversations` (canonical pair, unique) + `dm_messages` (sender-verified, per-sender idempotency key, 1..1000 chars, read_at once-only) via migration 0016, TEST only. Guards at write boundary: accepted friendship + both block directions; block races caught by post-write re-check that removes only a fresh insert. Receipt means stored, never delivered-to-device. Inbox hides blocked pairs, keeps unfriended history; history durable across block/unfriend. Single-instance 20/min send throttle (RATE_LIMITED 429). Routes under `/api/players/me/messages` (list, send, fetch, read). Tests 19/19 new, regressions 33/33, typecheck/lint/build green. No PROD writes, no push, no UI.

@@ -8,6 +8,7 @@
 // avatar). No wallet address, player id or Privy identifier is rendered.
 
 import { useState } from "react";
+import Link from "next/link";
 import AppHud from "./AppHud";
 import AppNav from "./AppNav";
 import AppNotice from "./AppNotice";
@@ -45,6 +46,7 @@ function FriendRow({
       </span>
       <span className="app-badge">{listChip(entry)}</span>
       <span className="app-friend__actions">
+        {entry.status === "accepted" && <Link className="app-btn app-btn--save" href={`/app/messages?player=${encodeURIComponent(entry.player.id)}`}>Message</Link>}
         {entry.status === "pending" && entry.incoming ? (
           <>
             <button
@@ -220,6 +222,7 @@ export default function FriendsView({
           <header className="app-settings-head app-rise">
             <p className="app-settings-head__eyebrow">Social</p>
             <h1 className="app-settings-head__title">Friends</h1>
+            <Link className="app-btn app-btn--ghost" href="/app/messages">Open messages</Link>
             <p className="app-settings-head__lead">
               Find players by username, send requests, and manage your list. Every change is confirmed by the server
               before it shows here.
