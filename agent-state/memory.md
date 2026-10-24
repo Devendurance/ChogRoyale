@@ -42,6 +42,8 @@
 
 - P5f.1 lending: `commander_loans` holds one ACTIVE row per token max (partial unique index + app re-checks). `resolveCommander` grants `basis: "borrowed"` only while the loan is usable, friendship accepted, no blocks, and the lender still owns the token onchain; an active loan freezes the lender's own direct use. Settlement accepts borrowed provenance; legacy skips it (no borrower achievements). Match-start lock re-resolves, so revoke/expiry/transfer fail the next start but never rewrite locked evidence. Room loan wiring degrades to null only on the no-DB harness sentinel; production outages still fail closed at verifiedWallets.
 
+- P6a (design only): `docs/P6-economy-gifting-contract.md` is the implementation contract. Truth: no $CHOG, store, orders, or receipt code exists; chain surface is read-only; B4.6 is NOT AUTHORIZED. Recommendation: Model B Gold sponsorship for card gifts, $CHOG for cosmetics/deck slots/sponsorship, never Gold/XP/trophies for sale. P6b starts only after owner signs catalog, payment details, and the B4.6 gate.
+
 - Delegated project agents use GPT-6.1 Sol at low or medium reasoning per the owner's 2026-10-23 instruction.
 
 Durable facts, conventions, and gotchas that should survive across sessions.

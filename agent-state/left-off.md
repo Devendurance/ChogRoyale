@@ -1,5 +1,9 @@
 # Left Off
 
+## P6a economy and card-gifting design contract, complete (local commit, no push)
+
+- Wrote `docs/P6-economy-gifting-contract.md`: truth table, $CHOG catalog (cosmetic, deck slots, $CHOG sponsorship), Model B gift recommendation, payment/receipt architecture, anti-abuse minimums, slices P6b-P6g, 7 owner decisions, exact P6b contract. Design only: no code, migrations, purchases, mints, or PROD writes.
+
 ## P5f.2 NFT commander lending UI (complete, local commit)
 
 - Added `/app/loans` with server-backed lend, borrowed, active/history, revoke and return views. Creation uses accepted friends, 1-7 day validation, one UUID idempotency key per intended submission, retry retention, visibility refresh and confirmation dialogs.
