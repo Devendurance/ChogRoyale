@@ -1,4 +1,8 @@
-# Left Off
+## LAUNCH DAY: BLOCKED on endy-vps SSH, aws-hermes still live (state committed locally)
+
+- `ssh endy-vps` (and ubuntu@38.49.217.165) rejected for this machine's key (ED25519 SHA256:7xIzlAp...). Owner must append the client pubkey (in docs/endy-vps-cutover.md §0) or grant access another way. Nothing deployed to endy-vps yet; no guessing, no other-host changes.
+- aws-hermes battle verified healthy (single clean start, NRestarts=0, gates correct) and remains the live endpoint until cutover.
+- Cutover runbook ready: docs/endy-vps-cutover.md (inspect, transfer 65e19e4, pre-settlement health, proxy, DNS-or-nip.io, controlled cutover, rollback). Vercel env + smoke still owner-gated as before.
 
 ## LAUNCH DAY: battle server LIVE, frontend/smoke owner-gated (no push pending except state)
 
