@@ -3,6 +3,12 @@
    marketing site and the Phaser battle routes never receive these styles. */
 
 .app-root {
+  /* Plain CSS needs runtime aliases. Tailwind's inline theme only substitutes
+     these aliases into utilities and doesn't emit the custom properties. */
+  --font-site: var(--font-satoshi), "Satoshi", "General Sans", -apple-system, "Segoe UI", sans-serif;
+  --font-data: var(--font-georama), "Satoshi", system-ui, sans-serif;
+  --font-game: var(--font-lilita), "Titan One", Impact, sans-serif;
+
   /* Lobby palette, DESIGN.md "Lobby (game) [C][D]". */
   --lobby-ground-a: #2a1b7a;
   --lobby-ground-b: #4b2fc4;
@@ -359,7 +365,7 @@
   min-width: 0;
 }
 
-.app-column--gate {
+.app-stage .app-column--gate {
   flex: 0 0 auto;
   width: 100%;
   max-width: 520px;
@@ -952,7 +958,7 @@
   display: grid;
   justify-items: center;
   gap: 12px;
-  padding: 34px 22px;
+  padding: 24px 20px;
   text-align: center;
 }
 
@@ -969,6 +975,22 @@
     0 5px 0 rgba(18, 11, 69, 0.72),
     0 0 26px rgba(143, 123, 255, 0.4);
   color: var(--app-lilac);
+}
+
+.app-gate form {
+  display: grid;
+  gap: 14px;
+  width: 100%;
+  max-width: 420px;
+  text-align: left;
+}
+
+.app-gate form > .app-btn {
+  justify-self: center;
+  max-width: 100%;
+  min-height: 52px;
+  padding: 10px 20px;
+  font-size: 23px;
 }
 
 .app-gate__mark--warn {
@@ -3040,13 +3062,13 @@
 /* ---------------------------------------------------------------- P1a play hub */
 
 .app-stage--play {
-  min-height: calc(100dvh - var(--app-hud-h));
+  min-height: 0;
 }
 
 .app-play-column {
   width: 100%;
-  max-width: 980px;
-  gap: 18px;
+  max-width: 880px;
+  gap: 12px;
 }
 
 .app-play-hero {
@@ -3054,7 +3076,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  padding: clamp(20px, 4vw, 34px);
+  padding: 18px 20px;
   border: 2px solid #8f7bff;
   border-top-color: #ffc83d;
   border-radius: 22px;
@@ -3075,7 +3097,7 @@
 .app-play-battle-head h1 {
   margin: 0;
   color: #fff4c7;
-  font: 400 clamp(32px, 7vw, 52px)/.95 var(--font-game);
+  font: 400 clamp(28px, 5vw, 36px)/1.05 var(--font-game);
   letter-spacing: .01em;
   text-shadow: 0 4px #1a0d45;
 }
@@ -3114,8 +3136,8 @@
   flex-direction: column;
   gap: 14px;
   min-width: 0;
-  min-height: 300px;
-  padding: 18px;
+  min-height: 0;
+  padding: 16px;
   border: 2px solid #8f7bff;
   border-top-color: #c7adff;
   border-radius: 18px;
@@ -3130,7 +3152,7 @@
 .app-play-card__body { display: flex; flex: 1; flex-direction: column; min-width: 0; }
 .app-play-card h2 { margin: 0; color: #fff; font: 400 29px/1 var(--font-game); }
 .app-play-card p:not(.app-play-card__eyebrow) { margin: 10px 0 18px; color: var(--app-ink-65); font: 500 14px/1.5 var(--font-site); }
-.app-play-card .app-btn { align-self: flex-start; min-height: 48px; margin-top: auto; padding-inline: 18px; font-size: 17px; }
+.app-play-card .app-btn { align-self: flex-start; min-height: 44px; max-width: 100%; margin-top: auto; padding: 10px 16px; font-size: 17px; }
 .app-play-card__status { align-self: flex-start; color: #d7c8ed; font: 700 10px/1.2 var(--font-data); letter-spacing: .1em; text-transform: uppercase; }
 .app-play-card__status--live { color: #9ff5de; }
 .app-play-card__disabled { display: inline-flex; align-self: flex-start; margin-top: auto; padding: 10px 12px; border: 1px solid #77669e; border-radius: 10px; color: #ddd1ee; font: 700 11px/1.2 var(--font-data); }
@@ -3140,9 +3162,11 @@
 
 .app-play-battle-shell {
   display: grid;
-  place-items: center;
+  justify-items: center;
+  align-content: start;
+  gap: 14px;
   min-height: 100dvh;
-  padding: 22px 16px;
+  padding: clamp(20px, 5vh, 48px) 16px;
   color: #fff;
   background: radial-gradient(ellipse at 50% 10%, #6042ab, transparent 48%), linear-gradient(150deg, #28185f, #1d1248 58%, #352078);
 }
@@ -3161,7 +3185,7 @@
 .app-play-battle-head .app-btn { flex: none; min-height: 44px; padding-inline: 14px; font-size: 14px; }
 .app-play-battle-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .app-play-battle-actions .app-btn { min-height: 50px; padding-inline: 18px; font-size: 16px; }
-.app-play-battle-controls > div { display: grid; gap: 10px; color: var(--app-ink-85); font: 600 14px/1.5 var(--font-data); }
+.app-play-battle-controls > div { gap: 10px; color: var(--app-ink-85); font: 600 14px/1.5 var(--font-data); }
 .app-play-battle-controls > div + div { margin-top: 12px; }
 .app-play-battle-controls .app-btn { min-height: 44px; padding-inline: 15px; font-size: 14px; }
 .app-play-code { display: flex; min-height: 50px; }
@@ -3172,6 +3196,31 @@
 .app-play-battle-error { width: min(100%, 780px); padding: 12px 15px; border: 1px solid #ff9eae; border-radius: 12px; background: #5a1d48; color: #ffe2e8; font: 600 13px/1.4 var(--font-data); }
 .app-play-battle-state { width: min(100%, 780px); padding: 18px; border: 1px solid #8f7bff; border-radius: 14px; background: #29175e; color: #fff1c8; text-align: center; font: 600 14px/1.4 var(--font-data); }
 
+/* The idle entry is one bounded game plate. Content owns its height, so
+   viewport-sized grid tracks cannot spread the heading away from actions. */
+.app-play-battle-shell[data-stage="idle"] > .app-play-battle-entry {
+  width: min(100%, 640px);
+  padding: 20px;
+}
+.app-play-battle-entry .app-play-battle-head {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+.app-play-battle-entry .app-play-kicker { margin: 0 0 6px; font: 700 10px/1.2 var(--font-data); }
+.app-play-entry-lead { max-width: 48ch; margin: 14px 0 18px; color: var(--app-ink-85); font: 500 14px/1.5 var(--font-site); }
+.app-play-entry-actions { display: grid; justify-items: start; gap: 20px; }
+.app-play-entry-actions > .app-btn--battle { min-height: 52px; max-width: 100%; padding: 10px 20px; font-size: 23px; }
+.app-play-join { display: flex; align-items: end; flex-wrap: wrap; gap: 10px; width: 100%; padding-top: 16px; border-top: 1px solid rgba(185,162,255,.25); }
+.app-play-join .app-play-code { display: grid; gap: 6px; color: var(--app-ink-65); font: 600 11px/1.4 var(--font-data); }
+.app-play-join input { width: 170px; height: 44px; font-size: 16px; }
+.app-play-join .app-btn { min-height: 44px; padding-inline: 12px; font-size: 10px; letter-spacing: .06em; }
+.app-play-battle-entry > .app-play-battle-error { width: 100%; margin: 18px 0 0; }
+.app-play-battle-entry .app-play-battle-state { width: 100%; margin: 0; }
+
 @media (max-width: 800px) {
   .app-play-modes { grid-template-columns: 1fr; }
   .app-play-card { min-height: 0; }
@@ -3181,11 +3230,11 @@
   .app-play-hero { align-items: flex-start; padding: 20px 17px; }
   .app-play-hero-mark { width: 52px; height: 52px; }
   .app-play-card { padding: 16px; }
-  .app-play-battle-shell { place-items: start center; padding: calc(12px + env(safe-area-inset-top)) 10px calc(12px + env(safe-area-inset-bottom)); }
+  .app-play-battle-shell { align-content: start; padding: calc(12px + env(safe-area-inset-top)) 10px calc(12px + env(safe-area-inset-bottom)); }
   .app-play-battle-head { align-items: flex-start; flex-direction: column; padding: 18px; }
   .app-play-battle-controls { padding: 18px; }
-  .app-play-battle-actions > * { flex: 1 1 140px; }
-  .app-play-code { flex: 1 1 100%; }
+  .app-play-battle-actions { align-items: flex-start; }
+  .app-play-code { min-width: 0; }
   .app-play-code input { width: 100%; }
 }
 

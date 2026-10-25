@@ -135,6 +135,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## GAME APP SHELL
 
+- Plain app CSS needs runtime `--font-site`, `--font-data` and `--font-game` aliases inside `.app-root`. Tailwind inline theme entries only substitute utilities, so relying on them for CSS `font` shorthands silently drops both font family and size.
 - The Privy provider lives in the shared `/app` layout. A route inside `/app` must never mount its own provider, or a route change tears the session down and starts a second one.
 - Card names, costs, type labels, traits, descriptions and stat rows come from `src/lib/card-details.ts` and the ruleset tables. Never write card copy by hand and never read a card cost from anywhere else.
 - The deck screen may only write through `GET`/`PUT /api/players/me/loadout`. Keep the revision check and the 409 behaviour. Do not add a second persistence system or a new endpoint.
@@ -208,6 +209,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 ## BATTLEFIELD PRESENTATION
 
 - Use GPT-6.1 Sol at low or medium reasoning for delegated project work unless the owner changes that preference.
+- Keep contextual card guidance outside layout flow so selection and deselection never resize the arena during a gesture. Card labels wrap at word boundaries, and unaffordable portraits must remain recognizable.
+- Audio readiness requires a running Web Audio context, positive volume, an unmuted preference and a visible page. A saved preference alone cannot justify "Sound On". Ordinary melee has no public attack-release event, so use observed authoritative HP loss for its impact feedback.
 - Keep battle shell styles scoped to `.chud` and `chud-` classes. Desktop hand placement must not reduce the board's height, and compact landscape rules must stay below the desktop breakpoint.
 - Preserve the shared canvas-rectangle pointer mapper and stable Phaser instance. Presentation fixtures prove layout and callback behavior only, never authenticated multiplayer or server acceptance.
 - Connection, error and recovery notices must remain visible inside the fixed HUD. Recovery actions reuse the existing session callbacks.

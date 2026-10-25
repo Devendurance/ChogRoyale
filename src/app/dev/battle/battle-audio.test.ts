@@ -1,7 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { BattleFrame } from "@/lib/battle-protocol";
 import {
   BattleAudio,
+  BATTLE_AUDIO_VOICE_LIMIT,
   DEFAULT_BATTLE_AUDIO_PREFERENCES,
   cueForAck,
   cueForResult,
@@ -33,6 +34,135 @@ const frame = (overrides: Partial<BattleFrame> = {}): BattleFrame => ({
   riftOpen: false,
   events: [],
   ...overrides,
+});
+
+const mockGain = () => ({ gain: { value: 0, setTargetAtTime: vi.fn(), setValueAtTime: vi.fn(), exponentialRampToValueAtTime: vi.fn() }, connect: vi.fn().mockReturnThis(), disconnect: vi.fn() });
+const mockOscillator = () => ({ type: "sine", frequency: { setValueAtTime: vi.fn(), exponentialRampToValueAtTime: vi.fn() }, connect: vi.fn().mockReturnThis(), disconnect: vi.fn(), start: vi.fn(), stop: vi.fn(), onended: null as (() => void) | null });
+
+class MockContext {
+  state = "suspended";
+  currentTime = 1;
+  sampleRate = 44100;
+  destination = {};
+  onstatechange: (() => void) | null = null;
+  sources: ReturnType<typeof mockOscillator>[] = [];
+  gains: ReturnType<typeof mockGain>[] = [];
+  resume = vi.fn(async () => { this.state = "running"; this.onstatechange?.(); });
+  close = vi.fn(async () => { this.state = "closed"; });
+  createGain() {
+    const node = mockGain();
+    this.gains.push(node);
+    return node;
+  }
+  createOscillator() {
+    const node = mockOscillator();
+    this.sources.push(node);
+    return node;
+  }
+  createBufferSource() {
+    const node = { buffer: null as unknown, connect: vi.fn().mockReturnThis(), disconnect: vi.fn(), start: vi.fn(), stop: vi.fn(), onended: null as (() => void) | null };
+    this.sources.push(node as unknown as ReturnType<typeof mockOscillator>);
+    return node;
+  }
+  createBuffer(_channels: number, size: number) { return { getChannelData: () => new Float32Array(size) }; }
+  createBiquadFilter() { return { type: "lowpass", frequency: { value: 0 }, connect: vi.fn().mockReturnThis(), disconnect: vi.fn() }; }
+  createDynamicsCompressor() { return { threshold: { value: 0 }, knee: { value: 0 }, ratio: { value: 0 }, attack: { value: 0 }, release: { value: 0 }, connect: vi.fn().mockReturnThis() }; }
+}
+
+describe("battle audio browser lifecycle", () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const setup = () => {
+    const context = new MockContext();
+    vi.stubGlobal("window", { AudioContext: function () { return context; } });
+    return { context, audio: new BattleAudio({ muted: false, volume: 0.55 }) };
+  };
+
+  it("reports readiness from the running context, resumes inside gesture and warms WebKit", async () => {
+    const { context, audio } = setup();
+    const changed = vi.fn();
+    const unsubscribe = audio.subscribe(changed);
+    expect(audio.getReady()).toBe(false);
+    expect(await audio.unlock()).toBe(true);
+    expect(context.resume).toHaveBeenCalledOnce();
+    expect(context.sources[0].start).toHaveBeenCalledOnce();
+    expect(audio.getReady()).toBe(true);
+    context.state = "interrupted";
+    context.onstatechange?.();
+    expect(audio.getReady()).toBe(false);
+    expect(await audio.unlock()).toBe(true);
+    expect(context.resume).toHaveBeenCalledTimes(2);
+    expect(changed).toHaveBeenCalled();
+    unsubscribe();
+    audio.dispose();
+  });
+
+  it("enables persisted mute before unlocking, and never creates a context while muted", async () => {
+    const { context, audio } = setup();
+    audio.setPreferences({ muted: true, volume: 0.6 });
+    expect(await audio.unlock()).toBe(false);
+    expect(context.sources).toHaveLength(0);
+    audio.setPreferences({ muted: false, volume: 0.6 });
+    expect(await audio.unlock()).toBe(true);
+    expect(audio.play("impact")).toBe(true);
+    audio.setPreferences({ muted: true, volume: 0.6 });
+    expect(audio.getReady()).toBe(false);
+    expect(audio.play("impact")).toBe(false);
+    expect(context.gains[0].gain.setTargetAtTime).toHaveBeenLastCalledWith(0, 1, 0.015);
+    expect(context.sources.slice(1).every((source) => source.stop.mock.calls.length >= 1)).toBe(true);
+    audio.dispose();
+  });
+
+  it("drops locked cues rather than replaying a stale burst after resume", async () => {
+    const { context, audio } = setup();
+    let resolve!: () => void;
+    context.resume.mockImplementation(() => new Promise<void>((done) => { resolve = () => { context.state = "running"; done(); }; }));
+    const pending = audio.unlock();
+    expect(audio.play("destroy")).toBe(false);
+    resolve();
+    await pending;
+    expect(context.sources).toHaveLength(1);
+    audio.dispose();
+  });
+
+  it("keeps failed or disposed unlock attempts unavailable", async () => {
+    const { context, audio } = setup();
+    context.resume.mockRejectedValueOnce(new Error("gesture rejected"));
+    expect(await audio.unlock()).toBe(false);
+    expect(audio.getReady()).toBe(false);
+    let resolve!: () => void;
+    context.resume.mockImplementation(() => new Promise<void>((done) => { resolve = () => { context.state = "running"; done(); }; }));
+    const pending = audio.unlock();
+    audio.dispose();
+    resolve();
+    expect(await pending).toBe(false);
+    expect(audio.play("victory")).toBe(false);
+  });
+
+  it("bounds complete layered cues and clears voices on hide, mute and disposal", async () => {
+    const { context, audio } = setup();
+    await audio.unlock();
+    expect(audio.play("impact")).toBe(true);
+    expect(audio.play("impact")).toBe(false);
+    for (let i = 0; i < 30; i++) { context.currentTime += 1; audio.play("destroy"); }
+    expect(context.sources.length - 1).toBeLessThanOrEqual(BATTLE_AUDIO_VOICE_LIMIT);
+    audio.setPageHidden(true);
+    expect(audio.getReady()).toBe(false);
+    expect(audio.play("select")).toBe(false);
+    audio.setPageHidden(false);
+    expect(audio.play("select")).toBe(true);
+    audio.setPreferences({ muted: false, volume: 0 });
+    expect(audio.play("select")).toBe(false);
+    audio.dispose();
+    expect(context.close).toHaveBeenCalledOnce();
+    expect(audio.getReady()).toBe(false);
+  });
+
+  it("bounds the snapshot identity memory", () => {
+    const seen = new Set<string>();
+    takeUnseenBattleAudioCues(Array.from({ length: 3000 }, (_, i) => ({ cue: "impact", key: String(i) })), seen);
+    expect(seen.size).toBe(2048);
+    expect(seen.has("2999")).toBe(true);
+  });
 });
 
 describe("battle audio event projection", () => {

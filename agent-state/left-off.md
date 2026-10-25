@@ -1,3 +1,10 @@
+## Responsive UI and audio rescue (2026-10-25)
+
+- Doing: ship scoped responsive HUD, mode-specific entry, onboarding sizing and audible original battle cues to origin/main.
+- Done: code fixes, reference inspection, 40 final five-size exact-component screenshots without overflow/image failures, 22/22 tap/drag/touch/resize checks, actual gesture audio capture and 19-cue offline output evidence. Existing auth routes render honest gates and Ranked stays closed. Temporary fixture source is archived outside the repo and removed from release code.
+- Checks: 31 focused tests pass. Extra unchanged input unit suite is blocked by the installed viem/noble-curves import, with browser input independently passing. Scoped lint, full typecheck and the single production build pass, with all 62 pages generated and no fixture route.
+- Next: physical iOS, live two-login play and subjective audio/visual approval. The scoped release is authorized for origin/main and Vercel. Evidence and limits are in docs/responsive-audio-rescue.md, with deployment identity in the external release-evidence.json.
+
 ## Permanent domain + onboarding (staged, pushing next)
 
 - DNS: endyos.xyz is Cloudflare-managed, but battle.endyos.xyz has NO record and endy-vps holds NO Cloudflare credentials. Named tunnel needs owner action (API token with Zone DNS:Edit + Tunnel:Edit, or an owner-built tunnel). Quick tunnel stays live (URL unchanged, both services stable).

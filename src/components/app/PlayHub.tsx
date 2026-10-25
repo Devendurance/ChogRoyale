@@ -85,16 +85,20 @@ export default function PlayHub() {
 
   if (!authenticated) return <Gate onSignIn={() => login()} />;
 
+  return <PlayHubView player={player} onSignOut={() => void logout()} />;
+}
+
+export function PlayHubView({ player, onSignOut }: { player: LobbyPlayer | null; onSignOut: () => void }) {
   return (
     <>
-      <AppHud player={player} onSignOut={() => void logout()} extra={<Link href="/app" className="app-iconbtn" aria-label="Back to lobby" title="Back to lobby"><Icon name="back" /></Link>} />
+      <AppHud player={player} onSignOut={onSignOut} extra={<Link href="/app" className="app-iconbtn" aria-label="Back to lobby" title="Back to lobby"><Icon name="back" /></Link>} />
       <main className="app-stage app-stage--play">
         <div className="app-column app-play-column">
           <header className="app-play-hero">
             <div>
               <p className="app-play-kicker">Battle hall</p>
               <h1 className="app-play-title">Choose your arena</h1>
-              <p className="app-play-lead">Pick a mode, ready your deck, and let the authoritative battle server bring the match to life.</p>
+              <p className="app-play-lead">Choose a mode and ready your deck.</p>
             </div>
             <div className="app-play-hero-mark" aria-hidden="true"><Icon name="swords" size={42} /></div>
           </header>
@@ -107,7 +111,7 @@ export default function PlayHub() {
                 <p className="app-play-card__eyebrow">Casual matchmaking</p>
                 <h2>Unranked</h2>
                 <p>Join the live queue and face a genuine opponent. Your result follows the current server ruleset.</p>
-                <Link href="/app/play/battle?mode=unranked" className="app-btn app-btn--battle">Find an opponent</Link>
+                <Link href="/app/play/battle?mode=unranked" className="app-btn app-btn--battle">Find Opponent</Link>
               </div>
               <span className="app-play-card__status app-play-card__status--live">Available</span>
             </article>
@@ -118,7 +122,7 @@ export default function PlayHub() {
                 <p className="app-play-card__eyebrow">Invite a friend</p>
                 <h2>Private room</h2>
                 <p>Create a room and share its code, or join a room your opponent has already opened.</p>
-                <Link href="/app/play/battle?mode=private" className="app-btn app-btn--ghost">Open a private room</Link>
+                <Link href="/app/play/battle?mode=private" className="app-btn app-btn--ghost">Create or join</Link>
               </div>
               <span className="app-play-card__status app-play-card__status--live">Available</span>
             </article>

@@ -1,5 +1,11 @@
 # Project State
 
+## Responsive UI and audio rescue (2026-10-25)
+
+- Reused BattleHud/Phaser and Colyseus callbacks. Four readable portraits plus secondary next, intact word labels, visible low-energy art, centered desktop board, compact ability and stable selection geometry. Private entry has Create/Join with Code, Unranked has Find Opponent.
+- BattleAudio now reports actual readiness, unlocks in entry gestures, handles interrupted contexts, adds original filtered percussion, bounds voices and mixes through a compressor. No proprietary audio or server/combat changes.
+- Exact-component presentation fixtures cover all requested sizes. Physical iOS and authenticated two-player acceptance remain separate. Final verification and deployment recorded in docs/responsive-audio-rescue.md.
+
 ## P7a production-safe multiplayer host (2026-10-24)
 
 - Explicit activation replaces the NODE_ENV refusal; dev boot unchanged. Health probe, drain hooks, gate-default table, and single-replica constraint documented in `docs/P7a-hosting.md`. No combat/economy/migration changes, no Ranked activation, no deploy.

@@ -75,6 +75,7 @@ export interface BattleHudProps {
   onCardPointerEnd: (cancelled: boolean) => (e: React.PointerEvent<HTMLButtonElement>) => void;
   suppressClickUntil: React.RefObject<number>;
   onSelectCard: (id: string | null) => void;
+  audioReady?: boolean;
   audioMuted: boolean;
   audioVolume: number;
   onAudioUnlock: () => void;
@@ -143,7 +144,7 @@ function CardButton({
         opacity: dragging ? 0.3 : 1,
       }}
     >
-      <Portrait src={src} name={card?.name ?? id} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", filter: afford ? undefined : "grayscale(0.85)" }} />
+      <Portrait src={src} name={card?.name ?? id} className="chud-card-portrait" />
       {!afford && (
         <div
           className="chud-card-lockfill"
@@ -157,14 +158,13 @@ function CardButton({
           }}
         />
       )}
-      {!afford && <div style={{ position: "absolute", inset: 0, background: "#0009" }} />}
       <span
         className="chud-cost"
       >
         {card?.cost ?? "?"}
       </span>
       {isCommanderCard(id) && <span className="chud-class-art">Class art</span>}
-      <span className="chud-name">{card?.name ?? id}</span>
+      <span className="chud-name" title={card?.name ?? id}>{(card?.name ?? id).split(" ").map((word, index) => <span className="chud-name-word" key={`${index}-${word}`}>{word}{" "}</span>)}</span>
     </button>
   );
 }
@@ -243,7 +243,7 @@ function AbilityButton({
       }}
       style={{ boxShadow: flash ? "0 0 0 2px #4ade80" : undefined }}
     >
-      <Portrait src={manifest ? portraitForCommanderClass(manifest, start.commander.class) : null} name={start.commander.class} style={{ width: 38, height: 38, borderRadius: 5, flex: "none" }} />
+      <Portrait src={manifest ? portraitForCommanderClass(manifest, start.commander.class) : null} name={start.commander.class} className="chud-ability-portrait" />
       <span className="chud-ability-info">
         <span className="chud-ability-name">{abilityLabel(a.abilityId, start.commander.class)}</span>
         <span className="chud-ability-sub" data-ready={v.label === "READY"}>
@@ -489,15 +489,14 @@ export default function BattleHud(props: BattleHudProps) {
               <button
                 type="button"
                 className="chud-audio-toggle"
-                aria-pressed={!props.audioMuted}
+                aria-pressed={props.audioReady === true}
                 onClick={() => {
-                  props.onAudioUnlock();
                   props.onToggleAudio();
                 }}
-                title={props.audioMuted ? "Unmute battle sounds" : "Mute battle sounds"}
+                title={props.audioReady ? "Mute battle sounds" : "Enable battle sounds on this device"}
               >
                 <span aria-hidden="true">{props.audioMuted ? "×" : "♪"}</span>
-                {props.audioMuted ? "Muted" : "Sound"}
+                {props.audioMuted ? "Sound Off" : props.audioReady ? "Sound On" : "Enable Sound"}
               </button>
               <input
                 className="chud-audio-volume"
@@ -604,7 +603,7 @@ export default function BattleHud(props: BattleHudProps) {
               </div>
               <EnergyMeter frame={frame} />
               <div className="chud-abilities chud-abilities-tray">{abilityControls}</div>
-              <div className="chud-hint" data-testid="placement-hint">
+              <div className="chud-hint" data-active={Boolean(hint || selected)} data-testid="placement-hint">
                 {hint ?? (selected ? `Tap the board to play ${card(selected)?.name}, or drag a card onto it.` : "Drag a card onto the board, or select it then tap the board.")}
               </div>
             </>

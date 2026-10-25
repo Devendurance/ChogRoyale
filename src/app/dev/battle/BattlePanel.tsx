@@ -3,7 +3,7 @@
 // B3.1 dev battle surface. Real Privy login, authoritative Colyseus server,
 // Phaser view. Gated to development unless explicitly enabled.
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { usePrivy, useLogin } from "@privy-io/react-auth";
 import { Client, type Room } from "@colyseus/sdk";
 import {
@@ -26,6 +26,7 @@ import { awardForMatch, resolveRankedSummary } from "@/components/app/ranked-mod
 import type { RankedAwardView, MyRankedResponse } from "@/lib/ranked";
 import type { BoardMapper, CanvasFeed } from "./BattleCanvas";
 import LoadoutPicker from "./LoadoutPicker";
+import BattleEntry from "@/components/app/BattleEntry";
 import BattleHud from "./BattleHud";
 import {
   BattleAudio,
@@ -98,6 +99,7 @@ export function BattlePanel({
   const audioResultSeen = useRef<string | null>(null);
   const [audioPreferences, setAudioPreferences] = useState<BattleAudioPreferences>(() => ({ ...DEFAULT_BATTLE_AUDIO_PREFERENCES }));
   const [audio] = useState(() => new BattleAudio(DEFAULT_BATTLE_AUDIO_PREFERENCES));
+  const audioReady = useSyncExternalStore(audio.subscribe, audio.getReady, () => false);
 
   const unlockAudio = useCallback(() => {
     void audio.unlock();
@@ -118,9 +120,11 @@ export function BattlePanel({
   }, [audio]);
 
   const toggleAudio = useCallback(() => {
-    const next = { ...audioPreferences, muted: !audioPreferences.muted };
+    const next = audio.getReady()
+      ? { ...audioPreferences, muted: true }
+      : { ...audioPreferences, muted: false, volume: audioPreferences.volume || DEFAULT_BATTLE_AUDIO_PREFERENCES.volume };
     updateAudio(next);
-    if (!next.muted) void audio.unlock();
+    if (!next.muted) void audio.unlock().then((ready) => { if (ready) audio.play("select"); });
   }, [audio, audioPreferences, updateAudio]);
 
   const setAudioVolume = useCallback(
@@ -135,7 +139,9 @@ export function BattlePanel({
   useEffect(() => {
     const timer = setTimeout(() => {
       try {
-        setAudioPreferences(readBattleAudioPreferences(window.localStorage));
+        const saved = readBattleAudioPreferences(window.localStorage);
+        audio.setPreferences(saved);
+        setAudioPreferences(saved);
       } catch {
         /* Storage is optional. The deterministic default remains active. */
       }
@@ -163,6 +169,7 @@ export function BattlePanel({
       audioSeen.current.clear();
       audioResultSeen.current = null;
       audioPriming.current = m.resumed;
+      if (!m.resumed) audio.play("start");
       setSelected(null);
       setDragging(null);
       gesture.current = null;
@@ -575,7 +582,7 @@ export function BattlePanel({
   const me = start?.seat ?? 0;
 
   return (
-    <div className={publicMode ? "app-play-battle-shell" : undefined} data-mode={publicMode ? initialMode : undefined}>
+    <div className={publicMode ? "app-play-battle-shell" : undefined} data-mode={publicMode ? initialMode : undefined} data-stage={publicMode ? stage : undefined}>
       {!publicMode && <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", fontSize: 13 }}>
         <span>stage: {stage}</span>
         {room && <span>room code: <b>{room.roomId}</b></span>}
@@ -585,19 +592,14 @@ export function BattlePanel({
       </div>}
 
       {publicMode && stage === "idle" && (
-        <div className="app-play-battle-head">
-          <div>
-            <p className="app-play-kicker">{initialMode === "private" ? "Private room" : initialMode === "ranked" ? "Ranked queue" : "Unranked battle"}</p>
-            <h1>Enter the arena</h1>
-            <p>{initialMode === "private" ? "Create a room for a friend, or join with their code." : initialMode === "ranked" ? "Ranked matchmaking stays unavailable until the rating and trophy pipeline lands." : "Find a casual opponent through the live battle queue."}</p>
-          </div>
-          <a className="app-btn app-btn--ghost" href="/app/play">Change mode</a>
-        </div>
+        <BattleEntry mode={initialMode} code={code} error={error} onCodeChange={setCode}
+          onFind={() => { unlockAudio(); void findMatch(initialMode === "ranked" ? "ranked" : "unranked"); }}
+          onCreate={() => { unlockAudio(); void connect("create"); }} onJoin={() => { unlockAudio(); void connect("join"); }} />
       )}
 
       {publicMode && stage !== "idle" && error && <div className="app-play-battle-error" role="alert">{error}</div>}
 
-      {stage === "idle" && (
+      {!publicMode && stage === "idle" && (
         <section className={publicMode ? "app-play-battle-controls" : undefined} style={publicMode ? undefined : { display: "grid", gap: 8 }}>
           <div className={publicMode ? "app-play-battle-actions" : undefined} style={publicMode ? undefined : { display: "flex", gap: 8, flexWrap: "wrap" }}>
             {publicMode && initialMode === "ranked" ? (
@@ -696,6 +698,7 @@ export function BattlePanel({
           suppressClickUntil={suppressClickUntil}
           onSelectCard={setSelected}
           audioMuted={audioPreferences.muted}
+          audioReady={audioReady}
           audioVolume={audioPreferences.volume}
           onAudioUnlock={unlockAudio}
           onAudioCue={playAudioCue}

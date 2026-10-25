@@ -1,5 +1,9 @@
 # Memory
 
+- App typography: Tailwind inline theme aliases weren't emitted for plain app.css. Define scoped runtime --font-site/data/game aliases at .app-root or font shorthands lose family and size. Computed Private h1 changed from Arial16 to Lilita28 after the fix.
+- Battle layout: desktop starts at 1200px with equal support tracks and a 420px hand rail. Selection guidance overlays the tray rather than adding height, so select/deselect cannot change the canvas rectangle during an intent. Long card words ellipsize intact, and low-energy art stays recognizable.
+- Battle sound readiness is actual running context plus unmuted/visible/positive volume, read with useSyncExternalStore. Gesture handlers unlock before network waits. Original filtered percussion is generated locally, no competitor sounds ship. Ordinary melee has no public release event, only observed-HP impact feedback.
+
 - PROD battle: VPS aws-hermes (63.183.2.78, Ubuntu, Node 24), code in ~/apps/chog-royale @65e19e4 (DEPLOYED_SHA), env in battle.env (600), systemd chog-royale-battle (enabled), Caddy /etc/caddy/Caddyfile reverse proxy, public https://63-183-2-78.nip.io. Logs ~/apps/chog-royale/battle.log. Do NOT redeploy without owner need; never commit secrets.
 - LAUNCH: Vercel fix = @types/node ^24.19.2 (commit 60bf4f6, pushed). PROD = br-snowy-star-b5ftxkro (endpoint ep-frosty-sunset; DATABASE_URL verified via Neon API). Snapshot branch br-red-feather-b5xc380x (pre-migration restore point). PROD now 0000-0022, 9 players intact. Battle env contract in docs/P7a-hosting.md; host still unprovisioned.
 - P7a hosting: `src/server/battle/host-config.ts` (pure) + tests, `/healthz`, SIGTERM/SIGINT drain in `src/server/battle/server.ts`, strict bootstrap in `scripts/battle-server.ts`. One replica only (in-memory coordinator); `wss://` + `https://` origins enforced in prod; `ws://`/`http://` accepted only for localhost. Battle server never serves gifting/$CHOG.

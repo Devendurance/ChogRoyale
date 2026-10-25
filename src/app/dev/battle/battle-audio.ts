@@ -2,6 +2,7 @@ import type { AckMessage, BattleFrame, FrameEvent } from "@/lib/battle-protocol"
 import { combatEventKey } from "./combat-vfx";
 
 export type BattleCue =
+  | "start"
   | "select"
   | "deploy"
   | "spawn"
@@ -36,6 +37,7 @@ export function takeUnseenBattleAudioCues(cues: BattleAudioCue[], seen: Set<stri
   for (const cue of cues) {
     if (seen.has(cue.key)) continue;
     seen.add(cue.key);
+    if (seen.size > 2048) seen.delete(seen.values().next().value!);
     unseen.push(cue);
   }
   return unseen;
@@ -75,6 +77,7 @@ const cueForEvent = (event: FrameEvent): BattleAudioCue | null => {
       return { cue: "deploy", key };
     case "building_spawned":
     case "unit_spawned":
+    case "commander_deployed":
       return { cue: "spawn", key };
     case "spell_cast":
       return { cue: "spell", key };
@@ -114,6 +117,13 @@ export function cuesForBattleFrame(frame: BattleFrame, previous: BattleFrame | n
   }
 
   const previousStructures = new Map((previous?.structures ?? []).map((structure) => [structure.id, structure]));
+  // The protocol has no ordinary melee attack/release event. Observed HP loss
+  // can provide impact feedback without inventing an attacker or attack time.
+  const previousUnits = new Map([...(previous?.troops ?? []), ...(previous?.commanders ?? []), ...(previous?.buildings ?? [])].map((unit) => [unit.id, unit]));
+  for (const unit of [...frame.troops, ...frame.commanders, ...frame.buildings]) {
+    const before = previousUnits.get(unit.id);
+    if (before && unit.hp < before.hp) cues.push({ cue: "impact", key: `unit-hit:${frame.tick}:${unit.id}:${unit.hp}` });
+  }
   for (const structure of frame.structures) {
     const before = previousStructures.get(structure.id);
     if (before && structure.hp < before.hp && structure.alive) {
@@ -157,6 +167,7 @@ function audioContextCtor(): AudioContextCtor | null {
 }
 
 const cueGap: Record<BattleCue, number> = {
+  start: 0.8,
   select: 0.04,
   deploy: 0.08,
   spawn: 0.08,
@@ -184,9 +195,15 @@ interface ToneSpec {
   type: OscillatorType;
   gain: number;
   delay?: number;
+  noise?: boolean;
 }
 
 const toneSpecs: Record<BattleCue, ToneSpec[]> = {
+  start: [
+    { frequency: 196, duration: 0.18, type: "triangle", gain: 0.18 },
+    { frequency: 294, duration: 0.22, type: "triangle", gain: 0.15, delay: 0.12 },
+    { frequency: 392, duration: 0.32, type: "triangle", gain: 0.14, delay: 0.26 },
+  ],
   select: [{ frequency: 560, endFrequency: 700, duration: 0.055, type: "triangle", gain: 0.2 }],
   deploy: [{ frequency: 250, endFrequency: 520, duration: 0.12, type: "triangle", gain: 0.24 }],
   spawn: [{ frequency: 360, endFrequency: 620, duration: 0.13, type: "sine", gain: 0.16 }],
@@ -216,15 +233,48 @@ const toneSpecs: Record<BattleCue, ToneSpec[]> = {
   draw: [{ frequency: 420, endFrequency: 360, duration: 0.22, type: "triangle", gain: 0.13 }],
 };
 
+// Original short percussion layers. Filtered noise gives body and texture,
+// while the pitched layers above supply a restrained magical identity.
+const percussion: Partial<Record<BattleCue, ToneSpec>> = {
+  select: { frequency: 2600, duration: 0.025, type: "sine", gain: 0.09, noise: true },
+  deploy: { frequency: 1100, duration: 0.11, type: "sine", gain: 0.22, noise: true },
+  spawn: { frequency: 1900, duration: 0.08, type: "sine", gain: 0.12, noise: true },
+  spell: { frequency: 3200, duration: 0.22, type: "sine", gain: 0.15, noise: true },
+  fire: { frequency: 1400, duration: 0.075, type: "sine", gain: 0.23, noise: true },
+  impact: { frequency: 700, duration: 0.15, type: "sine", gain: 0.3, noise: true },
+  "structure-hit": { frequency: 900, duration: 0.14, type: "sine", gain: 0.26, noise: true },
+  death: { frequency: 1700, duration: 0.11, type: "sine", gain: 0.13, noise: true },
+  destroy: { frequency: 650, duration: 0.45, type: "sine", gain: 0.34, noise: true },
+  ability: { frequency: 2300, duration: 0.24, type: "sine", gain: 0.18, noise: true },
+  "ability-impact": { frequency: 1300, duration: 0.28, type: "sine", gain: 0.23, noise: true },
+  "chaos-active": { frequency: 850, duration: 0.36, type: "sine", gain: 0.23, noise: true },
+};
+
+export const BATTLE_AUDIO_VOICE_LIMIT = 16;
+
 export class BattleAudio {
   private context: AudioContext | null = null;
   private master: GainNode | null = null;
+  private noiseBuffer: AudioBuffer | null = null;
   private readonly lastPlayed = new Map<BattleCue, number>();
   private activeVoices = 0;
   private muted: boolean;
   private volume: number;
   private unlockPromise: Promise<boolean> | null = null;
   private pageHidden = false;
+  private readonly voices = new Set<AudioScheduledSourceNode>();
+  private readonly listeners = new Set<() => void>();
+
+  readonly subscribe = (listener: () => void): (() => void) => {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  };
+
+  readonly getReady = (): boolean => this.context?.state === "running" && !this.muted && !this.pageHidden && this.volume > 0;
+
+  private notify(): void {
+    for (const listener of this.listeners) listener();
+  }
 
   constructor(preferences: BattleAudioPreferences = DEFAULT_BATTLE_AUDIO_PREFERENCES) {
     this.muted = preferences.muted;
@@ -239,35 +289,66 @@ export class BattleAudio {
     this.muted = preferences.muted;
     this.volume = clampVolume(preferences.volume);
     if (this.master && this.context) this.master.gain.setTargetAtTime(this.muted || this.pageHidden ? 0 : this.volume, this.context.currentTime, 0.015);
+    if (this.muted || this.volume === 0) this.stopVoices();
+    this.notify();
   }
 
   setPageHidden(hidden: boolean): void {
     this.pageHidden = hidden;
     if (this.master && this.context) this.master.gain.setTargetAtTime(this.muted || hidden ? 0 : this.volume, this.context.currentTime, 0.015);
+    if (hidden) this.stopVoices();
+    this.notify();
   }
 
   async unlock(): Promise<boolean> {
     if (this.muted) return false;
-    if (!this.context) {
+    if (!this.context || this.context.state === "closed") {
       const Ctor = audioContextCtor();
       if (!Ctor) return false;
       try {
         this.context = new Ctor();
+        this.noiseBuffer = this.context.createBuffer(1, Math.ceil(this.context.sampleRate * 0.5), this.context.sampleRate);
+        const samples = this.noiseBuffer.getChannelData(0);
+        let seed = 1319;
+        for (let i = 0; i < samples.length; i++) {
+          seed = (Math.imul(seed, 1664525) + 1013904223) | 0;
+          samples[i] = (seed >>> 0) / 2147483648 - 1;
+        }
         this.master = this.context.createGain();
         this.master.gain.value = this.volume;
-        this.master.connect(this.context.destination);
+        const limiter = this.context.createDynamicsCompressor();
+        limiter.threshold.value = -9;
+        limiter.knee.value = 6;
+        limiter.ratio.value = 20;
+        limiter.attack.value = 0.002;
+        limiter.release.value = 0.12;
+        this.master.connect(limiter).connect(this.context.destination);
+        this.context.onstatechange = () => this.notify();
+        // Start a silent buffer synchronously inside the gesture for WebKit.
+        const warmup = this.context.createBufferSource();
+        warmup.buffer = this.context.createBuffer(1, 1, this.context.sampleRate);
+        warmup.connect(this.master);
+        warmup.onended = () => warmup.disconnect();
+        warmup.start();
       } catch {
+        if (this.context) void this.context.close().catch(() => {});
         this.context = null;
         this.master = null;
+        this.noiseBuffer = null;
+        this.notify();
         return false;
       }
     }
-    if (this.context.state === "suspended") {
+    // Safari may report `interrupted` after a call or tab switch.
+    if (this.context.state !== "running") {
       if (!this.unlockPromise) {
         const context = this.context;
         const pending = context
           .resume()
-          .then(() => context.state === "running")
+          .then(() => {
+            this.notify();
+            return this.context === context && context.state === "running";
+          })
           .catch(() => false);
         this.unlockPromise = pending;
         void pending.finally(() => {
@@ -276,55 +357,88 @@ export class BattleAudio {
       }
       return this.unlockPromise;
     }
-    return this.context.state === "running";
+    this.notify();
+    return this.getReady();
   }
 
   play(cue: BattleCue): boolean {
     const context = this.context;
     const master = this.master;
-    if (this.muted || this.pageHidden || !context || !master || this.activeVoices >= 10) return false;
-    if (context.state !== "running") {
-      if (this.unlockPromise) void this.unlockPromise.then((ready) => ready && this.play(cue));
-      return false;
-    }
+    if (!this.getReady() || !context || !master) return false;
+    const layers = percussion[cue] ? [...toneSpecs[cue], percussion[cue]!] : toneSpecs[cue];
     const now = context.currentTime;
     const last = this.lastPlayed.get(cue) ?? -Infinity;
     if (now - last < cueGap[cue]) return false;
+    if (cue === "start" || cue === "victory" || cue === "defeat" || cue === "draw") this.stopVoices();
+    if (this.activeVoices + layers.length > BATTLE_AUDIO_VOICE_LIMIT) return false;
     this.lastPlayed.set(cue, now);
-    for (const spec of toneSpecs[cue]) this.playTone(spec);
+    for (const spec of layers) this.playTone(spec);
     return true;
   }
 
   dispose(): void {
     const context = this.context;
+    this.stopVoices();
     this.context = null;
     this.master = null;
+    this.noiseBuffer = null;
     this.unlockPromise = null;
     this.lastPlayed.clear();
     this.activeVoices = 0;
-    if (context) void context.close().catch(() => {});
+    if (context) {
+      context.onstatechange = null;
+      void context.close().catch(() => {});
+    }
+    this.notify();
+  }
+
+  private stopVoices(): void {
+    for (const voice of this.voices) {
+      try { voice.stop(); } catch { /* A source may already have ended. */ }
+      voice.disconnect();
+    }
+    this.voices.clear();
+    this.activeVoices = 0;
   }
 
   private playTone(spec: ToneSpec): void {
     const context = this.context;
     const master = this.master;
     if (!context || !master) return;
-    const start = context.currentTime + (spec.delay ?? 0);
-    const end = start + spec.duration;
-    const oscillator = context.createOscillator();
+    const oscillator = spec.noise ? context.createBufferSource() : context.createOscillator();
     const gain = context.createGain();
-    oscillator.type = spec.type;
-    oscillator.frequency.setValueAtTime(spec.frequency, start);
-    oscillator.frequency.exponentialRampToValueAtTime(Math.max(35, spec.endFrequency ?? spec.frequency), end);
+    let filter: BiquadFilterNode | null = null;
+    if ("frequency" in oscillator) {
+      oscillator.type = spec.type;
+    } else {
+      // Reuse deterministic local noise, never allocate it during combat or
+      // consume authoritative RNG. Each source still has its own envelope.
+      oscillator.buffer = this.noiseBuffer;
+      filter = context.createBiquadFilter();
+      filter.type = "lowpass";
+      filter.frequency.value = spec.frequency;
+      oscillator.connect(filter).connect(gain);
+    }
+    // Allocate nodes before choosing the start time. A short lookahead keeps
+    // tiny UI transients out of the past when the render thread is busy.
+    const start = context.currentTime + 0.015 + (spec.delay ?? 0);
+    const end = start + spec.duration;
+    if ("frequency" in oscillator) {
+      oscillator.frequency.setValueAtTime(spec.frequency, start);
+      oscillator.frequency.exponentialRampToValueAtTime(Math.max(35, spec.endFrequency ?? spec.frequency), end);
+    }
     gain.gain.setValueAtTime(0.0001, start);
     gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, spec.gain), start + Math.min(0.018, spec.duration * 0.25));
     gain.gain.exponentialRampToValueAtTime(0.0001, end);
-    oscillator.connect(gain).connect(master);
+    if (!filter) oscillator.connect(gain);
+    gain.connect(master);
+    this.voices.add(oscillator);
     this.activeVoices += 1;
     oscillator.onended = () => {
-      this.activeVoices = Math.max(0, this.activeVoices - 1);
+      if (this.voices.delete(oscillator)) this.activeVoices = Math.max(0, this.activeVoices - 1);
       oscillator.disconnect();
       gain.disconnect();
+      filter?.disconnect();
     };
     oscillator.start(start);
     oscillator.stop(end + 0.01);
