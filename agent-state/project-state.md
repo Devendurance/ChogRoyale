@@ -1,5 +1,11 @@
 # Project State
 
+## Visual overhaul v3, slice 1 (2026-10-25)
+
+- Handoff v3 lives at repo root (`Chog_Royale_Visual_Overhaul_Handoff_v3_CORRECTED/`). Readiness report in `docs/chog-visual-overhaul-readiness.md`: all 25 cards map to repo ids, commanders are domain classes, `burrow_scrapper` is an extra spawned sprite, and no approved-style asset exists yet.
+- `arena-registry.ts` gained `TEAM_COLORS`, `CAMERA_SPACE_LAYERS`/`layerFlipY`, `teamTrimHalves` and `defenderCue`. `defenderPose` now always returns the directional aim for live defenders that are aiming, firing or hit.
+- Presentation only. No geometry, pointer mapping, gameplay, server or asset file changes.
+
 ## Battle identity and perspective hotfix (2026-10-25)
 
 - Root cause: BattlePanel read `lobby.players[start.seat]`. Lobby players are indexed by join slot, battle seats are shuffled at start, so a swapped shuffle showed the opponent's name as your own on both devices.

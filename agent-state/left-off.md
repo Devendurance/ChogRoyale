@@ -1,3 +1,9 @@
+## Visual overhaul v3, slice 1 (2026-10-25)
+
+- Doing: v3 corrected handoff, Prompt 01 bounded slice on branch `visual-overhaul/v3-slice1` from origin/main 6307f1b. Local commit only, no push without owner approval.
+- Done: handoff folder copied to repo root, `docs/chog-visual-overhaul-readiness.md`, player-relative orientation fix (red top/blue bottom pennants and tinted team-trim, camera-space layers upright for seat 1, defenders keep directional aim during fire/hit). Tests 115/115 battle, tsc, scoped lint, build green. Before/after two-seat captures in `C:/Users/USER/Documents/ChogRoyale-Assets/visual-overhaul-v3-slice1/`.
+- Next: owner review and push approval. Then blocker 1 (approved-style arena layer pack on the v002 canvas), blocker 2 (Bulwark red and Chog Guardian blue defender mounts), then Choglings/Boulderback atlases. Owner decision pending on troop ring colours.
+
 ## Battle identity hotfix (2026-10-25)
 
 - Doing: fix live name swap (Endychog/phantom both saw the opponent's name twice), keep self-blue/enemy-red per device, small mobile/desktop/result polish. Branch `hotfix/battle-identity-perspective` from origin/main 80f9e82.

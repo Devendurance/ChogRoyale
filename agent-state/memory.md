@@ -1,5 +1,8 @@
 # Memory
 
+- Visual overhaul v3: the v002 `team-trim` and `foundations` art bake P1 purple and P0 cyan. Seat 1 used to flip them, which inverted team sides. They now render unflipped (camera space) and team-trim is cropped into halves tinted red/blue. The approved arena PNG and five-character poster are references only. Tower defenders are generic Sentinel/Core Keeper art for both teams until Bulwark and Chog Guardian mounts are produced.
+- Fixture captures for the battle canvas: copy `ChogRoyale-Assets/battle-identity-hotfix-20261025/qa-v2-harness/page.tsx` to `src/app/dev/battle/qa-v2/page.tsx`, run `ChogRoyale-Assets/visual-overhaul-v3-slice1/capture.cjs` against next dev, then delete the harness. Another `next dev` may already hold port 3000 for this repo, so reuse it instead of starting a second one.
+
 - App typography: Tailwind inline theme aliases weren't emitted for plain app.css. Define scoped runtime --font-site/data/game aliases at .app-root or font shorthands lose family and size. Computed Private h1 changed from Arial16 to Lilita28 after the fix.
 - Battle layout: desktop starts at 1200px with equal support tracks and a 420px hand rail. Selection guidance overlays the tray rather than adding height, so select/deselect cannot change the canvas rectangle during an intent. Long card words ellipsize intact, and low-energy art stays recognizable.
 - Battle sound readiness is actual running context plus unmuted/visible/positive volume, read with useSyncExternalStore. Gesture handlers unlock before network waits. Original filtered percussion is generated locally, no competitor sounds ship. Ordinary melee has no public release event, only observed-HP impact feedback.

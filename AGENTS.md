@@ -232,3 +232,11 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - P6d gifting uses the existing eligibility, quote and sponsorship routes only. Eligibility is server-owned and requires the accepted-friend age check. Never calculate friendship age, recipient XP, recipient Gold or sponsorship caps in the client.
 - Sponsorship quote `nextLevel` is the recipient's current purchased level. Pass it unchanged as `expectedLevel`. Well-formed POST responses use HTTP 200 for domain refusals, and `sponsored` or `duplicate` are the only confirmed outcomes. Success and duplicate responses may omit both `receiptId` and `goldCost`, so the UI refreshes party-scoped history instead of inventing a receipt.
 - Keep the same UUID request key for an uncertain retry, never optimistically deduct Gold or advance a card, and never expose sponsorship party IDs, wallets, private XP, balances or raw ledger data. Test-only cap constants are not production policy.
+
+## VISUAL OVERHAUL V3
+
+- `Chog_Royale_Visual_Overhaul_Handoff_v3_CORRECTED/` is the art source of truth. Its references are direction only. Never install the flattened arena painting as a live background, and never crop the five-character poster into sprites. `docs/chog-visual-overhaul-readiness.md` tracks what is code ready versus art installed.
+- Player-relative team colour is `TEAM_COLORS[structureTeamFor(owner, seat)]`: blue friendly at the bottom, red opponent at the top, for both seats. Never key a colour or side to a seat id.
+- Camera-space arena layers (`CAMERA_SPACE_LAYERS` in `arena-registry.ts`: background, foundations, team-trim, foreground) stay upright for seat 1. Only board-coupled layers mirror. Adding a camera-space layer is valid only while the structure anchors mirror about y = 80.
+- Top defenders always use `aim-south` and bottom defenders `aim-north`, including while firing or hit. Fire and hit are overlay cues from `defenderCue`, never pose swaps, because the authored fire and hit poses face sideways or toward the camera.
+- Identity drift is a bug. Tower defenders must become recognizable Bulwark (red) and Chog Guardian (blue) art, and every redesign must still read as its v001 roster card.

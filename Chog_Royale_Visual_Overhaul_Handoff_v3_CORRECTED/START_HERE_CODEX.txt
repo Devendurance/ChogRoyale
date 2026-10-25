@@ -1,0 +1,29 @@
+We are beginning the officially approved CHOG ROYALE 2.5D VISUAL OVERHAUL — v3 corrected handoff.
+
+The complete source-of-truth handoff is in:
+Chog_Royale_Visual_Overhaul_Handoff_v3_CORRECTED/
+
+Read first:
+- README.md
+- docs/00_TEAM_ORIENTATION_LOCK.md
+- docs/00B_CHOG_IDENTITY_LOCK.md
+- docs/01_ART_BIBLE.md
+- docs/02_ARENA_SPEC.md
+- docs/03_ASSET_PIPELINE.md
+- docs/04_ROADMAP_AND_ACCEPTANCE.md
+- docs/05_CODEX_PROMPT_01.md
+
+Important non-negotiables:
+- Preserve the current Phaser project and gameplay logic.
+- Player POV visual orientation is: ENEMY RED at the TOP, LOCAL PLAYER BLUE at the BOTTOM.
+- Top red tower cannons and mounted defenders must face DOWN toward the player side.
+- Bottom blue tower cannons and mounted defenders must face UP toward the enemy side.
+- Use actual Chog Royale identities for tower defenders.
+- Preserve original Chog identity and commander/NFT recognizability. The original 25-card roster is the canonical identity anchor.
+- Treat the approved five-character 3D poster as a quality / polish / materials benchmark, not as permission to genericize characters.
+- Do not crop poster images into gameplay sprites.
+- Do not claim the flattened arena concept is a finished layered gameplay arena.
+- Do not push or deploy without permission.
+
+Execute the bounded first slice described in docs/05_CODEX_PROMPT_01.md.
+Work carefully, preserve unrelated working-tree changes, run the smallest relevant verification steps, and report exactly what is complete, what is blocked, and what assets are still needed.

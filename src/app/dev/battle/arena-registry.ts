@@ -130,6 +130,35 @@ export type StructureTeam = "friendly" | "opponent";
 export const structureTeamFor = (owner: number, seat: Seat): StructureTeam =>
   owner === seat ? "friendly" : "opponent";
 
+// v3 orientation lock: the viewing player is always BLUE at the bottom and the
+// opponent RED at the top, derived from owner === seat, never from a seat id.
+export const TEAM_COLORS: Record<StructureTeam, number> = { friendly: 0x2f80ed, opponent: 0xe0393e };
+
+// Layers authored in camera space instead of board space. The tower pads sit
+// under the upright mounts, the trim carries one team per screen half, and the
+// background and foreground are the far and near arena edges. The board is
+// symmetric about y = 80, so these render unflipped for both seats and seat 1
+// sees the same composition as seat 0. Board-coupled layers keep the mirror.
+export const CAMERA_SPACE_LAYERS: ReadonlySet<string> = new Set(["background", "foundations", "team-trim", "foreground"]);
+
+export const layerFlipY = (layerId: string, seat: Seat): boolean => seat === 1 && !CAMERA_SPACE_LAYERS.has(layerId);
+
+export const TEAM_TRIM_LAYER = "team-trim";
+
+// The authored trim paints one team per half. Unflipped, the top half is
+// always the opponent and the bottom half the viewing player, so each half is
+// cropped from the same texture and tinted with its player-relative colour.
+export const teamTrimHalves = (
+  width: number,
+  height: number
+): { team: StructureTeam; crop: [number, number, number, number] }[] => {
+  const half = Math.floor(height / 2);
+  return [
+    { team: "opponent", crop: [0, 0, width, half] },
+    { team: "friendly", crop: [0, half, width, height - half] },
+  ];
+};
+
 // The authored Core Keeper extends above the top gameplay edge. Keep the
 // authoritative ground point and weapon anchors fixed, then lower only the
 // visual assembly enough to keep its art and health bar inside the canvas.
@@ -244,8 +273,11 @@ export const updateDefender = (
   return out;
 };
 
-// Priority: destroyed > hit > fire > aim. The renderer only draws a defender
-// for live structures; "destroyed" maps to the rubble path (no pose art).
+// v3 orientation lock: top defenders always face down and bottom defenders
+// always face up. The authored fire pose aims sideways and the hit pose faces
+// the camera, so neither may replace the directional aim. Fire and hit become
+// overlay cues (see defenderCue) on the directional pose instead. The renderer
+// only draws a defender for live structures; "destroyed" maps to rubble.
 export const defenderPose = (
   s: DefenderState,
   aiming: boolean,
@@ -254,11 +286,16 @@ export const defenderPose = (
   alive = true
 ): string => {
   if (!alive) return "destroyed";
-  if (now < s.hitUntil) return "hit";
-  if (now < s.fireUntil) return "fire";
-  if (aiming) return directionalAim(screenY);
+  if (aiming || now < s.hitUntil || now < s.fireUntil) return directionalAim(screenY);
   return "idle";
 };
+
+export type DefenderCue = "hit" | "fire" | null;
+
+// Priority: hit > fire, both driven only by authoritative hp drops and fresh
+// tower_fired events through updateDefender.
+export const defenderCue = (s: DefenderState, now: number): DefenderCue =>
+  now < s.hitUntil ? "hit" : now < s.fireUntil ? "fire" : null;
 
 // Deterministic projectile attribution: a projectile whose first-seen arena
 // position is within `maxDist` units of a same-owner structure's weapon

@@ -28,15 +28,20 @@ import {
 } from "./sprite-registry";
 import {
   ARENA_URL,
+  TEAM_COLORS,
+  TEAM_TRIM_LAYER,
+  defenderCue,
   defenderPose,
   fireFresh,
   fireKey,
+  layerFlipY,
   layerVisible,
   mountRoleFor,
   mountVisualOffsetY,
   newDefenderState,
   placementFor,
   structureTeamFor,
+  teamTrimHalves,
   updateDefender,
   weaponScreen,
   type ArenaManifest,
@@ -46,8 +51,6 @@ import {
 const S = 5; // pixels per arena unit
 const OWN = 0x36dbe8;
 const FOE = 0xf27978;
-const FRIENDLY_STRUCTURE = 0x36dbe8;
-const OPPONENT_STRUCTURE = 0xf27978;
 const KIT_URL = "/assets/chog-kit/v001";
 
 export interface CanvasFeed {
@@ -173,7 +176,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
         rim: import("phaser").GameObjects.Image;
         rubble: boolean;
       }
-      const envLayers = new Map<string, import("phaser").GameObjects.Image>();
+      const envLayers = new Map<string, import("phaser").GameObjects.Image[]>();
       const mountPool = new Map<string, MountEnt>();
       const defenderStates = new Map<string, DefenderState>();
       let eventStart: StartMessage | null = null;
@@ -236,8 +239,19 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
           // (bars, telegraphs, ghost) above every sprite and effect image.
           // v002 arena art sits below both as a textured underlay.
           for (const l of arena?.layers ?? []) {
-            const img = this.add.image(-50, -60, `arena:layer:${l.id}`).setOrigin(0, 0).setDepth(-500 + l.zOrder);
-            envLayers.set(l.id, img);
+            const mk = () => this.add.image(-50, -60, `arena:layer:${l.id}`).setOrigin(0, 0).setDepth(-500 + l.zOrder);
+            const img = mk();
+            if (l.id !== TEAM_TRIM_LAYER) {
+              envLayers.set(l.id, [img]);
+              continue;
+            }
+            // Player-relative team trim: the same texture cropped into an
+            // opponent (top) half and a friendly (bottom) half, each tinted.
+            const halves = teamTrimHalves(img.width, img.height);
+            envLayers.set(
+              l.id,
+              halves.map((h, i) => (i === 0 ? img : mk()).setCrop(...h.crop).setTint(TEAM_COLORS[h.team]))
+            );
           }
           this.g = this.add.graphics().setDepth(-100);
           this.og = this.add.graphics().setDepth(3000);
@@ -262,8 +276,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
           const sx = (x: number) => x * S;
           const sy = (y: number) => (seat === 0 ? 160 - y : y) * S;
           const col = (owner: number) => (owner === seat ? OWN : FOE);
-          const structureCol = (owner: number) =>
-            structureTeamFor(owner, seat) === "friendly" ? FRIENDLY_STRUCTURE : OPPONENT_STRUCTURE;
+          const structureCol = (owner: number) => TEAM_COLORS[structureTeamFor(owner, seat)];
           const t = Math.min(1, (now - f.receivedAt) / 100);
           const prevPos = new Map<string, { x: number; y: number }>();
           for (const u of [...(prev?.troops ?? []), ...(prev?.commanders ?? [])]) prevPos.set(u.id, u);
@@ -278,8 +291,9 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             return { y: Math.min(a, b), h: Math.abs(a - b) };
           };
           // v002 environment underlay. Every layer image shares the entity
-          // transform: placed at (-50,-60) half-size into the board, and for
-          // seat 1 only flipped vertically (the entity transform mirrors y).
+          // transform: placed at (-50,-60) half-size into the board. For
+          // seat 1 board-coupled layers flip vertically (the entity transform
+          // mirrors y) while camera-space layers stay upright (layerFlipY).
           const arenaOk =
             !!arena &&
             arena.layers.every((l) => !missing.has(`arena:layer:${l.id}`)) &&
@@ -291,9 +305,8 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             const boardWide = (st: string) => frame.chaos.some((c) => c.state === st && c.zones.length === 0);
             const rippleAlt = !reduced && Math.floor(now / 700) % 2 === 1;
             for (const l of arena.layers) {
-              const img = envLayers.get(l.id);
-              if (!img) continue;
-              img.setFlipY(seat === 1);
+              const imgs = envLayers.get(l.id);
+              if (!imgs) continue;
               const vis = layerVisible(l, {
                 riftOpen: frame.riftOpen,
                 anyWarning,
@@ -302,14 +315,18 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                 now,
                 rippleAlt,
               });
-              img.setVisible(vis);
               // The authored chaos overlays are board-centred illustrations.
               // Zone-specific chaos keeps them at low alpha so they never
               // contradict the authoritative per-zone bands drawn below.
-              if (l.state === "chaos-warning") img.setAlpha(boardWide("warning") ? 1 : 0.35);
-              else if (l.state === "chaos-active") img.setAlpha(boardWide("active") ? 1 : 0.35);
-              else if (l.state === "chaos-expiry") img.setAlpha(0.6);
-              else img.setAlpha(1);
+              const alpha =
+                l.state === "chaos-warning"
+                  ? boardWide("warning") ? 1 : 0.35
+                  : l.state === "chaos-active"
+                    ? boardWide("active") ? 1 : 0.35
+                    : l.state === "chaos-expiry"
+                      ? 0.6
+                      : 1;
+              for (const img of imgs) img.setFlipY(layerFlipY(l.id, seat)).setVisible(vis).setAlpha(alpha);
             }
           }
           // Ground, own territory, river, bridges, ford. When the v002
@@ -647,15 +664,19 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                 const placement = arena ? placementFor(arena, s.kind, s.x, s.y) : null;
                 // Defender art stays upright, so the directional stance is
                 // chosen by screen hemisphere, not the authored placement
-                // direction (which is fixed per P0/P1 side).
-                const dir = y > H / 2 ? "north" : "south";
+                // direction (which is fixed per P0/P1 side). The top half
+                // always aims down and the bottom half always aims up, even
+                // while firing or hit.
                 let pose = defenderPose(st, true, y, now, s.alive);
-                // The authored static stance for this board is the directional
-                // aim (placements encode directionRequested), so idle falls
-                // back to the hemisphere aim when that pose exists.
-                if (pose === "idle" && mrole.poses[`aim-${dir}`]) pose = `aim-${dir}`;
-                if (missing.has(`${role}:defender-${pose}`)) pose = mrole.poses[`aim-${dir}`] ? `aim-${dir}` : "idle";
+                if (missing.has(`${role}:defender-${pose}`) || !mrole.poses[pose]) pose = "idle";
                 me.defender.setTexture(`${role}:defender-${pose}`);
+                // Fire and hit read as overlay cues on the directional pose: a
+                // short recoil away from the aim direction and a warm flash.
+                const cue = defenderCue(st, now);
+                const recoil = cue === "fire" && !reduced ? (pose === "aim-north" ? 1.5 : -1.5) : 0;
+                me.defender.setY(artOffsetY + recoil);
+                if (cue === "hit") me.defender.setTint(0xff8a8a);
+                else me.defender.clearTint();
                 // Muzzle flash + instant tracer from the measured weapon
                 // anchor of the firing pose to the authoritative target.
                 if (accepted && fire && placement) {
