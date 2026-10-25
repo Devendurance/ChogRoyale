@@ -1,6 +1,6 @@
 {
  "schemaVersion": 1,
- "slice": "Visual overhaul v3 slice 2, refined in slice 2.1",
+ "slice": "Visual overhaul v3 slice 2, refined in slice 2.1, units in slice 3",
  "rules": [
   "Every pack PNG is a reference crop with game_ready=false. None of them is installed as runtime art.",
   "Canonical identity is 02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY. Stylized 3D concepts are quality and lighting references only.",
@@ -249,8 +249,8 @@
    "poseReference": "Chog_Royale_Devin_Asset_Reference_Pack_v1/06_ANIMATION_AND_ANCHOR_POSE_REFERENCES/choglings_pose_sequence_reference.png",
    "vfxReference": null,
    "live": {
-    "battle": "troop:choglings (v001 static, fallback)",
-    "card": "card:choglings (v001 derivative, fallback)"
+    "battle": "unit:choglings (chog-units v001 animated sheet; troop:choglings v001 static is the fallback)",
+    "card": "chog-units/v001/choglings/card-portrait.png (v001 card:choglings is the fallback)"
    },
    "required": [
     {
@@ -263,7 +263,7 @@
       "defeat"
      ],
      "pivot": "feet/base shared across frames",
-     "status": "missing"
+     "status": "produced in slice 3 (one front three-quarter view, mirrored on X), owner art approval pending"
     },
     {
      "asset": "card art",
@@ -271,10 +271,10 @@
       "72x96",
       "46x61"
      ],
-     "status": "missing"
+     "status": "produced in slice 3, checked at both sizes, owner art approval pending"
     }
    ],
-   "priority": "next slice",
+   "priority": "slice 3 done, owner review",
    "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
   },
   {
@@ -327,8 +327,8 @@
    "poseReference": "Chog_Royale_Devin_Asset_Reference_Pack_v1/06_ANIMATION_AND_ANCHOR_POSE_REFERENCES/boulderback_pose_sequence_reference.png",
    "vfxReference": null,
    "live": {
-    "battle": "troop:boulderback (v001 static, fallback)",
-    "card": "card:boulderback (v001 derivative, fallback)"
+    "battle": "unit:boulderback (chog-units v001 animated sheet; troop:boulderback v001 static is the fallback)",
+    "card": "chog-units/v001/boulderback/card-portrait.png (v001 card:boulderback is the fallback)"
    },
    "required": [
     {
@@ -341,7 +341,7 @@
       "defeat"
      ],
      "pivot": "feet/base shared across frames",
-     "status": "missing"
+     "status": "produced in slice 3 (one front three-quarter view, mirrored on X), owner art approval pending"
     },
     {
      "asset": "card art",
@@ -349,10 +349,10 @@
       "72x96",
       "46x61"
      ],
-     "status": "missing"
+     "status": "produced in slice 3, checked at both sizes, owner art approval pending"
     }
    ],
-   "priority": "next slice",
+   "priority": "slice 3 done, owner review",
    "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
   },
   {

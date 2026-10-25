@@ -1,0 +1,89 @@
+[
+ {
+  "seat": 0,
+  "viewport": [
+   390,
+   844
+  ],
+  "errors": [],
+  "failed": [],
+  "census": {
+   "boulderback:attack": 950,
+   "choglings:attack": 1155,
+   "choglings:defeat": 243,
+   "choglings:idle": 1232,
+   "boulderback:move": 451,
+   "boulderback:defeat": 110,
+   "choglings:move": 578,
+   "choglings:hit": 47,
+   "boulderback:idle": 370,
+   "boulderback:hit": 279
+  },
+  "marker": {
+   "ok": 1711,
+   "bad": 0,
+   "colors": {
+    "2f80ed": 440,
+    "e0393e": 1271
+   }
+  }
+ },
+ {
+  "seat": 1,
+  "viewport": [
+   390,
+   844
+  ],
+  "errors": [],
+  "failed": [],
+  "census": {
+   "boulderback:attack": 918,
+   "choglings:attack": 1153,
+   "boulderback:defeat": 111,
+   "boulderback:move": 509,
+   "choglings:idle": 1152,
+   "choglings:defeat": 226,
+   "choglings:hit": 69,
+   "choglings:move": 664,
+   "boulderback:idle": 372,
+   "boulderback:hit": 277
+  },
+  "marker": {
+   "ok": 1771,
+   "bad": 0,
+   "colors": {
+    "e0393e": 468,
+    "2f80ed": 1303
+   }
+  }
+ },
+ {
+  "seat": 0,
+  "viewport": [
+   1366,
+   768
+  ],
+  "errors": [],
+  "failed": [],
+  "census": {
+   "boulderback:idle": 361,
+   "choglings:idle": 1205,
+   "choglings:defeat": 241,
+   "boulderback:move": 503,
+   "boulderback:defeat": 110,
+   "choglings:move": 665,
+   "choglings:hit": 47,
+   "boulderback:attack": 962,
+   "choglings:attack": 1178,
+   "boulderback:hit": 273
+  },
+  "marker": {
+   "ok": 1816,
+   "bad": 0,
+   "colors": {
+    "2f80ed": 497,
+    "e0393e": 1319
+   }
+  }
+ }
+]

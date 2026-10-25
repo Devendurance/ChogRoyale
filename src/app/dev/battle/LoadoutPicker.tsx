@@ -9,7 +9,7 @@ import { chooseInitialLoadout, LOADOUT_SCHEMA_VERSION, type SavedLoadout } from 
 import { GameIcon } from "@/components/game/GameIcon";
 import { Portrait } from "./portrait";
 import { useSpriteManifest } from "./use-sprite-manifest";
-import { portraitForCard, portraitForCommanderClass } from "./sprite-registry";
+import { portraitCandidatesForCard, portraitForCommanderClass } from "./sprite-registry";
 import { candidateLabel, usableCandidate, type CommanderCandidate } from "./commander-candidate";
 import "./loadout-picker.css";
 
@@ -196,7 +196,7 @@ export default function LoadoutPicker({ lobby, mine, getAccessToken, onConfirm, 
             {Array.from({ length: 7 }, (_, index) => {
               const card = catalog.get(displayedCards[index]);
               return <div className={`lp-card${card ? "" : " lp-card--empty"}`} key={index}>
-                {card ? <><span className="lp-cost" aria-label={`${card.cost} energy`}>{card.cost}</span><Portrait key={card.id} src={kit ? portraitForCard(kit, card.id) : null} name={card.name} className="lp-card-art" style={{ objectFit: "contain" }} /><span className="lp-card-name">{card.name}</span></> : <><span className="lp-empty-mark" aria-hidden="true">+</span><span className="lp-card-name">Choose a card</span></>}
+                {card ? <><span className="lp-cost" aria-label={`${card.cost} energy`}>{card.cost}</span><Portrait key={card.id} src={kit ? portraitCandidatesForCard(kit, card.id) : null} name={card.name} className="lp-card-art" style={{ objectFit: "contain" }} /><span className="lp-card-name">{card.name}</span></> : <><span className="lp-empty-mark" aria-hidden="true">+</span><span className="lp-card-name">Choose a card</span></>}
               </div>;
             })}
           </div>
@@ -230,7 +230,7 @@ export default function LoadoutPicker({ lobby, mine, getAccessToken, onConfirm, 
             <p className="lp-help">Select seven different cards. Remove a selected card before adding a replacement.</p>
             <div className="lp-collection">{ordinary.map((card) => {
               const selected = cards.includes(card.id);
-              return <button type="button" className={`lp-choice${selected ? " lp-choice--selected" : ""}`} key={card.id} aria-pressed={selected} aria-label={`${selected ? "Remove" : "Add"} ${card.name}, ${card.cost} energy`} title={card.description} disabled={frozen || (!selected && cards.length >= 7)} onClick={() => toggle(card.id)}><span className="lp-cost">{card.cost}</span><Portrait src={kit ? portraitForCard(kit, card.id) : null} name={card.name} style={{ objectFit: "contain" }} /><span>{card.name}</span>{selected && <GameIcon kind="ready" size={18} className="lp-choice-check" />}</button>;
+              return <button type="button" className={`lp-choice${selected ? " lp-choice--selected" : ""}`} key={card.id} aria-pressed={selected} aria-label={`${selected ? "Remove" : "Add"} ${card.name}, ${card.cost} energy`} title={card.description} disabled={frozen || (!selected && cards.length >= 7)} onClick={() => toggle(card.id)}><span className="lp-cost">{card.cost}</span><Portrait src={kit ? portraitCandidatesForCard(kit, card.id) : null} name={card.name} style={{ objectFit: "contain" }} /><span>{card.name}</span>{selected && <GameIcon kind="ready" size={18} className="lp-choice-check" />}</button>;
             })}</div>
             <details className="lp-subdetails"><summary>Card details</summary>{ordinary.filter((card) => cards.includes(card.id)).map((card) => <p key={card.id}><strong>{card.name}</strong> · {card.cost} energy · {card.kind}{card.air ? " · Air" : ""}<br />{card.description}</p>)}</details>
           </div>

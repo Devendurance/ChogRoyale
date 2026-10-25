@@ -128,6 +128,19 @@ export function portraitForCard(manifest: SpriteManifest, cardId: string): strin
   return portraitUrl(rec);
 }
 
+/** Slice 3 card portraits rendered from the animated 3D models. The v001
+ * portrait stays second so a failed load falls back to the approved art. */
+export const UNIT_CARD_PORTRAITS: Record<string, string> = {
+  choglings: "/assets/chog-units/v001/choglings/card-portrait.png",
+  boulderback: "/assets/chog-units/v001/boulderback/card-portrait.png",
+};
+
+/** Ordered portrait sources for an ordinary card: new art first, then v001. */
+export function portraitCandidatesForCard(manifest: SpriteManifest, cardId: string): string[] {
+  const legacy = portraitForCard(manifest, cardId);
+  return [UNIT_CARD_PORTRAITS[cardId], legacy].filter((s): s is string => !!s);
+}
+
 /** Class-template portrait for a commander, resolved by server-verified class
  * only. Never resolves an NFT token id to portrait art. */
 export function portraitForCommanderClass(manifest: SpriteManifest, cls: string): string | null {

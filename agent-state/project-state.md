@@ -1,5 +1,11 @@
 # Project State
 
+## Visual overhaul v3, slice 3 (2026-10-25)
+
+- Choglings and Boulderback animate from pre-rendered sheets in `public/assets/chog-units/v001` (idle, move, attack, hit, defeat; one front three-quarter view mirrored on X). Source in `tools/blender/chog-units-v001`, masters in `ChogRoyale-Assets/chog-units-v001`.
+- `unit-anim.ts` picks frames from authoritative data only (stationary with a ground foe in ruleset reach = swing, HP drop = hit, removal = defeat). BattleCanvas falls back to the v001 static sprite per unit. New 256x256 card portraits are served first with v001 portraits as fallback.
+- Troop and building allegiance markers use the tower `TEAM_COLORS`. Readiness doc section 12 records the details.
+
 ## Visual overhaul v3, slice 2.1 (2026-10-25)
 
 - Same v003 package and manifest schema, re-rendered from refined scripts. Defender identities corrected against cards 21 and 07, towers and arena polished. Weapon anchors, pivots, ground anchors, geometry projections, ripple layers and Chaos overlays unchanged. Only health-bar tops moved 2 to 5 board px. Runtime size about 1.8 MB.

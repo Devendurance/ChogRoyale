@@ -1,0 +1,147 @@
+// Packs build_units.py frames into Phaser spritesheets, downsamples the card
+// portraits to the 256x256 contract and writes units.runtime.json.
+//   node pack_units.cjs <masters_dir> <public_out_dir> [review_dir]
+// Every frame shares one cell size and ground pivot. The packer fails if a
+// frame touches its cell border, which would mean a cropped pose.
+const fs = require("fs");
+const path = require("path");
+const crypto = require("crypto");
+const sharp = require(path.join(__dirname, "../../../../node_modules/sharp"));
+sharp.cache(false);
+
+const [mastersDir, outDir, reviewDir] = process.argv.slice(2);
+const CLIP_ORDER = ["idle", "move", "attack", "hit", "defeat"];
+const COLUMNS = 8;
+// Ruleset-derived timing (TROOP_CARDS_V1, 10 ticks/s). unit-anim.test.ts
+// checks these against the live ruleset so they can't silently drift.
+const RULES = {
+  choglings: { attackIntervalTicks: 8, range: 2, targetBoardHeight: 34 },
+  boulderback: { attackIntervalTicks: 12, range: 2, targetBoardHeight: 48 },
+};
+
+const sha = (buf) => crypto.createHash("sha256").update(buf).digest("hex");
+const write = (file, buf) => {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  for (let i = 0; ; i++) {
+    try {
+      fs.writeFileSync(file, buf);
+      return;
+    } catch (e) {
+      if (i > 5) throw e;
+    }
+  }
+};
+
+async function alphaInfo(file) {
+  const { data, info } = await sharp(file).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const { width: w, height: h } = info;
+  let top = h, bottom = -1, left = w, right = -1, border = 0;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const a = data[(y * w + x) * 4 + 3];
+      if (!a) continue;
+      if (x === 0 || y === 0 || x === w - 1 || y === h - 1) border = Math.max(border, a);
+      if (a > 24) {
+        top = Math.min(top, y);
+        bottom = Math.max(bottom, y);
+        left = Math.min(left, x);
+        right = Math.max(right, x);
+      }
+    }
+  }
+  return { top, bottom, left, right, border };
+}
+
+const label = (text, w, h, size = 13) =>
+  Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><text x="4" y="${size + 2}" font-family="Arial" font-weight="700" font-size="${size}" fill="#ffffff" stroke="#1d1424" stroke-width="3" paint-order="stroke">${text}</text></svg>`);
+
+(async () => {
+  const manifest = { schema: 1, version: "chog-units-v001", source: "tools/blender/chog-units-v001", units: {} };
+  for (const unit of Object.keys(RULES)) {
+    const rec = JSON.parse(fs.readFileSync(path.join(mastersDir, unit, "record.json"), "utf8"));
+    const [cw, ch] = rec.cell;
+    const clips = {};
+    const frames = [];
+    for (const clip of CLIP_ORDER) {
+      const c = rec.clips[clip];
+      if (!c) throw new Error(`${unit}: missing clip ${clip}`);
+      clips[clip] = { start: frames.length, count: c.files.length, fps: c.fps, loop: c.loop, ...(c.impact != null ? { impact: c.impact } : {}) };
+      for (const f of c.files) frames.push({ clip, file: path.join(mastersDir, unit, f) });
+    }
+    let idleTop = ch;
+    let worstBorder = 0;
+    for (const fr of frames) {
+      fr.alpha = await alphaInfo(fr.file);
+      worstBorder = Math.max(worstBorder, fr.alpha.border);
+      if (fr.clip === "idle") idleTop = Math.min(idleTop, fr.alpha.top);
+    }
+    if (worstBorder > 0) {
+      const bad = frames.filter((f) => f.alpha.border > 0).map((f) => `${path.basename(f.file)} [${f.alpha.left},${f.alpha.top},${f.alpha.right},${f.alpha.bottom}]`);
+      throw new Error(`${unit}: frames touch their cell border: ${bad.join(" ")}`);
+    }
+    const rows = Math.ceil(frames.length / COLUMNS);
+    const sheet = await sharp({ create: { width: COLUMNS * cw, height: rows * ch, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
+      .composite(frames.map((fr, i) => ({ input: fr.file, left: (i % COLUMNS) * cw, top: Math.floor(i / COLUMNS) * ch })))
+      .png({ compressionLevel: 9, palette: false })
+      .toBuffer();
+    const sheetRel = `${unit}/sheet.png`;
+    write(path.join(outDir, sheetRel), sheet);
+    const portrait = await sharp(path.join(mastersDir, unit, "card-portrait@2x.png")).resize(256, 256, { kernel: "lanczos3" }).png({ compressionLevel: 9 }).toBuffer();
+    const portraitRel = `${unit}/card-portrait.png`;
+    write(path.join(outDir, portraitRel), portrait);
+    const visibleHeight = rec.pivot[1] - idleTop;
+    const rules = RULES[unit];
+    const displayScale = Math.round((rules.targetBoardHeight / visibleHeight) * 1000) / 1000;
+    const defeat = clips.defeat;
+    manifest.units[unit] = {
+      entityId: unit,
+      sheet: sheetRel,
+      sha256: sha(sheet),
+      width: COLUMNS * cw,
+      height: rows * ch,
+      frameWidth: cw,
+      frameHeight: ch,
+      columns: COLUMNS,
+      frameCount: frames.length,
+      pivot: rec.pivot,
+      pivotNormalized: [rec.pivot[0] / cw, rec.pivot[1] / ch],
+      visibleHeight,
+      displayScale,
+      facing: "right",
+      clips,
+      attackPeriodMs: rules.attackIntervalTicks * 100,
+      reach: rules.range,
+      defeatMs: Math.round((defeat.count / defeat.fps) * 1000),
+      portrait: portraitRel,
+      portraitSha256: sha(portrait),
+      camera: { tiltDeg: rec.tiltDeg, yawDeg: rec.yawDeg, pxPerUnit: rec.pxPerUnit },
+    };
+    console.log(unit, `${frames.length} frames`, `${COLUMNS * cw}x${rows * ch}`, `${(sheet.length / 1024).toFixed(1)} KB`, `visible ${visibleHeight}px`, `scale ${displayScale}`);
+
+    if (reviewDir) {
+      // Contact sheet: one row per clip on arena grass, 2x, frame index labels.
+      const k = 2;
+      const maxCount = Math.max(...CLIP_ORDER.map((c) => clips[c].count));
+      const W = 90 + maxCount * cw * k;
+      const H = CLIP_ORDER.length * ch * k;
+      const comp = [];
+      for (const [ri, clip] of CLIP_ORDER.entries()) {
+        comp.push({ input: label(`${clip} ${clips[clip].fps}fps`, 90, 40, 13), left: 0, top: ri * ch * k + 8 });
+        for (let i = 0; i < clips[clip].count; i++) {
+          const fr = frames[clips[clip].start + i];
+          const big = await sharp(fr.file).resize(cw * k, ch * k, { kernel: "lanczos3" }).toBuffer();
+          comp.push({ input: big, left: 90 + i * cw * k, top: ri * ch * k });
+          comp.push({ input: label(String(i) + (clips[clip].impact === i ? " hit" : ""), 60, 20, 12), left: 90 + i * cw * k, top: ri * ch * k });
+          // Ground pivot tick so foot anchoring is visible across the row.
+          comp.push({ input: { create: { width: 9, height: 2, channels: 4, background: "#ff3355" } }, left: 90 + i * cw * k + rec.pivot[0] * k - 4, top: ri * ch * k + rec.pivot[1] * k });
+        }
+      }
+      await sharp({ create: { width: W, height: H, channels: 4, background: "#6f9f55" } }).composite(comp).png().toFile(path.join(reviewDir, `${unit}-contact-sheet.png`));
+    }
+  }
+  write(path.join(outDir, "manifests/units.runtime.json"), Buffer.from(JSON.stringify(manifest, null, 2) + "\n"));
+  console.log("wrote", path.join(outDir, "manifests/units.runtime.json"));
+})().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

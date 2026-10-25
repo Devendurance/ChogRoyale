@@ -1,0 +1,137 @@
+{
+  "schema": 1,
+  "version": "chog-units-v001",
+  "source": "tools/blender/chog-units-v001",
+  "units": {
+    "choglings": {
+      "entityId": "choglings",
+      "sheet": "choglings/sheet.png",
+      "sha256": "785e79df068adb673c03f2f221679dd7f732cecb01f5c9df165654178cd536fe",
+      "width": 896,
+      "height": 448,
+      "frameWidth": 112,
+      "frameHeight": 112,
+      "columns": 8,
+      "frameCount": 31,
+      "pivot": [
+        56,
+        94
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.8392857142857143
+      ],
+      "visibleHeight": 59,
+      "displayScale": 0.576,
+      "facing": "right",
+      "clips": {
+        "idle": {
+          "start": 0,
+          "count": 6,
+          "fps": 8,
+          "loop": true
+        },
+        "move": {
+          "start": 6,
+          "count": 8,
+          "fps": 14,
+          "loop": true
+        },
+        "attack": {
+          "start": 14,
+          "count": 6,
+          "fps": 16,
+          "loop": false,
+          "impact": 3
+        },
+        "hit": {
+          "start": 20,
+          "count": 3,
+          "fps": 14,
+          "loop": false
+        },
+        "defeat": {
+          "start": 23,
+          "count": 8,
+          "fps": 14,
+          "loop": false
+        }
+      },
+      "attackPeriodMs": 800,
+      "reach": 2,
+      "defeatMs": 571,
+      "portrait": "choglings/card-portrait.png",
+      "portraitSha256": "49d491609fede46f905c3a38b7489b1c6fd1d9cd3183e7bb968fdabafb7a0ad0",
+      "camera": {
+        "tiltDeg": 52,
+        "yawDeg": 24.000000000000004,
+        "pxPerUnit": 12
+      }
+    },
+    "boulderback": {
+      "entityId": "boulderback",
+      "sheet": "boulderback/sheet.png",
+      "sha256": "9ea864b495462b8c0bba3bc35e0cf5cb157ee5c6501dd6fcc4b491c73b45dfab",
+      "width": 1280,
+      "height": 880,
+      "frameWidth": 160,
+      "frameHeight": 176,
+      "columns": 8,
+      "frameCount": 35,
+      "pivot": [
+        80,
+        126
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.7159090909090909
+      ],
+      "visibleHeight": 83,
+      "displayScale": 0.578,
+      "facing": "right",
+      "clips": {
+        "idle": {
+          "start": 0,
+          "count": 6,
+          "fps": 6,
+          "loop": true
+        },
+        "move": {
+          "start": 6,
+          "count": 8,
+          "fps": 9,
+          "loop": true
+        },
+        "attack": {
+          "start": 14,
+          "count": 8,
+          "fps": 11,
+          "loop": false,
+          "impact": 4
+        },
+        "hit": {
+          "start": 22,
+          "count": 4,
+          "fps": 12,
+          "loop": false
+        },
+        "defeat": {
+          "start": 26,
+          "count": 9,
+          "fps": 10,
+          "loop": false
+        }
+      },
+      "attackPeriodMs": 1200,
+      "reach": 2,
+      "defeatMs": 900,
+      "portrait": "boulderback/card-portrait.png",
+      "portraitSha256": "e03aa627a9f54d3eea3f7b9f3ecd4cbfc642ddff493c200196d5eac0e2b012b1",
+      "camera": {
+        "tiltDeg": 52,
+        "yawDeg": 24.000000000000004,
+        "pxPerUnit": 18
+      }
+    }
+  }
+}

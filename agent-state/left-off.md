@@ -1,3 +1,9 @@
+## Visual overhaul v3, slice 3 (2026-10-25)
+
+- Doing: first animated Chogs (Choglings, Boulderback) on `visual-overhaul/v3-slice2`. Slice 2.1 is the approved arena/defender baseline, don't revisit it. Local commit only, no push, PR or deploy.
+- Done: `tools/blender/chog-units-v001` (build_units.py, pack_units.cjs, card_check.cjs), sheets and card portraits in `public/assets/chog-units/v001`, `unit-anim.ts` (+ tests), BattleCanvas spritesheet wiring with v001 fallback, portrait candidates with v001 fallback, blue/red troop rings. Battle tests 135/135, tsc, scoped lint green. Review set in `ChogRoyale-Assets/chog-units-v001/review/` and `docs/visual-overhaul/review/slice3/`.
+- Next: owner review of both units and card art. Then the other 23 cards and `burrow_scrapper`, spell VFX. Live two-login match, phone pass and performance still unverified.
+
 ## Visual overhaul v3, slice 2.1 (2026-10-25)
 
 - Doing: defender identity correction and arena polish on `visual-overhaul/v3-slice2`, refining the existing slice 2 Blender scripts. Local commit only, no push, PR or deploy.

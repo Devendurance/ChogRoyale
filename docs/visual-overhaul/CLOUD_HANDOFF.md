@@ -8,21 +8,25 @@ Branch `visual-overhaul/v3-slice2` on `github.com/Devendurance/ChogRoyale`. Not 
 - `88323d8` reference pack v1 (reference only, nothing game-ready).
 - `9096930` slice 2: v003 pre-rendered arena and red/blue team defender mounts, v002 fallback.
 - `5774ee0` slice 2.1: Bulwark and Chog Guardian identity correction, tower and arena polish. Complete, not WIP.
-- The commit that adds this file: Blender scripts, review images and this handoff.
+- `911bb69`: Blender scripts, review images and this handoff.
+- Slice 3 commit (after `911bb69`): animated Choglings and Boulderback, new card portraits, blue/red troop rings. Approved Slice 2.1 is the arena and defender baseline.
 
 ## Status
 
 Done and integrated in Phaser: v003 arena (12 Blender layers plus the reused v002 Chaos overlays), four mount roles (`lane-red`, `king-red` Bulwark aiming south, `lane-blue`, `king-blue` Chog Guardian aiming north). Renderer falls back to v002 if v003 fails to load. Battle tests 121/121, typecheck, scoped lint and `next build` passed at `5774ee0`.
 
-Not done: owner approval of the defenders and arena, Choglings and Boulderback animation atlases, the other 23 cards, `burrow_scrapper`, spell VFX, live two-login match, phone test, live tower fire, performance. Troop ring colour (cyan/coral vs blue/red) is an open owner decision.
+Slice 3: Choglings and Boulderback animate from pre-rendered sheets (idle, move, attack, hit, defeat) in `public/assets/chog-units/v001`, with new card portraits and the v001 sprite and portrait as fallbacks. Troop rings are now blue for the viewer and red for the opponent. Battle tests 135/135, typecheck and `next build` pass.
+
+Not done: owner approval of the Slice 3 units and card art, the other 23 cards, `burrow_scrapper`, spell VFX, live two-login match, phone test, live tower fire, performance.
 
 ## Where things live
 
 - Approved v3 handoff and art bible: `Chog_Royale_Visual_Overhaul_Handoff_v3_CORRECTED/` and `Chog_Royale_Devin_Asset_Reference_Pack_v1/07_APPROVED_V3_ART_BIBLE/`.
 - Original 25-card identity (canonical): `Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/`. 3D style studies: `02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/`. Arena, tower, defender, material and lighting references: `01_ARENA/`, `03_MATERIALS/`, `04_LIGHTING_AND_STYLE/`.
 - Game assets: `public/assets/arena/chaos-crossing/v003/` with runtime manifest `manifests/arena.runtime.json`.
-- Asset queue: `docs/chog-asset-production-manifest.json`. History and limits: `docs/chog-visual-overhaul-readiness.md` sections 10 and 11.
-- Review images: `docs/visual-overhaul/review/slice2-1/` (Bulwark and Guardian comparisons, assembled mounts, both seats at 390x844 and 1366x768 in `after/`, before/after, fallback) and `docs/visual-overhaul/review/slice2/` (slice 2 identity sheet and seat comparison).
+- Unit sheets and portraits: `public/assets/chog-units/v001/` with `manifests/units.runtime.json`. Frame logic: `src/app/dev/battle/unit-anim.ts`.
+- Asset queue: `docs/chog-asset-production-manifest.json`. History and limits: `docs/chog-visual-overhaul-readiness.md` sections 10 to 12.
+- Review images: `docs/visual-overhaul/review/slice3/` (unit comparisons, contact sheets, card check, both seats at 390x844, a short playback video, fallback), `docs/visual-overhaul/review/slice2-1/` (Bulwark and Guardian comparisons, assembled mounts, both seats at 390x844 and 1366x768 in `after/`, before/after, fallback) and `docs/visual-overhaul/review/slice2/` (slice 2 identity sheet and seat comparison).
 - Renderer and registry: `src/app/dev/battle/BattleCanvas.tsx`, `src/app/dev/battle/arena-registry.ts` (tests beside it). Importer: `scripts/import-arena-v003.ts`.
 
 ## Blender pipeline
@@ -44,6 +48,8 @@ Rebuild order:
 3. From the repo root: `node <workspace>/scripts/export_gameplay.cjs`
 4. `npx tsx scripts/import-arena-v003.ts`
 
+Units: `tools/blender/chog-units-v001/scripts/build_units.py` (imports `common.py` from the v003 scripts), then `pack_units.cjs <masters> <out> [review]` and copy `<out>` to `public/assets/chog-units/v001`. `card_check.cjs <repo>/public <png>` renders the card readability sheet. A full unit render takes about 2.5 minutes.
+
 Master renders and `.blend` files weren't committed. They regenerate deterministically from the scripts, and full renders take about 14 minutes.
 
 ## Tools the cloud needs
@@ -59,7 +65,7 @@ Node and the repo dependencies (`npm ci`, which includes sharp and playwright-co
 
 ## Next step
 
-Get owner review of the slice 2.1 images. Then produce Choglings and Boulderback transparent animation atlases (idle, move, attack, hit, defeat) from the canonical card art, plus their card art checked at 72x96 and 46x61.
+Get owner review of the Slice 3 units and card art in `review/slice3/`. Then extend the same unit pipeline to the next roster cards, one or two per slice.
 
 ## Rules for continuing
 

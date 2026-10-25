@@ -1,0 +1,148 @@
+// Pure presentation layer for pre-rendered unit animation sheets (Slice 3).
+// No Phaser import. BattleCanvas asks this module which sheet frame to draw
+// from authoritative frame data only: position deltas, HP drops, removal and
+// distance to enemies. It never predicts damage, targeting or movement.
+
+export type UnitClipName = "idle" | "move" | "attack" | "hit" | "defeat";
+
+export interface UnitClip {
+  /** First frame index in the sheet. */
+  start: number;
+  count: number;
+  fps: number;
+  loop: boolean;
+  /** Frame (within the clip) where the blow lands. */
+  impact?: number;
+}
+
+export interface UnitAnimRecord {
+  entityId: string;
+  sheet: string;
+  sha256: string;
+  width: number;
+  height: number;
+  frameWidth: number;
+  frameHeight: number;
+  columns: number;
+  frameCount: number;
+  pivot: [number, number];
+  pivotNormalized: [number, number];
+  /** Idle height from the ground pivot to the top of the art, sheet px. */
+  visibleHeight: number;
+  /** Board px per sheet px. */
+  displayScale: number;
+  facing: "right";
+  clips: Record<UnitClipName, UnitClip>;
+  /** attackIntervalTicks x 100 ms, from the ruleset. */
+  attackPeriodMs: number;
+  /** Ruleset attack range in arena units. */
+  reach: number;
+  defeatMs: number;
+  portrait: string;
+  portraitSha256: string;
+}
+
+export interface UnitAnimManifest {
+  schema: 1;
+  version: string;
+  units: Record<string, UnitAnimRecord>;
+}
+
+export const UNITS_URL = "/assets/chog-units/v001";
+export const UNITS_MANIFEST_URL = `${UNITS_URL}/manifests/units.runtime.json`;
+
+export const unitTextureKey = (entityId: string) => `unit:${entityId}`;
+
+export const unitAnimFor = (manifest: UnitAnimManifest | null, cardId: string): UnitAnimRecord | null =>
+  manifest?.units[cardId] ?? null;
+
+export const clipDurationMs = (clip: UnitClip) => (clip.count * 1000) / clip.fps;
+
+/** Absolute sheet frame for a clip after `elapsedMs`. Loops wrap, one-shots hold. */
+export const clipFrame = (clip: UnitClip, elapsedMs: number): number => {
+  const i = Math.floor((Math.max(0, elapsedMs) * clip.fps) / 1000);
+  return clip.start + (clip.loop ? i % clip.count : Math.min(i, clip.count - 1));
+};
+
+export interface UnitAnimState {
+  /** When the current engagement began. The swing cycle is anchored here. */
+  engagedSince: number | null;
+  /** Last observed authoritative HP drop. */
+  hitAt: number;
+  /** Removal or death time. */
+  goneAt: number | null;
+  /** Per-entity loop offset so a swarm never moves in lockstep. */
+  offsetMs: number;
+}
+
+export const newUnitAnimState = (offsetMs = 0): UnitAnimState => ({ engagedSince: null, hitAt: -Infinity, goneAt: null, offsetMs });
+
+/** Tracks engagement edges. Returns a new state, never mutates. */
+export const updateEngagement = (st: UnitAnimState, engaged: boolean, now: number): UnitAnimState =>
+  engaged ? (st.engagedSince === null ? { ...st, engagedSince: now } : st) : st.engagedSince === null ? st : { ...st, engagedSince: null };
+
+/**
+ * Picks the clip and sheet frame. Priority: defeat, a swing in progress, a hit
+ * reaction, movement, then idle. Between swings an engaged unit idles so the
+ * next blow reads as a fresh windup.
+ */
+export function unitFrame(
+  rec: UnitAnimRecord,
+  st: UnitAnimState,
+  input: { now: number; moving: boolean }
+): { clip: UnitClipName; frame: number } {
+  const { now, moving } = input;
+  const c = rec.clips;
+  if (st.goneAt !== null) return { clip: "defeat", frame: clipFrame(c.defeat, now - st.goneAt) };
+  if (st.engagedSince !== null) {
+    const phase = (now - st.engagedSince) % rec.attackPeriodMs;
+    if (phase < clipDurationMs(c.attack)) return { clip: "attack", frame: clipFrame(c.attack, phase) };
+  }
+  if (now - st.hitAt < clipDurationMs(c.hit)) return { clip: "hit", frame: clipFrame(c.hit, now - st.hitAt) };
+  if (moving && st.engagedSince === null) return { clip: "move", frame: clipFrame(c.move, now + st.offsetMs) };
+  return { clip: "idle", frame: clipFrame(c.idle, now + st.offsetMs) };
+}
+
+/** Defeat fade: opaque for most of the clip, then out over the last 35%. */
+export const defeatAlpha = (rec: UnitAnimRecord, elapsedMs: number): number => {
+  const p = elapsedMs / rec.defeatMs;
+  return p <= 0.65 ? 1 : Math.max(0, 1 - (p - 0.65) / 0.35);
+};
+
+export interface Foe {
+  x: number;
+  y: number;
+  /** Footprint half-size; 0 for units (center distance), like combat reach2. */
+  r: number;
+  air?: boolean;
+}
+
+/** Same metric as combat `reach2`: center distance for units, gap to the
+ * footprint ring (r + 1) for structures and buildings. */
+export const reachSq = (ux: number, uy: number, t: Foe): number => {
+  if (t.r <= 0) return (ux - t.x) ** 2 + (uy - t.y) ** 2;
+  const dx = Math.max(0, Math.abs(ux - t.x) - (t.r + 1));
+  const dy = Math.max(0, Math.abs(uy - t.y) - (t.r + 1));
+  return dx * dx + dy * dy;
+};
+
+/**
+ * Presentation-only melee engagement: a stationary unit with a ground foe in
+ * reach (plus a little slack for tick quantisation). The public frame has no
+ * melee event, so this mirrors the ruleset's own range test instead.
+ * Returns the nearest foe in reach, or null.
+ */
+export function engagedFoe(u: { x: number; y: number }, reach: number, foes: Foe[], slack = 0.75): Foe | null {
+  const lim = (reach + slack) ** 2;
+  let best: Foe | null = null;
+  let bestD = Infinity;
+  for (const f of foes) {
+    if (f.air) continue;
+    const d = reachSq(u.x, u.y, f);
+    if (d <= lim && d < bestD) {
+      best = f;
+      bestD = d;
+    }
+  }
+  return best;
+}

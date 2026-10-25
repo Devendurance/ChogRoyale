@@ -49,6 +49,21 @@ import {
   type ArenaManifest,
   type DefenderState,
 } from "./arena-registry";
+import {
+  UNITS_MANIFEST_URL,
+  UNITS_URL,
+  defeatAlpha,
+  engagedFoe,
+  newUnitAnimState,
+  unitAnimFor,
+  unitFrame,
+  unitTextureKey,
+  updateEngagement,
+  type Foe,
+  type UnitAnimManifest,
+  type UnitAnimRecord,
+  type UnitAnimState,
+} from "./unit-anim";
 
 // First arena manifest that loads wins: v003 pre-rendered 2.5D art, else v002.
 const loadArena = async (): Promise<{ arena: ArenaManifest; base: string } | null> => {
@@ -64,8 +79,10 @@ const loadArena = async (): Promise<{ arena: ArenaManifest; base: string } | nul
 };
 
 const S = 5; // pixels per arena unit
-const OWN = 0x36dbe8;
-const FOE = 0xf27978;
+// Allegiance follows the v3 orientation lock: the viewer is blue, the
+// opponent red, derived from owner === seat for both perspectives.
+const OWN = TEAM_COLORS.friendly;
+const FOE = TEAM_COLORS.opponent;
 const KIT_URL = "/assets/chog-kit/v001";
 
 export interface CanvasFeed {
@@ -101,6 +118,13 @@ interface Props {
   hostStyle?: React.CSSProperties;
 }
 
+/** Authoritative motion for an animated unit: frame-to-frame position delta and the foe in reach. */
+interface UnitMotion {
+  moving: boolean;
+  foe: Foe | null;
+  dx: number;
+}
+
 const hashPhase = (id: string) => {
   let h = 0;
   for (const c of id) h = (h * 31 + c.charCodeAt(0)) % 6283;
@@ -133,7 +157,10 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
         .then((r) => (r.ok ? (r.json() as Promise<SpriteManifest>) : null))
         .catch(() => null),
       loadArena(),
-    ]).then(([Phaser, manifest, arenaLoad]) => {
+      fetch(UNITS_MANIFEST_URL)
+        .then((r) => (r.ok ? (r.json() as Promise<UnitAnimManifest>) : null))
+        .catch(() => null),
+    ]).then(([Phaser, manifest, arenaLoad, unitManifest]) => {
       if (cancelled || !host.current) return;
       const arena = arenaLoad?.arena ?? null;
       const arenaBase = arenaLoad?.base ?? "";
@@ -164,6 +191,9 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
         rubble: boolean;
         baseScale: number;
         phase: number;
+        /** Pre-rendered animation sheet, or null for the static v001 sprite. */
+        anim: UnitAnimRecord | null;
+        animSt: UnitAnimState;
       }
       interface FxImg {
         img: import("phaser").GameObjects.Image;
@@ -241,6 +271,9 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
         preload() {
           this.load.on("loaderror", (file: { key: string }) => missing.add(file.key));
           if (manifest) for (const a of manifest.assets) this.load.image(a.stableAssetId, `${KIT_URL}/${a.path}`);
+          for (const u of Object.values(unitManifest?.units ?? {})) {
+            this.load.spritesheet(unitTextureKey(u.entityId), `${UNITS_URL}/${u.sheet}`, { frameWidth: u.frameWidth, frameHeight: u.frameHeight });
+          }
           if (arena) {
             for (const l of arena.layers) this.load.image(`arena:layer:${l.id}`, `${arenaBase}/${l.path}`);
             for (const [role, r] of Object.entries(arena.mounts)) {
@@ -423,7 +456,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
           // ground point; shadow + owner ring hug the ground while the sprite
           // image hangs from its authored pivot. Motion offsets only move the
           // image, so hp bars and rings stay put.
-          const ensure = (id: string, r: SpriteRecord, air: boolean, owner: number): PoolEnt => {
+          const ensure = (id: string, r: SpriteRecord, air: boolean, owner: number, anim: UnitAnimRecord | null = null): PoolEnt => {
             let e = pool.get(id);
             if (!e) {
               const root = this.add.container(0, 0);
@@ -431,13 +464,19 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
               // color with a brighter outline, sized to the sprite's visible
               // footprint so structures read larger. The art itself is never
               // tinted; the dark contact shadow sits on top of the marker.
-              const vis = r.proposedDisplaySize.visibleHeight * displayScale(r);
+              // Animated sheets size it from half their drawn height, the same
+              // proportion the v001 records produce.
+              const scale = anim ? anim.displayScale : displayScale(r);
+              const vis = anim ? anim.visibleHeight * scale * 0.5 : r.proposedDisplaySize.visibleHeight * scale;
               const ew = Math.max(16, vis * 0.85);
               const marker = this.add.ellipse(0, 0, ew, ew * 0.45, col(owner), 0.35);
               marker.setStrokeStyle(2, owner === seat ? 0x93c5fd : 0xfca5a5, 0.95);
-              const shadow = this.add.ellipse(0, 0, ew * 0.8, ew * 0.35, 0x000000, 0.28);
-              const img = this.add.image(0, air ? -10 : 0, r.stableAssetId);
-              img.setOrigin(r.pivotNormalized[0], r.pivotNormalized[1]).setScale(displayScale(r));
+              const shadow = this.add.ellipse(0, 0, ew * 0.8, ew * 0.35, 0x000000, anim ? 0.34 : 0.28);
+              const img = anim
+                ? this.add.image(0, air ? -10 : 0, unitTextureKey(anim.entityId), anim.clips.idle.start)
+                : this.add.image(0, air ? -10 : 0, r.stableAssetId);
+              const pivot = anim ? anim.pivotNormalized : r.pivotNormalized;
+              img.setOrigin(pivot[0], pivot[1]).setScale(scale);
               root.add([marker, shadow, img]);
               e = {
                 root,
@@ -454,8 +493,10 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                 facingX: 1,
                 gone: null,
                 rubble: false,
-                baseScale: displayScale(r),
+                baseScale: scale,
                 phase: hashPhase(id),
+                anim,
+                animSt: newUnitAnimState(hashPhase(id) * 1000),
               };
               pool.set(id, e);
             }
@@ -468,7 +509,8 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             py: number,
             hp: number,
             moving: boolean,
-            owner: number
+            owner: number,
+            motion?: UnitMotion
           ) => {
             const X = sx(px);
             const Y = sy(py);
@@ -477,6 +519,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             const firstSample = e.lastHp < 0;
             if (e.lastHp >= 0 && hp < e.lastHp) {
               e.flashUntil = now + 140;
+              e.animSt.hitAt = now;
               fx.push({
                 kind: "hit",
                 x: px,
@@ -493,6 +536,21 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             let scaleX = e.baseScale * pop;
             let scaleY = e.baseScale * pop;
             e.img.setAlpha(e.gone === null ? 0.55 + 0.45 * dp : e.img.alpha);
+            if (e.anim) {
+              // Pre-rendered sheet: the frames carry bob, stride, swing, hit
+              // and defeat, so the procedural offsets below are skipped.
+              const m = motion ?? { moving, foe: null, dx: px - e.lastX };
+              e.animSt = updateEngagement(e.animSt, !m.moving && m.foe !== null, now);
+              if (m.foe && Math.abs(m.foe.x - px) > 0.01) e.facingX = m.foe.x < px ? -1 : 1;
+              else if (m.moving && Math.abs(m.dx) > 1e-3) e.facingX = m.dx < 0 ? -1 : 1;
+              e.img.setFrame(unitFrame(e.anim, { ...e.animSt, goneAt: e.gone }, { now, moving: m.moving }).frame);
+              e.img.setPosition(0, e.air ? -10 : 0).setScale(scaleX, scaleY).setFlipX(e.facingX < 0).setRotation(0);
+              if (e.flashUntil > now) e.img.setTint(0xff8a8a);
+              else e.img.clearTint();
+              e.lastX = px;
+              e.lastY = py;
+              return;
+            }
             // Idle bob and move bounce/tilt, all timestamp-driven.
             let ox = 0;
             let oy = 0;
@@ -564,13 +622,21 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             air: boolean,
             owner: number,
             drawPh: () => void,
-            name: string
+            name: string,
+            anim: UnitAnimRecord | null = null,
+            motion?: UnitMotion
           ) => {
             if (r) {
-              const e = ensure(id, r, air, owner);
+              const e = ensure(id, r, air, owner, anim);
               const moving = Math.hypot(x - e.lastX, y - e.lastY) > 0.05;
-              updateEnt(e, id, x, y, hp, moving, owner);
+              updateEnt(e, id, x, y, hp, moving, owner, motion);
               const hpx = sx(x);
+              if (e.anim) {
+                // Animated sheets carry their measured idle height: the bar sits just above the head.
+                const drawn = e.anim.visibleHeight * e.anim.displayScale;
+                hpBar(hpx, sy(y) - drawn - (air ? 14 : 3), Math.max(16, drawn * 0.6), hp, maxHp, shield);
+                return;
+              }
               const hpy = sy(y) - r.proposedDisplaySize.visibleHeight * displayScale(r) - (air ? 14 : 4);
               hpBar(hpx, hpy, Math.max(16, r.proposedDisplaySize.visibleHeight * displayScale(r) * 0.6), hp, maxHp, shield);
             } else {
@@ -790,9 +856,28 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
               og.lineStyle(2, 0xa78bfa, 0.9).beginPath().arc(x, top, 4, -Math.PI / 2, -Math.PI / 2 + frac * Math.PI * 2).strokePath();
             }
           }
+          // Ground foes per owner for presentation-only melee engagement. Radii
+          // follow combat reach2: units by center distance, footprints by ring.
+          const foesOf = (owner: number): Foe[] => [
+            ...frame.troops.filter((t) => t.owner !== owner).map((t) => ({ x: t.x, y: t.y, r: 0, air: t.air })),
+            ...frame.commanders.filter((c) => c.owner !== owner).map((c) => ({ x: c.x, y: c.y, r: 0 })),
+            ...frame.buildings.filter((b) => b.owner !== owner).map((b) => ({ x: b.x, y: b.y, r: b.footprint })),
+            ...frame.structures.filter((s) => s.alive && s.owner !== owner).map((s) => ({ x: s.x, y: s.y, r: s.kind === "core" ? 4 : 3 })),
+          ];
+          const foeCache = new Map<number, Foe[]>();
           for (const u of frame.troops) {
             const p = lerp(u.id, u.x, u.y);
             const r = ent("troop", u.cardId);
+            const anim0 = unitAnimFor(unitManifest, u.cardId);
+            const anim = anim0 && !missing.has(unitTextureKey(anim0.entityId)) && this.textures.exists(unitTextureKey(anim0.entityId)) ? anim0 : null;
+            let motion: UnitMotion | undefined;
+            if (anim) {
+              const before = prevPos.get(u.id);
+              const dx = before ? u.x - before.x : 0;
+              const moving = !!before && Math.hypot(dx, u.y - before.y) > 0.01;
+              if (!foeCache.has(u.owner)) foeCache.set(u.owner, foesOf(u.owner));
+              motion = { moving, dx, foe: moving ? null : engagedFoe(u, anim.reach, foeCache.get(u.owner)!) };
+            }
             spriteOrFallback(
               u.id,
               r,
@@ -812,7 +897,9 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                 } else og.fillStyle(col(u.owner), 1).fillCircle(x, y, 6);
                 hpBar(x, y - 14, 14, u.hp, u.maxHp, u.shield);
               },
-              (start.catalog[u.cardId]?.name ?? u.cardId).slice(0, 2)
+              (start.catalog[u.cardId]?.name ?? u.cardId).slice(0, 2),
+              anim,
+              motion
             );
           }
           for (const c of frame.commanders) {
@@ -1021,7 +1108,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             } else if (e.type === "siege_fired") {
               lungeTo(e.buildingId, Number(e.x), Number(e.y));
             } else if (e.type === "building_spawned") {
-              fx.push({ kind: "ring", x: Number(e.x), y: Number(e.y), r: 4, color: Number(e.player) === seat ? 0x36dbe8 : 0xf27978, until: frame.tick + (reduced ? 3 : 5) });
+              fx.push({ kind: "ring", x: Number(e.x), y: Number(e.y), r: 4, color: Number(e.player) === seat ? OWN : FOE, until: frame.tick + (reduced ? 3 : 5) });
               const prim = manifest ? byId(manifest, "effect:aura") : null;
               if (prim) spawnFx(prim, Number(e.x), Number(e.y), 0.9, 220);
             } else if (e.type === "unit_spawned") {
@@ -1117,10 +1204,15 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
           }
           for (const [id, e] of pool) {
             if (e.gone === null) continue;
-            if (now - e.gone >= 220) {
-              e.root.destroy(true);
-              pool.delete(id);
-            }
+            if (e.anim) {
+              // Animated units play their defeat clip in place, then fade.
+              const el = now - e.gone;
+              e.img.setFrame(unitFrame(e.anim, { ...e.animSt, goneAt: e.gone }, { now, moving: false }).frame).clearTint().setAlpha(1);
+              e.root.setAlpha(defeatAlpha(e.anim, el));
+              if (el < e.anim.defeatMs) continue;
+            } else if (now - e.gone < 220) continue;
+            e.root.destroy(true);
+            pool.delete(id);
           }
           // Placement ghost: green when the advisory check passes, red otherwise.
           if (f.ghost) {

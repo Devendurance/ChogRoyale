@@ -1,5 +1,9 @@
 # Memory
 
+- Unit animation loop: `PREVIEW=1 build_units.py -- <out>` renders identity and gameplay stills at 16 samples in about 20 s. A full both-unit render is about 2.5 minutes. Python locals named like helper functions (`lean`) shadow them for the whole function, so loop variables use other names.
+- Fixture playback harnesses must keep the `StartMessage` object identity stable. BattleCanvas clears every presentation pool when `start` changes, so a fresh object per render restarts swings and hides hit and defeat.
+- Headless Chromium plays the battle canvas at about 1.7 ticks/s on this machine unless launched with `--use-angle=d3d11 --enable-gpu --ignore-gpu-blocklist`, which restores the real 10 ticks/s.
+
 - v003 Blender loop: `PREVIEW=1 build_mounts.py -- <out> [bulwark|guardian]` renders the defender alone at 16 samples (front identity plus gameplay view). `LOWQ=1` drops mounts and arena layers to 16 samples, arena at 50 percent. Rebuilding mount roles by name merges into `_mounts-record.json`. `scripts/montage.cjs` and `scripts/assemble.cjs` make review sheets.
 - Smooth-shaded cones that point toward the high gameplay camera read as round lumps. Back-facing spikes should splay sideways in the view plane and use flat shading. Spikes based at the head centre and pointing radially exit cleanly, while offset bases with a different direction bulge.
 
