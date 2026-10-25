@@ -26,11 +26,14 @@ interface Props {
 const TALLY_LEAD_MS = 750;
 const TALLY_STEP_MS = 340;
 
-function Ribbon({ side, name, crowns, shown, winner, you }: { side: "foe" | "mine"; name: string; crowns: number; shown: number; winner: boolean; you?: boolean }) {
+function Ribbon({ side, name, crowns, shown, winner, you }: { side: "foe" | "mine"; name: string | null; crowns: number; shown: number; winner: boolean; you?: boolean }) {
   return (
     <div className={`chud-finale-ribbon chud-finale-ribbon--${side}`} data-winner={winner}>
-      {winner && <span className="chud-finale-badge">Winner</span>}
-      <span className="chud-finale-name" title={name}>{you && <i className="chud-finale-you">You</i>}{name}</span>
+      <div className="chud-finale-who">
+        {you && <i className="chud-finale-you">You</i>}
+        {name && <span className="chud-finale-name" title={name}>{name}</span>}
+        {winner && <span className="chud-finale-badge">Winner</span>}
+      </div>
       <div className="chud-finale-crowns" role="img" aria-label={`${crowns} ${crowns === 1 ? "crown" : "crowns"}`}>
         {Array.from({ length: 3 }, (_, i) => <span key={i} data-earned={i < shown} aria-hidden="true"><GameIcon kind="crown" size={44} /></span>)}
         <strong aria-hidden="true">{shown}</strong>
@@ -39,7 +42,7 @@ function Ribbon({ side, name, crowns, shown, winner, you }: { side: "foe" | "min
   );
 }
 
-export default function BattleResult({ start, end, abort, settlement, me, playerName = "You", onExit, onAudioCue, rankedAward, rankedAwardStatus }: Props) {
+export default function BattleResult({ start, end, abort, settlement, me, playerName, onExit, onAudioCue, rankedAward, rankedAwardStatus }: Props) {
   const router = useRouter();
   const dialog = useRef<HTMLDivElement>(null);
   const exit = useRef<HTMLButtonElement>(null);
@@ -100,7 +103,7 @@ export default function BattleResult({ start, end, abort, settlement, me, player
         {end && <div className="chud-finale-versus">
           <Ribbon side="foe" name={start.opponent} crowns={view.theirs} shown={tallyAt(step, view.theirs)} winner={view.winner === "theirs"} />
           <span className="chud-finale-vs" aria-hidden="true">VS</span>
-          <Ribbon side="mine" name={playerName} crowns={view.mine} shown={tallyAt(step, view.mine)} winner={view.winner === "mine"} you />
+          <Ribbon side="mine" name={playerName ?? null} crowns={view.mine} shown={tallyAt(step, view.mine)} winner={view.winner === "mine"} you />
         </div>}
         {view.settlement && <div className="chud-finale-details">
           <p className="chud-finale-settle" data-state={view.settlement.state} aria-live="polite"><i aria-hidden="true" />{view.settlement.text}</p>

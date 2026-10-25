@@ -1,3 +1,10 @@
+## Battle identity hotfix (2026-10-25)
+
+- Doing: fix live name swap (Endychog/phantom both saw the opponent's name twice), keep self-blue/enemy-red per device, small mobile/desktop/result polish. Branch `hotfix/battle-identity-perspective` from origin/main 80f9e82.
+- Done: identity helper + server `start.self`, tests (identity 5, session seat-shuffle naming), UI polish, two-perspective fixture captures in `C:/Users/USER/Documents/ChogRoyale-Assets/battle-identity-hotfix-20261025`.
+- Next: owner review of PR. Battle server must be redeployed for `start.self`; until then the client falls back to the lobby by join slot. Live two-login acceptance and physical iPhone remain unverified.
+- Local env: restored empty `node_modules/viem/node_modules/@noble/curves` (1.9.1, lockfile integrity match) so server session tests run again.
+
 ## Battle Experience V2 completion (2026-10-25, Devin)
 
 - Doing: finish Codex's interrupted V2 on `handoff/battle-experience-v2-20261025` (base 4812c04, Codex 4dc44da/df0bbe5), push, open PR against main. No merge or deploy without owner approval.

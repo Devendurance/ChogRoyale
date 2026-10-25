@@ -219,6 +219,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - A WAAPI `easing` option applies to the whole iteration and compresses multi-phase choreography. Use linear timing with per-keyframe easing for flights.
 - The crown chime sounds when a crown lands on its counter. Under reduced motion it sounds with the confirmed score change. The finale lead-in comes from `end.reason` so a Core's crowns land before the reveal.
 - Finale settlement copy has one state per server status. A missing settlement reads as waiting, never recorded. Fixture captures that stub a settled status must be labelled as fixtures.
+- Player names resolve only through `battleIdentity()` in `battle-identity.ts`. `LobbyMessage.players` is indexed by join slot (`lobby.you`), while `StartMessage.seat` is the shuffled battle seat, so never read `lobby.players[start.seat]`. Prefer the server's `start.self`, and show only the "You" label when the own name is unknown, never another player's name.
+- Identity verification must cover both devices and both seat shuffles with distinct names. A fixture where join slot equals seat cannot catch slot/seat mix-ups.
 
 ## NFT COMMANDER LENDING
 
