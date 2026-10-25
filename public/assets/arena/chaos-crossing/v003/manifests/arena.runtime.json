@@ -185,11 +185,11 @@
       ],
       "healthBarLocalBoardRectangle": [
         -40,
-        -139,
+        -143,
         80,
         5
       ],
-      "artTopLocalBoardPixels": -127,
+      "artTopLocalBoardPixels": -131,
       "renderOrder": [
         "structure-base",
         "socket-platform",
@@ -237,11 +237,11 @@
       ],
       "healthBarLocalBoardRectangle": [
         -40,
-        -126,
+        -124,
         80,
         5
       ],
-      "artTopLocalBoardPixels": -114,
+      "artTopLocalBoardPixels": -112,
       "renderOrder": [
         "structure-base",
         "socket-platform",
@@ -289,11 +289,11 @@
       ],
       "healthBarLocalBoardRectangle": [
         -50,
-        -153,
+        -158,
         100,
         5
       ],
-      "artTopLocalBoardPixels": -141,
+      "artTopLocalBoardPixels": -146,
       "renderOrder": [
         "structure-base",
         "socket-platform",
@@ -341,11 +341,11 @@
       ],
       "healthBarLocalBoardRectangle": [
         -50,
-        -140,
+        -137,
         100,
         5
       ],
-      "artTopLocalBoardPixels": -128,
+      "artTopLocalBoardPixels": -125,
       "renderOrder": [
         "structure-base",
         "socket-platform",

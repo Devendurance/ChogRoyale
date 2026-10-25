@@ -1,5 +1,8 @@
 # Memory
 
+- v003 Blender loop: `PREVIEW=1 build_mounts.py -- <out> [bulwark|guardian]` renders the defender alone at 16 samples (front identity plus gameplay view). `LOWQ=1` drops mounts and arena layers to 16 samples, arena at 50 percent. Rebuilding mount roles by name merges into `_mounts-record.json`. `scripts/montage.cjs` and `scripts/assemble.cjs` make review sheets.
+- Smooth-shaded cones that point toward the high gameplay camera read as round lumps. Back-facing spikes should splay sideways in the view plane and use flat shading. Spikes based at the head centre and pointing radially exit cleanly, while offset bases with a different direction bulge.
+
 - Blender 5.2 is installed at `C:/Users/USER/AppData/Local/Programs/Blender Foundation/Blender 5.2/blender.exe` and renders headless (`-b --factory-startup --python`) with EEVEE. The only engines are `BLENDER_EEVEE`, `BLENDER_WORKBENCH` and `CYCLES`, so `BLENDER_EEVEE_NEXT` doesn't exist. Blender's bundled numpy works. System Python has neither numpy nor Pillow. The MCP Blender bridge was not connected this session, and headless runs don't need it.
 - Blender primitive defaults: cube size 2 and cylinder depth 2. Pass size and depth of 1 when the scale is meant as full dimensions. Generated images saved through `Image.save()` and reloaded avoid the empty-texture problem with packed generated images.
 - sharp is only a transitive dependency. Asset-side scripts resolve it from the repo `node_modules` and must call `sharp.cache(false)`, then write through `fs` with a retry, because Windows briefly locks just-read PNGs.

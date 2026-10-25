@@ -1,6 +1,6 @@
 {
  "schemaVersion": 1,
- "slice": "Visual overhaul v3 slice 2",
+ "slice": "Visual overhaul v3 slice 2, refined in slice 2.1",
  "rules": [
   "Every pack PNG is a reference crop with game_ready=false. None of them is installed as runtime art.",
   "Canonical identity is 02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY. Stylized 3D concepts are quality and lighting references only.",
@@ -156,7 +156,7 @@
     "idle",
     "aim-south"
    ],
-   "status": "produced, owner art approval pending",
+   "status": "produced, refined in slice 2.1, owner art approval pending",
    "missing": [
     "fire frame sequence (recoil and muzzle flash are code cues today)",
     "destroy or rubble art (code dims the base)"
@@ -180,7 +180,7 @@
     "idle",
     "aim-south"
    ],
-   "status": "produced, owner art approval pending",
+   "status": "produced, refined in slice 2.1, owner art approval pending",
    "missing": [
     "fire frame sequence (recoil and muzzle flash are code cues today)",
     "destroy or rubble art (code dims the base)"
@@ -206,7 +206,7 @@
     "idle",
     "aim-north"
    ],
-   "status": "produced, owner art approval pending",
+   "status": "produced, refined in slice 2.1, owner art approval pending",
    "missing": [
     "fire frame sequence (recoil and muzzle flash are code cues today)",
     "destroy or rubble art (code dims the base)"
@@ -230,7 +230,7 @@
     "idle",
     "aim-north"
    ],
-   "status": "produced, owner art approval pending",
+   "status": "produced, refined in slice 2.1, owner art approval pending",
    "missing": [
     "fire frame sequence (recoil and muzzle flash are code cues today)",
     "destroy or rubble art (code dims the base)"

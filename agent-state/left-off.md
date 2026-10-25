@@ -1,3 +1,9 @@
+## Visual overhaul v3, slice 2.1 (2026-10-25)
+
+- Doing: defender identity correction and arena polish on `visual-overhaul/v3-slice2`, refining the existing slice 2 Blender scripts. Local commit only, no push, PR or deploy.
+- Done: Bulwark (Corinthian helmet, V brow, striped crest band, black spikes, studded tunic, faceted star shield) and Chog Guardian (taller cream mask, black oval eyes, angled brow, faceted spike sunburst and rear starburst, thick scarf with back tail, layered plate, riveted blue-field shield) rebuilt in `build_mounts.py`. Tower masonry, quoins and crystal bezels. Arena ground hierarchy, flagstone lanes, river foam and glints, grey banks, bridge posts, clustered flora, warmer light. Tests 121/121, tsc, scoped lint, build green. Review set in `ChogRoyale-Assets/visual-overhaul-v3-slice2-1/`.
+- Next: owner review of both defenders and the arena. Then Choglings and Boulderback atlases. Live two-login match, phone pass and the troop ring colour decision are still open.
+
 ## Visual overhaul v3, slice 2 (2026-10-25)
 
 - Doing: asset reference pack v1 plus the first genuine production slice on branch `visual-overhaul/v3-slice2` from slice 1 commit 1e1fa56. Local commits only, with no push, PR or deploy without owner approval.

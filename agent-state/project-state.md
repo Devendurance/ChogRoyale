@@ -1,5 +1,10 @@
 # Project State
 
+## Visual overhaul v3, slice 2.1 (2026-10-25)
+
+- Same v003 package and manifest schema, re-rendered from refined scripts. Defender identities corrected against cards 21 and 07, towers and arena polished. Weapon anchors, pivots, ground anchors, geometry projections, ripple layers and Chaos overlays unchanged. Only health-bar tops moved 2 to 5 board px. Runtime size about 1.8 MB.
+- Readiness doc section 11 records the changes and limits.
+
 ## Visual overhaul v3, slice 2 (2026-10-25)
 
 - Reference pack v1 sits at the repo root (`Chog_Royale_Devin_Asset_Reference_Pack_v1/`). It's reference only, every file `game_ready: false`, and its art bible is identical to the v3 handoff.

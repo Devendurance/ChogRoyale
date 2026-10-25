@@ -134,6 +134,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Fixture screenshots are presentation evidence only. Pointer/deployment delivery and touch behavior remain pending a real two-player regression.
 - Pre-rendered 2.5D arena layers (v003+) are camera-space (`space: "camera"`) and must never be flipped for seat 1, or trees, posts and banners turn upside down. Only board-space overlays mirror. New layers keep logical points on exact master pixels via the pitched ortho camera with ground Y stretched by 1/cos(pitch). Check the projected anchors before importing.
 - Tower mounts are player-relative roles from `structureMounts`: the opponent gets red Bulwark mounts aiming south and the viewer gets blue Chog Guardian mounts aiming north. Weapon anchors come from projected 3D muzzle points, never hand-picked pixels. Keep v002 as the runtime fallback.
+- Defender art refinements are judged against the original card first. Reject a revision that is prettier but less recognizable as its Chog. Visual-only refinements must leave weapon anchors, pivots, ground anchors and the ripple and Chaos layers unchanged, so compare the export log anchors before importing.
 
 ## GAME APP SHELL
 
