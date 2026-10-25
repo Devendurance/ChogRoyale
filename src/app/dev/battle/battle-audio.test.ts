@@ -124,6 +124,19 @@ describe("battle audio browser lifecycle", () => {
     audio.dispose();
   });
 
+  it("plays a crown chime through the existing unlocked context and respects mute", async () => {
+    const { context, audio } = setup();
+    expect(audio.play("crown-earned")).toBe(false);
+    await audio.unlock();
+    const before = context.sources.length;
+    expect(audio.play("crown-earned")).toBe(true);
+    expect(context.sources.length - before).toBe(3);
+    expect(audio.play("crown-earned")).toBe(false);
+    audio.setPreferences({ muted: true, volume: .55 });
+    expect(audio.play("crown-earned")).toBe(false);
+    audio.dispose();
+  });
+
   it("keeps failed or disposed unlock attempts unavailable", async () => {
     const { context, audio } = setup();
     context.resume.mockRejectedValueOnce(new Error("gesture rejected"));
