@@ -4,7 +4,7 @@
 // equals the sum of its ledger rows, and the level is re-derived from the
 // single policy ladder on every apply, so XP and level can never disagree
 // and concurrent applies converge instead of losing updates.
-import { inArray, sql } from "drizzle-orm";
+import { asc, inArray, sql } from "drizzle-orm";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { cardXpAwards, cardXpProgress, cardXpRuns, matchEvidence, matchParticipants, matches } from "@/db/schema";
@@ -19,6 +19,24 @@ import {
 } from "@/lib/card-xp";
 
 export const CARD_XP_ELIGIBLE_TYPES = ["matchmaking", "ranked"] as const;
+
+/**
+ * Seat-ordered participant mapping. Replay commands address seats
+ * (players[cmd.player]), so the two participant rows must resolve to
+ * exactly seat 0 and seat 1 in that order. Database row order is
+ * unspecified, and an unordered mapping silently reverses XP ownership.
+ * Pure: unit-tested without a database.
+ */
+export function seatOrderedPlayers(
+  rows: Array<{ seat: number; playerId: string }>
+): { ok: true; players: [{ playerId: string }, { playerId: string }] } | { ok: false; reason: string } {
+  if (rows.length !== 2) return { ok: false, reason: "seats-count" };
+  const bySeat = [...rows].sort((a, b) => a.seat - b.seat);
+  const [s0, s1] = bySeat;
+  if (!s0 || !s1 || s0.seat !== 0 || s1.seat !== 1) return { ok: false, reason: "seats-invalid" };
+  if (s0.playerId === s1.playerId) return { ok: false, reason: "seats-not-distinct" };
+  return { ok: true, players: [{ playerId: s0.playerId }, { playerId: s1.playerId }] };
+}
 
 export interface CardUsageUnit {
   playerId: string;
@@ -56,18 +74,18 @@ export async function getAwardableMatch(matchId: string): Promise<
   }
   if (m.verification !== "replay-verified") return { ok: false, reason: `unverified:${m.verification}` };
   const parts = await db
-    .select({ playerId: matchParticipants.playerId })
+    .select({ seat: matchParticipants.seat, playerId: matchParticipants.playerId })
     .from(matchParticipants)
-    .where(eq(matchParticipants.matchId, matchId));
-  if (parts.length !== 2 || !parts[0] || !parts[1] || parts[0].playerId === parts[1].playerId) {
-    return { ok: false, reason: "seats-not-distinct" };
-  }
+    .where(eq(matchParticipants.matchId, matchId))
+    .orderBy(asc(matchParticipants.seat));
+  const ordered = seatOrderedPlayers(parts);
+  if (!ordered.ok) return { ok: false, reason: ordered.reason };
   const ev = await db.select({ evidence: matchEvidence.evidence }).from(matchEvidence).where(eq(matchEvidence.matchId, matchId)).limit(1);
   const stored = ev[0]?.evidence as SettledMatch["evidence"] | undefined;
   if (!stored || !Array.isArray(stored.commands) || typeof stored.config !== "object" || stored.config === null) {
     return { ok: false, reason: "evidence-missing" };
   }
-  return { ok: true, match: { matchId, matchType: m.matchType, verification: m.verification, players: [{ playerId: parts[0].playerId }, { playerId: parts[1].playerId }], evidence: stored } };
+  return { ok: true, match: { matchId, matchType: m.matchType, verification: m.verification, players: ordered.players, evidence: stored } };
 }
 
 /**

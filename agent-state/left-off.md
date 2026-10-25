@@ -5,13 +5,21 @@
 - Checks: 31 focused tests pass. Extra unchanged input unit suite is blocked by the installed viem/noble-curves import, with browser input independently passing. Scoped lint, full typecheck and the single production build pass, with all 62 pages generated and no fixture route.
 - Next: physical iOS, live two-login play and subjective audio/visual approval. The scoped release is authorized for origin/main and Vercel. Evidence and limits are in docs/responsive-audio-rescue.md, with deployment identity in the external release-evidence.json.
 
-## Permanent domain + onboarding (staged, pushing next)
+## Named tunnel CONNECTED, DNS route owner-gated (state local, no repo changes)
+
+- endy-vps named tunnel `chog-royale-battle` CONNECTED (fresh edge registrations yul01/ewr08). Service now runs `cloudflared tunnel run --token-file` (token only in 600 file, never in unit/logs/Git). Quick tunnel retired with it.
+- Battle restarted with BATTLE_PUBLIC_URL=wss://battle.endyos.xyz, settlement ON, ranked closed; local /healthz ok.
+- battle.endyos.xyz has NO DNS yet: owner must add public hostname route in Zero Trust (tunnel chog-royale-battle -> subdomain battle, domain endyos.xyz, service http://127.0.0.1:2567; auto-creates the CNAME). Then owner sets Vercel NEXT_PUBLIC_BATTLE_SERVER_URL=https://battle.endyos.xyz + redeploys, then two-login smoke.
 
 - DNS: endyos.xyz is Cloudflare-managed, but battle.endyos.xyz has NO record and endy-vps holds NO Cloudflare credentials. Named tunnel needs owner action (API token with Zone DNS:Edit + Tunnel:Edit, or an owner-built tunnel). Quick tunnel stays live (URL unchanged, both services stable).
 - Built /app/onboarding (username/display/avatar/wallet, server-authoritative, complete-only redirect) + guards on /app, /app/play, /app/play/battle + player-facing /dev/onboarding links rerouted. Model tests 3/3, touched suites green, typecheck/lint/build green.
 - Owner left: Cloudflare token or prebuilt tunnel; Vercel env + deploy check; two-login smoke.
 
-## HOTFIX live: entry journey unblocked, pushed 0666669 (state local)
+## P7.1 XP attribution hotfix (this session, committing)
+
+- PROVEN live bug: d0029963 awarded 16 XP to seat-0 Endychog for seat-1 phantom's 34 deployments (unordered participants + players[cmd.player]). Gold correct, untouched.
+- Fix: getAwardableMatch selects seat + ORDER BY seat ASC; pure seatOrderedPlayers() requires exactly seats {0,1}, fails closed otherwise. Regression test 3/3 pure (reversed rows, invalid seats, end-to-end attribution to deploying player). tsc+lint clean.
+- PROD forensics (read-only): only 6 award rows exist, all d0029963, all wrong-owner; phantom progress empty; purchased all 1. Repair plan prepared, NOT executed (awaits owner approval).
 
 - Fixes: landing Play CTAs -> /app; PlayHub real player via /api/players/me + resolvePlayer (was null); public battle gate = HTTPS WSS configured in prod (GameLobby + BattlePanel publicMode), dev gate untouched; PlayGuide stale currency line corrected.
 - Verified: gate tests 3/3, typecheck, lint, prod build WITH tunnel URL and with EMPTY env (Vercel failure mode) both green.
