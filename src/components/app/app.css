@@ -3170,7 +3170,8 @@
   color: #fff;
   background: radial-gradient(ellipse at 50% 10%, #6042ab, transparent 48%), linear-gradient(150deg, #28185f, #1d1248 58%, #352078);
 }
-.app-play-battle-shell > * { width: min(100%, 780px); }
+/* Lobby and recovery plates are bounded. The fixed match HUD owns the viewport. */
+.app-play-battle-shell > :is(.app-play-battle-entry, .app-play-battle-head, .app-play-battle-controls, .app-play-battle-error, .app-play-battle-state) { width: min(100%, 780px); }
 .app-play-battle-head,
 .app-play-battle-controls {
   width: min(100%, 780px);

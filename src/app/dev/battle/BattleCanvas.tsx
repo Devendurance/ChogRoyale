@@ -668,8 +668,11 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                 // HP bar from the authored mount rectangle (master px -> board px).
                 const hb = mrole.healthBarLocalBoardRectangle;
                 const visualY = y + artOffsetY;
-                hpBar(x + (hb[0] + hb[2] / 2) / 2, visualY + hb[1] / 2, hb[2] / 2, s.hp, s.maxHp);
-                label(`hp:${s.id}`, `${s.hp}`, x, visualY + hb[1] / 2 - 10);
+                // Presentation clamp: the far Core's bar and number would sit
+                // above the canvas edge. Keep them readable inside it.
+                const barY = Math.max(16, visualY + hb[1] / 2);
+                hpBar(x + (hb[0] + hb[2] / 2) / 2, barY, hb[2] / 2, s.hp, s.maxHp);
+                label(`hp:${s.id}`, `${s.hp}`, x, barY - 9);
               } else if (!me.rubble) {
                 // Destroyed: only the dimmed base remains, like rubble.
                 me.rubble = true;
@@ -1043,8 +1046,11 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
               continue;
             }
             const a = reduced ? 0.9 : 0.9 * (1 - p);
-            og.fillStyle(0xfde047, a).fillCircle(e.fx, e.fy, 7);
-            og.lineStyle(2, 0xfef08a, a).lineBetween(e.fx, e.fy, sx(e.tx), sy(e.ty));
+            // The far Core's weapon anchor can sit at the canvas edge. Keep
+            // the whole flash on the board without moving the tracer target.
+            const flashY = Math.max(7, e.fy);
+            og.fillStyle(0xfde047, a).fillCircle(e.fx, flashY, 7);
+            og.lineStyle(2, 0xfef08a, a).lineBetween(e.fx, flashY, sx(e.tx), sy(e.ty));
             og.fillStyle(0xffffff, a).fillCircle(sx(e.tx), sy(e.ty), 3);
           }
           for (let i = fxImgs.length - 1; i >= 0; i--) {

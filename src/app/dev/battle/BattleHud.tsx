@@ -27,6 +27,9 @@ import { portraitForCard, portraitForCommanderClass, type SpriteManifest } from 
 import { abilityView, scoreView, timerView } from "./hud-view";
 import { satoshi, georama, lilitaOne } from "@/components/site/fonts";
 import type { BattleCue } from "./battle-audio";
+import { GameIcon } from "@/components/game/GameIcon";
+import BattleResult from "./BattleResult";
+import CrownCelebration from "./CrownCelebration";
 import "./battle-hud.css";
 
 // Display-only copy of energyPhaseMult (src/lib/combat.ts). combat.ts imports
@@ -34,8 +37,6 @@ import "./battle-hud.css";
 const phaseMult = (tick: number) => (tick >= 2400 ? 3 : tick >= 1200 ? 2 : 1);
 
 const isCommanderCard = (id: string) => id.startsWith("cmdr:");
-
-const secs = (ticks: number) => `${Math.floor(ticks / 600)}:${String(Math.floor((ticks % 600) / 10)).padStart(2, "0")}`;
 
 const abilityLabel = (abilityId: string, cls: string) => {
   const base = abilityId.startsWith(`${cls}-`) ? abilityId.slice(cls.length + 1) : abilityId;
@@ -45,6 +46,7 @@ const abilityLabel = (abilityId: string, cls: string) => {
 const nftImageUrl = (u: string) => (u.startsWith("ipfs://") ? `https://ipfs.filebase.io/ipfs/${u.slice(7)}` : u);
 
 export interface BattleHudProps {
+  playerName?: string;
   /** Keep development-only room diagnostics out of the player-facing route. */
   showDevDiagnostics?: boolean;
   connectionStatus?: string;
@@ -192,13 +194,6 @@ function EnergyMeter({ frame }: { frame: BattleFrame }) {
   );
 }
 
-/** Original crown mark (not Clash Royale art). */
-const CrownIcon = ({ color }: { color: string }) => (
-  <svg width="11" height="9" viewBox="0 0 12 10" aria-hidden="true" style={{ verticalAlign: "-1px" }}>
-    <path d="M1 8.5h10l-.6-5L8 5.5 6 2 4 5.5 1.6 3.5z" fill={color} />
-  </svg>
-);
-
 function AbilityButton({
   a,
   frame,
@@ -294,32 +289,6 @@ function DevPanel({ end, acks, start, frame, me }: { end: EndMessage | null; ack
   );
 }
 
-const settlementText = (s: SettlementMessage | null) =>
-  !s
-    ? "Settlement status pending…"
-    : s.status === "settled" || s.status === "already-settled"
-      ? `Result recorded (${s.status})${s.matchId ? ` · ${s.matchId.slice(0, 8)}` : ""}`
-      : s.status === "pending"
-        ? "Result pending, retrying in background"
-        : s.status === "disabled"
-          ? "Settlement disabled on this server"
-          : "Result refused by settlement verification";
-
-const resultReasonText = (reason: string | null) => {
-  switch (reason) {
-    case "core":
-      return "Core broken";
-    case "crowns":
-      return "Crown lead";
-    case "overtime":
-      return "Overtime tiebreak";
-    case "timeout":
-      return "Time expired";
-    default:
-      return reason || "Battle complete";
-  }
-};
-
 export default function BattleHud(props: BattleHudProps) {
   const { start, frame, me, end, abort, settlement, presence, now, acks, selected, dragging, hint, feed, mapRef, onBoardTap, onBoardHover, send } = props;
   const manifest = useSpriteManifest();
@@ -327,19 +296,10 @@ export default function BattleHud(props: BattleHudProps) {
   const [banner, setBanner] = useState<number | null>(null);
   const prevMult = useRef(0);
   const score = scoreView(frame, end, me as 0 | 1);
-  const prevCrowns = useRef<[number, number]>([score.mine, score.theirs]);
-  const [crownPulse, setCrownPulse] = useState<"mine" | "theirs" | null>(null);
+  const boardElementRef = useRef<HTMLDivElement>(null);
+  const mineScoreRef = useRef<HTMLSpanElement>(null);
+  const theirsScoreRef = useRef<HTMLSpanElement>(null);
   const tv = timerView(frame, end);
-
-  // Short restrained pulse on the side whose crown count just increased.
-  useEffect(() => {
-    const [pm, pt] = prevCrowns.current;
-    prevCrowns.current = [score.mine, score.theirs];
-    if (score.mine <= pm && score.theirs <= pt) return;
-    setCrownPulse(score.mine > pm ? "mine" : "theirs");
-    const t = setTimeout(() => setCrownPulse(null), 900);
-    return () => clearTimeout(t);
-  }, [score.mine, score.theirs]);
 
   // 2s non-blocking banner when the energy phase steps up.
   useEffect(() => {
@@ -393,11 +353,12 @@ export default function BattleHud(props: BattleHudProps) {
 
   const dev = <DevPanel end={end} acks={acks} start={start} frame={frame} me={me} />;
 
+  const nftArt = start.commander.kind === "nft" && start.commander.imageOriginal ? nftImageUrl(start.commander.imageOriginal) : null;
   const commanderIdentity = (
     <div className="chud-identity">
-      {start.commander.kind === "nft" && start.commander.imageOriginal ? (
+      {nftArt ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={nftImageUrl(start.commander.imageOriginal)} alt={start.commander.name} width={56} height={56} style={{ borderRadius: 6, objectFit: "cover" }} />
+        <img src={nftArt} alt={start.commander.name} width={56} height={56} style={{ borderRadius: 6, objectFit: "cover" }} />
       ) : (
         <Portrait src={manifest ? portraitForCommanderClass(manifest, commanderCls) : null} name={commanderCls} style={{ width: 56, height: 56, borderRadius: 6 }} />
       )}
@@ -406,14 +367,15 @@ export default function BattleHud(props: BattleHudProps) {
         <div className="chud-identity-meta">
           {commanderCls} · {start.commander.variant} · {start.commander.prestige}
           {start.commander.kind === "nft" ? ` · token ${start.commander.tokenId}` : ""}
-          {!(start.commander.kind === "nft" && start.commander.imageOriginal) && " · class art"}
+          {start.commander.basis === "borrowed" && " · borrowed"}
+          {!nftArt && " · class art"}
         </div>
       </div>
     </div>
   );
 
   const patronChip = (
-    <span className="chud-pill" title={`Arena Patron token ${start.patron.tokenId}`}>
+    <span className="chud-pill chud-patron" title={`Arena Patron token ${start.patron.tokenId}`}>
       Arena Patron · {start.patron.name ?? `CHOG #${start.patron.tokenId}`}
     </span>
   );
@@ -450,8 +412,8 @@ export default function BattleHud(props: BattleHudProps) {
         <header className="chud-top">
           <div className="chud-score">
             <span className="chud-side-tag" data-side="foe">
-              <span className={`chud-crown-num${crownPulse === "theirs" ? " chud-pulse" : ""}`}>
-                <CrownIcon color="#c084fc" /> {score.theirs}
+              <span className="chud-crown-num" ref={theirsScoreRef}>
+                <GameIcon kind="crown" size={25} /> {score.theirs}
               </span>
               <span className="chud-player">{start.opponent}</span>
             </span>
@@ -461,9 +423,9 @@ export default function BattleHud(props: BattleHudProps) {
               {tv.mult > 1 && <span className="chud-mult chud-clock-mult">{tv.mult}x</span>}
             </span>
             <span className="chud-side-tag" data-side="you">
-              <span className="chud-player">You</span>
-              <span className={`chud-crown-num${crownPulse === "mine" ? " chud-pulse" : ""}`}>
-                {score.mine} <CrownIcon color="#67e8f9" />
+              <span className="chud-player">{props.playerName ?? "You"}</span>
+              <span className="chud-crown-num" ref={mineScoreRef}>
+                {score.mine} <GameIcon kind="crown" size={25} />
               </span>
             </span>
             {props.showDevDiagnostics !== false && (
@@ -472,7 +434,7 @@ export default function BattleHud(props: BattleHudProps) {
               </button>
             )}
           </div>
-          {(props.connectionStatus || props.error || props.notice) && <div className="chud-status" aria-live="polite">
+          {(props.connectionStatus || props.error || props.notice) && <div className="chud-status" aria-live="polite" data-alert={Boolean(props.error || props.notice || props.onGiveUp)}>
             <span>{props.connectionStatus}</span>
             {props.error && <span role="alert" className="chud-status-error">{props.error}</span>}
             {props.notice && <span className="chud-status-notice">{props.notice}</span>}
@@ -515,9 +477,9 @@ export default function BattleHud(props: BattleHudProps) {
           </div>
         </header>
         {props.showDevDiagnostics !== false && devOpen && <div className="chud-dev-inline">{dev}</div>}
-        <div className="chud-arena">
+        <div className="chud-arena" ref={boardElementRef}>
           <div className="chud-board">
-            <BattleCanvas seat={me === 1 ? 1 : 0} feed={feed} mapRef={mapRef} onBoardTap={onBoardTap} onBoardHover={onBoardHover} hostStyle={{ width: "min(100cqw, 62.5cqh)", height: "auto", aspectRatio: "100 / 160", maxWidth: "none", margin: "auto" }} />
+            <BattleCanvas seat={me === 1 ? 1 : 0} feed={feed} mapRef={mapRef} onBoardTap={onBoardTap} onBoardHover={onBoardHover} hostStyle={{ width: "var(--chud-board-w, min(100cqw, 62.5cqh))", height: "auto", aspectRatio: "100 / 160", maxWidth: "none", margin: "auto" }} />
           </div>
           <div className="chud-chaos-stack">{chaosChips}</div>
           {banner !== null && (
@@ -525,57 +487,7 @@ export default function BattleHud(props: BattleHudProps) {
               {banner}x Energy
             </div>
           )}
-          {(end || abort) && (
-            <div className={`chud-result${end ? ` chud-result--${end.result}` : " chud-result--abort"}`} role="dialog" aria-label={end ? "Match result" : "Match interrupted"}>
-              {end ? (
-                <div className="chud-result-panel">
-                  <div className="chud-result-kicker">Battle complete</div>
-                  <div className="chud-result-title">{end.result === "win" ? "Victory" : end.result === "loss" ? "Defeat" : "Draw"}</div>
-                  <div className="chud-result-identities" aria-label={`You versus ${start.opponent}`}>
-                    <span className="chud-result-player chud-result-player--you">You</span>
-                    <span className="chud-result-versus">vs</span>
-                    <span className="chud-result-player chud-result-player--foe" title={start.opponent}>{start.opponent}</span>
-                  </div>
-                  <div className="chud-result-score" aria-label={`${end.crowns[me]} crowns for you, ${end.crowns[1 - me]} crowns for ${start.opponent}`}>
-                    <div className="chud-result-score-side">
-                      <strong>{end.crowns[me]}</strong>
-                      <span>Your crowns</span>
-                    </div>
-                    <span className="chud-result-score-divider">:</span>
-                    <div className="chud-result-score-side chud-result-score-side--foe">
-                      <strong>{end.crowns[1 - me]}</strong>
-                      <span>{start.opponent}&apos;s crowns</span>
-                    </div>
-                  </div>
-                  <div className="chud-result-context">
-                    <span>{resultReasonText(end.reason)}</span>
-                    <span aria-hidden="true">·</span>
-                    <span>{secs(end.ticks)}</span>
-                  </div>
-                  <div className="chud-result-settlement">{settlementText(settlement)}</div>
-                  {start.mode === "ranked" && (
-                    <div className="chud-result-ranked" aria-live="polite">
-                      {props.rankedAward
-                        ? `Ranked award confirmed: ${props.rankedAward.delta > 0 ? "+" : ""}${props.rankedAward.delta} trophies · balance ${props.rankedAward.balanceAfter}`
-                        : props.rankedAwardStatus === "checking" || props.rankedAwardStatus === "idle"
-                          ? "Ranked award is being confirmed by the server"
-                          : props.rankedAwardStatus === "timeout"
-                            ? "Ranked award is still pending. Check Progress after the ledger catches up."
-                            : "No ranked award was confirmed for this match."}
-                    </div>
-                  )}
-                  {props.onExit && <button type="button" className="chud-result-action" onClick={props.onExit}>Back to lobby</button>}
-                </div>
-              ) : (
-                <div className="chud-result-panel chud-result-panel--abort">
-                  <div className="chud-result-kicker">Battle interrupted</div>
-                  <div className="chud-result-title">Match ended early</div>
-                  <div className="chud-result-context">{abort}</div>
-                  {props.onExit && <button type="button" className="chud-result-action" onClick={props.onExit}>Back to lobby</button>}
-                </div>
-              )}
-            </div>
-          )}
+
         </div>
         <div className="chud-tray">
           {frame && (
@@ -612,9 +524,29 @@ export default function BattleHud(props: BattleHudProps) {
       </div>
       <aside className="chud-side chud-side-right">
         <div className="chud-side-block"><div className="chud-side-title">Battle status</div><div className="chud-live-label">{end ? "Match complete" : abort ? "Match interrupted" : frame ? "In the arena" : "Entering arena"}</div><p className="chud-status-copy">{props.connectionStatus ?? "Connected"}</p></div>
-        <div className="chud-side-block"><div className="chud-side-title">Commander ability</div><div className="chud-abilities">{abilityControls}</div><span className="chud-class-note">Commander class art</span></div>
         <div className="chud-side-block"><div className="chud-side-title">Chaos Pulse</div><p className="chud-status-copy">Watch the arena warnings. Each pulse changes the battle for both players.</p><div className="chud-side-chaos">{chaosChips.length ? chaosChips : <span className="chud-status-copy">No active pulse</span>}</div></div>
+        <div className="chud-side-block chud-side-ability"><div className="chud-side-title">Commander ability</div><div className="chud-abilities">{abilityControls}</div><span className="chud-class-note">Commander class art</span></div>
       </aside>
+      <CrownCelebration frame={frame} start={start} me={me} boardRef={boardElementRef} mineRef={mineScoreRef} theirsRef={theirsScoreRef} onAudioCue={props.onAudioCue} />
+      {/* Server start already happened. The reveal is pointer-transparent and
+          clears in under two seconds so the live clock is never blocked. */}
+      {!start.resumed && !end && !abort && <div className="chud-start" aria-hidden="true">
+        <div className="chud-start-band chud-start-band--foe">
+          <span className="chud-start-emblem"><GameIcon kind="crown" size={46} /></span>
+          <span className="chud-start-who"><small>Opponent</small><b>{start.opponent}</b></span>
+        </div>
+        <span className="chud-start-vs">VS</span>
+        <div className="chud-start-band chud-start-band--you">
+          <span className="chud-start-who"><small>{start.commander.name}{nftArt ? "" : " · Class art"}</small><b>{props.playerName ?? "You"}</b></span>
+          <span className="chud-start-emblem chud-start-emblem--art">{nftArt
+            // eslint-disable-next-line @next/next/no-img-element
+            ? <img src={nftArt} alt="" />
+            : <Portrait src={manifest ? portraitForCommanderClass(manifest, commanderCls) : null} name={commanderCls} style={{ width: "100%", height: "100%" }} />}</span>
+        </div>
+        <span className="chud-start-go">Battle!</span>
+        <span className="chud-start-patron">Arena Patron · {start.patron.name ?? `CHOG #${start.patron.tokenId}`}</span>
+      </div>}
+      {(end || abort) && <BattleResult start={start} end={end} abort={abort} settlement={settlement} me={me} playerName={props.playerName} onExit={props.onExit} onAudioCue={props.onAudioCue} rankedAward={props.rankedAward} rankedAwardStatus={props.rankedAwardStatus} />}
       {dragging && (
         <div
           ref={(el) => {

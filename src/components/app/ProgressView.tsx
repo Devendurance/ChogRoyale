@@ -9,6 +9,7 @@
 // server-owned read-only standings while public matchmaking remains gated.
 
 import Image from "next/image";
+import { GameIcon } from "@/components/game/GameIcon";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import AppHud, { AppHudBackLink } from "./AppHud";
@@ -34,25 +35,8 @@ interface HeroMetric {
   caption: string;
 }
 
-/** The crown stays local to the record screen, so the shared nav icon set is untouched. */
 function CrownGlyph({ size = 16 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.9}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      focusable="false"
-    >
-      <path d="M3.6 8.2l4.3 3.4L12 5l4.1 6.6 4.3-3.4-1.7 9.6H5.3L3.6 8.2z" />
-      <path d="M5.6 20h12.8" />
-    </svg>
-  );
+  return <GameIcon kind="crown" size={size} />;
 }
 
 function heroMetric(stats: StatsSummary): HeroMetric {
@@ -496,7 +480,7 @@ function RankedSummary({ ranked }: { ranked: RankedSummaryView }) {
   return (
     <>
       <dl className="app-progress-tiles app-ranked-summary__tiles">
-        <div className="app-progress-tile app-progress-tile--gold"><dt>Trophies</dt><dd>{ranked.trophies ?? "n/a"}</dd></div>
+        <div className="app-progress-tile app-progress-tile--gold"><dt><GameIcon kind="trophy" size={20} /> Trophies</dt><dd>{ranked.trophies ?? "n/a"}</dd></div>
         <div className="app-progress-tile"><dt>Position</dt><dd>{ranked.position ? `#${ranked.position}` : "Pending"}</dd></div>
         <div className="app-progress-tile app-progress-tile--win"><dt>Wins</dt><dd>{ranked.wins ?? "n/a"}</dd></div>
         <div className="app-progress-tile app-progress-tile--loss"><dt>Losses</dt><dd>{ranked.losses ?? "n/a"}</dd></div>

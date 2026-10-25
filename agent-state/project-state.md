@@ -1,5 +1,11 @@
 # Project State
 
+## Battle Experience V2 (2026-10-25)
+
+- Codex V2 foundations kept: BattleLobby, BattleResult, CrownCelebration, crown-presentation, GameIcon, crown chime. Devin pass added `battle-result-model.ts` (finale view, settlement states, tally) and `commander-candidate.ts` (ready-room NFT labels), both pure and tested.
+- Presentation-only scope. No server, settlement, economy, migration or auth changes. Ranked stays closed.
+
+
 ## Responsive UI and audio rescue (2026-10-25)
 
 - Reused BattleHud/Phaser and Colyseus callbacks. Four readable portraits plus secondary next, intact word labels, visible low-energy art, centered desktop board, compact ability and stable selection geometry. Private entry has Create/Join with Code, Unranked has Find Opponent.

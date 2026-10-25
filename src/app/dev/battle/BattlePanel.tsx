@@ -25,7 +25,7 @@ import { aimPoint, endGesture, moveGesture, placementHint, startGesture, type Ar
 import { awardForMatch, resolveRankedSummary } from "@/components/app/ranked-model";
 import type { RankedAwardView, MyRankedResponse } from "@/lib/ranked";
 import type { BoardMapper, CanvasFeed } from "./BattleCanvas";
-import LoadoutPicker from "./LoadoutPicker";
+import BattleLobby from "./BattleLobby";
 import BattleEntry from "@/components/app/BattleEntry";
 import BattleHud from "./BattleHud";
 import {
@@ -640,30 +640,10 @@ export function BattlePanel({
       )}
 
       {stage === "lobby" && lobby && (
-        <section className={publicMode ? "app-play-battle-controls" : undefined} style={publicMode ? undefined : { display: "grid", gap: 6 }}>
-          {lobby.match ? (
-            <div>
-              Matched vs {lobby.match.opponent ?? "opponent"} · ready within {Math.max(0, Math.ceil((lobby.match.deadlineAt - now) / 1000))}s
-            </div>
-          ) : (
-            <>
-              <div>Share the room code with your opponent. Seats, seed and Chaos patron are chosen by the server.</div>
-              {publicMode && room && <div className="app-play-room-code" aria-live="polite"><span>Room code</span><strong>{room.roomId}</strong></div>}
-            </>
-          )}
-          {lobby.players.map((p, i) => (
-            <div key={i}>
-              Slot {i + 1}: {p.username || "(empty)"} {p.ready ? "ready" : ""} {i === lobby.you ? "(you)" : ""}
-            </div>
-          ))}
-          <LoadoutPicker
-            lobby={lobby}
-            mine={lobby.mine}
-            getAccessToken={getAccessToken}
-            onConfirm={(cards, commander: CommanderChoice) => room?.send("ready", { cards, commander })}
-            onEdit={() => room?.send("unready")}
-          />
-        </section>
+        <BattleLobby lobby={lobby} roomCode={room?.roomId} now={now}
+          getAccessToken={getAccessToken}
+          onConfirm={(cards, commander: CommanderChoice) => room?.send("ready", { cards, commander })}
+          onEdit={() => room?.send("unready")} />
       )}
 
       {start && (stage === "active" || stage === "reconnecting" || stage === "ended" || stage === "aborted") && (
@@ -675,6 +655,7 @@ export function BattlePanel({
           onGiveUp={stage === "reconnecting" ? reset : undefined}
           onExit={reset}
           start={start}
+          playerName={lobby?.players[me]?.username || undefined}
           frame={frame}
           me={me}
           end={end}

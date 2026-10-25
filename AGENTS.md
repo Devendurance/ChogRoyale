@@ -214,6 +214,11 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Keep battle shell styles scoped to `.chud` and `chud-` classes. Desktop hand placement must not reduce the board's height, and compact landscape rules must stay below the desktop breakpoint.
 - Preserve the shared canvas-rectangle pointer mapper and stable Phaser instance. Presentation fixtures prove layout and callback behavior only, never authenticated multiplayer or server acceptance.
 - Connection, error and recovery notices must remain visible inside the fixed HUD. Recovery actions reuse the existing session callbacks.
+- Desktop board sizing must include the decorative frame overhang (7.5% vertical, 10% horizontal of the canvas) through `--chud-board-w`. Only the CSS display size changes, never the 100x160 mapping.
+- Battle HUD, finale and crown styles use the HUD's own `--font-lilita`/`--font-georama` variables. `--font-game` exists only under `.app-root`, so it silently falls back on `/dev/battle`.
+- A WAAPI `easing` option applies to the whole iteration and compresses multi-phase choreography. Use linear timing with per-keyframe easing for flights.
+- The crown chime sounds when a crown lands on its counter. Under reduced motion it sounds with the confirmed score change. The finale lead-in comes from `end.reason` so a Core's crowns land before the reveal.
+- Finale settlement copy has one state per server status. A missing settlement reads as waiting, never recorded. Fixture captures that stub a settled status must be labelled as fixtures.
 
 ## NFT COMMANDER LENDING
 
