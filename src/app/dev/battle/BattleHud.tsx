@@ -353,11 +353,12 @@ export default function BattleHud(props: BattleHudProps) {
 
   const dev = <DevPanel end={end} acks={acks} start={start} frame={frame} me={me} />;
 
+  const nftArt = start.commander.kind === "nft" && start.commander.imageOriginal ? nftImageUrl(start.commander.imageOriginal) : null;
   const commanderIdentity = (
     <div className="chud-identity">
-      {start.commander.kind === "nft" && start.commander.imageOriginal ? (
+      {nftArt ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={nftImageUrl(start.commander.imageOriginal)} alt={start.commander.name} width={56} height={56} style={{ borderRadius: 6, objectFit: "cover" }} />
+        <img src={nftArt} alt={start.commander.name} width={56} height={56} style={{ borderRadius: 6, objectFit: "cover" }} />
       ) : (
         <Portrait src={manifest ? portraitForCommanderClass(manifest, commanderCls) : null} name={commanderCls} style={{ width: 56, height: 56, borderRadius: 6 }} />
       )}
@@ -366,14 +367,15 @@ export default function BattleHud(props: BattleHudProps) {
         <div className="chud-identity-meta">
           {commanderCls} · {start.commander.variant} · {start.commander.prestige}
           {start.commander.kind === "nft" ? ` · token ${start.commander.tokenId}` : ""}
-          {!(start.commander.kind === "nft" && start.commander.imageOriginal) && " · class art"}
+          {start.commander.basis === "borrowed" && " · borrowed"}
+          {!nftArt && " · class art"}
         </div>
       </div>
     </div>
   );
 
   const patronChip = (
-    <span className="chud-pill" title={`Arena Patron token ${start.patron.tokenId}`}>
+    <span className="chud-pill chud-patron" title={`Arena Patron token ${start.patron.tokenId}`}>
       Arena Patron · {start.patron.name ?? `CHOG #${start.patron.tokenId}`}
     </span>
   );
@@ -432,7 +434,7 @@ export default function BattleHud(props: BattleHudProps) {
               </button>
             )}
           </div>
-          {(props.connectionStatus || props.error || props.notice) && <div className="chud-status" aria-live="polite">
+          {(props.connectionStatus || props.error || props.notice) && <div className="chud-status" aria-live="polite" data-alert={Boolean(props.error || props.notice || props.onGiveUp)}>
             <span>{props.connectionStatus}</span>
             {props.error && <span role="alert" className="chud-status-error">{props.error}</span>}
             {props.notice && <span className="chud-status-notice">{props.notice}</span>}
@@ -477,7 +479,7 @@ export default function BattleHud(props: BattleHudProps) {
         {props.showDevDiagnostics !== false && devOpen && <div className="chud-dev-inline">{dev}</div>}
         <div className="chud-arena" ref={boardElementRef}>
           <div className="chud-board">
-            <BattleCanvas seat={me === 1 ? 1 : 0} feed={feed} mapRef={mapRef} onBoardTap={onBoardTap} onBoardHover={onBoardHover} hostStyle={{ width: "min(100cqw, 62.5cqh)", height: "auto", aspectRatio: "100 / 160", maxWidth: "none", margin: "auto" }} />
+            <BattleCanvas seat={me === 1 ? 1 : 0} feed={feed} mapRef={mapRef} onBoardTap={onBoardTap} onBoardHover={onBoardHover} hostStyle={{ width: "var(--chud-board-w, min(100cqw, 62.5cqh))", height: "auto", aspectRatio: "100 / 160", maxWidth: "none", margin: "auto" }} />
           </div>
           <div className="chud-chaos-stack">{chaosChips}</div>
           {banner !== null && (
@@ -522,16 +524,29 @@ export default function BattleHud(props: BattleHudProps) {
       </div>
       <aside className="chud-side chud-side-right">
         <div className="chud-side-block"><div className="chud-side-title">Battle status</div><div className="chud-live-label">{end ? "Match complete" : abort ? "Match interrupted" : frame ? "In the arena" : "Entering arena"}</div><p className="chud-status-copy">{props.connectionStatus ?? "Connected"}</p></div>
-        <div className="chud-side-block"><div className="chud-side-title">Commander ability</div><div className="chud-abilities">{abilityControls}</div><span className="chud-class-note">Commander class art</span></div>
         <div className="chud-side-block"><div className="chud-side-title">Chaos Pulse</div><p className="chud-status-copy">Watch the arena warnings. Each pulse changes the battle for both players.</p><div className="chud-side-chaos">{chaosChips.length ? chaosChips : <span className="chud-status-copy">No active pulse</span>}</div></div>
+        <div className="chud-side-block chud-side-ability"><div className="chud-side-title">Commander ability</div><div className="chud-abilities">{abilityControls}</div><span className="chud-class-note">Commander class art</span></div>
       </aside>
       <CrownCelebration frame={frame} start={start} me={me} boardRef={boardElementRef} mineRef={mineScoreRef} theirsRef={theirsScoreRef} onAudioCue={props.onAudioCue} />
-      {!start.resumed && <div className="chud-start" aria-hidden="true">
-        <div className="chud-start-ribbon chud-start-ribbon--foe"><GameIcon kind="crown" size={42} /><span>{start.opponent}</span></div>
+      {/* Server start already happened. The reveal is pointer-transparent and
+          clears in under two seconds so the live clock is never blocked. */}
+      {!start.resumed && !end && !abort && <div className="chud-start" aria-hidden="true">
+        <div className="chud-start-band chud-start-band--foe">
+          <span className="chud-start-emblem"><GameIcon kind="crown" size={46} /></span>
+          <span className="chud-start-who"><small>Opponent</small><b>{start.opponent}</b></span>
+        </div>
         <span className="chud-start-vs">VS</span>
-        <div className="chud-start-ribbon chud-start-ribbon--you"><GameIcon kind="crown" size={42} /><span>{props.playerName ?? "You"}</span></div>
+        <div className="chud-start-band chud-start-band--you">
+          <span className="chud-start-who"><small>{start.commander.name}{nftArt ? "" : " · Class art"}</small><b>{props.playerName ?? "You"}</b></span>
+          <span className="chud-start-emblem chud-start-emblem--art">{nftArt
+            // eslint-disable-next-line @next/next/no-img-element
+            ? <img src={nftArt} alt="" />
+            : <Portrait src={manifest ? portraitForCommanderClass(manifest, commanderCls) : null} name={commanderCls} style={{ width: "100%", height: "100%" }} />}</span>
+        </div>
+        <span className="chud-start-go">Battle!</span>
+        <span className="chud-start-patron">Arena Patron · {start.patron.name ?? `CHOG #${start.patron.tokenId}`}</span>
       </div>}
-      {(end || abort) && <BattleResult start={start} end={end} abort={abort} settlement={settlement} me={me} playerName={props.playerName} onExit={props.onExit} rankedAward={props.rankedAward} rankedAwardStatus={props.rankedAwardStatus} />}
+      {(end || abort) && <BattleResult start={start} end={end} abort={abort} settlement={settlement} me={me} playerName={props.playerName} onExit={props.onExit} onAudioCue={props.onAudioCue} rankedAward={props.rankedAward} rankedAwardStatus={props.rankedAwardStatus} />}
       {dragging && (
         <div
           ref={(el) => {

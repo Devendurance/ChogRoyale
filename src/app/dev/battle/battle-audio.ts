@@ -14,6 +14,7 @@ export type BattleCue =
   | "death"
   | "destroy"
   | "crown-earned"
+  | "crown-tally"
   | "ability"
   | "ability-impact"
   | "chaos-warning"
@@ -180,6 +181,7 @@ const cueGap: Record<BattleCue, number> = {
   death: 0.09,
   destroy: 0.2,
   "crown-earned": 0.45,
+  "crown-tally": 0.1,
   ability: 0.12,
   "ability-impact": 0.14,
   "chaos-warning": 0.45,
@@ -224,6 +226,10 @@ const toneSpecs: Record<BattleCue, ToneSpec[]> = {
     { frequency: 659, endFrequency: 784, duration: 0.15, type: "sine", gain: 0.16 },
     { frequency: 988, duration: 0.24, type: "triangle", gain: 0.13, delay: 0.1 },
     { frequency: 1318, duration: 0.3, type: "sine", gain: 0.09, delay: 0.19 },
+  ],
+  "crown-tally": [
+    { frequency: 880, endFrequency: 1175, duration: 0.09, type: "triangle", gain: 0.12 },
+    { frequency: 1760, duration: 0.12, type: "sine", gain: 0.05, delay: 0.03 },
   ],
   "ability-impact": [{ frequency: 300, endFrequency: 900, duration: 0.2, type: "sine", gain: 0.16 }],
   "chaos-warning": [

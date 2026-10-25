@@ -1,3 +1,9 @@
+## Battle Experience V2 completion (2026-10-25, Devin)
+
+- Doing: finish Codex's interrupted V2 on `handoff/battle-experience-v2-20261025` (base 4812c04, Codex 4dc44da/df0bbe5), push, open PR against main. No merge or deploy without owner approval.
+- Done: desktop frame-fit board sizing and right-column regrouping, team crown chips, crown flight choreography fix (WAAPI whole-iteration easing bug) with landing-synced chime and +1 pop, VS start reveal, finale per-result differentiation with server-crown tally and settlement chip, lobby OWNED/BORROWED/LENT labels with loan expiry, far-Core label/flash clamp. Tests, typecheck, scoped lint green. Fixture captures and motion/audio evidence in `C:/Users/USER/Documents/ChogRoyale-Assets/battle-experience-v2-devin-20261025`.
+- Next: owner review of PR and captures. Live two-login match, physical iPhone and subjective audio remain INCONCLUSIVE. qa-v2 harness stays uncommitted and must be deleted before any release commit.
+
 ## Responsive UI and audio rescue (2026-10-25)
 
 - Doing: ship scoped responsive HUD, mode-specific entry, onboarding sizing and audible original battle cues to origin/main.

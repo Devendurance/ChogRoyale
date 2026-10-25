@@ -102,7 +102,12 @@
 .lp-nft-art { width: 46px; height: 46px; border-radius: 8px; }
 .lp-nft span { min-width: 0; }
 .lp-nft strong { display: block; overflow-wrap: anywhere; font: 400 16px/1.2 var(--font-game, "Lilita One", Impact, sans-serif); }
-.lp-nft small { display: block; color: #d5c0e5; margin-top: 3px; font-size: 10px; }
+.lp-nft small { display: flex; align-items: center; gap: 6px; color: #d5c0e5; margin-top: 3px; font-size: 10px; }
+.lp-badge { padding: 1px 6px; border-radius: 5px; background: #5a3f86; color: #f4e8ff; font: 700 9px/1.5 var(--font-data, Georama, sans-serif); letter-spacing: .08em; }
+.lp-badge[data-badge="OWNED"] { background: #2f6e4a; color: #d8f6d4; }
+.lp-badge[data-badge="BORROWED"] { background: #1b6b8f; color: #d4f7ff; }
+.lp-badge[data-badge="LENT"], .lp-badge[data-badge="UNVERIFIED"] { background: #6b3348; color: #ffd9e2; }
+.lp-commander-art--token { border: 2px solid #e7c77f; border-radius: 16px; object-fit: cover; box-shadow: 0 4px 0 #120b45; }
 .lp-subdetails { margin-top: 16px; color: #cdbbe1; font-size: 11px; }
 .lp-subdetails > summary { display: list-item; min-height: 44px; padding: 12px 0; cursor: pointer; }
 .lp-subdetails p { margin: 7px 0 12px; line-height: 1.6; }

@@ -86,3 +86,18 @@ Added:
 - File: `battle-experience-v2-20261025-handoff.zip` (sibling of this report in the assets folder).
 - Contains: harness copy, evidence JSON, logs, harness scripts, presentation PNGs (competitor reference PNGs excluded), motion-audio PNGs and evidence JSON (webm excluded), `initial-fast-build.diff`, `MANIFEST.txt`.
 - Verify: `git diff --check` clean at checkpoint; secret scan of the staged diff found no tokens or private keys.
+
+## Devin completion pass (2026-10-25)
+
+Verdict on the Codex claims, checked against code and fixture evidence:
+
+- Desktop shell: PARTIAL, now fixed. The board's decorative frame overhung the viewport bottom at 1366x768 and 1920x1080 and slid under the scoreboard. `--chud-board-w` now sizes the canvas so the whole frame fits. The right column groups the ability with the hand.
+- Crown flight: PARTIAL, now fixed. Projection logic was correct (seat mapping, Core multi-crown, priming, dedupe). The WAAPI whole-iteration easing compressed the hover and arc so the crown faded out near the counter. It now uses per-keyframe easing, lands solid, pulses the chip and pops +1. The chime sounds on landing (measured 14 ms after arrival, the scheduler lookahead).
+- Finale: PARTIAL, now fixed. Victory and Defeat shared one look and the exit button lost its game font. Results now differ by scrim, emblem motion, title and winner badge. Crowns tally from `end.crowns` with soft ticks. Settlement shows a distinct chip per server state.
+- Start ribbon: PARTIAL, replaced by a 1.9s pointer-transparent VS reveal with commander art, Battle stamp and Arena Patron line.
+- Lobby lending labels: PARTIAL, now OWNED, BORROWED, LENT, PENDING and UNVERIFIED with loan expiry, never loan ids. Debug ruleset copy removed. Entitlement checks unchanged.
+- Far Core HP label and muzzle flash: clamped inside the canvas (presentation only).
+- Directional fire, hit and idle sprites: NOT ADDRESSED. Needs new art, outside this UI scope.
+- Live two-player, physical iPhone and subjective audio: INCONCLUSIVE.
+
+Evidence: `C:/Users/USER/Documents/ChogRoyale-Assets/battle-experience-v2-devin-20261025`.

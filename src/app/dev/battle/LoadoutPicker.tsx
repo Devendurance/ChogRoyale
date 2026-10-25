@@ -10,22 +10,10 @@ import { GameIcon } from "@/components/game/GameIcon";
 import { Portrait } from "./portrait";
 import { useSpriteManifest } from "./use-sprite-manifest";
 import { portraitForCard, portraitForCommanderClass } from "./sprite-registry";
+import { candidateLabel, usableCandidate, type CommanderCandidate } from "./commander-candidate";
 import "./loadout-picker.css";
 
-interface NftCandidate {
-  tokenId: string;
-  name: string | null;
-  imageUrl: string | null;
-  status: "derived" | "pending";
-  eligible: boolean;
-  basis?: "owned" | "borrowed";
-  ownership?: "owned" | "borrowed" | "lent";
-  loan?: { endsAt: string } | null;
-  eligibilityFreshness?: "live" | "cached";
-  commander?: { class: string; variant: string; prestige: string | null; powerScore: number | null };
-  provenance?: { rulesetVersion: string; contentHash: string };
-  reason?: string;
-}
+type NftCandidate = CommanderCandidate;
 interface CommandersResponse { nftCommanders: NftCandidate[]; freshness: "live" | "cached" }
 interface LoadoutGetResponse { loadout: SavedLoadout | null; invalidSaved?: { revision: number; reason: string } }
 interface Envelope<T> {
@@ -47,13 +35,7 @@ function loadSaved(): { cards: string[]; commander: CommanderChoice } | null {
   } catch { return null; }
 }
 
-function usableNft(candidate: NftCandidate): boolean {
-  if (candidate.status !== "derived" || !candidate.eligible || candidate.ownership === "lent") return false;
-  if (candidate.basis === "borrowed" || candidate.ownership === "borrowed") {
-    return !!candidate.loan && Date.parse(candidate.loan.endsAt) > Date.now();
-  }
-  return true;
-}
+const usableNft = (candidate: NftCandidate) => usableCandidate(candidate);
 
 export interface LoadoutPickerProps {
   lobby: LobbyMessage;
@@ -183,6 +165,8 @@ export default function LoadoutPicker({ lobby, mine, getAccessToken, onConfirm, 
   const commanderClass = mine?.commander.class ?? (commander.kind === "free" ? commander.class : selectedNft?.commander?.class);
   const commanderName = mine?.commander.name ?? (commander.kind === "free" ? titleCase(commander.class) : selectedNft?.name ?? "NFT commander");
   const commanderKind = mine?.commander.kind ?? commander.kind;
+  // Token art only from the authenticated commander read, never from a typed claim.
+  const tokenArt = commanderKind === "nft" && selectedNft?.imageUrl && (!mine || (mine.commander.kind === "nft" && mine.commander.tokenId === selectedNft.tokenId)) ? selectedNft.imageUrl : null;
   const sameAsAccount = !!serverDeck?.loadout && JSON.stringify(serverDeck.loadout.cards) === JSON.stringify(cards) && JSON.stringify(serverDeck.loadout.commander) === JSON.stringify(commander);
   const deckStatus = readStatus === "loading" ? "Loading account deck"
     : readStatus === "session" ? "Session unavailable. Your draft is still here."
@@ -201,8 +185,10 @@ export default function LoadoutPicker({ lobby, mine, getAccessToken, onConfirm, 
       <div className="lp-squad">
         <div className="lp-commander">
           <div className="lp-commander-heading"><GameIcon kind="crown" size={22} /><span>Commander</span></div>
-          <Portrait key={commanderClass ?? "unresolved"} src={kit && commanderClass ? portraitForCommanderClass(kit, commanderClass) : null} name={commanderClass ? titleCase(commanderClass) : "Awaiting verification"} className="lp-commander-art" style={{ objectFit: "contain" }} />
-          <div className="lp-commander-copy"><h3>{commanderName}</h3><span>{commanderKind === "free" ? "Free commander" : mine ? (mine.commander.basis === "borrowed" ? "Borrowed commander" : "Verified commander") : "Checked when you ready up"}</span><small>{commanderClass ? `${titleCase(commanderClass)} class art` : "Class resolves after verification"}</small></div>
+          {tokenArt
+            ? <Portrait key={tokenArt} src={tokenArt} name={commanderName} className="lp-commander-art lp-commander-art--token" />
+            : <Portrait key={commanderClass ?? "unresolved"} src={kit && commanderClass ? portraitForCommanderClass(kit, commanderClass) : null} name={commanderClass ? titleCase(commanderClass) : "Awaiting verification"} className="lp-commander-art" style={{ objectFit: "contain" }} />}
+          <div className="lp-commander-copy"><h3>{commanderName}</h3><span>{commanderKind === "free" ? "Free commander" : mine ? (mine.commander.basis === "borrowed" ? "Borrowed commander" : "Verified commander") : selectedNft?.basis === "borrowed" || selectedNft?.ownership === "borrowed" ? "Borrowed. Checked when you ready up" : "Checked when you ready up"}</span><small>{tokenArt ? `Genesis token art${commanderClass ? ` · ${titleCase(commanderClass)} class` : ""}` : commanderClass ? `${titleCase(commanderClass)} class art` : "Class resolves after verification"}</small></div>
         </div>
         <div className="lp-deck">
           <div className="lp-deck-heading"><h3><GameIcon kind="deck" size={22} />Your Battle Deck</h3><span>{displayedCards.length}/7 cards <i />{average} avg. energy</span></div>
@@ -256,9 +242,9 @@ export default function LoadoutPicker({ lobby, mine, getAccessToken, onConfirm, 
           {!nfts.length && !nftStatus && <p className="lp-help">No Genesis commander candidates returned for this account.</p>}
           <div className="lp-nfts">{nfts.map((candidate) => <button type="button" key={candidate.tokenId} className={`lp-nft${commander.kind === "nft" && commander.tokenId === candidate.tokenId ? " lp-nft--selected" : ""}`} disabled={frozen || !usableNft(candidate)} onClick={() => selectNft(candidate.tokenId)}>
             {candidate.imageUrl && <Portrait src={candidate.imageUrl} name={candidate.name ?? "Genesis commander"} className="lp-nft-art" />}
-            <span><strong>{candidate.name ?? "Genesis commander"}</strong><small>{candidate.ownership === "lent" ? "Lent · Unavailable" : candidate.basis === "borrowed" ? "Borrowed" : candidate.ownership === "owned" || candidate.basis === "owned" ? "Owned candidate" : "Commander candidate"}{candidate.commander ? ` · ${titleCase(candidate.commander.class)}` : ""}</small>{!usableNft(candidate) && <small>{candidate.reason ?? "Currently unavailable"}</small>}</span>
+            {(() => { const label = candidateLabel(candidate); return <span><strong>{candidate.name ?? "Genesis commander"}</strong><small><b className="lp-badge" data-badge={label.badge}>{label.badge}</b>{candidate.commander ? titleCase(candidate.commander.class) : "Class pending"}</small><small>{label.detail}</small></span>; })()}
           </button>)}</div>
-          <details className="lp-subdetails"><summary>Verification &amp; Token Details</summary><p>Genesis ownership or borrowed access is checked by the server when you ready up and again at match start. Candidate list: {nftFreshness}. Saving a deck does not verify access.</p>{selectedNft?.provenance && <p>Selected definition: {selectedNft.provenance.rulesetVersion}. Variant: {selectedNft.commander?.variant ?? "Pending"}. Eligibility: {selectedNft.eligibilityFreshness ?? nftFreshness}.</p>}<label htmlFor="lp-token-id">Manually select a token claim</label><div className="lp-manual"><input id="lp-token-id" inputMode="numeric" placeholder="Genesis token ID" value={manualToken} disabled={frozen} onChange={(event) => setManualToken(event.target.value.replace(/\D/g, ""))} /><button type="button" className="lp-button lp-button--small" disabled={!/^\d{1,78}$/.test(manualToken) || frozen} onClick={() => selectNft(manualToken)}>Use Token</button></div>{commander.kind === "nft" && <p>Selected token claim: {commander.tokenId}. The server confirms access.</p>}</details>
+          <details className="lp-subdetails"><summary>Ownership checks &amp; token ID</summary><p>Genesis ownership or borrowed access is checked by the server when you ready up and again at match start. {nftFreshness === "live" ? "This list was just checked onchain." : "This list comes from your last ownership check. Refresh to check again."} Saving a deck does not verify access.</p><label htmlFor="lp-token-id">Use a Genesis token ID</label><div className="lp-manual"><input id="lp-token-id" inputMode="numeric" placeholder="Genesis token ID" value={manualToken} disabled={frozen} onChange={(event) => setManualToken(event.target.value.replace(/\D/g, ""))} /><button type="button" className="lp-button lp-button--small" disabled={!/^\d{1,78}$/.test(manualToken) || frozen} onClick={() => selectNft(manualToken)}>Use Token</button></div>{commander.kind === "nft" && <p>Selected token claim: {commander.tokenId}. The server confirms access.</p>}</details>
         </div></details>
       </>}
     </section>

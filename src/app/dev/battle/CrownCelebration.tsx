@@ -61,7 +61,11 @@ export default function CrownCelebration({ frame, start, me, boardRef, mineRef, 
     const rect = canvas?.getBoundingClientRect();
     if (!rect || !rect.width || !rect.height) return;
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (cues.length) onAudioCue("crown-earned");
+    // The chime marks the moment a crown reaches its counter. Reduced motion
+    // has no flight, so it sounds with the confirmed score change instead.
+    let chimed = false;
+    const chime = () => { if (!chimed) { chimed = true; onAudioCue("crown-earned"); } };
+    if (cues.length && reduced) chime();
     cues.forEach((cue, index) => {
       const target = (cue.scorer === me ? mineRef : theirsRef).current;
       if (!target) return;
@@ -96,22 +100,47 @@ export default function CrownCelebration({ frame, start, me, boardRef, mineRef, 
       sprite.appendChild(burst);
       host.current!.appendChild(sprite);
       const spread = (index - (cues.length - 1) / 2) * 34;
+      // Per-segment easing on a linear timeline: pop up from the rubble, hang
+      // for a beat, then accelerate along an arc and land solid on the counter.
+      const dx = dest.x - origin.x;
+      const dy = dest.y - origin.y;
       const animation = sprite.animate(reduced ? [{ opacity: 1 }, { opacity: 0 }] : [
-        { transform: "translate(-50%,-50%) scale(.12) rotate(-20deg)", opacity: 0, offset: 0 },
-        { transform: `translate(calc(-50% + ${spread}px),calc(-50% - 35px)) scale(1.38) rotate(7deg)`, opacity: 1, offset: .2 },
-        { transform: `translate(calc(-50% + ${spread}px),calc(-50% - 42px)) scale(1) rotate(-3deg)`, opacity: 1, offset: .42 },
-        { transform: `translate(calc(-50% + ${(dest.x - origin.x) * .4}px),calc(-50% + ${(dest.y - origin.y) * .35 - 65}px)) scale(.9)`, opacity: 1, offset: .66 },
-        { transform: `translate(calc(-50% + ${dest.x - origin.x}px),calc(-50% + ${dest.y - origin.y}px)) scale(.24)`, opacity: 0, offset: 1 },
-      ], { duration: reduced ? 180 : 1250, delay: reduced ? 0 : index * 100, easing: "cubic-bezier(.2,.7,.3,1)", fill: "both" });
+        { transform: "translate(-50%,-50%) scale(.15) rotate(-20deg)", opacity: 0, offset: 0, easing: "cubic-bezier(.2,1.5,.4,1)" },
+        { transform: `translate(calc(-50% + ${spread}px),calc(-50% - 46px)) scale(1.35) rotate(6deg)`, opacity: 1, offset: .2, easing: "ease-in-out" },
+        { transform: `translate(calc(-50% + ${spread}px),calc(-50% - 54px)) scale(1.08) rotate(-3deg)`, opacity: 1, offset: .42, easing: "cubic-bezier(.5,0,.9,.6)" },
+        { transform: `translate(calc(-50% + ${spread + (dx - spread) * .45}px),calc(-50% + ${dy * .4 - 80}px)) scale(.9) rotate(0deg)`, opacity: 1, offset: .74, easing: "cubic-bezier(.2,.6,.4,1)" },
+        { transform: `translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px)) scale(.5)`, opacity: 1, offset: 1 },
+      ], { duration: reduced ? 180 : 1300, delay: reduced ? 0 : index * 170, easing: "linear", fill: "both" });
       let pulse: Animation | null = null;
-      const dispose = () => { animation.onfinish = null; animation.cancel(); pulse?.cancel(); sprite.remove(); };
+      let plus: HTMLElement | null = null;
+      const dispose = () => { animation.onfinish = null; animation.cancel(); pulse?.cancel(); sprite.remove(); plus?.remove(); };
       cleanup.current.add(dispose);
       animation.onfinish = () => {
         sprite.remove();
-        if (!reduced) {
-          pulse = target.animate([{ transform: "scale(1)", filter: "brightness(1)" }, { transform: "scale(1.65)", filter: "brightness(1.8)" }, { transform: "scale(1)", filter: "brightness(1)" }], { duration: 420, easing: "ease-out" });
-          pulse.onfinish = () => cleanup.current.delete(dispose);
-        } else cleanup.current.delete(dispose);
+        if (reduced) { cleanup.current.delete(dispose); return; }
+        chime();
+        pulse = target.animate([
+          { transform: "scale(1)", filter: "brightness(1)" },
+          { transform: "scale(1.45) rotate(-4deg)", filter: "brightness(1.7)", offset: .3 },
+          { transform: "scale(.94)", filter: "brightness(1.15)", offset: .65 },
+          { transform: "scale(1)", filter: "brightness(1)" },
+        ], { duration: 480, easing: "ease-out" });
+        plus = document.createElement("b");
+        plus.className = "chud-crown-plus";
+        plus.dataset.team = sprite.dataset.team;
+        plus.textContent = "+1";
+        plus.style.left = `${dest.x}px`;
+        plus.style.top = `${arrival.bottom + 4}px`;
+        host.current?.appendChild(plus);
+        const rise = plus.animate([
+          { transform: "translate(-50%, 6px) scale(.6)", opacity: 0 },
+          { transform: "translate(-50%, 0) scale(1.15)", opacity: 1, offset: .25 },
+          { transform: "translate(-50%, -14px) scale(1)", opacity: 0 },
+        ], { duration: 900, easing: "ease-out" });
+        let settled = 0;
+        const done = () => { if (++settled === 2) { plus?.remove(); cleanup.current.delete(dispose); } };
+        pulse.onfinish = done;
+        rise.onfinish = done;
       };
     });
   }, [frame, me, boardRef, mineRef, theirsRef, onAudioCue]);

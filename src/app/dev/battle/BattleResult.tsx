@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import type { EndMessage, SettlementMessage, StartMessage } from "@/lib/battle-protocol";
 import type { RankedAwardView } from "@/lib/ranked";
 import { GameIcon } from "@/components/game/GameIcon";
+import type { BattleCue } from "./battle-audio";
+import { finaleView, tallyAt } from "./battle-result-model";
 import "./battle-result.css";
 
 interface Props {
@@ -15,23 +17,38 @@ interface Props {
   me: number;
   playerName?: string;
   onExit?: () => void;
+  onAudioCue?: (cue: BattleCue) => void;
   rankedAward?: RankedAwardView | null;
   rankedAwardStatus?: "idle" | "checking" | "awarded" | "unavailable" | "timeout";
 }
 
-const reasonText = (reason: string | null) => ({ core: "Core broken", crowns: "Crown lead", overtime: "Overtime tiebreak", timeout: "Time expired" }[reason ?? ""] ?? "Battle complete");
-const settlementText = (value: SettlementMessage | null) => {
-  if (!value) return "Waiting for result confirmation";
-  if (value.status === "settled" || value.status === "already-settled") return "Result recorded";
-  if (value.status === "pending") return "Result pending. Retrying in the background.";
-  if (value.status === "disabled") return "Result recording is unavailable on this server.";
-  return "Result could not be verified.";
-};
+/** Ribbons land 0.75s after the reveal starts, then each crown step takes 0.34s. */
+const TALLY_LEAD_MS = 750;
+const TALLY_STEP_MS = 340;
 
-export default function BattleResult({ start, end, abort, settlement, me, playerName = "You", onExit, rankedAward, rankedAwardStatus }: Props) {
+function Ribbon({ side, name, crowns, shown, winner, you }: { side: "foe" | "mine"; name: string; crowns: number; shown: number; winner: boolean; you?: boolean }) {
+  return (
+    <div className={`chud-finale-ribbon chud-finale-ribbon--${side}`} data-winner={winner}>
+      {winner && <span className="chud-finale-badge">Winner</span>}
+      <span className="chud-finale-name" title={name}>{you && <i className="chud-finale-you">You</i>}{name}</span>
+      <div className="chud-finale-crowns" role="img" aria-label={`${crowns} ${crowns === 1 ? "crown" : "crowns"}`}>
+        {Array.from({ length: 3 }, (_, i) => <span key={i} data-earned={i < shown} aria-hidden="true"><GameIcon kind="crown" size={44} /></span>)}
+        <strong aria-hidden="true">{shown}</strong>
+      </div>
+    </div>
+  );
+}
+
+export default function BattleResult({ start, end, abort, settlement, me, playerName = "You", onExit, onAudioCue, rankedAward, rankedAwardStatus }: Props) {
   const router = useRouter();
   const dialog = useRef<HTMLDivElement>(null);
   const exit = useRef<HTMLButtonElement>(null);
+  const view = finaleView(end, abort, me, settlement, start.ticksPerSecond);
+  const [reduced] = useState(() => typeof window !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches);
+  const [step, setStep] = useState(() => (reduced ? 3 : 0));
+  const cue = useRef(onAudioCue);
+  useEffect(() => { cue.current = onAudioCue; }, [onAudioCue]);
+
   useEffect(() => {
     const node = dialog.current;
     if (!node) return;
@@ -59,42 +76,38 @@ export default function BattleResult({ start, end, abort, settlement, me, player
     };
   }, [onExit]);
 
-  const result = end?.result ?? "abort";
-  const title = result === "win" ? "Victory" : result === "loss" ? "Defeat" : result === "draw" ? "Draw" : "Battle interrupted";
-  const mine = end?.crowns[me] ?? 0;
-  const theirs = end?.crowns[1 - me] ?? 0;
-  const seconds = end ? Math.floor(end.ticks / start.ticksPerSecond) : 0;
+  // Presentation-only tally of the server's final crowns. Each step that
+  // lights a crown gets one soft tick. Reduced motion shows the final count.
+  const top = Math.max(view.mine, view.theirs);
+  useEffect(() => {
+    if (reduced || !end || top === 0) return;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    for (let next = 1; next <= top; next++) {
+      timers.push(setTimeout(() => { setStep(next); cue.current?.("crown-tally"); }, view.revealDelayMs + TALLY_LEAD_MS + (next - 1) * TALLY_STEP_MS));
+    }
+    return () => timers.forEach(clearTimeout);
+  }, [end, reduced, top, view.revealDelayMs]);
+
+  const style = { "--fd": `${view.revealDelayMs / 1000}s` } as CSSProperties;
   return (
-    <div className="chud-finale" data-result={result} ref={dialog} role="dialog" aria-modal="true" aria-labelledby="chud-finale-title" aria-describedby="chud-finale-context">
+    <div className="chud-finale" data-result={view.result} ref={dialog} role="dialog" aria-modal="true" aria-labelledby="chud-finale-title" aria-describedby="chud-finale-context" style={style}>
       <div className="chud-finale-scrim" />
       <div className="chud-finale-content">
-        <p className="chud-finale-kicker">{end ? "Battle complete" : "Connection ended"}</p>
-        <div className="chud-finale-emblem" aria-hidden="true"><GameIcon kind={result === "win" ? "victory" : result === "loss" ? "defeat" : "crown"} size={110} /></div>
-        <h2 id="chud-finale-title">{title}</h2>
+        <p className="chud-finale-kicker">{view.kicker}</p>
+        <div className="chud-finale-emblem" aria-hidden="true"><GameIcon kind={view.result === "win" ? "victory" : view.result === "loss" ? "defeat" : "crown"} size={112} /></div>
+        <h2 id="chud-finale-title">{view.title}</h2>
+        <p className="chud-finale-context" id="chud-finale-context">{view.context}</p>
         {end && <div className="chud-finale-versus">
-          <div className="chud-finale-ribbon chud-finale-ribbon--foe">
-            <span className="chud-finale-name" title={start.opponent}>{start.opponent}</span>
-            <div className="chud-finale-crowns" aria-label={`${theirs} crowns`}>
-              {Array.from({ length: 3 }, (_, i) => <span key={i} data-earned={i < theirs} style={{ animationDelay: `${2.3 + i * .14}s` }}><GameIcon kind="crown" size={43} /></span>)}
-              <strong>{theirs}</strong>
-            </div>
-          </div>
+          <Ribbon side="foe" name={start.opponent} crowns={view.theirs} shown={tallyAt(step, view.theirs)} winner={view.winner === "theirs"} />
           <span className="chud-finale-vs" aria-hidden="true">VS</span>
-          <div className="chud-finale-ribbon chud-finale-ribbon--mine">
-            <span className="chud-finale-name" title={playerName}>{playerName}</span>
-            <div className="chud-finale-crowns" aria-label={`${mine} crowns`}>
-              {Array.from({ length: 3 }, (_, i) => <span key={i} data-earned={i < mine} style={{ animationDelay: `${2.45 + i * .14}s` }}><GameIcon kind="crown" size={43} /></span>)}
-              <strong>{mine}</strong>
-            </div>
-          </div>
+          <Ribbon side="mine" name={playerName} crowns={view.mine} shown={tallyAt(step, view.mine)} winner={view.winner === "mine"} you />
         </div>}
-        <div className="chud-finale-details" id="chud-finale-context">
-          <p>{end ? `${reasonText(end.reason)} · ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}` : abort || "The match ended early."}</p>
-          {end && <p aria-live="polite">{settlementText(settlement)}</p>}
-          {end && start.mode === "ranked" && <p className="chud-finale-ranked" aria-live="polite">
+        {view.settlement && <div className="chud-finale-details">
+          <p className="chud-finale-settle" data-state={view.settlement.state} aria-live="polite"><i aria-hidden="true" />{view.settlement.text}</p>
+          {start.mode === "ranked" && <p className="chud-finale-ranked" aria-live="polite">
             {rankedAward ? <><GameIcon kind="trophy" size={22} /> {rankedAward.delta > 0 ? "+" : ""}{rankedAward.delta} trophies · Balance {rankedAward.balanceAfter}</> : rankedAwardStatus === "checking" || rankedAwardStatus === "idle" ? "Confirming the ranked award" : rankedAwardStatus === "timeout" ? "Ranked award pending. Check Progress later." : "No ranked award confirmed."}
           </p>}
-        </div>
+        </div>}
       </div>
       <div className="chud-finale-footer"><button ref={exit} type="button" className="chud-finale-exit" onClick={onExit ?? (() => { router.push("/app/play"); })}>Back to lobby <span aria-hidden="true">›</span></button></div>
     </div>
