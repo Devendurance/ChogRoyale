@@ -32,9 +32,12 @@
 .chud-finale-ribbon--mine{border-top-color:#c3fbff;background:linear-gradient(#45b2cf,#1b6b8f);animation-name:chud-finale-ribbon-mine;animation-delay:calc(var(--fd) + .55s)}
 .chud-finale-ribbon[data-winner=true]{border-top-color:#fff0a8;box-shadow:inset 0 3px 0 #ffffff4a,inset 0 -5px 0 #0000002b,inset 0 0 0 3px #ffd76866}
 .chud-finale[data-result=win] .chud-finale-ribbon--foe,.chud-finale[data-result=loss] .chud-finale-ribbon--mine{filter:saturate(.62) brightness(.82)}
-.chud-finale-badge{position:absolute;top:7px;right:8%;padding:2px 9px;border:2px solid #2a153f;border-radius:999px;background:linear-gradient(#fff1a6,#f7b733);color:#3a1d0c;font:400 12px/1.2 var(--font-lilita),sans-serif;letter-spacing:.04em;box-shadow:0 2px 0 #2a153f;animation:chud-finale-pop .4s calc(var(--fd) + 1.1s) both}
-.chud-finale-name{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 64px;font:400 21px/1.2 var(--font-lilita),sans-serif;text-shadow:0 2px 0 #261239}
-.chud-finale-you{display:inline-block;margin-right:7px;padding:1px 6px;border-radius:5px;background:#0d3f57;color:#c3fbff;font:700 10px/1.4 var(--font-georama),sans-serif;font-style:normal;letter-spacing:.1em;text-transform:uppercase;vertical-align:3px}
+/* Tag, name and badge share one row, so a long name ellipsizes instead of
+   sliding under the badge, and the badge always sits beside the winner. */
+.chud-finale-who{display:flex;align-items:center;justify-content:center;gap:8px;min-width:0;padding:0 18px}
+.chud-finale-badge{flex:none;padding:2px 9px;border:2px solid #2a153f;border-radius:999px;background:linear-gradient(#fff1a6,#f7b733);color:#3a1d0c;font:400 12px/1.2 var(--font-lilita),sans-serif;letter-spacing:.04em;box-shadow:0 2px 0 #2a153f;animation:chud-finale-pop .4s calc(var(--fd) + 1.1s) both}
+.chud-finale-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:400 21px/1.2 var(--font-lilita),sans-serif;text-shadow:0 2px 0 #261239}
+.chud-finale-you{flex:none;padding:1px 6px;border-radius:5px;background:#0d3f57;color:#c3fbff;font:700 10px/1.4 var(--font-georama),sans-serif;font-style:normal;letter-spacing:.1em;text-transform:uppercase}
 .chud-finale-crowns{display:flex;align-items:center;justify-content:center;gap:12px;min-height:54px}
 .chud-finale-crowns>span{transition:opacity .2s,filter .2s}
 .chud-finale-crowns>span[data-earned=true]{animation:chud-finale-crown .42s cubic-bezier(.3,1.6,.5,1) both}
@@ -72,7 +75,7 @@
 @keyframes chud-finale-sparkles{0%,100%{opacity:.25;transform:scale(.96)}50%{opacity:1;transform:scale(1.05)}}
 @keyframes chud-finale-wait{0%,100%{opacity:.35}50%{opacity:1}}
 
-@media(max-width:480px){.chud-finale-name{padding:0 54px 0 34px;font-size:18px}.chud-finale-badge{right:5%;top:5px;font-size:11px}.chud-finale-crowns .game-icon{width:38px;height:38px}}
+@media(max-width:480px){.chud-finale-who{gap:6px;padding:0 8px}.chud-finale-name{font-size:18px}.chud-finale-badge{padding:1px 7px;font-size:11px}.chud-finale-crowns .game-icon{width:38px;height:38px}}
 @media(max-height:700px){.chud-finale-content{padding-top:2px}.chud-finale-emblem{height:78px}.chud-finale-emblem .game-icon{width:80px;height:80px}.chud-finale h2{font-size:48px}.chud-finale-context{margin-bottom:12px}.chud-finale-ribbon{padding:7px 22px 9px}.chud-finale-crowns{min-height:44px}.chud-finale-crowns .game-icon{width:36px;height:36px}.chud-finale-details{margin-top:10px}.chud-finale-footer{margin-top:6px}}
 @media(max-height:450px) and (min-width:600px){.chud-finale-content{width:min(100%,740px);display:grid;grid-template-columns:200px 1fr;column-gap:22px;align-items:center}.chud-finale-kicker{grid-column:1/-1}.chud-finale-emblem{grid-column:1;grid-row:2;height:80px}.chud-finale h2{grid-column:1;grid-row:3;font-size:40px}.chud-finale-context{grid-column:1;grid-row:4}.chud-finale-versus{grid-column:2;grid-row:2/5}.chud-finale-details{grid-column:1/-1}.chud-finale-footer{max-width:500px}}
 @media(prefers-reduced-motion:reduce){.chud-finale *,.chud-finale-scrim,.chud-finale .chud-finale-emblem:before,.chud-finale .chud-finale-emblem:after{animation:none!important;transition:none!important}}

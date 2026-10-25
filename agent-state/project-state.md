@@ -1,5 +1,11 @@
 # Project State
 
+## Battle identity and perspective hotfix (2026-10-25)
+
+- Root cause: BattlePanel read `lobby.players[start.seat]`. Lobby players are indexed by join slot, battle seats are shuffled at start, so a swapped shuffle showed the opponent's name as your own on both devices.
+- Fix: `battle-identity.ts` resolves self/opponent/seats. Server `StartMessage.self` (optional, additive) carries the own verified username, so reconnects without a lobby still name the player. Older servers fall back to the lobby by join slot.
+- Polish: compact phone header with icon sound toggle and volume popover, card names sized to fit, empty ability row collapsed, commander identity grouped with its ability on desktop, mirrored side columns, result Winner badge in the name row.
+
 ## Battle Experience V2 (2026-10-25)
 
 - Codex V2 foundations kept: BattleLobby, BattleResult, CrownCelebration, crown-presentation, GameIcon, crown chime. Devin pass added `battle-result-model.ts` (finale view, settlement states, tally) and `commander-candidate.ts` (ready-room NFT labels), both pure and tested.

@@ -344,6 +344,7 @@ export class BattleSession {
       ruleset: COMBAT_RULESET_VERSION,
       arena: ARENA_VERSION,
       seat,
+      self: this.slots[slot]!.username,
       opponent: opp.username,
       deck: [...this.config!.decks[seat]],
       commander: grant.identity,

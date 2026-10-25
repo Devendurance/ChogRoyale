@@ -120,6 +120,20 @@ describe("B3.1 battle session", () => {
     expect(() => s.join({ playerId: "pc", username: "c" })).toThrow(/already started/);
   });
 
+  it("names self and opponent from the join slot even when the seat shuffle swaps seats", () => {
+    for (const flip of [0, 1]) {
+      const s = started(flip);
+      for (const [slot, self, opponent] of [[0, "alice", "bob"], [1, "bob", "alice"]] as const) {
+        const start = s.startMessage(slot);
+        expect(start.self).toBe(self);
+        expect(start.opponent).toBe(opponent);
+        expect(start.seat).toBe(s.seatOf(slot === 0 ? "pa" : "pb"));
+      }
+      // Lobby players stay indexed by join slot, never by battle seat.
+      expect(s.lobby(0).players.map((p) => p.username)).toEqual(["alice", "bob"]);
+    }
+  });
+
   it("rejects malformed, inactive, duplicate and flooding intents before the engine", () => {
     const pre = new BattleSession(rng());
     pre.join(A);

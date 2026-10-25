@@ -39,7 +39,7 @@ describe("battle finale render", () => {
     const html = render();
     expect(html).toContain("Victory");
     expect(html).toMatch(/chud-finale-ribbon--mine" data-winner="true"/);
-    expect(html).toContain(">You</i>MyChog");
+    expect(html).toMatch(/ribbon--mine" data-winner="true"><div class="chud-finale-who"><i class="chud-finale-you">You<\/i><span class="chud-finale-name" title="MyChog">MyChog<\/span><span class="chud-finale-badge">Winner<\/span>/);
     expect(html).toContain("Waiting for result confirmation");
     expect(html).toContain('aria-label="3 crowns"');
     for (const secret of ["private-state-hash", "private-match-id"]) expect(html).not.toContain(secret);
@@ -49,6 +49,11 @@ describe("battle finale render", () => {
     expect(html).toMatch(/chud-finale-ribbon--foe" data-winner="true"/);
     expect(html).toContain('data-state="recorded"');
     expect(html).toContain("Crown lead");
+  });
+  it("shows only the You tag while the own name is unknown, never a borrowed name", () => {
+    const html = render({ playerName: undefined });
+    expect(html).toMatch(/<i class="chud-finale-you">You<\/i><span class="chud-finale-badge">Winner<\/span>/);
+    expect(html.match(/chud-finale-name/g)).toHaveLength(1);
   });
   it("shows an interrupted battle without a scoreboard or settlement line", () => {
     const html = render({ end: null, abort: "Your opponent left." });

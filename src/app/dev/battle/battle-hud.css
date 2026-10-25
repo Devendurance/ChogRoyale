@@ -43,11 +43,18 @@
 .chud-clock-mult { margin-left: 4px; vertical-align: 4px; -webkit-text-stroke: 0; text-shadow: none; }
 .chud-ot { color: #ffc83d; font-size: 14px; font-weight: 400; }
 .chud-subrow { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; min-width: 0; }
-.chud-audio { display: inline-flex; align-items: center; gap: 5px; margin-left: auto; min-width: 0; padding: 2px 4px; border: 1px solid #9271d466; border-radius: 6px; background: #1d1458aa; }
-.chud-audio-toggle { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; padding: 4px 7px; border: 1px solid #b697d6; border-radius: 5px; background: #302064; color: #f5eaff; font: 600 10px/1.1 var(--font-georama), sans-serif; cursor: pointer; }
+/* Compact sound controls: a toggle and a volume disclosure. Both draw at 32px
+   but extend their hit area to 44px, so the header stays short on phones. */
+.chud-audio { position: relative; display: inline-flex; align-items: center; gap: 4px; margin-left: auto; min-width: 0; }
+.chud-audio-toggle, .chud-audio-more { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-height: 32px; padding: 3px 8px; border: 1px solid #b697d6; border-radius: 7px; background: #302064; color: #f5eaff; font: 600 10px/1.1 var(--font-georama), sans-serif; cursor: pointer; }
+.chud-audio-toggle::after, .chud-audio-more::after { content: ""; position: absolute; inset: -6px -2px; }
+.chud-audio-more { min-width: 42px; padding-inline: 6px; font-variant-numeric: tabular-nums; color: #e4d8fa; }
+.chud-audio-more[aria-expanded="true"] { border-color: #ffe08a; color: #fff1b5; }
+.chud-audio-icon { font-size: 13px; line-height: 1; }
 .chud-audio-toggle[aria-pressed="true"] { border-color: #ffe08a; color: #fff1b5; }
-.chud-audio-toggle:focus-visible, .chud-audio-volume:focus-visible { outline: 2px solid #fff1af; outline-offset: 2px; }
-.chud-audio-volume { width: 66px; min-width: 48px; min-height: 44px; accent-color: #ffc83d; cursor: pointer; }
+.chud-audio-toggle:focus-visible, .chud-audio-more:focus-visible, .chud-audio-volume:focus-visible { outline: 2px solid #fff1af; outline-offset: 2px; }
+.chud-audio-pop { position: absolute; z-index: 9; top: calc(100% + 8px); right: 0; display: flex; align-items: center; padding: 4px 12px; border: 1px solid #b697d6; border-radius: 10px; background: #241858f5; box-shadow: 0 8px 20px #0a041f99; }
+.chud-audio-volume { width: 150px; min-height: 44px; accent-color: #ffc83d; cursor: pointer; }
 .chud-pill { display: inline-block; background: #1d1458; border: 1px solid #9271d466; border-radius: 5px; padding: 2px 6px; font: 500 10px/1.3 var(--font-georama), sans-serif; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #e4d8fa; }
 .chud-pill[data-dead="true"] { opacity: .55; text-decoration: line-through; }
 .chud-pill[data-owner="you"] { border-color: #67d8ed; }
@@ -57,6 +64,9 @@
 .chud-dev-inline { position: absolute; z-index: 8; top: 80px; left: 8px; right: 8px; max-height: 220px; overflow: auto; background: #1d1437f5; border: 1px solid #9472d9; border-radius: 10px; padding: 10px; box-shadow: 0 8px 20px #0007; }
 .chud-dev { font: 11px/1.5 var(--font-georama), sans-serif; color: #d3c4e8; overflow-wrap: anywhere; }
 .chud-dev-towers { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+/* Passive connection copy lives in the desktop status panel. The scoreboard
+   only grows for alerts, notices and the give-up action. */
+.chud-top .chud-status[data-alert="false"] { display: none; }
 .chud-status { display: flex; align-items: center; flex-wrap: wrap; gap: 3px 8px; font: 500 10px/1.3 var(--font-georama), sans-serif; color: #c9b9e5; overflow-wrap: anywhere; }
 .chud-giveup { padding: 4px 9px; min-height: 44px; margin-left: auto; border: 1px solid #c19ad1; border-radius: 5px; background: #40245c; color: #fff0fa; cursor: pointer; }
 .chud-status-error { color: #ffc0c8; }
@@ -78,13 +88,15 @@
 .chud-cards { display: grid; grid-template-columns: 40px repeat(4, minmax(0, 1fr)); gap: 7px; align-items: stretch; width: 100%; max-width: 480px; margin: auto; }
 .chud-next { position: relative; width: 36px; height: 50px; align-self: center; border: 2px solid #9e83bb; border-radius: 7px; overflow: hidden; opacity: .85; box-shadow: 3px 3px #20133b; }
 .chud-next-tag { position: absolute; bottom: 0; left: 0; right: 0; font: 600 8px/1.5 var(--font-georama), sans-serif; text-align: center; background: #21113ce8; color: #f6e8ff; text-transform: uppercase; }
-.chud-card { position: relative; width: 100%; aspect-ratio: 3/4; min-height: 88px; min-width: 0; border-radius: 9px; overflow: hidden; border: 2px solid #ac8ce4; border-bottom: 4px solid #1b103f; background: linear-gradient(#8c63ff, #4a23b8); padding: 0; cursor: pointer; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; box-shadow: 0 2px 0 #130b32, inset 0 1px #ffffff66; transition: transform .12s; }
+.chud-card { container-type: inline-size; position: relative; width: 100%; aspect-ratio: 3/4; min-height: 88px; min-width: 0; border-radius: 9px; overflow: hidden; border: 2px solid #ac8ce4; border-bottom: 4px solid #1b103f; background: linear-gradient(#8c63ff, #4a23b8); padding: 0; cursor: pointer; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; box-shadow: 0 2px 0 #130b32, inset 0 1px #ffffff66; transition: transform .12s; }
 .chud-card-portrait { position: absolute; inset: 0; width: 100%; height: 100%; }
 .chud-card[data-afford="false"] .chud-card-portrait { filter: saturate(.65) brightness(.78); }
 .chud-card[data-selected="true"] { border-color: #ffe084; box-shadow: 0 0 0 2px #ffc83d, 0 5px 12px #160a34; }
 .chud-cost { position: absolute; z-index: 2; top: 2px; left: 2px; display: grid; place-items: center; min-width: 25px; height: 27px; padding: 0 4px; border: 1px solid #f0ceff; border-bottom: 3px solid #3a1163; border-radius: 8px 8px 10px 10px; background: linear-gradient(#ce7cff, #7130b2); color: #fff; font: 400 20px/1 var(--font-lilita), sans-serif; -webkit-text-stroke: 2px #351052; paint-order: stroke fill; text-shadow: 0 1px #180a35; box-shadow: 1px 2px 0 #110b35aa, inset 0 1px #ffffff55; }
 .chud-card[data-afford="false"] .chud-cost { background: linear-gradient(#8a638c, #55395e); }
-.chud-name { position: absolute; z-index: 2; bottom: 0; left: 0; right: 0; min-height: 30px; display: -webkit-box; align-items: end; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow-wrap: break-word; font: 400 12px/1.1 var(--font-lilita), sans-serif; padding: 8px 3px 4px; background: linear-gradient(transparent, #1a0c3df2 30%); color: #fff; text-align: center; -webkit-text-stroke: 1.5px #190b35; paint-order: stroke fill; text-wrap: balance; }
+/* Lilita glyphs average up to .58em, so the longest word sets a size that
+   fits the card width. Whole words stay intact down to 9px on a 360px phone. */
+.chud-name { position: absolute; z-index: 2; bottom: 0; left: 0; right: 0; min-height: 30px; display: -webkit-box; align-items: end; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow-wrap: break-word; font: 400 12px/1.1 var(--font-lilita), sans-serif; font-size: clamp(9px, calc((100cqi - 8px) * 1.74 / var(--chud-name-len, 8)), 13px); padding: 8px 3px 4px; background: linear-gradient(transparent, #1a0c3df2 30%); color: #fff; text-align: center; -webkit-text-stroke: 1.5px #190b35; paint-order: stroke fill; text-wrap: balance; }
 .chud-name-word { display: inline-block; margin-inline: 1px; max-width: calc(100% - 2px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
 .chud-class-art { position: absolute; top: 3px; right: 2px; padding: 1px 2px; background: #22103ed9; color: #fff3d4; font: 7px/1.2 var(--font-georama), sans-serif; border-radius: 2px; }
 .chud-abilities { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
@@ -103,6 +115,10 @@
 .chud-ability-cd-fill { display: block; height: 100%; background: #f4cf6d; }
 .chud-ability:disabled .chud-ability-cd-fill { background: #b398ea; }
 .chud-ability-empty { font: 500 10px/1.35 var(--font-georama), sans-serif; color: #dfd0f3; text-align: center; padding: 3px 0; }
+/* Under the hand, guidance copy would push the cards up. The commander card
+   in the hand already says what to do, so the empty tray row collapses. */
+.chud-abilities-tray:not(:has(.chud-ability)) { display: none; }
+.chud-side-ability .chud-identity { margin-bottom: 10px; }
 .chud-energy { display: flex; align-items: center; gap: 6px; }
 .chud-energy-cells { flex: 1; display: grid; grid-template-columns: repeat(10, 1fr); gap: 2px; height: 17px; }
 .chud-cell { background: #1d0c42; border: 1px solid #b18cdc; border-radius: 3px; overflow: hidden; box-shadow: inset 0 2px 3px #100923; }
@@ -161,7 +177,9 @@
   .chud-col { display: contents; }
   .chud-side-left { grid-column: 1; grid-row: 1 / 4; width: 100%; max-width: 250px; justify-self: end; padding-top: 4px; }
   .chud-side-right { grid-column: 3; grid-row: 1 / 3; width: 100%; max-width: 440px; justify-self: start; gap: 12px; padding-top: 0; }
-  .chud-side-right > .chud-side-ability { margin-top: auto; }
+  /* Both columns pin their play guidance to the bottom edge, so the side
+     panels mirror each other around the centred arena. */
+  .chud-side-right > .chud-side-ability, .chud-side-left > .chud-battle-guide { margin-top: auto; }
   /* The decorative frame overhangs the canvas by 7.5% vertically and 10%
      horizontally. Size the canvas so the whole frame stays on screen. Only
      the CSS display size changes, the 100x160 mapping is untouched. */
@@ -177,13 +195,12 @@
   .chud-crown-num { min-width: 52px; }
   /* Desktop shows patron and connection state in the side columns. Alerts,
      notices and the give-up action stay in the fixed scoreboard. */
-  .chud-top .chud-status[data-alert="false"], .chud-top .chud-patron { display: none; }
+  .chud-top .chud-patron { display: none; }
   .chud-subrow { justify-content: flex-end; }
   .chud-cards { gap: 8px; grid-template-columns: 38px repeat(4, minmax(0, 1fr)); max-width: none; }
   .chud-next { width: 36px; height: 50px; }
   .chud-card { min-height: 104px; }
   .chud-cost { min-width: 22px; height: 24px; font-size: 18px; }
-  .chud-name { font-size: 12px; }
   .chud-hint { padding-top: 2px; }
   .chud-dev-inline { left: 50%; right: auto; width: 380px; max-width: 90vw; transform: translateX(-50%); }
 }
@@ -196,16 +213,18 @@
   .chud-crown-num { font-size: 22px; }
   .chud-side-tag { gap: 4px; }
   .chud-pill { font-size: 9px; max-width: 210px; }
-  .chud-subrow { gap: 3px; }
-  .chud-audio { margin-left: 0; padding: 1px 3px; }
-  .chud-audio-toggle { padding-inline: 5px; font-size: 10px; }
-  .chud-audio-volume { width: 54px; }
-  .chud-arena { margin: 6px 3px; }
+  .chud-subrow { gap: 4px; flex-wrap: nowrap; }
+  .chud-subrow > .chud-pill { flex: 0 1 auto; min-width: 0; }
+  /* Once sound is on, the toggle shrinks to its icon. The label stays for
+     screen readers and returns whenever the player needs to act. */
+  .chud-audio-toggle { min-width: 36px; padding-inline: 7px; }
+  .chud-audio-toggle[aria-pressed="true"] .chud-audio-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .chud-audio-volume { width: 130px; }
+  .chud-arena { margin: 8px 3px 7px; }
   .chud-tray { padding: 7px 8px 5px; gap: 5px; }
   .chud-cards { gap: 6px; grid-template-columns: 32px repeat(4, minmax(0, 1fr)); }
   .chud-next { width: 29px; height: 42px; }
   .chud-card { min-height: 88px; }
-  .chud-name { font-size: 12px; }
   .chud-cost { min-width: 23px; height: 25px; font-size: 19px; }
   .chud-ability { min-height: 44px; }
   .chud-hint { font-size: 9px; }

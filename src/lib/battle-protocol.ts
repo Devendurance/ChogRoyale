@@ -140,6 +140,8 @@ export interface StartMessage {
   ruleset: string;
   arena: string;
   seat: Seat;
+  /** Own server-verified username. Optional because older servers omit it. */
+  self?: string;
   opponent: string;
   deck: string[];
   /** Own commander identity. The opponent's is never sent. */

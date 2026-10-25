@@ -166,7 +166,7 @@ function CardButton({
         {card?.cost ?? "?"}
       </span>
       {isCommanderCard(id) && <span className="chud-class-art">Class art</span>}
-      <span className="chud-name" title={card?.name ?? id}>{(card?.name ?? id).split(" ").map((word, index) => <span className="chud-name-word" key={`${index}-${word}`}>{word}{" "}</span>)}</span>
+      <span className="chud-name" title={card?.name ?? id} style={{ "--chud-name-len": Math.max(5, ...(card?.name ?? id).split(" ").map((word) => word.length)) } as React.CSSProperties}>{(card?.name ?? id).split(" ").map((word, index) => <span className="chud-name-word" key={`${index}-${word}`}>{word}{" "}</span>)}</span>
     </button>
   );
 }
@@ -293,6 +293,8 @@ export default function BattleHud(props: BattleHudProps) {
   const { start, frame, me, end, abort, settlement, presence, now, acks, selected, dragging, hint, feed, mapRef, onBoardTap, onBoardHover, send } = props;
   const manifest = useSpriteManifest();
   const [devOpen, setDevOpen] = useState(false);
+  const [volumeOpen, setVolumeOpen] = useState(false);
+  const audioRef = useRef<HTMLDivElement>(null);
   const [banner, setBanner] = useState<number | null>(null);
   const prevMult = useRef(0);
   const score = scoreView(frame, end, me as 0 | 1);
@@ -313,6 +315,19 @@ export default function BattleHud(props: BattleHudProps) {
     }
     prevMult.current = m;
   }, [frame]);
+
+  // The volume popover closes on an outside press or Escape.
+  useEffect(() => {
+    if (!volumeOpen) return;
+    const press = (event: PointerEvent) => { if (!audioRef.current?.contains(event.target as Node)) setVolumeOpen(false); };
+    const key = (event: KeyboardEvent) => { if (event.key === "Escape") setVolumeOpen(false); };
+    document.addEventListener("pointerdown", press);
+    document.addEventListener("keydown", key);
+    return () => {
+      document.removeEventListener("pointerdown", press);
+      document.removeEventListener("keydown", key);
+    };
+  }, [volumeOpen]);
 
   // The fixed HUD owns the viewport during a match; lock body scroll.
   useEffect(() => {
@@ -402,10 +417,6 @@ export default function BattleHud(props: BattleHudProps) {
             </div>
           </div>
         </div>
-        <div className="chud-side-block">
-          <div className="chud-side-title">Your commander</div>
-          {commanderIdentity}
-        </div>
         <div className="chud-side-block chud-battle-guide"><div className="chud-side-title">The arena</div><p>Play your hand. Break their towers.</p><span>Drag a card into the arena, or select a card and tap to place it.</span></div>
       </aside>
       <div className="chud-col">
@@ -447,7 +458,7 @@ export default function BattleHud(props: BattleHudProps) {
                 {presence.opponentConnected ? "Opponent back" : `Opp. offline ${Math.max(0, Math.ceil(((presence.reconnectDeadlineAt ?? 0) - now) / 1000))}s`}
               </span>
             )}
-            <div className="chud-audio" role="group" aria-label="Battle audio">
+            <div className="chud-audio" role="group" aria-label="Battle audio" ref={audioRef}>
               <button
                 type="button"
                 className="chud-audio-toggle"
@@ -457,22 +468,36 @@ export default function BattleHud(props: BattleHudProps) {
                 }}
                 title={props.audioReady ? "Mute battle sounds" : "Enable battle sounds on this device"}
               >
-                <span aria-hidden="true">{props.audioMuted ? "×" : "♪"}</span>
-                {props.audioMuted ? "Sound Off" : props.audioReady ? "Sound On" : "Enable Sound"}
+                <span aria-hidden="true" className="chud-audio-icon">{props.audioMuted ? "×" : "♪"}</span>
+                <span className="chud-audio-label">{props.audioMuted ? "Sound Off" : props.audioReady ? "Sound On" : "Enable Sound"}</span>
               </button>
-              <input
-                className="chud-audio-volume"
+              <button
+                type="button"
+                className="chud-audio-more"
+                aria-expanded={volumeOpen}
+                aria-controls="chud-audio-volume"
                 aria-label="Battle sound volume"
-                type="range"
-                min="0"
-                max="1"
-                step="0.05"
-                value={props.audioVolume}
-                onChange={(event) => {
-                  props.onAudioUnlock();
-                  props.onAudioVolumeChange(Number(event.currentTarget.value));
-                }}
-              />
+                title="Volume"
+                onClick={() => setVolumeOpen((open) => !open)}
+              >
+                <span aria-hidden="true">{Math.round(props.audioVolume * 100)}%</span>
+              </button>
+              {volumeOpen && <div className="chud-audio-pop" id="chud-audio-volume">
+                <input
+                  className="chud-audio-volume"
+                  aria-label="Battle sound volume"
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={props.audioVolume}
+                  autoFocus
+                  onChange={(event) => {
+                    props.onAudioUnlock();
+                    props.onAudioVolumeChange(Number(event.currentTarget.value));
+                  }}
+                />
+              </div>}
             </div>
           </div>
         </header>
@@ -525,7 +550,7 @@ export default function BattleHud(props: BattleHudProps) {
       <aside className="chud-side chud-side-right">
         <div className="chud-side-block"><div className="chud-side-title">Battle status</div><div className="chud-live-label">{end ? "Match complete" : abort ? "Match interrupted" : frame ? "In the arena" : "Entering arena"}</div><p className="chud-status-copy">{props.connectionStatus ?? "Connected"}</p></div>
         <div className="chud-side-block"><div className="chud-side-title">Chaos Pulse</div><p className="chud-status-copy">Watch the arena warnings. Each pulse changes the battle for both players.</p><div className="chud-side-chaos">{chaosChips.length ? chaosChips : <span className="chud-status-copy">No active pulse</span>}</div></div>
-        <div className="chud-side-block chud-side-ability"><div className="chud-side-title">Commander ability</div><div className="chud-abilities">{abilityControls}</div><span className="chud-class-note">Commander class art</span></div>
+        <div className="chud-side-block chud-side-ability"><div className="chud-side-title">Your commander</div>{commanderIdentity}<div className="chud-abilities">{abilityControls}</div></div>
       </aside>
       <CrownCelebration frame={frame} start={start} me={me} boardRef={boardElementRef} mineRef={mineScoreRef} theirsRef={theirsScoreRef} onAudioCue={props.onAudioCue} />
       {/* Server start already happened. The reveal is pointer-transparent and

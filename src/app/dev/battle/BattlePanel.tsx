@@ -28,6 +28,7 @@ import type { BoardMapper, CanvasFeed } from "./BattleCanvas";
 import BattleLobby from "./BattleLobby";
 import BattleEntry from "@/components/app/BattleEntry";
 import BattleHud from "./BattleHud";
+import { battleIdentity } from "./battle-identity";
 import {
   BattleAudio,
   DEFAULT_BATTLE_AUDIO_PREFERENCES,
@@ -579,7 +580,8 @@ export function BattlePanel({
     ) : <button onClick={() => login()}>Log in with Privy</button>;
   }
 
-  const me = start?.seat ?? 0;
+  const identity = start ? battleIdentity(start, lobby) : null;
+  const me = identity?.selfSeat ?? 0;
 
   return (
     <div className={publicMode ? "app-play-battle-shell" : undefined} data-mode={publicMode ? initialMode : undefined} data-stage={publicMode ? stage : undefined}>
@@ -655,7 +657,7 @@ export function BattlePanel({
           onGiveUp={stage === "reconnecting" ? reset : undefined}
           onExit={reset}
           start={start}
-          playerName={lobby?.players[me]?.username || undefined}
+          playerName={identity?.self ?? undefined}
           frame={frame}
           me={me}
           end={end}
