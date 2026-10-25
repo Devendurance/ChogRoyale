@@ -1,0 +1,3792 @@
+{
+  "pack_name": "Chog_Royale_Devin_Asset_Reference_Pack_v1",
+  "generated_at": "2026-10-25",
+  "total_individual_files": 192,
+  "cards": [
+    {
+      "id": 1,
+      "name": "Choglings",
+      "slug": "choglings",
+      "group": "troops",
+      "canonical_identity": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/01_choglings.png",
+      "style_study": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/01_choglings.png",
+      "comparison": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/01_choglings_compare.jpg",
+      "approved_for_production": false,
+      "identity_priority": "original first; 3d polish second"
+    },
+    {
+      "id": 2,
+      "name": "Chaos Archer",
+      "slug": "chaos_archer",
+      "group": "troops",
+      "canonical_identity": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/02_chaos_archer.png",
+      "style_study": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/02_chaos_archer.png",
+      "comparison": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/02_chaos_archer_compare.jpg",
+      "approved_for_production": false,
+      "identity_priority": "original first; 3d polish second"
+    },
+    {
+      "id": 3,
+      "name": "Boulderback",
+      "slug": "boulderback",
+      "group": "troops",
+      "canonical_identity": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/03_boulderback.png",
+      "style_study": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/03_boulderback.png",
+      "comparison": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/03_boulderback_compare.jpg",
+      "approved_for_production": false,
+      "identity_priority": "original first; 3d polish second"
+    },
+    {
+      "id": 4,
+      "name": "Frostshell",
+      "slug": "frostshell",
+      "group": "troops",
+      "canonical_identity": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/04_frostshell.png",
+      "style_study": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/04_frostshell.png",
+      "comparison": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/04_frostshell_compare.jpg",
+      "approved_for_production": false,
+      "identity_priority": "original first; 3d polish second"
+    },
+    {
+      "id": 5,
+      "name": "Rift Runner",
+      "slug": "rift_runner",
+      "group": "troops",
+      "canonical_identity": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/05_rift_runner.png",
+      "style_study": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/05_rift_runner.png",
+      "comparison": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/05_rift_runner_compare.jpg",
+      "approved_for_production": false,
+      "identity_priority": "original first; 3d polish second"
+    },
+    {
+      "id": 6,
+      "name": "Sparkcaster",
+      "slug": "sparkcaster",
+      "group": "troops",
+      "canonical_identity": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/06_sparkcaster.png",
+      "style_study": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/06_sparkcaster.png",
+      "comparison": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/06_sparkcaster_compare.jpg",
+      "approved_for_production": false,
+      "identity_priority": "original first; 3d polish second"
+    },
+    {
+      "id": 7,
+      "name": "Chog Guardian",
+      "slug": "chog_guardian",
+      "group": "troops",
+      "canonical_identity": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/07_chog_guardian.png",
+      "style_study": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/07_chog_guardian.png",
+      "comparison": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/07_chog_guardian_compare.jpg",
+      "approved_for_production": false,
+      "identity_priority": "original first; 3d polish second"
+    },
+    {
+      "id": 8,
+      "name": "Hexwing",
+      "slug": "hexwing",
+      "group": "troops",
+      "canonical_identity": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/08_hexwing.png",
+      "style_study": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/08_hexwing.png",
+      "comparison": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/08_hexwing_compare.jpg",
+      "approved_for_production": false,
+      "identity_priority": "original first; 3d polish second"
+    },
+    {
+      "id": 9,
+      "name": "Rift Sprites",
+      "slug": "rift_sprites",
+      "group": "troops",
+      "canonical_identity": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/09_rift_sprites.png",
+      "style_study": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/09_rift_sprites.png",
+      "comparison": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/09_rift_sprites_compare.jpg",
+      "approved_for_production": false,
+      "identity_priority": "original first; 3d polish second"
+    },
+    {
+      "id": 10,
+      "name": "Gale Netter",
+      "slug": "gale_netter",
+      "group": "troops",
+      "canonical_identity": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/10_gale_netter.png",
+      "style_study": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/10_gale_netter.png",
+      "comparison": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/10_gale_netter_compare.jpg",
+      "approved_for_production": false,
+      "identity_priority": "original first; 3d polish second"
+    },
+    {
+      "id": 11,
+      "name": "Riftbreaker",
+      "slug": "riftbreaker",
+      "group": "troops",
+      "canonical_identity": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/11_riftbreaker.png",
+      "style_study": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/11_riftbreaker.png",
+      "comparison": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/11_riftbreaker_compare.jpg",
+      "approved_for_production": false,
+      "identity_priority": "original first; 3d polish second"
+    },
+    {
+      "id": 12,
+      "name": "Ember Mauler",
+      "slug": "ember_mauler",
+      "group": "troops",
+      "canonical_identity": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/12_ember_mauler.png",
+      "style_study": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/12_ember_mauler.png",
+      "comparison": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/12_ember_mauler_compare.jpg",
+      "approved_for_production": false,
+      "identity_priority": "original first; 3d polish second"
+    },
+    {
+      "id": 13,
+      "name": "Rift Sentry",
+      "slug": "rift_sentry",
+      "group": "buildings",
+      "canonical_identity": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/13_rift_sentry.png",
+      "style_study": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/13_rift_sentry.png",
+      "comparison": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/13_rift_sentry_compare.jpg",
+      "approved_for_production": false,
+      "identity_priority": "original first; 3d polish second"
+    },
+    {
+      "id": 14,
+      "name": "Decoy Totem",
+      "slug": "decoy_totem",
+      "group": "buildings",
+      "canonical_identity": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/14_decoy_totem.png",
+      "style_study": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/14_decoy_totem.png",
+      "comparison": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/14_decoy_totem_compare.jpg",
+      "approved_for_production": false,
+      "identity_priority": "original first; 3d polish second"
+    },
+    {
+      "id": 15,
+      "name": "Chog Burrow",
+      "slug": "chog_burrow",
+      "group": "buildings",
+      "canonical_identity": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/15_chog_burrow.png",
+      "style_study": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/15_chog_burrow.png",
+      "comparison": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/15_chog_burrow_compare.jpg",
+      "approved_for_production": false,
+      "identity_priority": "original first; 3d polish second"
+    },
+    {
+      "id": 16,
+      "name": "Rift Mortar",
+      "slug": "rift_mortar",
+      "group": "buildings",
+      "canonical_identity": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/16_rift_mortar.png",
+      "style_study": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/16_rift_mortar.png",
+      "comparison": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/16_rift_mortar_compare.jpg",
+      "approved_for_production": false,
+      "identity_priority": "original first; 3d polish second"
+    },
+    {
+      "id": 17,
+      "name": "Chaos Bolt",
+      "slug": "chaos_bolt",
+      "group": "spells",
+      "canonical_identity": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/17_chaos_bolt.png",
+      "style_study": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/17_chaos_bolt.png",
+      "comparison": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/17_chaos_bolt_compare.jpg",
+      "approved_for_production": false,
+      "identity_priority": "original first; 3d polish second"
+    },
+    {
+      "id": 18,
+      "name": "Rally Horn",
+      "slug": "rally_horn",
+      "group": "spells",
+      "canonical_identity": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/18_rally_horn.png",
+      "style_study": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/18_rally_horn.png",
+      "comparison": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/18_rally_horn_compare.jpg",
+      "approved_for_production": false,
+      "identity_priority": "original first; 3d polish second"
+    },
+    {
+      "id": 19,
+      "name": "Chaos Comet",
+      "slug": "chaos_comet",
+      "group": "spells",
+      "canonical_identity": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/19_chaos_comet.png",
+      "style_study": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/19_chaos_comet.png",
+      "comparison": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/19_chaos_comet_compare.jpg",
+      "approved_for_production": false,
+      "identity_priority": "original first; 3d polish second"
+    },
+    {
+      "id": 20,
+      "name": "Rift Snare",
+      "slug": "rift_snare",
+      "group": "spells",
+      "canonical_identity": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/20_rift_snare.png",
+      "style_study": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/20_rift_snare.png",
+      "comparison": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/20_rift_snare_compare.jpg",
+      "approved_for_production": false,
+      "identity_priority": "original first; 3d polish second"
+    },
+    {
+      "id": 21,
+      "name": "Bulwark",
+      "slug": "bulwark",
+      "group": "commanders",
+      "canonical_identity": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/21_bulwark.png",
+      "style_study": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/21_bulwark.png",
+      "comparison": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/21_bulwark_compare.jpg",
+      "approved_for_production": false,
+      "identity_priority": "original first; 3d polish second"
+    },
+    {
+      "id": 22,
+      "name": "Reaver",
+      "slug": "reaver",
+      "group": "commanders",
+      "canonical_identity": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/22_reaver.png",
+      "style_study": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/22_reaver.png",
+      "comparison": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/22_reaver_compare.jpg",
+      "approved_for_production": false,
+      "identity_priority": "original first; 3d polish second"
+    },
+    {
+      "id": 23,
+      "name": "Deadeye",
+      "slug": "deadeye",
+      "group": "commanders",
+      "canonical_identity": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/23_deadeye.png",
+      "style_study": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/23_deadeye.png",
+      "comparison": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/23_deadeye_compare.jpg",
+      "approved_for_production": false,
+      "identity_priority": "original first; 3d polish second"
+    },
+    {
+      "id": 24,
+      "name": "Scout",
+      "slug": "scout",
+      "group": "commanders",
+      "canonical_identity": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/24_scout.png",
+      "style_study": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/24_scout.png",
+      "comparison": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/24_scout_compare.jpg",
+      "approved_for_production": false,
+      "identity_priority": "original first; 3d polish second"
+    },
+    {
+      "id": 25,
+      "name": "Warden",
+      "slug": "warden",
+      "group": "commanders",
+      "canonical_identity": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/25_warden.png",
+      "style_study": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/25_warden.png",
+      "comparison": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/25_warden_compare.jpg",
+      "approved_for_production": false,
+      "identity_priority": "original first; 3d polish second"
+    }
+  ],
+  "source_images": [
+    "chog_royale_arena_asset_pack.png",
+    "chog_royale_visual_style_guide.png",
+    "chog_royale_25_card_identity_roster.png",
+    "chog_royale_slice_2_asset_checklist.png",
+    "IMG_1373.png"
+  ],
+  "assets": [
+    {
+      "file": "00_REFERENCE_BOARDS/01_arena_environment_board.png",
+      "source": "chog_royale_arena_asset_pack.png",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        1448,
+        1086
+      ],
+      "category": "source_boards",
+      "label": "01_arena_environment_board",
+      "usage": "full_reference",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "arena composition board"
+    },
+    {
+      "file": "00_REFERENCE_BOARDS/02_style_lighting_material_board.png",
+      "source": "chog_royale_visual_style_guide.png",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        1448,
+        1086
+      ],
+      "category": "source_boards",
+      "label": "02_style_lighting_material_board",
+      "usage": "full_reference",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "style guide"
+    },
+    {
+      "file": "00_REFERENCE_BOARDS/03_all_25_stylized_card_concepts.png",
+      "source": "chog_royale_25_card_identity_roster.png",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        1448,
+        1086
+      ],
+      "category": "source_boards",
+      "label": "03_all_25_stylized_card_concepts",
+      "usage": "full_reference",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "25-card concept board"
+    },
+    {
+      "file": "00_REFERENCE_BOARDS/04_asset_production_checklist.png",
+      "source": "chog_royale_slice_2_asset_checklist.png",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        1448,
+        1086
+      ],
+      "category": "source_boards",
+      "label": "04_asset_production_checklist",
+      "usage": "full_reference",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "animation/checklist"
+    },
+    {
+      "file": "00_REFERENCE_BOARDS/05_original_25_card_roster_CANONICAL_IDENTITY.png",
+      "source": "IMG_1373.png",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        1120,
+        920
+      ],
+      "category": "source_boards",
+      "label": "05_original_25_card_roster_CANONICAL_IDENTITY",
+      "usage": "full_reference",
+      "game_ready": false,
+      "alpha_transparent": true,
+      "notes": "canonical Chog identity board"
+    },
+    {
+      "file": "00_REFERENCE_BOARDS/06_original_approved_five_character_3d_direction.png",
+      "source": "a_vibrant_high_quality_3d_cg_promotional_characte.png",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        1536,
+        1024
+      ],
+      "category": "source_boards",
+      "label": "06_original_approved_five_character_3d_direction",
+      "usage": "full_reference",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "approved rendering style"
+    },
+    {
+      "file": "00_REFERENCE_BOARDS/07_red_top_blue_bottom_arena_composition.png",
+      "source": "chog_royale_crystal_river_arena.png",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        941,
+        1672
+      ],
+      "category": "source_boards",
+      "label": "07_red_top_blue_bottom_arena_composition",
+      "usage": "full_reference",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "arena concept (check cannon facing)"
+    },
+    {
+      "file": "00_REFERENCE_BOARDS/08_old_match_screenshot.png",
+      "source": "IMG_1374.png",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        375,
+        562
+      ],
+      "category": "source_boards",
+      "label": "08_old_match_screenshot",
+      "usage": "full_reference",
+      "game_ready": false,
+      "alpha_transparent": true,
+      "notes": "before arena"
+    },
+    {
+      "file": "01_ARENA/01_environment/01_ground_base_grass_reference.png",
+      "source": "arena_asset_pack",
+      "source_box_xyxy": [
+        26,
+        159,
+        186,
+        282
+      ],
+      "size_pixels": [
+        160,
+        123
+      ],
+      "category": "arena_environment",
+      "label": "01 Ground Base Grass Reference",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "main grassy terrain; source has baked flowers and decorative edges",
+      "production_target": "600x920 terrain-compatible clean base tiles, no towers"
+    },
+    {
+      "file": "01_ARENA/01_environment/02_lane_path_reference.png",
+      "source": "arena_asset_pack",
+      "source_box_xyxy": [
+        200,
+        159,
+        356,
+        282
+      ],
+      "size_pixels": [
+        156,
+        123
+      ],
+      "category": "arena_environment",
+      "label": "02 Lane Path Reference",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "pale stone route texture / grass integration",
+      "production_target": "path overlays, separate alpha edges"
+    },
+    {
+      "file": "01_ARENA/01_environment/03_turquoise_river_water_reference.png",
+      "source": "arena_asset_pack",
+      "source_box_xyxy": [
+        26,
+        353,
+        185,
+        422
+      ],
+      "size_pixels": [
+        159,
+        69
+      ],
+      "category": "arena_environment",
+      "label": "03 Turquoise River Water Reference",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "rendered turquoise river; baked banks in reference",
+      "production_target": "repeatable horizontal water strip / loops"
+    },
+    {
+      "file": "01_ARENA/01_environment/04_river_bank_reference.png",
+      "source": "arena_asset_pack",
+      "source_box_xyxy": [
+        200,
+        354,
+        356,
+        421
+      ],
+      "size_pixels": [
+        156,
+        67
+      ],
+      "category": "arena_environment",
+      "label": "04 River Bank Reference",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "stylized stone banks with water edges",
+      "production_target": "isolated alpha river banks"
+    },
+    {
+      "file": "01_ARENA/01_environment/05_bridge_left_reference.png",
+      "source": "arena_asset_pack",
+      "source_box_xyxy": [
+        27,
+        482,
+        185,
+        586
+      ],
+      "size_pixels": [
+        158,
+        104
+      ],
+      "category": "arena_environment",
+      "label": "05 Bridge Left Reference",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "wood plank bridge and cyan crystal posts",
+      "production_target": "bridge floor / rails separated, align existing geometry"
+    },
+    {
+      "file": "01_ARENA/01_environment/06_bridge_right_reference.png",
+      "source": "arena_asset_pack",
+      "source_box_xyxy": [
+        201,
+        482,
+        355,
+        586
+      ],
+      "size_pixels": [
+        154,
+        104
+      ],
+      "category": "arena_environment",
+      "label": "06 Bridge Right Reference",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "wood plank bridge and cyan crystal posts",
+      "production_target": "bridge floor / rails separated, align existing geometry"
+    },
+    {
+      "file": "01_ARENA/01_environment/07_crystal_border_cluster_reference.png",
+      "source": "arena_asset_pack",
+      "source_box_xyxy": [
+        26,
+        662,
+        200,
+        753
+      ],
+      "size_pixels": [
+        174,
+        91
+      ],
+      "category": "arena_environment",
+      "label": "07 Crystal Border Cluster Reference",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "border crystal/torch cluster; baked surroundings",
+      "production_target": "transparent independent border decorations"
+    },
+    {
+      "file": "01_ARENA/01_environment/08_flowers_and_shrubs_reference.png",
+      "source": "arena_asset_pack",
+      "source_box_xyxy": [
+        214,
+        660,
+        354,
+        756
+      ],
+      "size_pixels": [
+        140,
+        96
+      ],
+      "category": "arena_environment",
+      "label": "08 Flowers And Shrubs Reference",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "flower and shrub arrangement",
+      "production_target": "individual alpha-cutout decoration variations"
+    },
+    {
+      "file": "01_ARENA/01_environment/09_rock_variations_reference.png",
+      "source": "arena_asset_pack",
+      "source_box_xyxy": [
+        25,
+        812,
+        357,
+        889
+      ],
+      "size_pixels": [
+        332,
+        77
+      ],
+      "category": "arena_environment",
+      "label": "09 Rock Variations Reference",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "rock set reference (multiple rocks in one sheet)",
+      "production_target": "individual separated rocks and variants"
+    },
+    {
+      "file": "01_ARENA/01_environment/10_waterfall_edge_reference.png",
+      "source": "arena_asset_pack",
+      "source_box_xyxy": [
+        25,
+        943,
+        356,
+        1042
+      ],
+      "size_pixels": [
+        331,
+        99
+      ],
+      "category": "arena_environment",
+      "label": "10 Waterfall Edge Reference",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "waterfall decorative border illustration",
+      "production_target": "foreground alpha cliff/waterfall loops"
+    },
+    {
+      "file": "01_ARENA/02_environment_variations/12_terrain_rocks_overlays_checklist.png",
+      "source": "production_checklist",
+      "source_box_xyxy": [
+        141,
+        252,
+        264,
+        363
+      ],
+      "size_pixels": [
+        123,
+        111
+      ],
+      "category": "arena_environment",
+      "label": "12_terrain_rocks_overlays_checklist",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "production checklist visual, not isolated transparent asset",
+      "production_target": ""
+    },
+    {
+      "file": "01_ARENA/02_environment_variations/13_river_water_checklist.png",
+      "source": "production_checklist",
+      "source_box_xyxy": [
+        272,
+        251,
+        395,
+        363
+      ],
+      "size_pixels": [
+        123,
+        112
+      ],
+      "category": "arena_environment",
+      "label": "13_river_water_checklist",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "production checklist visual, not isolated transparent asset",
+      "production_target": ""
+    },
+    {
+      "file": "01_ARENA/02_environment_variations/14_animated_river_bank_checklist.png",
+      "source": "production_checklist",
+      "source_box_xyxy": [
+        400,
+        250,
+        487,
+        367
+      ],
+      "size_pixels": [
+        87,
+        117
+      ],
+      "category": "arena_environment",
+      "label": "14_animated_river_bank_checklist",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "production checklist visual, not isolated transparent asset",
+      "production_target": ""
+    },
+    {
+      "file": "01_ARENA/02_environment_variations/15_edge_environment_checklist.png",
+      "source": "production_checklist",
+      "source_box_xyxy": [
+        702,
+        254,
+        825,
+        363
+      ],
+      "size_pixels": [
+        123,
+        109
+      ],
+      "category": "arena_environment",
+      "label": "15_edge_environment_checklist",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "production checklist visual, not isolated transparent asset",
+      "production_target": ""
+    },
+    {
+      "file": "01_ARENA/02_environment_variations/16_border_crystals_checklist.png",
+      "source": "production_checklist",
+      "source_box_xyxy": [
+        842,
+        253,
+        937,
+        361
+      ],
+      "size_pixels": [
+        95,
+        108
+      ],
+      "category": "arena_environment",
+      "label": "16_border_crystals_checklist",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "production checklist visual, not isolated transparent asset",
+      "production_target": ""
+    },
+    {
+      "file": "01_ARENA/02_environment_variations/17_foreground_occluders_checklist.png",
+      "source": "production_checklist",
+      "source_box_xyxy": [
+        951,
+        254,
+        1075,
+        365
+      ],
+      "size_pixels": [
+        124,
+        111
+      ],
+      "category": "arena_environment",
+      "label": "17_foreground_occluders_checklist",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "production checklist visual, not isolated transparent asset",
+      "production_target": ""
+    },
+    {
+      "file": "01_ARENA/02_environment_variations/18_tower_pad_checklist.png",
+      "source": "production_checklist",
+      "source_box_xyxy": [
+        1083,
+        254,
+        1201,
+        364
+      ],
+      "size_pixels": [
+        118,
+        110
+      ],
+      "category": "arena_environment",
+      "label": "18_tower_pad_checklist",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "production checklist visual, not isolated transparent asset",
+      "production_target": ""
+    },
+    {
+      "file": "01_ARENA/02_environment_variations/19_team_trim_banners_checklist.png",
+      "source": "production_checklist",
+      "source_box_xyxy": [
+        1213,
+        253,
+        1390,
+        363
+      ],
+      "size_pixels": [
+        177,
+        110
+      ],
+      "category": "arena_environment",
+      "label": "19_team_trim_banners_checklist",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "production checklist visual, not isolated transparent asset",
+      "production_target": ""
+    },
+    {
+      "file": "01_ARENA/03_tower_designs/blue_lane_tower_REFERENCE.png",
+      "source": "arena_asset_pack",
+      "source_box_xyxy": [
+        1041,
+        165,
+        1117,
+        336
+      ],
+      "size_pixels": [
+        76,
+        171
+      ],
+      "category": "towers",
+      "label": "bottom, friendly BLUE tower",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "baked bright green lower patch; concept only",
+      "production_target": "needs separate base/rim, mount socket and correctly upward aimed defender"
+    },
+    {
+      "file": "01_ARENA/03_tower_designs/red_lane_tower_REFERENCE.png",
+      "source": "arena_asset_pack",
+      "source_box_xyxy": [
+        1128,
+        164,
+        1202,
+        335
+      ],
+      "size_pixels": [
+        74,
+        171
+      ],
+      "category": "towers",
+      "label": "top, enemy RED tower",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "baked bright green lower patch; concept only",
+      "production_target": "needs downward-facing muzzle / defender"
+    },
+    {
+      "file": "01_ARENA/03_tower_designs/blue_king_tower_REFERENCE.png",
+      "source": "arena_asset_pack",
+      "source_box_xyxy": [
+        1212,
+        165,
+        1291,
+        335
+      ],
+      "size_pixels": [
+        79,
+        170
+      ],
+      "category": "towers",
+      "label": "blue king tower",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "baked bright green lower patch; concept only",
+      "production_target": "blue player bottom; defender must aim UP"
+    },
+    {
+      "file": "01_ARENA/03_tower_designs/red_king_tower_REFERENCE.png",
+      "source": "arena_asset_pack",
+      "source_box_xyxy": [
+        1302,
+        165,
+        1392,
+        335
+      ],
+      "size_pixels": [
+        90,
+        170
+      ],
+      "category": "towers",
+      "label": "red king tower",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "baked bright green lower patch; concept only",
+      "production_target": "red opponent top; defender must aim DOWN"
+    },
+    {
+      "file": "01_ARENA/04_tower_defenders/bottom_blue_chog_guardian_REFERENCE.png",
+      "source": "arena_asset_pack",
+      "source_box_xyxy": [
+        1040,
+        463,
+        1215,
+        659
+      ],
+      "size_pixels": [
+        175,
+        196
+      ],
+      "category": "tower_defender",
+      "label": "Chog Guardian style",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "must preserve ORIGINAL Chog/commander NFT identity; screenshot render is visual reference",
+      "production_target": "transparent 256x320 defender mount + idle, aim UP, recoil, hit; anchor sockets"
+    },
+    {
+      "file": "01_ARENA/04_tower_defenders/top_red_bulwark_REFERENCE.png",
+      "source": "arena_asset_pack",
+      "source_box_xyxy": [
+        1222,
+        462,
+        1393,
+        660
+      ],
+      "size_pixels": [
+        171,
+        198
+      ],
+      "category": "tower_defender",
+      "label": "Bulwark commander style",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "must preserve ORIGINAL Chog/commander NFT identity; screenshot render is visual reference",
+      "production_target": "transparent 256x320 defender mount + idle, aim DOWN, recoil, hit; anchor sockets"
+    },
+    {
+      "file": "01_ARENA/05_effects/contact_shadow_REFERENCE.png",
+      "source": "arena_asset_pack",
+      "source_box_xyxy": [
+        1041,
+        773,
+        1208,
+        965
+      ],
+      "size_pixels": [
+        167,
+        192
+      ],
+      "category": "arena_effect",
+      "label": "contact_shadow",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "",
+      "production_target": "transparency / in-game ground effect texture"
+    },
+    {
+      "file": "01_ARENA/05_effects/deployment_ring_REFERENCE.png",
+      "source": "arena_asset_pack",
+      "source_box_xyxy": [
+        1222,
+        773,
+        1393,
+        965
+      ],
+      "size_pixels": [
+        171,
+        192
+      ],
+      "category": "arena_effect",
+      "label": "deployment_ring",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "",
+      "production_target": "transparency / in-game ground effect texture"
+    },
+    {
+      "file": "03_MATERIALS/01_chog_ivory_skin_REFERENCE.png",
+      "source": "style_guide",
+      "source_box_xyxy": [
+        20,
+        515,
+        114,
+        615
+      ],
+      "size_pixels": [
+        94,
+        100
+      ],
+      "category": "material_style",
+      "label": "01_chog_ivory_skin",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "visual material swatch from style board, not texture/PBR atlas",
+      "production_target": ""
+    },
+    {
+      "file": "03_MATERIALS/02_teal_spikes_REFERENCE.png",
+      "source": "style_guide",
+      "source_box_xyxy": [
+        120,
+        515,
+        215,
+        615
+      ],
+      "size_pixels": [
+        95,
+        100
+      ],
+      "category": "material_style",
+      "label": "02_teal_spikes",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "visual material swatch from style board, not texture/PBR atlas",
+      "production_target": ""
+    },
+    {
+      "file": "03_MATERIALS/03_polished_gold_armor_REFERENCE.png",
+      "source": "style_guide",
+      "source_box_xyxy": [
+        226,
+        515,
+        321,
+        615
+      ],
+      "size_pixels": [
+        95,
+        100
+      ],
+      "category": "material_style",
+      "label": "03_polished_gold_armor",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "visual material swatch from style board, not texture/PBR atlas",
+      "production_target": ""
+    },
+    {
+      "file": "03_MATERIALS/04_cobalt_armor_REFERENCE.png",
+      "source": "style_guide",
+      "source_box_xyxy": [
+        328,
+        515,
+        422,
+        615
+      ],
+      "size_pixels": [
+        94,
+        100
+      ],
+      "category": "material_style",
+      "label": "04_cobalt_armor",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "visual material swatch from style board, not texture/PBR atlas",
+      "production_target": ""
+    },
+    {
+      "file": "03_MATERIALS/05_rough_stone_REFERENCE.png",
+      "source": "style_guide",
+      "source_box_xyxy": [
+        433,
+        515,
+        524,
+        615
+      ],
+      "size_pixels": [
+        91,
+        100
+      ],
+      "category": "material_style",
+      "label": "05_rough_stone",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "visual material swatch from style board, not texture/PBR atlas",
+      "production_target": ""
+    },
+    {
+      "file": "03_MATERIALS/06_carved_wood_bridge_REFERENCE.png",
+      "source": "style_guide",
+      "source_box_xyxy": [
+        539,
+        515,
+        631,
+        615
+      ],
+      "size_pixels": [
+        92,
+        100
+      ],
+      "category": "material_style",
+      "label": "06_carved_wood_bridge",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "visual material swatch from style board, not texture/PBR atlas",
+      "production_target": ""
+    },
+    {
+      "file": "03_MATERIALS/07_crystal_cyan_glow_REFERENCE.png",
+      "source": "style_guide",
+      "source_box_xyxy": [
+        645,
+        515,
+        736,
+        615
+      ],
+      "size_pixels": [
+        91,
+        100
+      ],
+      "category": "material_style",
+      "label": "07_crystal_cyan_glow",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "visual material swatch from style board, not texture/PBR atlas",
+      "production_target": ""
+    },
+    {
+      "file": "03_MATERIALS/08_lush_grass_REFERENCE.png",
+      "source": "style_guide",
+      "source_box_xyxy": [
+        748,
+        515,
+        842,
+        615
+      ],
+      "size_pixels": [
+        94,
+        100
+      ],
+      "category": "material_style",
+      "label": "08_lush_grass",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "visual material swatch from style board, not texture/PBR atlas",
+      "production_target": ""
+    },
+    {
+      "file": "03_MATERIALS/09_turquoise_water_REFERENCE.png",
+      "source": "style_guide",
+      "source_box_xyxy": [
+        856,
+        515,
+        951,
+        615
+      ],
+      "size_pixels": [
+        95,
+        100
+      ],
+      "category": "material_style",
+      "label": "09_turquoise_water",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "visual material swatch from style board, not texture/PBR atlas",
+      "production_target": ""
+    },
+    {
+      "file": "03_MATERIALS/10_chaos_purple_energy_REFERENCE.png",
+      "source": "style_guide",
+      "source_box_xyxy": [
+        964,
+        515,
+        1053,
+        615
+      ],
+      "size_pixels": [
+        89,
+        100
+      ],
+      "category": "material_style",
+      "label": "10_chaos_purple_energy",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "visual material swatch from style board, not texture/PBR atlas",
+      "production_target": ""
+    },
+    {
+      "file": "03_MATERIALS/11_frost_blue_crystal_REFERENCE.png",
+      "source": "style_guide",
+      "source_box_xyxy": [
+        1067,
+        515,
+        1159,
+        615
+      ],
+      "size_pixels": [
+        92,
+        100
+      ],
+      "category": "material_style",
+      "label": "11_frost_blue_crystal",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "visual material swatch from style board, not texture/PBR atlas",
+      "production_target": ""
+    },
+    {
+      "file": "03_MATERIALS/12_ember_lava_rock_REFERENCE.png",
+      "source": "style_guide",
+      "source_box_xyxy": [
+        1172,
+        515,
+        1266,
+        615
+      ],
+      "size_pixels": [
+        94,
+        100
+      ],
+      "category": "material_style",
+      "label": "12_ember_lava_rock",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "visual material swatch from style board, not texture/PBR atlas",
+      "production_target": ""
+    },
+    {
+      "file": "03_MATERIALS/13_rift_cyan_magenta_REFERENCE.png",
+      "source": "style_guide",
+      "source_box_xyxy": [
+        1278,
+        515,
+        1372,
+        615
+      ],
+      "size_pixels": [
+        94,
+        100
+      ],
+      "category": "material_style",
+      "label": "13_rift_cyan_magenta",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "visual material swatch from style board, not texture/PBR atlas",
+      "production_target": ""
+    },
+    {
+      "file": "04_LIGHTING_AND_STYLE/01_lighting_warm_sunlight_cool_fill.png",
+      "source": "style_guide",
+      "source_box_xyxy": [
+        933,
+        220,
+        1396,
+        485
+      ],
+      "size_pixels": [
+        463,
+        265
+      ],
+      "category": "style_lighting",
+      "label": "01_lighting_warm_sunlight_cool_fill",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "style reference only",
+      "production_target": ""
+    },
+    {
+      "file": "04_LIGHTING_AND_STYLE/02_approved_arena_daylight.png",
+      "source": "style_guide",
+      "source_box_xyxy": [
+        488,
+        220,
+        929,
+        485
+      ],
+      "size_pixels": [
+        441,
+        265
+      ],
+      "category": "style_lighting",
+      "label": "02_approved_arena_daylight",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "style reference only",
+      "production_target": ""
+    },
+    {
+      "file": "04_LIGHTING_AND_STYLE/03_visual_pillars.png",
+      "source": "style_guide",
+      "source_box_xyxy": [
+        13,
+        222,
+        476,
+        485
+      ],
+      "size_pixels": [
+        463,
+        263
+      ],
+      "category": "style_lighting",
+      "label": "03_visual_pillars",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "style reference only",
+      "production_target": ""
+    },
+    {
+      "file": "04_LIGHTING_AND_STYLE/04_premium_character_render_quality.png",
+      "source": "style_guide",
+      "source_box_xyxy": [
+        895,
+        698,
+        1394,
+        916
+      ],
+      "size_pixels": [
+        499,
+        218
+      ],
+      "category": "style_lighting",
+      "label": "04_premium_character_render_quality",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "style reference only",
+      "production_target": ""
+    },
+    {
+      "file": "04_LIGHTING_AND_STYLE/05_approved_quality_header.png",
+      "source": "style_guide",
+      "source_box_xyxy": [
+        284,
+        0,
+        1400,
+        211
+      ],
+      "size_pixels": [
+        1116,
+        211
+      ],
+      "category": "style_lighting",
+      "label": "05_approved_quality_header",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "style reference only",
+      "production_target": ""
+    },
+    {
+      "file": "05_VFX_AND_SPELLS/chaos_bolt_REFERENCE.png",
+      "source": "style_guide",
+      "source_box_xyxy": [
+        23,
+        735,
+        153,
+        847
+      ],
+      "size_pixels": [
+        130,
+        112
+      ],
+      "category": "spell_vfx",
+      "label": "chaos_bolt",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "not an alpha VFX atlas, individual concept crop",
+      "production_target": ""
+    },
+    {
+      "file": "05_VFX_AND_SPELLS/rally_horn_REFERENCE.png",
+      "source": "style_guide",
+      "source_box_xyxy": [
+        166,
+        735,
+        294,
+        847
+      ],
+      "size_pixels": [
+        128,
+        112
+      ],
+      "category": "spell_vfx",
+      "label": "rally_horn",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "not an alpha VFX atlas, individual concept crop",
+      "production_target": ""
+    },
+    {
+      "file": "05_VFX_AND_SPELLS/chaos_comet_REFERENCE.png",
+      "source": "style_guide",
+      "source_box_xyxy": [
+        307,
+        735,
+        437,
+        847
+      ],
+      "size_pixels": [
+        130,
+        112
+      ],
+      "category": "spell_vfx",
+      "label": "chaos_comet",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "not an alpha VFX atlas, individual concept crop",
+      "production_target": ""
+    },
+    {
+      "file": "05_VFX_AND_SPELLS/rift_snare_REFERENCE.png",
+      "source": "style_guide",
+      "source_box_xyxy": [
+        450,
+        735,
+        576,
+        847
+      ],
+      "size_pixels": [
+        126,
+        112
+      ],
+      "category": "spell_vfx",
+      "label": "rift_snare",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "not an alpha VFX atlas, individual concept crop",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/01_choglings.png",
+      "source": "original_25_card_roster",
+      "source_box_xyxy": [
+        18,
+        50,
+        115,
+        179
+      ],
+      "size_pixels": [
+        97,
+        129
+      ],
+      "category": "troops",
+      "label": "Choglings",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "CANONICAL original roster identity reference: do not replace facial DNA / signature props",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/01_choglings.png",
+      "source": "new_3d_25_roster_board",
+      "source_box_xyxy": [
+        14,
+        161,
+        144,
+        323
+      ],
+      "size_pixels": [
+        130,
+        162
+      ],
+      "category": "troops",
+      "label": "Choglings",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Premium material/render style study; subject to identity fidelity review",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/01_choglings_compare.jpg",
+      "source": "combined original + 3d concept crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        720,
+        480
+      ],
+      "category": "troops",
+      "label": "Choglings identity check",
+      "usage": "comparison",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Side by side to review character identity drift, not production art"
+    },
+    {
+      "file": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/02_chaos_archer.png",
+      "source": "original_25_card_roster",
+      "source_box_xyxy": [
+        128,
+        50,
+        225,
+        179
+      ],
+      "size_pixels": [
+        97,
+        129
+      ],
+      "category": "troops",
+      "label": "Chaos Archer",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "CANONICAL original roster identity reference: do not replace facial DNA / signature props",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/02_chaos_archer.png",
+      "source": "new_3d_25_roster_board",
+      "source_box_xyxy": [
+        156,
+        161,
+        286,
+        323
+      ],
+      "size_pixels": [
+        130,
+        162
+      ],
+      "category": "troops",
+      "label": "Chaos Archer",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Premium material/render style study; subject to identity fidelity review",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/02_chaos_archer_compare.jpg",
+      "source": "combined original + 3d concept crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        720,
+        480
+      ],
+      "category": "troops",
+      "label": "Chaos Archer identity check",
+      "usage": "comparison",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Side by side to review character identity drift, not production art"
+    },
+    {
+      "file": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/03_boulderback.png",
+      "source": "original_25_card_roster",
+      "source_box_xyxy": [
+        238,
+        50,
+        335,
+        179
+      ],
+      "size_pixels": [
+        97,
+        129
+      ],
+      "category": "troops",
+      "label": "Boulderback",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "CANONICAL original roster identity reference: do not replace facial DNA / signature props",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/03_boulderback.png",
+      "source": "new_3d_25_roster_board",
+      "source_box_xyxy": [
+        296,
+        161,
+        426,
+        323
+      ],
+      "size_pixels": [
+        130,
+        162
+      ],
+      "category": "troops",
+      "label": "Boulderback",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Premium material/render style study; subject to identity fidelity review",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/03_boulderback_compare.jpg",
+      "source": "combined original + 3d concept crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        720,
+        480
+      ],
+      "category": "troops",
+      "label": "Boulderback identity check",
+      "usage": "comparison",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Side by side to review character identity drift, not production art"
+    },
+    {
+      "file": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/04_frostshell.png",
+      "source": "original_25_card_roster",
+      "source_box_xyxy": [
+        348,
+        50,
+        445,
+        179
+      ],
+      "size_pixels": [
+        97,
+        129
+      ],
+      "category": "troops",
+      "label": "Frostshell",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "CANONICAL original roster identity reference: do not replace facial DNA / signature props",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/04_frostshell.png",
+      "source": "new_3d_25_roster_board",
+      "source_box_xyxy": [
+        436,
+        161,
+        566,
+        323
+      ],
+      "size_pixels": [
+        130,
+        162
+      ],
+      "category": "troops",
+      "label": "Frostshell",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Premium material/render style study; subject to identity fidelity review",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/04_frostshell_compare.jpg",
+      "source": "combined original + 3d concept crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        720,
+        480
+      ],
+      "category": "troops",
+      "label": "Frostshell identity check",
+      "usage": "comparison",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Side by side to review character identity drift, not production art"
+    },
+    {
+      "file": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/05_rift_runner.png",
+      "source": "original_25_card_roster",
+      "source_box_xyxy": [
+        458,
+        50,
+        555,
+        179
+      ],
+      "size_pixels": [
+        97,
+        129
+      ],
+      "category": "troops",
+      "label": "Rift Runner",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "CANONICAL original roster identity reference: do not replace facial DNA / signature props",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/05_rift_runner.png",
+      "source": "new_3d_25_roster_board",
+      "source_box_xyxy": [
+        577,
+        161,
+        707,
+        323
+      ],
+      "size_pixels": [
+        130,
+        162
+      ],
+      "category": "troops",
+      "label": "Rift Runner",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Premium material/render style study; subject to identity fidelity review",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/05_rift_runner_compare.jpg",
+      "source": "combined original + 3d concept crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        720,
+        480
+      ],
+      "category": "troops",
+      "label": "Rift Runner identity check",
+      "usage": "comparison",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Side by side to review character identity drift, not production art"
+    },
+    {
+      "file": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/06_sparkcaster.png",
+      "source": "original_25_card_roster",
+      "source_box_xyxy": [
+        568,
+        50,
+        665,
+        179
+      ],
+      "size_pixels": [
+        97,
+        129
+      ],
+      "category": "troops",
+      "label": "Sparkcaster",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "CANONICAL original roster identity reference: do not replace facial DNA / signature props",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/06_sparkcaster.png",
+      "source": "new_3d_25_roster_board",
+      "source_box_xyxy": [
+        716,
+        161,
+        846,
+        323
+      ],
+      "size_pixels": [
+        130,
+        162
+      ],
+      "category": "troops",
+      "label": "Sparkcaster",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Premium material/render style study; subject to identity fidelity review",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/06_sparkcaster_compare.jpg",
+      "source": "combined original + 3d concept crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        720,
+        480
+      ],
+      "category": "troops",
+      "label": "Sparkcaster identity check",
+      "usage": "comparison",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Side by side to review character identity drift, not production art"
+    },
+    {
+      "file": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/07_chog_guardian.png",
+      "source": "original_25_card_roster",
+      "source_box_xyxy": [
+        678,
+        50,
+        775,
+        179
+      ],
+      "size_pixels": [
+        97,
+        129
+      ],
+      "category": "troops",
+      "label": "Chog Guardian",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "CANONICAL original roster identity reference: do not replace facial DNA / signature props",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/07_chog_guardian.png",
+      "source": "new_3d_25_roster_board",
+      "source_box_xyxy": [
+        857,
+        161,
+        987,
+        323
+      ],
+      "size_pixels": [
+        130,
+        162
+      ],
+      "category": "troops",
+      "label": "Chog Guardian",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Premium material/render style study; subject to identity fidelity review",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/07_chog_guardian_compare.jpg",
+      "source": "combined original + 3d concept crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        720,
+        480
+      ],
+      "category": "troops",
+      "label": "Chog Guardian identity check",
+      "usage": "comparison",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Side by side to review character identity drift, not production art"
+    },
+    {
+      "file": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/08_hexwing.png",
+      "source": "original_25_card_roster",
+      "source_box_xyxy": [
+        788,
+        50,
+        885,
+        179
+      ],
+      "size_pixels": [
+        97,
+        129
+      ],
+      "category": "troops",
+      "label": "Hexwing",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "CANONICAL original roster identity reference: do not replace facial DNA / signature props",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/08_hexwing.png",
+      "source": "new_3d_25_roster_board",
+      "source_box_xyxy": [
+        997,
+        161,
+        1127,
+        323
+      ],
+      "size_pixels": [
+        130,
+        162
+      ],
+      "category": "troops",
+      "label": "Hexwing",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Premium material/render style study; subject to identity fidelity review",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/08_hexwing_compare.jpg",
+      "source": "combined original + 3d concept crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        720,
+        480
+      ],
+      "category": "troops",
+      "label": "Hexwing identity check",
+      "usage": "comparison",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Side by side to review character identity drift, not production art"
+    },
+    {
+      "file": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/09_rift_sprites.png",
+      "source": "original_25_card_roster",
+      "source_box_xyxy": [
+        898,
+        50,
+        995,
+        179
+      ],
+      "size_pixels": [
+        97,
+        129
+      ],
+      "category": "troops",
+      "label": "Rift Sprites",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "CANONICAL original roster identity reference: do not replace facial DNA / signature props",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/09_rift_sprites.png",
+      "source": "new_3d_25_roster_board",
+      "source_box_xyxy": [
+        1137,
+        161,
+        1267,
+        323
+      ],
+      "size_pixels": [
+        130,
+        162
+      ],
+      "category": "troops",
+      "label": "Rift Sprites",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Premium material/render style study; subject to identity fidelity review",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/09_rift_sprites_compare.jpg",
+      "source": "combined original + 3d concept crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        720,
+        480
+      ],
+      "category": "troops",
+      "label": "Rift Sprites identity check",
+      "usage": "comparison",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Side by side to review character identity drift, not production art"
+    },
+    {
+      "file": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/10_gale_netter.png",
+      "source": "original_25_card_roster",
+      "source_box_xyxy": [
+        1008,
+        50,
+        1105,
+        179
+      ],
+      "size_pixels": [
+        97,
+        129
+      ],
+      "category": "troops",
+      "label": "Gale Netter",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "CANONICAL original roster identity reference: do not replace facial DNA / signature props",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/10_gale_netter.png",
+      "source": "new_3d_25_roster_board",
+      "source_box_xyxy": [
+        1275,
+        161,
+        1405,
+        323
+      ],
+      "size_pixels": [
+        130,
+        162
+      ],
+      "category": "troops",
+      "label": "Gale Netter",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Premium material/render style study; subject to identity fidelity review",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/10_gale_netter_compare.jpg",
+      "source": "combined original + 3d concept crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        720,
+        480
+      ],
+      "category": "troops",
+      "label": "Gale Netter identity check",
+      "usage": "comparison",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Side by side to review character identity drift, not production art"
+    },
+    {
+      "file": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/11_riftbreaker.png",
+      "source": "original_25_card_roster",
+      "source_box_xyxy": [
+        18,
+        330,
+        115,
+        459
+      ],
+      "size_pixels": [
+        97,
+        129
+      ],
+      "category": "troops",
+      "label": "Riftbreaker",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "CANONICAL original roster identity reference: do not replace facial DNA / signature props",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/11_riftbreaker.png",
+      "source": "new_3d_25_roster_board",
+      "source_box_xyxy": [
+        14,
+        372,
+        166,
+        583
+      ],
+      "size_pixels": [
+        152,
+        211
+      ],
+      "category": "troops",
+      "label": "Riftbreaker",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Premium material/render style study; subject to identity fidelity review",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/11_riftbreaker_compare.jpg",
+      "source": "combined original + 3d concept crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        720,
+        480
+      ],
+      "category": "troops",
+      "label": "Riftbreaker identity check",
+      "usage": "comparison",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Side by side to review character identity drift, not production art"
+    },
+    {
+      "file": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/12_ember_mauler.png",
+      "source": "original_25_card_roster",
+      "source_box_xyxy": [
+        128,
+        330,
+        225,
+        459
+      ],
+      "size_pixels": [
+        97,
+        129
+      ],
+      "category": "troops",
+      "label": "Ember Mauler",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "CANONICAL original roster identity reference: do not replace facial DNA / signature props",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/12_ember_mauler.png",
+      "source": "new_3d_25_roster_board",
+      "source_box_xyxy": [
+        175,
+        372,
+        325,
+        583
+      ],
+      "size_pixels": [
+        150,
+        211
+      ],
+      "category": "troops",
+      "label": "Ember Mauler",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Premium material/render style study; subject to identity fidelity review",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/12_ember_mauler_compare.jpg",
+      "source": "combined original + 3d concept crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        720,
+        480
+      ],
+      "category": "troops",
+      "label": "Ember Mauler identity check",
+      "usage": "comparison",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Side by side to review character identity drift, not production art"
+    },
+    {
+      "file": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/13_rift_sentry.png",
+      "source": "original_25_card_roster",
+      "source_box_xyxy": [
+        238,
+        330,
+        335,
+        459
+      ],
+      "size_pixels": [
+        97,
+        129
+      ],
+      "category": "buildings",
+      "label": "Rift Sentry",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "CANONICAL original roster identity reference: do not replace facial DNA / signature props",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/13_rift_sentry.png",
+      "source": "new_3d_25_roster_board",
+      "source_box_xyxy": [
+        340,
+        426,
+        480,
+        586
+      ],
+      "size_pixels": [
+        140,
+        160
+      ],
+      "category": "buildings",
+      "label": "Rift Sentry",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Premium material/render style study; subject to identity fidelity review",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/13_rift_sentry_compare.jpg",
+      "source": "combined original + 3d concept crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        720,
+        480
+      ],
+      "category": "buildings",
+      "label": "Rift Sentry identity check",
+      "usage": "comparison",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Side by side to review character identity drift, not production art"
+    },
+    {
+      "file": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/14_decoy_totem.png",
+      "source": "original_25_card_roster",
+      "source_box_xyxy": [
+        348,
+        330,
+        445,
+        459
+      ],
+      "size_pixels": [
+        97,
+        129
+      ],
+      "category": "buildings",
+      "label": "Decoy Totem",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "CANONICAL original roster identity reference: do not replace facial DNA / signature props",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/14_decoy_totem.png",
+      "source": "new_3d_25_roster_board",
+      "source_box_xyxy": [
+        487,
+        426,
+        629,
+        586
+      ],
+      "size_pixels": [
+        142,
+        160
+      ],
+      "category": "buildings",
+      "label": "Decoy Totem",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Premium material/render style study; subject to identity fidelity review",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/14_decoy_totem_compare.jpg",
+      "source": "combined original + 3d concept crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        720,
+        480
+      ],
+      "category": "buildings",
+      "label": "Decoy Totem identity check",
+      "usage": "comparison",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Side by side to review character identity drift, not production art"
+    },
+    {
+      "file": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/15_chog_burrow.png",
+      "source": "original_25_card_roster",
+      "source_box_xyxy": [
+        458,
+        330,
+        555,
+        459
+      ],
+      "size_pixels": [
+        97,
+        129
+      ],
+      "category": "buildings",
+      "label": "Chog Burrow",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "CANONICAL original roster identity reference: do not replace facial DNA / signature props",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/15_chog_burrow.png",
+      "source": "new_3d_25_roster_board",
+      "source_box_xyxy": [
+        637,
+        426,
+        775,
+        586
+      ],
+      "size_pixels": [
+        138,
+        160
+      ],
+      "category": "buildings",
+      "label": "Chog Burrow",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Premium material/render style study; subject to identity fidelity review",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/15_chog_burrow_compare.jpg",
+      "source": "combined original + 3d concept crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        720,
+        480
+      ],
+      "category": "buildings",
+      "label": "Chog Burrow identity check",
+      "usage": "comparison",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Side by side to review character identity drift, not production art"
+    },
+    {
+      "file": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/16_rift_mortar.png",
+      "source": "original_25_card_roster",
+      "source_box_xyxy": [
+        568,
+        330,
+        665,
+        459
+      ],
+      "size_pixels": [
+        97,
+        129
+      ],
+      "category": "buildings",
+      "label": "Rift Mortar",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "CANONICAL original roster identity reference: do not replace facial DNA / signature props",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/16_rift_mortar.png",
+      "source": "new_3d_25_roster_board",
+      "source_box_xyxy": [
+        783,
+        426,
+        922,
+        586
+      ],
+      "size_pixels": [
+        139,
+        160
+      ],
+      "category": "buildings",
+      "label": "Rift Mortar",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Premium material/render style study; subject to identity fidelity review",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/16_rift_mortar_compare.jpg",
+      "source": "combined original + 3d concept crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        720,
+        480
+      ],
+      "category": "buildings",
+      "label": "Rift Mortar identity check",
+      "usage": "comparison",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Side by side to review character identity drift, not production art"
+    },
+    {
+      "file": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/17_chaos_bolt.png",
+      "source": "original_25_card_roster",
+      "source_box_xyxy": [
+        678,
+        330,
+        775,
+        459
+      ],
+      "size_pixels": [
+        97,
+        129
+      ],
+      "category": "spells",
+      "label": "Chaos Bolt",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "CANONICAL original roster identity reference: do not replace facial DNA / signature props",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/17_chaos_bolt.png",
+      "source": "new_3d_25_roster_board",
+      "source_box_xyxy": [
+        942,
+        428,
+        1054,
+        585
+      ],
+      "size_pixels": [
+        112,
+        157
+      ],
+      "category": "spells",
+      "label": "Chaos Bolt",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Premium material/render style study; subject to identity fidelity review",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/17_chaos_bolt_compare.jpg",
+      "source": "combined original + 3d concept crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        720,
+        480
+      ],
+      "category": "spells",
+      "label": "Chaos Bolt identity check",
+      "usage": "comparison",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Side by side to review character identity drift, not production art"
+    },
+    {
+      "file": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/18_rally_horn.png",
+      "source": "original_25_card_roster",
+      "source_box_xyxy": [
+        788,
+        330,
+        885,
+        459
+      ],
+      "size_pixels": [
+        97,
+        129
+      ],
+      "category": "spells",
+      "label": "Rally Horn",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "CANONICAL original roster identity reference: do not replace facial DNA / signature props",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/18_rally_horn.png",
+      "source": "new_3d_25_roster_board",
+      "source_box_xyxy": [
+        1061,
+        428,
+        1171,
+        585
+      ],
+      "size_pixels": [
+        110,
+        157
+      ],
+      "category": "spells",
+      "label": "Rally Horn",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Premium material/render style study; subject to identity fidelity review",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/18_rally_horn_compare.jpg",
+      "source": "combined original + 3d concept crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        720,
+        480
+      ],
+      "category": "spells",
+      "label": "Rally Horn identity check",
+      "usage": "comparison",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Side by side to review character identity drift, not production art"
+    },
+    {
+      "file": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/19_chaos_comet.png",
+      "source": "original_25_card_roster",
+      "source_box_xyxy": [
+        898,
+        330,
+        995,
+        459
+      ],
+      "size_pixels": [
+        97,
+        129
+      ],
+      "category": "spells",
+      "label": "Chaos Comet",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "CANONICAL original roster identity reference: do not replace facial DNA / signature props",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/19_chaos_comet.png",
+      "source": "new_3d_25_roster_board",
+      "source_box_xyxy": [
+        1177,
+        428,
+        1286,
+        585
+      ],
+      "size_pixels": [
+        109,
+        157
+      ],
+      "category": "spells",
+      "label": "Chaos Comet",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Premium material/render style study; subject to identity fidelity review",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/19_chaos_comet_compare.jpg",
+      "source": "combined original + 3d concept crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        720,
+        480
+      ],
+      "category": "spells",
+      "label": "Chaos Comet identity check",
+      "usage": "comparison",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Side by side to review character identity drift, not production art"
+    },
+    {
+      "file": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/20_rift_snare.png",
+      "source": "original_25_card_roster",
+      "source_box_xyxy": [
+        1008,
+        330,
+        1105,
+        459
+      ],
+      "size_pixels": [
+        97,
+        129
+      ],
+      "category": "spells",
+      "label": "Rift Snare",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "CANONICAL original roster identity reference: do not replace facial DNA / signature props",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/20_rift_snare.png",
+      "source": "new_3d_25_roster_board",
+      "source_box_xyxy": [
+        1294,
+        428,
+        1394,
+        585
+      ],
+      "size_pixels": [
+        100,
+        157
+      ],
+      "category": "spells",
+      "label": "Rift Snare",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Premium material/render style study; subject to identity fidelity review",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/20_rift_snare_compare.jpg",
+      "source": "combined original + 3d concept crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        720,
+        480
+      ],
+      "category": "spells",
+      "label": "Rift Snare identity check",
+      "usage": "comparison",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Side by side to review character identity drift, not production art"
+    },
+    {
+      "file": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/21_bulwark.png",
+      "source": "original_25_card_roster",
+      "source_box_xyxy": [
+        18,
+        610,
+        115,
+        739
+      ],
+      "size_pixels": [
+        97,
+        129
+      ],
+      "category": "commanders",
+      "label": "Bulwark",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "CANONICAL original roster identity reference: do not replace facial DNA / signature props",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/21_bulwark.png",
+      "source": "new_3d_25_roster_board",
+      "source_box_xyxy": [
+        15,
+        694,
+        284,
+        972
+      ],
+      "size_pixels": [
+        269,
+        278
+      ],
+      "category": "commanders",
+      "label": "Bulwark",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Premium material/render style study; subject to identity fidelity review",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/21_bulwark_compare.jpg",
+      "source": "combined original + 3d concept crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        720,
+        480
+      ],
+      "category": "commanders",
+      "label": "Bulwark identity check",
+      "usage": "comparison",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Side by side to review character identity drift, not production art"
+    },
+    {
+      "file": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/22_reaver.png",
+      "source": "original_25_card_roster",
+      "source_box_xyxy": [
+        128,
+        610,
+        225,
+        739
+      ],
+      "size_pixels": [
+        97,
+        129
+      ],
+      "category": "commanders",
+      "label": "Reaver",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "CANONICAL original roster identity reference: do not replace facial DNA / signature props",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/22_reaver.png",
+      "source": "new_3d_25_roster_board",
+      "source_box_xyxy": [
+        298,
+        694,
+        563,
+        972
+      ],
+      "size_pixels": [
+        265,
+        278
+      ],
+      "category": "commanders",
+      "label": "Reaver",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Premium material/render style study; subject to identity fidelity review",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/22_reaver_compare.jpg",
+      "source": "combined original + 3d concept crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        720,
+        480
+      ],
+      "category": "commanders",
+      "label": "Reaver identity check",
+      "usage": "comparison",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Side by side to review character identity drift, not production art"
+    },
+    {
+      "file": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/23_deadeye.png",
+      "source": "original_25_card_roster",
+      "source_box_xyxy": [
+        238,
+        610,
+        335,
+        739
+      ],
+      "size_pixels": [
+        97,
+        129
+      ],
+      "category": "commanders",
+      "label": "Deadeye",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "CANONICAL original roster identity reference: do not replace facial DNA / signature props",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/23_deadeye.png",
+      "source": "new_3d_25_roster_board",
+      "source_box_xyxy": [
+        575,
+        694,
+        842,
+        972
+      ],
+      "size_pixels": [
+        267,
+        278
+      ],
+      "category": "commanders",
+      "label": "Deadeye",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Premium material/render style study; subject to identity fidelity review",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/23_deadeye_compare.jpg",
+      "source": "combined original + 3d concept crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        720,
+        480
+      ],
+      "category": "commanders",
+      "label": "Deadeye identity check",
+      "usage": "comparison",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Side by side to review character identity drift, not production art"
+    },
+    {
+      "file": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/24_scout.png",
+      "source": "original_25_card_roster",
+      "source_box_xyxy": [
+        348,
+        610,
+        445,
+        739
+      ],
+      "size_pixels": [
+        97,
+        129
+      ],
+      "category": "commanders",
+      "label": "Scout",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "CANONICAL original roster identity reference: do not replace facial DNA / signature props",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/24_scout.png",
+      "source": "new_3d_25_roster_board",
+      "source_box_xyxy": [
+        850,
+        694,
+        1112,
+        972
+      ],
+      "size_pixels": [
+        262,
+        278
+      ],
+      "category": "commanders",
+      "label": "Scout",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Premium material/render style study; subject to identity fidelity review",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/24_scout_compare.jpg",
+      "source": "combined original + 3d concept crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        720,
+        480
+      ],
+      "category": "commanders",
+      "label": "Scout identity check",
+      "usage": "comparison",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Side by side to review character identity drift, not production art"
+    },
+    {
+      "file": "02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/25_warden.png",
+      "source": "original_25_card_roster",
+      "source_box_xyxy": [
+        458,
+        610,
+        555,
+        739
+      ],
+      "size_pixels": [
+        97,
+        129
+      ],
+      "category": "commanders",
+      "label": "Warden",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "CANONICAL original roster identity reference: do not replace facial DNA / signature props",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/25_warden.png",
+      "source": "new_3d_25_roster_board",
+      "source_box_xyxy": [
+        1124,
+        694,
+        1393,
+        972
+      ],
+      "size_pixels": [
+        269,
+        278
+      ],
+      "category": "commanders",
+      "label": "Warden",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Premium material/render style study; subject to identity fidelity review",
+      "production_target": ""
+    },
+    {
+      "file": "02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/25_warden_compare.jpg",
+      "source": "combined original + 3d concept crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        720,
+        480
+      ],
+      "category": "commanders",
+      "label": "Warden identity check",
+      "usage": "comparison",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Side by side to review character identity drift, not production art"
+    },
+    {
+      "file": "06_ANIMATION_AND_ANCHOR_POSE_REFERENCES/choglings_pose_sequence_reference.png",
+      "source": "production_checklist",
+      "source_box_xyxy": [
+        25,
+        862,
+        393,
+        1027
+      ],
+      "size_pixels": [
+        368,
+        165
+      ],
+      "category": "animation_reference",
+      "label": "choglings",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Pose illustrations in checklist are NOT separate transparent animation frames.",
+      "production_target": "Complete consistent camera frames and anchored atlas frames must be produced."
+    },
+    {
+      "file": "06_ANIMATION_AND_ANCHOR_POSE_REFERENCES/boulderback_pose_sequence_reference.png",
+      "source": "production_checklist",
+      "source_box_xyxy": [
+        397,
+        859,
+        796,
+        1026
+      ],
+      "size_pixels": [
+        399,
+        167
+      ],
+      "category": "animation_reference",
+      "label": "boulderback",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Pose illustrations in checklist are NOT separate transparent animation frames.",
+      "production_target": "Complete consistent camera frames and anchored atlas frames must be produced."
+    },
+    {
+      "file": "06_ANIMATION_AND_ANCHOR_POSE_REFERENCES/top_red_bulwark_pose_sequence_reference.png",
+      "source": "production_checklist",
+      "source_box_xyxy": [
+        28,
+        466,
+        1390,
+        605
+      ],
+      "size_pixels": [
+        1362,
+        139
+      ],
+      "category": "animation_reference",
+      "label": "top_red_bulwark",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Pose illustrations in checklist are NOT separate transparent animation frames.",
+      "production_target": "Complete consistent camera frames and anchored atlas frames must be produced."
+    },
+    {
+      "file": "06_ANIMATION_AND_ANCHOR_POSE_REFERENCES/bottom_blue_chog_guardian_pose_sequence_reference.png",
+      "source": "production_checklist",
+      "source_box_xyxy": [
+        27,
+        611,
+        1392,
+        757
+      ],
+      "size_pixels": [
+        1365,
+        146
+      ],
+      "category": "animation_reference",
+      "label": "bottom_blue_chog_guardian",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Pose illustrations in checklist are NOT separate transparent animation frames.",
+      "production_target": "Complete consistent camera frames and anchored atlas frames must be produced."
+    },
+    {
+      "file": "04_LIGHTING_AND_STYLE/blue_team_color_REFERENCE.png",
+      "source": "style_guide",
+      "source_box_xyxy": [
+        596,
+        729,
+        734,
+        847
+      ],
+      "size_pixels": [
+        138,
+        118
+      ],
+      "category": "team_colors",
+      "label": "blue_team_color",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "",
+      "production_target": ""
+    },
+    {
+      "file": "04_LIGHTING_AND_STYLE/red_team_color_REFERENCE.png",
+      "source": "style_guide",
+      "source_box_xyxy": [
+        738,
+        729,
+        880,
+        847
+      ],
+      "size_pixels": [
+        142,
+        118
+      ],
+      "category": "team_colors",
+      "label": "red_team_color",
+      "usage": "reference_crop",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "",
+      "production_target": ""
+    },
+    {
+      "file": "08_OPTIONAL_OFFICIAL_BRAND_LOGO_ASSETS/stacked_logo.png",
+      "source": "CHOG_ROYALE_primary_stacked_transparent.png",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        1600,
+        1319
+      ],
+      "category": "optional_logo",
+      "label": "stacked_logo",
+      "usage": "full_reference",
+      "game_ready": false,
+      "alpha_transparent": true,
+      "notes": "Earlier owner-requested brand export; independent of arena production"
+    },
+    {
+      "file": "08_OPTIONAL_OFFICIAL_BRAND_LOGO_ASSETS/horizontal_logo.png",
+      "source": "CHOG_ROYALE_horizontal_transparent.png",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        1600,
+        651
+      ],
+      "category": "optional_logo",
+      "label": "horizontal_logo",
+      "usage": "full_reference",
+      "game_ready": false,
+      "alpha_transparent": true,
+      "notes": "Earlier owner-requested brand export; independent of arena production"
+    },
+    {
+      "file": "08_OPTIONAL_OFFICIAL_BRAND_LOGO_ASSETS/crown_emblem.png",
+      "source": "CHOG_ROYALE_crystal_crown_transparent.png",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        960,
+        882
+      ],
+      "category": "optional_logo",
+      "label": "crown_emblem",
+      "usage": "full_reference",
+      "game_ready": false,
+      "alpha_transparent": true,
+      "notes": "Earlier owner-requested brand export; independent of arena production"
+    },
+    {
+      "file": "08_OPTIONAL_OFFICIAL_BRAND_LOGO_ASSETS/app_icon_1024.png",
+      "source": "CHOG_ROYALE_app_icon_1024.png",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        1024,
+        1024
+      ],
+      "category": "optional_logo",
+      "label": "app_icon_1024",
+      "usage": "full_reference",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "Earlier owner-requested brand export; independent of arena production"
+    },
+    {
+      "file": "01_ARENA/00_FACING_AND_TEAM_ORIENTATION_LOCK.png",
+      "source": "approved arena composition + human-produced orientation diagram",
+      "category": "orientation",
+      "label": "Orientation and cannon facing rules",
+      "usage": "explicit technical rule",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "AIM ARROWS override any incorrectly drawn barrel direction in the reference concept."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/card_72x96/01_choglings.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        72,
+        96
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Choglings card_72x96",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/compact_46x61/01_choglings.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        46,
+        61
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Choglings compact_46x61",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/card_72x96/02_chaos_archer.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        72,
+        96
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Chaos Archer card_72x96",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/compact_46x61/02_chaos_archer.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        46,
+        61
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Chaos Archer compact_46x61",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/card_72x96/03_boulderback.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        72,
+        96
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Boulderback card_72x96",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/compact_46x61/03_boulderback.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        46,
+        61
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Boulderback compact_46x61",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/card_72x96/04_frostshell.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        72,
+        96
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Frostshell card_72x96",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/compact_46x61/04_frostshell.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        46,
+        61
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Frostshell compact_46x61",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/card_72x96/05_rift_runner.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        72,
+        96
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Rift Runner card_72x96",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/compact_46x61/05_rift_runner.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        46,
+        61
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Rift Runner compact_46x61",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/card_72x96/06_sparkcaster.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        72,
+        96
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Sparkcaster card_72x96",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/compact_46x61/06_sparkcaster.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        46,
+        61
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Sparkcaster compact_46x61",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/card_72x96/07_chog_guardian.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        72,
+        96
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Chog Guardian card_72x96",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/compact_46x61/07_chog_guardian.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        46,
+        61
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Chog Guardian compact_46x61",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/card_72x96/08_hexwing.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        72,
+        96
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Hexwing card_72x96",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/compact_46x61/08_hexwing.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        46,
+        61
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Hexwing compact_46x61",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/card_72x96/09_rift_sprites.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        72,
+        96
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Rift Sprites card_72x96",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/compact_46x61/09_rift_sprites.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        46,
+        61
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Rift Sprites compact_46x61",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/card_72x96/10_gale_netter.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        72,
+        96
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Gale Netter card_72x96",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/compact_46x61/10_gale_netter.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        46,
+        61
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Gale Netter compact_46x61",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/card_72x96/11_riftbreaker.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        72,
+        96
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Riftbreaker card_72x96",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/compact_46x61/11_riftbreaker.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        46,
+        61
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Riftbreaker compact_46x61",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/card_72x96/12_ember_mauler.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        72,
+        96
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Ember Mauler card_72x96",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/compact_46x61/12_ember_mauler.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        46,
+        61
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Ember Mauler compact_46x61",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/card_72x96/13_rift_sentry.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        72,
+        96
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Rift Sentry card_72x96",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/compact_46x61/13_rift_sentry.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        46,
+        61
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Rift Sentry compact_46x61",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/card_72x96/14_decoy_totem.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        72,
+        96
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Decoy Totem card_72x96",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/compact_46x61/14_decoy_totem.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        46,
+        61
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Decoy Totem compact_46x61",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/card_72x96/15_chog_burrow.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        72,
+        96
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Chog Burrow card_72x96",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/compact_46x61/15_chog_burrow.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        46,
+        61
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Chog Burrow compact_46x61",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/card_72x96/16_rift_mortar.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        72,
+        96
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Rift Mortar card_72x96",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/compact_46x61/16_rift_mortar.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        46,
+        61
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Rift Mortar compact_46x61",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/card_72x96/17_chaos_bolt.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        72,
+        96
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Chaos Bolt card_72x96",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/compact_46x61/17_chaos_bolt.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        46,
+        61
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Chaos Bolt compact_46x61",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/card_72x96/18_rally_horn.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        72,
+        96
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Rally Horn card_72x96",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/compact_46x61/18_rally_horn.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        46,
+        61
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Rally Horn compact_46x61",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/card_72x96/19_chaos_comet.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        72,
+        96
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Chaos Comet card_72x96",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/compact_46x61/19_chaos_comet.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        46,
+        61
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Chaos Comet compact_46x61",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/card_72x96/20_rift_snare.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        72,
+        96
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Rift Snare card_72x96",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/compact_46x61/20_rift_snare.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        46,
+        61
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Rift Snare compact_46x61",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/card_72x96/21_bulwark.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        72,
+        96
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Bulwark card_72x96",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/compact_46x61/21_bulwark.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        46,
+        61
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Bulwark compact_46x61",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/card_72x96/22_reaver.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        72,
+        96
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Reaver card_72x96",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/compact_46x61/22_reaver.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        46,
+        61
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Reaver compact_46x61",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/card_72x96/23_deadeye.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        72,
+        96
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Deadeye card_72x96",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/compact_46x61/23_deadeye.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        46,
+        61
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Deadeye compact_46x61",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/card_72x96/24_scout.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        72,
+        96
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Scout card_72x96",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/compact_46x61/24_scout.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        46,
+        61
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Scout compact_46x61",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/card_72x96/25_warden.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        72,
+        96
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Warden card_72x96",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    },
+    {
+      "file": "02_CARDS/04_PROVISIONAL_UI_PREVIEWS_NOT_APPROVED/compact_46x61/25_warden.png",
+      "source": "individual_stylized_concept_crop",
+      "source_box_xyxy": null,
+      "size_pixels": [
+        46,
+        61
+      ],
+      "category": "temporary_ui_preview",
+      "label": "Warden compact_46x61",
+      "usage": "provisional UI preview, NOT final approved game art",
+      "game_ready": false,
+      "alpha_transparent": false,
+      "notes": "For card rendering layout preview only. Generated from a small crop; no Chog/NFT fidelity approval. Replace with genuinely produced and owner-approved originals."
+    }
+  ],
+  "game_ready_assets_count": 0,
+  "note": "Reference crops, NOT production alpha sprites, tiles, VFX or animation atlases. The production-ready claim on concept art sheet is not technically verified."
+}

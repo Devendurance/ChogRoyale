@@ -1,0 +1,95 @@
+{
+  "project": "Chog Royale",
+  "version": "2.0",
+  "approved_visual_references": [
+    "references/APPROVED_five_character_direction.png",
+    "references/ARENA_CORRECTED_red_top_blue_bottom.png"
+  ],
+  "reference_status": "REFERENCE_ONLY_NOT_GAME_READY",
+  "pipeline": "2.5D pre-rendered sprites + layered static/animated arena in existing Phaser renderer",
+  "required_before_full_visual_overhaul": {
+    "arena_layers": [
+      "terrain_without_towers",
+      "animated_or_tiled_river",
+      "river_banks",
+      "left_bridge_deck",
+      "right_bridge_deck",
+      "bridge_foreground_rails",
+      "outer_border_flora_and_crystal",
+      "foreground_occlusion_layers"
+    ],
+    "towers": [
+      "red_top_center_king",
+      "red_top_left_lane",
+      "red_top_right_lane",
+      "blue_bottom_center_king",
+      "blue_bottom_left_lane",
+      "blue_bottom_right_lane",
+      "tower_defender_art_real_chog_identity",
+      "tower_attack_states",
+      "tower_hit_damage_destroy_states_if_used"
+    ],
+    "per_troop": [
+      "high_res_card_art",
+      "gameplay_alpha_atlas",
+      "documented_pivot_and_scale",
+      "real_runtime_state_animations",
+      "directional_views_only_as_needed"
+    ],
+    "per_commander_candidate": [
+      "high_res_card_art",
+      "gameplay_alpha_atlas",
+      "actual_ability_state_animations_only",
+      "documented_pivot_and_scale"
+    ],
+    "per_building": [
+      "high_res_card_art",
+      "transparent_idle_sprite",
+      "activation_attack_destroy_states_only_if_used",
+      "footprint_and_occlusion_reference"
+    ],
+    "per_spell": [
+      "high_res_card_art",
+      "cast_animation_if_used",
+      "projectile_travel_if_used",
+      "impact_frames",
+      "area_indicator_if_used"
+    ],
+    "vfx": [
+      "contact_shadow_atlas",
+      "hit_dust",
+      "frost_burst",
+      "ember_hit",
+      "arcane_bolt",
+      "rift_field",
+      "water_ripples"
+    ],
+    "ui": [
+      "card_art_with_large_and_compact_safe_crop",
+      "valid HP/name/target overlays"
+    ]
+  },
+  "do_not_do": [
+    "do_not_slice_poster_into_frames",
+    "do_not_use_flattened_arena_as_production_layer",
+    "do_not_change_hitboxes_or_pathing",
+    "do_not_claim_full_overhaul_until_assets_and_code_both_verified"
+  ],
+  "test_requirements": [
+    "alpha_integrity",
+    "stable_sprite_pivots",
+    "actual_dimensions_and_game_view_scale",
+    "asset_registry_resolution",
+    "team_orientation_preserved",
+    "no_baked_tower_duplicates",
+    "card_72x96_and_46x61_comparison_plus_real_ui",
+    "mobile_performance_measured"
+  ],
+  "team_orientation": {
+    "perspective": "local-player",
+    "enemy": "red-top",
+    "local_player": "blue-bottom",
+    "multiplayer_ownership": "derive_from_actual_state_not_absolute_team_id",
+    "defenders": "top red Bulwark visual identity; bottom blue Chog Guardian visual identity (check actual tower occupants)"
+  }
+}
