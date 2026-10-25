@@ -132,6 +132,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Visual Core padding may lower only the authored mount assembly and its presentation labels. Keep the authoritative ground point, health model and weapon anchors fixed. Team accents must derive from `owner === seat` for both perspectives, with decorative pennants and halos kept inside the noninteractive canvas presentation.
 - Combat VFX must key off authoritative event identity or observed authoritative HP change. Keep a bounded dedupe set, destroy temporary Phaser objects after their cue window, and never turn an advisory placement preview into a success effect.
 - Fixture screenshots are presentation evidence only. Pointer/deployment delivery and touch behavior remain pending a real two-player regression.
+- Pre-rendered 2.5D arena layers (v003+) are camera-space (`space: "camera"`) and must never be flipped for seat 1, or trees, posts and banners turn upside down. Only board-space overlays mirror. New layers keep logical points on exact master pixels via the pitched ortho camera with ground Y stretched by 1/cos(pitch). Check the projected anchors before importing.
+- Tower mounts are player-relative roles from `structureMounts`: the opponent gets red Bulwark mounts aiming south and the viewer gets blue Chog Guardian mounts aiming north. Weapon anchors come from projected 3D muzzle points, never hand-picked pixels. Keep v002 as the runtime fallback.
 
 ## GAME APP SHELL
 

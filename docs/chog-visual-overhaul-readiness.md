@@ -121,3 +121,25 @@ Once blocker 1 lands: drop the re-exported layers into `public/assets/arena/chao
 - The `foundations` art keeps a thin baked purple (top) and cyan (bottom) rim. It's now on the correct side for both seats but still needs a neutral re-export.
 - Arena brightness and palette are still the older v002 look. No grass grading was added because a tint pass over the existing terrain can't reach the approved daylight look and would only muddy it.
 - Defender identity is the generic Sentinel and Core Keeper for both teams until blocker 2 lands.
+
+## 10. Slice 2: v003 arena and team defender mounts (2026-10-25)
+
+Source: `Chog_Royale_Devin_Asset_Reference_Pack_v1/` (README, DEVIN_OPUS_START_HERE, manifest.json, card_manifest.json, `07_APPROVED_V3_ART_BIBLE`, byte-identical to the v3 handoff docs). Every pack PNG is `game_ready: false` and none was installed. Branch `visual-overhaul/v3-slice2`.
+
+Pipeline actually used: procedural modelling in a headless Blender 5.2 install, rendered with EEVEE. No image generator or 3D generator was used, and nothing was traced or cropped from the pack. Scripts and masters live outside the repo in `ChogRoyale-Assets/arena-worlds/chaos-crossing/v003/` (`scripts/common.py`, `build_arena.py`, `build_mounts.py`, `export_gameplay.cjs`).
+
+- Camera: orthographic, pitched 52 degrees, with ground Y stretched by 1/cos(pitch). The script projects the bridge, ford, tower and Core anchors and every one lands on its exact master pixel (`masters/layers/_geometry-check.json`).
+- Arena: 12 new layers plus the three v002 Chaos overlays reused byte-identical. All new layers are `space: "camera"` and render upright for both seats. That works because the board is symmetric about y = 80, and seat 1 mirrors only the cell-band convention by half a cell, which the centred cell envelopes absorb. The Chaos overlays keep the v002 board mirror.
+- Team trim is authored red on top and blue on the bottom, so `tintsTeamTrim` skips the v002 crop and tint.
+- Mounts: four roles, `lane-red`, `king-red`, `lane-blue` and `king-blue`. Each has `structure-base`, `socket-platform`, `front-rim`, `defender-idle` and one directional pose. `structureMounts` in the manifest picks red Bulwark for the opponent's structures and blue Chog Guardian for the viewer's, from `owner === seat`. Weapon anchors are the projected 3D muzzle centres.
+- Identity check: `masters/mounts/<role>/identity-<defender>.png` sits beside the original card in `_identity.png`. Bulwark keeps the gold Corinthian helmet, red crest, dark face with round Chog eyes and blush, black rear spikes, ivory armour with gold buttons, and the round shield with a gold eight-point star. Chog Guardian keeps the blue spike fan, cream face mask, single angled brow, smile and blush, plus the steel plate, blue scarf and tabard, and the round steel shield with a blue field. Owner approval is still pending.
+- Renderer: `loadArena` tries v003 and falls back to v002. Layer flips come from `layer.space`, mount roles come from `mountRoleForStructure`, placements are matched by `kind`, the code pennants are skipped when the art carries team colour, and the far Core drop uses the measured `artTopLocalBoardPixels`.
+- Gameplay, geometry, input, server and the v001 kit are unchanged. v002 is kept intact as the fallback.
+
+Verification: `npx vitest run src/app/dev/battle` gives 11 files and 121 tests. Typecheck and scoped eslint are clean, and `next build` passes. Fixture captures at 390x844 and 1366x768 for both seats, plus a forced v002 fallback run, are in `ChogRoyale-Assets/visual-overhaul-v3-slice2/`. Both seats show `king-red`/`lane-red` on top with `aim-south` and `lane-blue`/`king-blue` at the bottom with `aim-north`, with zero console errors and zero failed asset loads. A live two-login match, physical devices, a tower firing in a live match and performance aren't verified.
+
+Known limits of this slice:
+- The art is procedural primitive modelling. It reads as bright, toy-like 2.5D, but it's below the painted quality of the concept boards. Grass, bridges and border flora are simple.
+- The blue defender faces away from the camera to aim up, so only the spikes, shield, scarf and armour carry identity, never the face. That follows the orientation lock.
+- Defenders have static idle and aim poses only, with no fire or destroy frames. Recoil, muzzle flash and the hit tint are code cues.
+- No troop, building, spell or commander atlas and no new card art exist yet. All 25 cards and `burrow_scrapper` still use v001. The full queue is in `docs/chog-asset-production-manifest.json`.

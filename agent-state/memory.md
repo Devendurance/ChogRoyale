@@ -1,5 +1,9 @@
 # Memory
 
+- Blender 5.2 is installed at `C:/Users/USER/AppData/Local/Programs/Blender Foundation/Blender 5.2/blender.exe` and renders headless (`-b --factory-startup --python`) with EEVEE. The only engines are `BLENDER_EEVEE`, `BLENDER_WORKBENCH` and `CYCLES`, so `BLENDER_EEVEE_NEXT` doesn't exist. Blender's bundled numpy works. System Python has neither numpy nor Pillow. The MCP Blender bridge was not connected this session, and headless runs don't need it.
+- Blender primitive defaults: cube size 2 and cylinder depth 2. Pass size and depth of 1 when the scale is meant as full dimensions. Generated images saved through `Image.save()` and reloaded avoid the empty-texture problem with packed generated images.
+- sharp is only a transitive dependency. Asset-side scripts resolve it from the repo `node_modules` and must call `sharp.cache(false)`, then write through `fs` with a retry, because Windows briefly locks just-read PNGs.
+
 - Visual overhaul v3: the v002 `team-trim` and `foundations` art bake P1 purple and P0 cyan. Seat 1 used to flip them, which inverted team sides. They now render unflipped (camera space) and team-trim is cropped into halves tinted red/blue. The approved arena PNG and five-character poster are references only. Tower defenders are generic Sentinel/Core Keeper art for both teams until Bulwark and Chog Guardian mounts are produced.
 - Fixture captures for the battle canvas: copy `ChogRoyale-Assets/battle-identity-hotfix-20261025/qa-v2-harness/page.tsx` to `src/app/dev/battle/qa-v2/page.tsx`, run `ChogRoyale-Assets/visual-overhaul-v3-slice1/capture.cjs` against next dev, then delete the harness. Another `next dev` may already hold port 3000 for this repo, so reuse it instead of starting a second one.
 

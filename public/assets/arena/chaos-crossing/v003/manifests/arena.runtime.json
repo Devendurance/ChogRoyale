@@ -1,0 +1,432 @@
+{
+  "arenaId": "chaos-crossing-v003",
+  "schemaVersion": 2,
+  "board": {
+    "artCanvas": [
+      600,
+      920
+    ],
+    "boardOffset": [
+      50,
+      60
+    ],
+    "boardSize": [
+      500,
+      800
+    ],
+    "pxPerUnit": 5,
+    "masterOrigin": [
+      100,
+      120
+    ],
+    "masterPxPerUnit": 10
+  },
+  "layers": [
+    {
+      "id": "base-terrain",
+      "path": "layers/base-terrain.png",
+      "zOrder": 10,
+      "defaultVisible": true,
+      "state": "static",
+      "stateRule": "static",
+      "space": "camera"
+    },
+    {
+      "id": "river-water",
+      "path": "layers/river-water.png",
+      "zOrder": 20,
+      "defaultVisible": true,
+      "state": "static",
+      "stateRule": "static",
+      "space": "camera"
+    },
+    {
+      "id": "water-ripples-0",
+      "path": "layers/water-ripples-0.png",
+      "zOrder": 30,
+      "defaultVisible": true,
+      "state": "ripple-a",
+      "stateRule": "alternate ripple phase A",
+      "space": "camera"
+    },
+    {
+      "id": "water-ripples-1",
+      "path": "layers/water-ripples-1.png",
+      "zOrder": 40,
+      "defaultVisible": false,
+      "state": "ripple-b",
+      "stateRule": "alternate ripple phase B",
+      "space": "camera"
+    },
+    {
+      "id": "rift-ford-open",
+      "path": "layers/rift-ford-open.png",
+      "zOrder": 50,
+      "defaultVisible": false,
+      "state": "rift-open",
+      "stateRule": "authoritative frame.riftOpen === true only",
+      "space": "camera"
+    },
+    {
+      "id": "rift-ford-closing",
+      "path": "layers/rift-ford-closing.png",
+      "zOrder": 60,
+      "defaultVisible": false,
+      "state": "rift-closed",
+      "stateRule": "frame.riftOpen === false only; disconnected sparks never open ford",
+      "space": "camera"
+    },
+    {
+      "id": "banks-bridges",
+      "path": "layers/banks-bridges.png",
+      "zOrder": 70,
+      "defaultVisible": true,
+      "state": "static",
+      "stateRule": "static",
+      "space": "camera"
+    },
+    {
+      "id": "foundations",
+      "path": "layers/foundations.png",
+      "zOrder": 80,
+      "defaultVisible": true,
+      "state": "static",
+      "stateRule": "static",
+      "space": "camera"
+    },
+    {
+      "id": "border-scenery",
+      "path": "layers/border-scenery.png",
+      "zOrder": 90,
+      "defaultVisible": true,
+      "state": "static",
+      "stateRule": "static",
+      "space": "camera"
+    },
+    {
+      "id": "chaos-warning",
+      "path": "layers/chaos-warning.png",
+      "zOrder": 100,
+      "defaultVisible": false,
+      "state": "chaos-warning",
+      "stateRule": "explicit Chaos visual state; never opens ford (v002 art reused byte-identical)",
+      "space": "board"
+    },
+    {
+      "id": "chaos-active",
+      "path": "layers/chaos-active.png",
+      "zOrder": 110,
+      "defaultVisible": false,
+      "state": "chaos-active",
+      "stateRule": "explicit Chaos visual state; never opens ford (v002 art reused byte-identical)",
+      "space": "board"
+    },
+    {
+      "id": "chaos-expiry",
+      "path": "layers/chaos-expiry.png",
+      "zOrder": 120,
+      "defaultVisible": false,
+      "state": "chaos-expiry",
+      "stateRule": "explicit Chaos visual state; never opens ford (v002 art reused byte-identical)",
+      "space": "board"
+    },
+    {
+      "id": "ambient",
+      "path": "layers/ambient.png",
+      "zOrder": 130,
+      "defaultVisible": true,
+      "state": "static",
+      "stateRule": "static",
+      "space": "camera"
+    },
+    {
+      "id": "team-trim",
+      "path": "layers/team-trim.png",
+      "zOrder": 140,
+      "defaultVisible": true,
+      "state": "static",
+      "stateRule": "static; authored red top and blue bottom",
+      "space": "camera",
+      "authoredTeamColors": true
+    },
+    {
+      "id": "foreground",
+      "path": "layers/foreground.png",
+      "zOrder": 150,
+      "defaultVisible": true,
+      "state": "static",
+      "stateRule": "static",
+      "space": "camera"
+    }
+  ],
+  "structureMounts": {
+    "tower": {
+      "friendly": "lane-blue",
+      "opponent": "lane-red"
+    },
+    "core": {
+      "friendly": "king-blue",
+      "opponent": "king-red"
+    }
+  },
+  "mounts": {
+    "lane-red": {
+      "kind": "tower",
+      "team": "red",
+      "authoredTeamColors": true,
+      "pivotNormalized": [
+        0.5,
+        0.875
+      ],
+      "displayScale": 0.5,
+      "seatLocalBoardPixels": [
+        0,
+        0
+      ],
+      "healthBarLocalBoardRectangle": [
+        -40,
+        -139,
+        80,
+        5
+      ],
+      "artTopLocalBoardPixels": -127,
+      "renderOrder": [
+        "structure-base",
+        "socket-platform",
+        "defender-pose",
+        "front-rim"
+      ],
+      "parts": {
+        "structure-base": "mounts/lane-red/structure-base.png",
+        "socket-platform": "mounts/lane-red/socket-platform.png",
+        "front-rim": "mounts/lane-red/front-rim.png"
+      },
+      "poses": {
+        "idle": {
+          "pose": "idle",
+          "path": "mounts/lane-red/defender-idle.png",
+          "weaponAnchorLocalBoardPixels": [
+            17.5,
+            -42.475
+          ],
+          "firingAllowed": false
+        },
+        "aim-south": {
+          "pose": "aim-south",
+          "path": "mounts/lane-red/defender-aim-south.png",
+          "weaponAnchorLocalBoardPixels": [
+            17.5,
+            -25.511
+          ],
+          "firingAllowed": true
+        }
+      }
+    },
+    "lane-blue": {
+      "kind": "tower",
+      "team": "blue",
+      "authoredTeamColors": true,
+      "pivotNormalized": [
+        0.5,
+        0.875
+      ],
+      "displayScale": 0.5,
+      "seatLocalBoardPixels": [
+        0,
+        0
+      ],
+      "healthBarLocalBoardRectangle": [
+        -40,
+        -126,
+        80,
+        5
+      ],
+      "artTopLocalBoardPixels": -114,
+      "renderOrder": [
+        "structure-base",
+        "socket-platform",
+        "defender-pose",
+        "front-rim"
+      ],
+      "parts": {
+        "structure-base": "mounts/lane-blue/structure-base.png",
+        "socket-platform": "mounts/lane-blue/socket-platform.png",
+        "front-rim": "mounts/lane-blue/front-rim.png"
+      },
+      "poses": {
+        "idle": {
+          "pose": "idle",
+          "path": "mounts/lane-blue/defender-idle.png",
+          "weaponAnchorLocalBoardPixels": [
+            20,
+            -84.124
+          ],
+          "firingAllowed": false
+        },
+        "aim-north": {
+          "pose": "aim-north",
+          "path": "mounts/lane-blue/defender-aim-north.png",
+          "weaponAnchorLocalBoardPixels": [
+            20,
+            -82.149
+          ],
+          "firingAllowed": true
+        }
+      }
+    },
+    "king-red": {
+      "kind": "core",
+      "team": "red",
+      "authoredTeamColors": true,
+      "pivotNormalized": [
+        0.5,
+        0.875
+      ],
+      "displayScale": 0.5,
+      "seatLocalBoardPixels": [
+        0,
+        0
+      ],
+      "healthBarLocalBoardRectangle": [
+        -50,
+        -153,
+        100,
+        5
+      ],
+      "artTopLocalBoardPixels": -141,
+      "renderOrder": [
+        "structure-base",
+        "socket-platform",
+        "defender-pose",
+        "front-rim"
+      ],
+      "parts": {
+        "structure-base": "mounts/king-red/structure-base.png",
+        "socket-platform": "mounts/king-red/socket-platform.png",
+        "front-rim": "mounts/king-red/front-rim.png"
+      },
+      "poses": {
+        "idle": {
+          "pose": "idle",
+          "path": "mounts/king-red/defender-idle.png",
+          "weaponAnchorLocalBoardPixels": [
+            17.5,
+            -48.779
+          ],
+          "firingAllowed": false
+        },
+        "aim-south": {
+          "pose": "aim-south",
+          "path": "mounts/king-red/defender-aim-south.png",
+          "weaponAnchorLocalBoardPixels": [
+            17.5,
+            -31.815
+          ],
+          "firingAllowed": true
+        }
+      }
+    },
+    "king-blue": {
+      "kind": "core",
+      "team": "blue",
+      "authoredTeamColors": true,
+      "pivotNormalized": [
+        0.5,
+        0.875
+      ],
+      "displayScale": 0.5,
+      "seatLocalBoardPixels": [
+        0,
+        0
+      ],
+      "healthBarLocalBoardRectangle": [
+        -50,
+        -140,
+        100,
+        5
+      ],
+      "artTopLocalBoardPixels": -128,
+      "renderOrder": [
+        "structure-base",
+        "socket-platform",
+        "defender-pose",
+        "front-rim"
+      ],
+      "parts": {
+        "structure-base": "mounts/king-blue/structure-base.png",
+        "socket-platform": "mounts/king-blue/socket-platform.png",
+        "front-rim": "mounts/king-blue/front-rim.png"
+      },
+      "poses": {
+        "idle": {
+          "pose": "idle",
+          "path": "mounts/king-blue/defender-idle.png",
+          "weaponAnchorLocalBoardPixels": [
+            20,
+            -90.429
+          ],
+          "firingAllowed": false
+        },
+        "aim-north": {
+          "pose": "aim-north",
+          "path": "mounts/king-blue/defender-aim-north.png",
+          "weaponAnchorLocalBoardPixels": [
+            20,
+            -88.453
+          ],
+          "firingAllowed": true
+        }
+      }
+    }
+  },
+  "placements": [
+    {
+      "id": "p1-core",
+      "kind": "core",
+      "groundAnchorPixels": [
+        600,
+        200
+      ]
+    },
+    {
+      "id": "p1-west",
+      "kind": "tower",
+      "groundAnchorPixels": [
+        400,
+        520
+      ]
+    },
+    {
+      "id": "p1-east",
+      "kind": "tower",
+      "groundAnchorPixels": [
+        800,
+        520
+      ]
+    },
+    {
+      "id": "p0-west",
+      "kind": "tower",
+      "groundAnchorPixels": [
+        400,
+        1320
+      ]
+    },
+    {
+      "id": "p0-east",
+      "kind": "tower",
+      "groundAnchorPixels": [
+        800,
+        1320
+      ]
+    },
+    {
+      "id": "p0-core",
+      "kind": "core",
+      "groundAnchorPixels": [
+        600,
+        1640
+      ]
+    }
+  ]
+}

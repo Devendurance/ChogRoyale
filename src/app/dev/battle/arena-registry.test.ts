@@ -3,6 +3,8 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   ARENA_URL,
+  ARENA_URLS,
+  ARENA_V003_URL,
   TEAM_COLORS,
   TEAM_TRIM_LAYER,
   anchorScreenOffset,
@@ -18,11 +20,13 @@ import {
   masterToArena,
   masterToScreen,
   mountRoleFor,
+  mountRoleForStructure,
   mountVisualOffsetY,
   newDefenderState,
   placementFor,
   structureTeamFor,
   teamTrimHalves,
+  tintsTeamTrim,
   updateDefender,
   weaponArena,
   weaponScreen,
@@ -255,7 +259,7 @@ describe("defender pose state machine", () => {
         for (const now of [10, 100, 500]) {
           const pose = defenderPose(s, true, screenY, now);
           expect(pose).toBe(expected);
-          expect(manifest.mounts[p.mountRole].poses[pose].firingAllowed).toBe(true);
+          expect(manifest.mounts[p.mountRole!].poses[pose].firingAllowed).toBe(true);
         }
       }
     }
@@ -379,5 +383,89 @@ describe("ford and chaos layer state", () => {
     expect(layerVisible(b, view)).toBe(false);
     expect(layerVisible(a, { ...view, rippleAlt: true })).toBe(false);
     expect(layerVisible(b, { ...view, rippleAlt: true })).toBe(true);
+  });
+});
+
+describe("v003 pre-rendered arena and team mounts", () => {
+  const v3 = JSON.parse(
+    readFileSync(join(process.cwd(), `public${ARENA_V003_URL}/manifests/arena.runtime.json`), "utf8")
+  ) as ArenaManifest;
+  const png = (rel: string): [number, number, number] => {
+    const buf = readFileSync(join(process.cwd(), `public${ARENA_V003_URL}/${rel}`));
+    return [buf.readUInt32BE(16), buf.readUInt32BE(20), buf[25]];
+  };
+
+  it("is preferred at runtime with v002 kept as the fallback", () => {
+    expect(ARENA_URLS).toEqual([ARENA_V003_URL, ARENA_URL]);
+    expect(v3.schemaVersion).toBe(2);
+  });
+
+  it("ships every layer and mount part as RGBA at the runtime contract size", () => {
+    expect(v3.layers).toHaveLength(15);
+    for (const l of v3.layers) expect(png(l.path)).toEqual([600, 920, 6]);
+    for (const role of Object.values(v3.mounts)) {
+      for (const p of [...Object.values(role.parts), ...Object.values(role.poses).map((x) => x.path)]) {
+        expect(p).toBeTruthy();
+        expect(png(p!)).toEqual([256, 320, 6]);
+      }
+    }
+  });
+
+  it("renders the 2.5D layers upright for both seats; only the reused chaos overlays mirror", () => {
+    for (const l of v3.layers) {
+      expect(layerFlipY(l, 0)).toBe(false);
+      expect(layerFlipY(l, 1)).toBe(l.id.startsWith("chaos-"));
+    }
+    const trim = v3.layers.find((l) => l.id === TEAM_TRIM_LAYER)!;
+    expect(tintsTeamTrim(trim)).toBe(false);
+    expect(tintsTeamTrim(manifest.layers.find((l) => l.id === TEAM_TRIM_LAYER)!)).toBe(true);
+    // String ids keep the v002 camera-space set.
+    expect(layerFlipY("team-trim", 1)).toBe(false);
+    expect(layerFlipY("base-terrain", 1)).toBe(true);
+  });
+
+  it("gives the opponent red Bulwark mounts and the viewer blue Chog Guardian mounts in both seats", () => {
+    for (const seat of [0, 1] as const) {
+      for (const p of v3.placements) {
+        const [x, y] = masterToArena(p.groundAnchorPixels[0], p.groundAnchorPixels[1]);
+        const owner = p.id.startsWith("p0") ? 0 : 1;
+        const kind = p.kind!;
+        const role = mountRoleForStructure(v3, kind, owner, seat);
+        const mount = v3.mounts[role];
+        const screenY = boardPoint(x, y, seat)[1];
+        const top = screenY < 400;
+        expect(mount.kind).toBe(kind);
+        expect(mount.team).toBe(top ? "red" : "blue");
+        expect(role).toBe(`${kind === "core" ? "king" : "lane"}-${top ? "red" : "blue"}`);
+        expect(placementFor(v3, kind, x, y)?.id).toBe(p.id);
+        // Red cannons aim down, blue cannons aim up, in every defender state.
+        const pose = defenderPose(newDefenderState(), true, screenY, 0);
+        expect(pose).toBe(top ? "aim-south" : "aim-north");
+        expect(mount.poses[pose]?.firingAllowed).toBe(true);
+        expect(mount.poses[top ? "aim-north" : "aim-south"]).toBeUndefined();
+      }
+    }
+    expect(mountRoleForStructure(manifest, "tower", 1, 0)).toBe("sentinel");
+  });
+
+  it("aims the red muzzle low on its mount and the blue muzzle high", () => {
+    for (const kind of ["lane", "king"]) {
+      const red = v3.mounts[`${kind}-red`].poses["aim-south"].weaponAnchorLocalBoardPixels;
+      const blue = v3.mounts[`${kind}-blue`].poses["aim-north"].weaponAnchorLocalBoardPixels;
+      expect(red[1]).toBeLessThan(0);
+      expect(blue[1]).toBeLessThan(red[1]);
+      const [gx, gy] = masterToScreen(400, 520, 0);
+      const [wx, wy] = weaponScreen([400, 520], red, 0);
+      expect(Math.hypot(wx - gx, wy - gy)).toBeLessThan(60);
+    }
+  });
+
+  it("drops the far Core enough to keep its measured art top inside the canvas", () => {
+    const top = v3.mounts["king-red"].artTopLocalBoardPixels!;
+    const screenY = boardPoint(50, 152, 0)[1];
+    const offset = mountVisualOffsetY("core", screenY, top);
+    expect(screenY + offset + top / 2).toBeGreaterThanOrEqual(18 - 1e-9);
+    expect(mountVisualOffsetY("core", screenY)).toBe(40);
+    expect(mountVisualOffsetY("tower", 200, -127)).toBe(0);
   });
 });

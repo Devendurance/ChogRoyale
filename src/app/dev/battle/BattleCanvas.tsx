@@ -27,26 +27,41 @@ import {
   type SpriteRecord,
 } from "./sprite-registry";
 import {
-  ARENA_URL,
+  ARENA_URLS,
   TEAM_COLORS,
-  TEAM_TRIM_LAYER,
   defenderCue,
   defenderPose,
+  directionalAim,
   fireFresh,
   fireKey,
   layerFlipY,
   layerVisible,
   mountRoleFor,
+  mountRoleForStructure,
   mountVisualOffsetY,
   newDefenderState,
   placementFor,
   structureTeamFor,
   teamTrimHalves,
+  tintsTeamTrim,
   updateDefender,
   weaponScreen,
   type ArenaManifest,
   type DefenderState,
 } from "./arena-registry";
+
+// First arena manifest that loads wins: v003 pre-rendered 2.5D art, else v002.
+const loadArena = async (): Promise<{ arena: ArenaManifest; base: string } | null> => {
+  for (const base of ARENA_URLS) {
+    try {
+      const r = await fetch(`${base}/manifests/arena.runtime.json`);
+      if (r.ok) return { arena: (await r.json()) as ArenaManifest, base };
+    } catch {
+      // Try the next manifest.
+    }
+  }
+  return null;
+};
 
 const S = 5; // pixels per arena unit
 const OWN = 0x36dbe8;
@@ -117,11 +132,11 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
       fetch(`${KIT_URL}/manifests/phaser-assets.runtime.json`)
         .then((r) => (r.ok ? (r.json() as Promise<SpriteManifest>) : null))
         .catch(() => null),
-      fetch(`${ARENA_URL}/manifests/arena.runtime.json`)
-        .then((r) => (r.ok ? (r.json() as Promise<ArenaManifest>) : null))
-        .catch(() => null),
-    ]).then(([Phaser, manifest, arena]) => {
+      loadArena(),
+    ]).then(([Phaser, manifest, arenaLoad]) => {
       if (cancelled || !host.current) return;
+      const arena = arenaLoad?.arena ?? null;
+      const arenaBase = arenaLoad?.base ?? "";
       if (!manifest) console.warn("battle sprites: kit manifest unavailable; vector placeholders only");
       const reduced = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
       const W = 100 * S;
@@ -227,10 +242,10 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
           this.load.on("loaderror", (file: { key: string }) => missing.add(file.key));
           if (manifest) for (const a of manifest.assets) this.load.image(a.stableAssetId, `${KIT_URL}/${a.path}`);
           if (arena) {
-            for (const l of arena.layers) this.load.image(`arena:layer:${l.id}`, `${ARENA_URL}/${l.path}`);
+            for (const l of arena.layers) this.load.image(`arena:layer:${l.id}`, `${arenaBase}/${l.path}`);
             for (const [role, r] of Object.entries(arena.mounts)) {
-              for (const p of Object.values(r.parts)) if (p) this.load.image(`${role}:${p.split("/").pop()!.replace(".png", "")}`, `${ARENA_URL}/${p}`);
-              for (const [pose, p] of Object.entries(r.poses)) this.load.image(`${role}:defender-${pose}`, `${ARENA_URL}/${p.path}`);
+              for (const p of Object.values(r.parts)) if (p) this.load.image(`${role}:${p.split("/").pop()!.replace(".png", "")}`, `${arenaBase}/${p}`);
+              for (const [pose, p] of Object.entries(r.poses)) this.load.image(`${role}:defender-${pose}`, `${arenaBase}/${p.path}`);
             }
           }
         }
@@ -241,7 +256,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
           for (const l of arena?.layers ?? []) {
             const mk = () => this.add.image(-50, -60, `arena:layer:${l.id}`).setOrigin(0, 0).setDepth(-500 + l.zOrder);
             const img = mk();
-            if (l.id !== TEAM_TRIM_LAYER) {
+            if (!tintsTeamTrim(l)) {
               envLayers.set(l.id, [img]);
               continue;
             }
@@ -326,7 +341,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                     : l.state === "chaos-expiry"
                       ? 0.6
                       : 1;
-              for (const img of imgs) img.setFlipY(layerFlipY(l.id, seat)).setVisible(vis).setAlpha(alpha);
+              for (const img of imgs) img.setFlipY(layerFlipY(l, seat)).setVisible(vis).setAlpha(alpha);
             }
           }
           // Ground, own territory, river, bridges, ford. When the v002
@@ -579,26 +594,34 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             const y = sy(s.y);
             const r0 = (s.kind === "core" ? 4 : 3) * S + S / 2;
             const r = ent("structure", s.kind);
-            const role = mountRoleFor(s.kind);
+            // Schema 2 manifests pick the mount from the viewer's relation to the
+            // owner (red Bulwark for the opponent, blue Chog Guardian for the
+            // viewer); v002 shares one role per structure kind.
+            const role = arena ? mountRoleForStructure(arena, s.kind, s.owner, seat) : mountRoleFor(s.kind);
             const mrole = arenaOk && arena ? arena.mounts[role] : undefined;
+            const core = s.kind === "core";
+            const aimPose = directionalAim(y);
             const mounted =
               !!mrole &&
               !missing.has(`${role}:structure-base`) &&
               !missing.has(`${role}:defender-idle`) &&
-              !missing.has(`${role}:defender-aim-north`) &&
-              !missing.has(`${role}:defender-aim-south`);
+              (!mrole.poses[aimPose] || !missing.has(`${role}:defender-${aimPose}`));
             if (mounted && mrole) {
               // v002 mounted assembly replaces the v001 structure sprite.
+              const authoredTeam = !!mrole.authoredTeamColors;
               let me = mountPool.get(s.id);
               if (!me) {
                 const mk = (key: string) => this.add.image(0, 0, key).setOrigin(0.5, 0.875).setScale(0.5);
                 // A low contact shadow anchors each authored mount to the
                 // terrain without changing the authoritative ground point.
                 // The subtle green edge keeps the V002 base readable over the
-                // textured banks while the dark centre supplies depth.
-                const core = role === "core-keeper";
-                const shadow = this.add.ellipse(0, core ? 5 : 3, core ? 116 : 94, core ? 24 : 19, 0x07111a, 0.38);
-                shadow.setStrokeStyle(1, core ? 0xf5c96b : 0x9fe3bf, 0.18).setDepth(-1);
+                // textured banks while the dark centre supplies depth. The v003
+                // towers sit centred on the anchor, so their shadow is tighter.
+                const shadow = authoredTeam
+                  ? this.add.ellipse(0, core ? 9 : 7, core ? 62 : 50, core ? 22 : 18, 0x0b2a14, 0.3)
+                  : this.add.ellipse(0, core ? 5 : 3, core ? 116 : 94, core ? 24 : 19, 0x07111a, 0.38);
+                if (!authoredTeam) shadow.setStrokeStyle(1, core ? 0xf5c96b : 0x9fe3bf, 0.18);
+                shadow.setDepth(-1);
                 const teamAccent = this.add.graphics();
                 const base = mk(`${role}:structure-base`);
                 const socket = mk(`${role}:socket-platform`);
@@ -609,29 +632,32 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                 mountPool.set(s.id, me);
               }
               me.root.setPosition(x, y).setDepth(y);
-              const artOffsetY = mountVisualOffsetY(role, y);
+              const artOffsetY = mountVisualOffsetY(s.kind, y, mrole.artTopLocalBoardPixels);
               const partY = (part: import("phaser").GameObjects.Image) => part.setY(artOffsetY);
               partY(me.base);
               partY(me.socket);
               partY(me.defender);
               partY(me.rim);
-              me.shadow.setPosition(0, artOffsetY + (role === "core-keeper" ? 5 : 3)).setAlpha(s.alive ? 0.38 : 0.22);
+              me.shadow.setPosition(0, artOffsetY + (authoredTeam ? (core ? 9 : 7) : core ? 5 : 3)).setAlpha(s.alive ? (authoredTeam ? 0.3 : 0.38) : 0.22);
               me.teamAccent.clear();
-              const accent = structureCol(s.owner);
-              const flagTop = role === "core-keeper" ? -47 : -40;
-              const flagHeight = role === "core-keeper" ? 23 : 19;
-              const flagWidth = role === "core-keeper" ? 10 : 8;
-              // Small pennants and a halo make the seat colour legible without
-              // tinting the authored stone and Chog art as one flat sprite.
-              me.teamAccent.fillStyle(accent, 0.96);
-              me.teamAccent.fillRect(-20, flagTop, flagWidth, flagHeight);
-              me.teamAccent.fillTriangle(-20, flagTop + flagHeight, -20 + flagWidth, flagTop + flagHeight, -20 + flagWidth / 2, flagTop + flagHeight + 6);
-              me.teamAccent.fillRect(12, flagTop, flagWidth, flagHeight);
-              me.teamAccent.fillTriangle(12, flagTop + flagHeight, 12 + flagWidth, flagTop + flagHeight, 12 + flagWidth / 2, flagTop + flagHeight + 6);
-              me.teamAccent.lineStyle(1, 0xfff7d6, 0.72);
-              me.teamAccent.strokeRect(-20, flagTop, flagWidth, flagHeight);
-              me.teamAccent.strokeRect(12, flagTop, flagWidth, flagHeight);
-              me.teamAccent.lineStyle(2, accent, 0.88).strokeCircle(0, role === "core-keeper" ? -26 : -23, role === "core-keeper" ? 16 : 13);
+              if (!authoredTeam) {
+                const accent = structureCol(s.owner);
+                const flagTop = core ? -47 : -40;
+                const flagHeight = core ? 23 : 19;
+                const flagWidth = core ? 10 : 8;
+                // Small pennants and a halo make the seat colour legible without
+                // tinting the authored stone and Chog art as one flat sprite.
+                // v003 art paints its own red/blue banners and gems instead.
+                me.teamAccent.fillStyle(accent, 0.96);
+                me.teamAccent.fillRect(-20, flagTop, flagWidth, flagHeight);
+                me.teamAccent.fillTriangle(-20, flagTop + flagHeight, -20 + flagWidth, flagTop + flagHeight, -20 + flagWidth / 2, flagTop + flagHeight + 6);
+                me.teamAccent.fillRect(12, flagTop, flagWidth, flagHeight);
+                me.teamAccent.fillTriangle(12, flagTop + flagHeight, 12 + flagWidth, flagTop + flagHeight, 12 + flagWidth / 2, flagTop + flagHeight + 6);
+                me.teamAccent.lineStyle(1, 0xfff7d6, 0.72);
+                me.teamAccent.strokeRect(-20, flagTop, flagWidth, flagHeight);
+                me.teamAccent.strokeRect(12, flagTop, flagWidth, flagHeight);
+                me.teamAccent.lineStyle(2, accent, 0.88).strokeCircle(0, core ? -26 : -23, core ? 16 : 13);
+              }
               me.teamAccent.setPosition(0, artOffsetY).setAlpha(s.alive ? 1 : 0.18);
               const fire = towerFires.get(s.id) ?? null;
               const prevDef = defenderStates.get(s.id) ?? newDefenderState();
@@ -640,7 +666,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                   kind: "hit",
                   x: s.x,
                   y: s.y,
-                  r: role === "core-keeper" ? 4.5 : 3.5,
+                  r: core ? 4.5 : 3.5,
                   color: s.owner === seat ? 0x9be7ff : 0xffa29a,
                   until: frame.tick + (reduced ? 2 : 4),
                 });

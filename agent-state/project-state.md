@@ -1,5 +1,12 @@
 # Project State
 
+## Visual overhaul v3, slice 2 (2026-10-25)
+
+- Reference pack v1 sits at the repo root (`Chog_Royale_Devin_Asset_Reference_Pack_v1/`). It's reference only, every file `game_ready: false`, and its art bible is identical to the v3 handoff.
+- New runtime arena `public/assets/arena/chaos-crossing/v003`: 12 procedural Blender layers plus the v002 chaos overlays, all camera-space, and four team mounts (`lane-red`, `king-red` Bulwark aiming south; `lane-blue`, `king-blue` Chog Guardian aiming north). Importer `scripts/import-arena-v003.ts`, sources in `ChogRoyale-Assets/arena-worlds/chaos-crossing/v003`.
+- Renderer prefers v003 and falls back to v002. Schema 2 manifest fields: `layer.space`, `authoredTeamColors`, `structureMounts`, `placement.kind`, `artTopLocalBoardPixels`.
+- Full asset queue in `docs/chog-asset-production-manifest.json`. Choglings and Boulderback atlases come next.
+
 ## Visual overhaul v3, slice 1 (2026-10-25)
 
 - Handoff v3 lives at repo root (`Chog_Royale_Visual_Overhaul_Handoff_v3_CORRECTED/`). Readiness report in `docs/chog-visual-overhaul-readiness.md`: all 25 cards map to repo ids, commanders are domain classes, `burrow_scrapper` is an extra spawned sprite, and no approved-style asset exists yet.

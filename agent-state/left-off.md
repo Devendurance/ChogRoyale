@@ -1,3 +1,9 @@
+## Visual overhaul v3, slice 2 (2026-10-25)
+
+- Doing: asset reference pack v1 plus the first genuine production slice on branch `visual-overhaul/v3-slice2` from slice 1 commit 1e1fa56. Local commits only, with no push, PR or deploy without owner approval.
+- Done: pack extracted to the repo root. v003 arena (12 procedural Blender layers) and four red/blue team mounts are installed with v002 as the fallback. `docs/chog-asset-production-manifest.json` is written and readiness doc section 10 is updated. Battle tests pass 121/121, typecheck, scoped lint and build are green. Both-seat captures and the fallback capture are in `ChogRoyale-Assets/visual-overhaul-v3-slice2/`.
+- Next: owner art review of the arena and defenders (identity sheet `identity-vs-original.png`). Then Choglings and Boulderback atlases (idle, move, attack, hit, defeat) and their card art. A live two-login match and a phone pass are still unverified. The troop ring colour decision is still open.
+
 ## Visual overhaul v3, slice 1 (2026-10-25)
 
 - Doing: v3 corrected handoff, Prompt 01 bounded slice on branch `visual-overhaul/v3-slice1` from origin/main 6307f1b. Local commit only, no push without owner approval.
