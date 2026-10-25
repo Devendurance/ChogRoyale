@@ -597,7 +597,7 @@ export default function LegacyView({
                   body={vaultState.body}
                   action={
                     vault.state === "no-wallet" ? (
-                      <Link href="/dev/onboarding" className="app-btn app-btn--ghost">
+                      <Link href="/app/onboarding" className="app-btn app-btn--ghost">
                         Open setup tools
                       </Link>
                     ) : undefined

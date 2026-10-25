@@ -1,3 +1,9 @@
+## Permanent domain + onboarding (staged, pushing next)
+
+- DNS: endyos.xyz is Cloudflare-managed, but battle.endyos.xyz has NO record and endy-vps holds NO Cloudflare credentials. Named tunnel needs owner action (API token with Zone DNS:Edit + Tunnel:Edit, or an owner-built tunnel). Quick tunnel stays live (URL unchanged, both services stable).
+- Built /app/onboarding (username/display/avatar/wallet, server-authoritative, complete-only redirect) + guards on /app, /app/play, /app/play/battle + player-facing /dev/onboarding links rerouted. Model tests 3/3, touched suites green, typecheck/lint/build green.
+- Owner left: Cloudflare token or prebuilt tunnel; Vercel env + deploy check; two-login smoke.
+
 ## HOTFIX live: entry journey unblocked, pushed 0666669 (state local)
 
 - Fixes: landing Play CTAs -> /app; PlayHub real player via /api/players/me + resolvePlayer (was null); public battle gate = HTTPS WSS configured in prod (GameLobby + BattlePanel publicMode), dev gate untouched; PlayGuide stale currency line corrected.

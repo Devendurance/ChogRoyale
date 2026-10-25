@@ -133,14 +133,14 @@ function profileNotice(error: ApiError): LobbyNotice {
     return {
       tone: "warn",
       text: "This sign-in has no player profile yet, so the legacy vault cannot open it.",
-      action: { label: "Finish profile setup", href: "/dev/onboarding" },
+      action: { label: "Finish profile setup", href: "/app/onboarding" },
     };
   }
   if (error.code === "BOOTSTRAP_FAILED") {
     return {
       tone: "error",
       text: `Your player profile could not be created. ${error.message}`,
-      action: { label: "Open the setup tools", href: "/dev/onboarding" },
+      action: { label: "Open the setup tools", href: "/app/onboarding" },
     };
   }
   if (error.code === "UNAUTHORIZED") {
@@ -414,7 +414,7 @@ export default function LegacyScreen() {
       list.push({
         tone: "info",
         text: "Your profile setup is not finished. Your verified-wallet holdings are still shown.",
-        action: { label: "Finish profile setup", href: "/dev/onboarding" },
+        action: { label: "Finish profile setup", href: "/app/onboarding" },
       });
     }
 

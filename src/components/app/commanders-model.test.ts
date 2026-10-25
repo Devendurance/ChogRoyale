@@ -313,7 +313,7 @@ describe("notices", () => {
       bootstrap: true,
     });
     expect(notice.tone).toBe("warn");
-    expect(notice.action).toEqual({ label: "Finish profile setup", href: "/dev/onboarding" });
+    expect(notice.action).toEqual({ label: "Finish profile setup", href: "/app/onboarding" });
   });
 
   it("keeps session, lock and generic profile failures separate", () => {

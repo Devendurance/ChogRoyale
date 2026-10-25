@@ -129,14 +129,14 @@ function profileNotice(error: ApiError): LobbyNotice {
     return {
       tone: "warn",
       text: "This sign-in has no player profile yet, so the progress screen cannot open it.",
-      action: { label: "Finish profile setup", href: "/dev/onboarding" },
+      action: { label: "Finish profile setup", href: "/app/onboarding" },
     };
   }
   if (error.code === "BOOTSTRAP_FAILED") {
     return {
       tone: "error",
       text: `Your player profile could not be created. ${error.message}`,
-      action: { label: "Open the setup tools", href: "/dev/onboarding" },
+      action: { label: "Open the setup tools", href: "/app/onboarding" },
     };
   }
   if (error.code === "UNAUTHORIZED") {
@@ -465,13 +465,13 @@ export default function ProgressScreen() {
       list.push({
         tone: "info",
         text: "Your profile setup is not finished, so your verified record, match history and casual standings stay locked.",
-        action: { label: "Finish profile setup", href: "/dev/onboarding" },
+        action: { label: "Finish profile setup", href: "/app/onboarding" },
       });
     } else if ([statsError, historyError, boardError, rankedError, rankedBoardError].some((error) => error?.code === "FORBIDDEN")) {
       list.push({
         tone: "warn",
         text: "Your match records are locked until your profile setup is complete.",
-        action: { label: "Finish profile setup", href: "/dev/onboarding" },
+        action: { label: "Finish profile setup", href: "/app/onboarding" },
       });
     }
 

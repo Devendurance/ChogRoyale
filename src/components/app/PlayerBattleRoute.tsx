@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { BattlePanel } from "@/app/dev/battle/BattlePanel";
 import { RANKED_PUBLIC_MATCHMAKING_ENABLED } from "@/lib/ranked";
+import { useMyOnboardingState, useOnboardingRedirect } from "@/components/app/use-onboarding-redirect";
 
 export default function PlayerBattleRoute() {
+  useOnboardingRedirect(useMyOnboardingState());
   const params = useSearchParams();
   const raw = params.get("mode");
   // The player route never mounts the battle session for ranked. This keeps a

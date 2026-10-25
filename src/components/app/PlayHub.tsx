@@ -10,6 +10,7 @@ import { useLogin, usePrivy } from "@privy-io/react-auth";
 import AppHud from "./AppHud";
 import AppNav from "./AppNav";
 import Icon from "./icons";
+import { useOnboardingRedirect } from "./use-onboarding-redirect";
 import { RANKED_SEASON } from "@/lib/ranked";
 import { resolvePlayer, type ProfilePayload } from "./lobby-model";
 import type { LobbyPlayer } from "./lobby-types";
@@ -31,15 +32,24 @@ function Gate({ onSignIn }: { onSignIn: () => void }) {
 }
 
 export default function PlayHub() {
-  const { ready, authenticated, getAccessToken, logout } = usePrivy();
+  const { ready, authenticated, getAccessToken, logout, user } = usePrivy();
   const { login } = useLogin();
   const [player, setPlayer] = useState<LobbyPlayer | null>(null);
+  const [failed, setFailed] = useState(false);
+  const sessionKey = user?.id ?? null;
+
+  useOnboardingRedirect(
+    !ready || !authenticated ? "loading" : failed || !player ? "loading" : player.onboardingComplete ? "complete" : "incomplete"
+  );
 
   useEffect(() => {
     let cancelled = false;
     void (async () => {
       if (!ready || !authenticated) {
-        if (!cancelled) setPlayer(null);
+        if (!cancelled) {
+          setPlayer(null);
+          setFailed(false);
+        }
         return;
       }
       const token = await getAccessToken();
@@ -47,15 +57,21 @@ export default function PlayHub() {
       try {
         const res = await fetch("/api/players/me", { headers: { authorization: `Bearer ${token}` } });
         const body = (await res.json()) as { success: boolean; data?: { player: ProfilePayload } };
-        if (!cancelled) setPlayer(body.success && body.data ? resolvePlayer(body.data.player) : null);
+        if (!cancelled) {
+          setFailed(!(body.success && body.data));
+          setPlayer(body.success && body.data ? resolvePlayer(body.data.player) : null);
+        }
       } catch {
-        if (!cancelled) setPlayer(null);
+        if (!cancelled) {
+          setFailed(true);
+          setPlayer(null);
+        }
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [ready, authenticated, getAccessToken]);
+  }, [ready, authenticated, sessionKey, getAccessToken]);
 
   if (!ready) {
     return (

@@ -212,7 +212,7 @@ describe("read and error states", () => {
   it("turns a bootstrappable 404 into a setup action", () => {
     const notice = settingsNoticeFor({ code: "NOT_FOUND", message: "Player not provisioned", bootstrap: true });
     expect(notice.tone).toBe("warn");
-    expect(notice.action).toEqual({ label: "Finish profile setup", href: "/dev/onboarding" });
+    expect(notice.action).toEqual({ label: "Finish profile setup", href: "/app/onboarding" });
   });
 
   it("keeps auth, setup lock and service failures honest", () => {

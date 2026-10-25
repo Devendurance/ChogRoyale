@@ -12,6 +12,7 @@ import { usePrivy, useLogin } from "@privy-io/react-auth";
 import LobbyView from "./LobbyView";
 import { sessionNotice } from "./feedback-model";
 import { isPublicBattleAvailable } from "./battle-availability";
+import { useOnboardingRedirect } from "./use-onboarding-redirect";
 import { useLobbyCatalog } from "./catalog-context";
 import {
   resolveCommander,
@@ -86,14 +87,14 @@ function profileNotice(error: ApiError): LobbyNotice {
     return {
       tone: "warn",
       text: "This sign-in has no player profile yet, so the lobby cannot open it.",
-      action: { label: "Finish profile setup", href: "/dev/onboarding" },
+      action: { label: "Finish profile setup", href: "/app/onboarding" },
     };
   }
   if (error.code === "BOOTSTRAP_FAILED") {
     return {
       tone: "error",
       text: `Your player profile could not be created. ${error.message}`,
-      action: { label: "Open the setup tools", href: "/dev/onboarding" },
+      action: { label: "Open the setup tools", href: "/app/onboarding" },
     };
   }
   if (error.code === "UNAUTHORIZED") {
@@ -110,7 +111,7 @@ function loadoutNotice(error: ApiError): LobbyNotice {
     return {
       tone: "warn",
       text: "Your saved deck unlocks once your profile setup is complete.",
-      action: { label: "Finish profile setup", href: "/dev/onboarding" },
+      action: { label: "Finish profile setup", href: "/app/onboarding" },
     };
   }
   if (error.code === "INTERNAL_ERROR") {
@@ -286,13 +287,15 @@ function LobbyShell() {
       list.push({
         tone: "info",
         text: "Your profile setup is not finished, so the saved deck and some commander features stay locked.",
-        action: { label: "Finish profile setup", href: "/dev/onboarding" },
+        action: { label: "Finish profile setup", href: "/app/onboarding" },
       });
     }
     return list;
   }, [profileError, loadoutError, loadout, deckResult.notice, commandersError, profile]);
 
   const loaded = authenticated && sessionKey !== null && loadedFor === sessionKey;
+
+  useOnboardingRedirect(!loaded ? "loading" : profile?.onboarding.complete === true ? "complete" : "incomplete");
 
   const deckEmpty = useMemo(() => {
     if (loadoutError) {

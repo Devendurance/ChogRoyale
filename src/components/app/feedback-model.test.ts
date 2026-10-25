@@ -42,7 +42,7 @@ describe("feedbackNoticeFor", () => {
       "open settings"
     );
     expect(notice.tone).toBe("warn");
-    expect(notice.action).toEqual({ label: "Finish profile setup", href: "/dev/onboarding" });
+    expect(notice.action).toEqual({ label: "Finish profile setup", href: "/app/onboarding" });
   });
 
   it("keeps a 403 as a lock with no retry", () => {

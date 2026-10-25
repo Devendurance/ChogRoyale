@@ -291,7 +291,7 @@ function SettingsShell() {
       list.push({
         tone: "info",
         text: "Your profile setup is not finished, so your avatar and wallet details stay locked until it is.",
-        action: { label: "Finish profile setup", href: "/dev/onboarding" },
+        action: { label: "Finish profile setup", href: "/app/onboarding" },
       });
     }
     return list;

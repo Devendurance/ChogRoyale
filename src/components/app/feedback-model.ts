@@ -41,7 +41,7 @@ export function feedbackNoticeFor(error: FeedbackError, subject: string): LobbyN
     return {
       tone: "warn",
       text: `This sign-in has no player profile yet, so we cannot ${subject}.`,
-      action: { label: "Finish profile setup", href: "/dev/onboarding" },
+      action: { label: "Finish profile setup", href: "/app/onboarding" },
     };
   }
 
@@ -49,7 +49,7 @@ export function feedbackNoticeFor(error: FeedbackError, subject: string): LobbyN
     return {
       tone: "error",
       text: `Your player profile could not be created. ${error.message}`,
-      action: { label: "Open the setup tools", href: "/dev/onboarding" },
+      action: { label: "Open the setup tools", href: "/app/onboarding" },
     };
   }
 
