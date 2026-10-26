@@ -1,1268 +1,1235 @@
 {
- "schemaVersion": 1,
- "slice": "Visual overhaul v3 slice 2, refined in slice 2.1, units in slice 3, refined in slice 3.1, roster in slice 4, identity and card correction in slice 4.1",
- "rules": [
-  "Every pack PNG is a reference crop with game_ready=false. None of them is installed as runtime art.",
-  "Canonical identity is 02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY. Stylized 3D concepts are quality and lighting references only.",
-  "Runtime contract: arena layers 600x920 RGBA at 5 px/unit drawn at (-50,-60); mount parts 256x320 RGBA at 0.5 scale with pivot (0.5,0.875) on the structure ground anchor; troop sprites keep the v001 foot pivot.",
-  "produced = new genuine source installed at runtime and fixture-verified. missing = no game-ready source exists. fallback = existing v001/v002 art stays live."
- ],
- "arena": {
-  "pipeline": "Procedural Blender 5.2 scene rendered with EEVEE through an orthographic camera pitched 52 degrees. Ground Y is stretched by 1/cos(pitch) so logical points land on exact master pixels. Scripts in ChogRoyale-Assets/arena-worlds/chaos-crossing/v003/scripts.",
-  "runtimeRoot": "public/assets/arena/chaos-crossing/v003",
-  "layers": [
-   {
-    "id": "base-terrain",
-    "status": "produced",
-    "source": "procedural Blender master 1200x1840",
-    "reference": [
-     "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/01_environment/01_ground_base_grass_reference.png",
-     "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/01_environment/02_lane_path_reference.png"
-    ]
-   },
-   {
-    "id": "river-water",
-    "status": "produced",
-    "source": "procedural Blender master 1200x1840",
-    "reference": [
-     "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/01_environment/03_turquoise_river_water_reference.png"
-    ]
-   },
-   {
-    "id": "water-ripples-0",
-    "status": "produced",
-    "source": "procedural Blender master 1200x1840",
-    "reference": [
-     "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/02_environment_variations/13_river_water_checklist.png"
-    ]
-   },
-   {
-    "id": "water-ripples-1",
-    "status": "produced",
-    "source": "procedural Blender master 1200x1840",
-    "reference": [
-     "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/02_environment_variations/13_river_water_checklist.png"
-    ]
-   },
-   {
-    "id": "rift-ford-open",
-    "status": "produced",
-    "source": "procedural Blender master 1200x1840",
-    "reference": []
-   },
-   {
-    "id": "rift-ford-closing",
-    "status": "produced",
-    "source": "procedural Blender master 1200x1840",
-    "reference": []
-   },
-   {
-    "id": "banks-bridges",
-    "status": "produced",
-    "source": "procedural Blender master 1200x1840",
-    "reference": [
-     "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/01_environment/04_river_bank_reference.png",
-     "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/01_environment/05_bridge_left_reference.png",
-     "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/01_environment/06_bridge_right_reference.png"
-    ]
-   },
-   {
-    "id": "foundations",
-    "status": "produced",
-    "source": "procedural Blender master 1200x1840",
-    "reference": [
-     "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/02_environment_variations/18_tower_pad_checklist.png"
-    ]
-   },
-   {
-    "id": "border-scenery",
-    "status": "produced",
-    "source": "procedural Blender master 1200x1840",
-    "reference": [
-     "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/01_environment/07_crystal_border_cluster_reference.png",
-     "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/01_environment/08_flowers_and_shrubs_reference.png",
-     "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/01_environment/09_rock_variations_reference.png"
-    ]
-   },
-   {
-    "id": "ambient",
-    "status": "produced",
-    "source": "procedural Blender master 1200x1840",
-    "reference": [
-     "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/01_environment/08_flowers_and_shrubs_reference.png"
-    ]
-   },
-   {
-    "id": "team-trim",
-    "status": "produced",
-    "source": "procedural Blender master 1200x1840",
-    "reference": [
-     "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/02_environment_variations/19_team_trim_banners_checklist.png",
-     "Chog_Royale_Devin_Asset_Reference_Pack_v1/04_LIGHTING_AND_STYLE/red_team_color_REFERENCE.png",
-     "Chog_Royale_Devin_Asset_Reference_Pack_v1/04_LIGHTING_AND_STYLE/blue_team_color_REFERENCE.png"
-    ]
-   },
-   {
-    "id": "foreground",
-    "status": "produced",
-    "source": "procedural Blender master 1200x1840",
-    "reference": [
-     "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/02_environment_variations/17_foreground_occluders_checklist.png"
-    ]
-   },
-   {
-    "id": "chaos-warning",
-    "status": "fallback",
-    "source": "v002 art reused byte-identical in board space",
-    "reference": []
-   },
-   {
-    "id": "chaos-active",
-    "status": "fallback",
-    "source": "v002 art reused byte-identical in board space",
-    "reference": []
-   },
-   {
-    "id": "chaos-expiry",
-    "status": "fallback",
-    "source": "v002 art reused byte-identical in board space",
-    "reference": []
-   }
+  "schemaVersion": 1,
+  "slice": "Visual overhaul v3 slice 2, refined in slice 2.1, units in slice 3, refined in slice 3.1, roster in slice 4, identity and card correction in slice 4.1, final assets (buildings, spells, commanders, Burrow Scrapper, shared VFX)",
+  "rules": [
+    "Every pack PNG is a reference crop with game_ready=false. None of them is installed as runtime art.",
+    "Canonical identity is 02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY. Stylized 3D concepts are quality and lighting references only.",
+    "Runtime contract: arena layers 600x920 RGBA at 5 px/unit drawn at (-50,-60); mount parts 256x320 RGBA at 0.5 scale with pivot (0.5,0.875) on the structure ground anchor; troop sprites keep the v001 foot pivot.",
+    "produced = new genuine source installed at runtime and fixture-verified. missing = no game-ready source exists. fallback = existing v001/v002 art stays live."
   ],
-  "notYetProduced": [
-   "waterfall edge (Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/01_environment/10_waterfall_edge_reference.png): the 500x800 board has no off-board room for it",
-   "animated water beyond two ripple phases",
-   "torch flame and crystal glow loops"
+  "arena": {
+    "pipeline": "Procedural Blender 5.2 scene rendered with EEVEE through an orthographic camera pitched 52 degrees. Ground Y is stretched by 1/cos(pitch) so logical points land on exact master pixels. Scripts in ChogRoyale-Assets/arena-worlds/chaos-crossing/v003/scripts.",
+    "runtimeRoot": "public/assets/arena/chaos-crossing/v003",
+    "layers": [
+      {
+        "id": "base-terrain",
+        "status": "produced",
+        "source": "procedural Blender master 1200x1840",
+        "reference": [
+          "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/01_environment/01_ground_base_grass_reference.png",
+          "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/01_environment/02_lane_path_reference.png"
+        ]
+      },
+      {
+        "id": "river-water",
+        "status": "produced",
+        "source": "procedural Blender master 1200x1840",
+        "reference": [
+          "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/01_environment/03_turquoise_river_water_reference.png"
+        ]
+      },
+      {
+        "id": "water-ripples-0",
+        "status": "produced",
+        "source": "procedural Blender master 1200x1840",
+        "reference": [
+          "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/02_environment_variations/13_river_water_checklist.png"
+        ]
+      },
+      {
+        "id": "water-ripples-1",
+        "status": "produced",
+        "source": "procedural Blender master 1200x1840",
+        "reference": [
+          "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/02_environment_variations/13_river_water_checklist.png"
+        ]
+      },
+      {
+        "id": "rift-ford-open",
+        "status": "produced",
+        "source": "procedural Blender master 1200x1840",
+        "reference": []
+      },
+      {
+        "id": "rift-ford-closing",
+        "status": "produced",
+        "source": "procedural Blender master 1200x1840",
+        "reference": []
+      },
+      {
+        "id": "banks-bridges",
+        "status": "produced",
+        "source": "procedural Blender master 1200x1840",
+        "reference": [
+          "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/01_environment/04_river_bank_reference.png",
+          "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/01_environment/05_bridge_left_reference.png",
+          "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/01_environment/06_bridge_right_reference.png"
+        ]
+      },
+      {
+        "id": "foundations",
+        "status": "produced",
+        "source": "procedural Blender master 1200x1840",
+        "reference": [
+          "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/02_environment_variations/18_tower_pad_checklist.png"
+        ]
+      },
+      {
+        "id": "border-scenery",
+        "status": "produced",
+        "source": "procedural Blender master 1200x1840",
+        "reference": [
+          "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/01_environment/07_crystal_border_cluster_reference.png",
+          "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/01_environment/08_flowers_and_shrubs_reference.png",
+          "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/01_environment/09_rock_variations_reference.png"
+        ]
+      },
+      {
+        "id": "ambient",
+        "status": "produced",
+        "source": "procedural Blender master 1200x1840",
+        "reference": [
+          "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/01_environment/08_flowers_and_shrubs_reference.png"
+        ]
+      },
+      {
+        "id": "team-trim",
+        "status": "produced",
+        "source": "procedural Blender master 1200x1840",
+        "reference": [
+          "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/02_environment_variations/19_team_trim_banners_checklist.png",
+          "Chog_Royale_Devin_Asset_Reference_Pack_v1/04_LIGHTING_AND_STYLE/red_team_color_REFERENCE.png",
+          "Chog_Royale_Devin_Asset_Reference_Pack_v1/04_LIGHTING_AND_STYLE/blue_team_color_REFERENCE.png"
+        ]
+      },
+      {
+        "id": "foreground",
+        "status": "produced",
+        "source": "procedural Blender master 1200x1840",
+        "reference": [
+          "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/02_environment_variations/17_foreground_occluders_checklist.png"
+        ]
+      },
+      {
+        "id": "chaos-warning",
+        "status": "fallback",
+        "source": "v002 art reused byte-identical in board space",
+        "reference": []
+      },
+      {
+        "id": "chaos-active",
+        "status": "fallback",
+        "source": "v002 art reused byte-identical in board space",
+        "reference": []
+      },
+      {
+        "id": "chaos-expiry",
+        "status": "fallback",
+        "source": "v002 art reused byte-identical in board space",
+        "reference": []
+      }
+    ],
+    "notYetProduced": [
+      "waterfall edge (Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/01_environment/10_waterfall_edge_reference.png): the 500x800 board has no off-board room for it",
+      "animated water beyond two ripple phases",
+      "torch flame and crystal glow loops"
+    ]
+  },
+  "towers": [
+    {
+      "role": "lane-red",
+      "kind": "tower",
+      "team": "red (opponent, top)",
+      "defender": "Bulwark",
+      "identity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/21_bulwark.png",
+      "reference": [
+        "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/03_tower_designs/red_lane_tower_REFERENCE.png",
+        "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/04_tower_defenders/top_red_bulwark_REFERENCE.png",
+        "Chog_Royale_Devin_Asset_Reference_Pack_v1/06_ANIMATION_AND_ANCHOR_POSE_REFERENCES/top_red_bulwark_pose_sequence_reference.png"
+      ],
+      "parts": [
+        "structure-base",
+        "socket-platform",
+        "front-rim"
+      ],
+      "poses": [
+        "idle",
+        "aim-south"
+      ],
+      "status": "produced, refined in slice 2.1, owner art approval pending",
+      "missing": [
+        "fire frame sequence (recoil and muzzle flash are code cues today)",
+        "destroy or rubble art (code dims the base)"
+      ]
+    },
+    {
+      "role": "king-red",
+      "kind": "core",
+      "team": "red (opponent, top)",
+      "defender": "Bulwark",
+      "identity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/21_bulwark.png",
+      "reference": [
+        "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/03_tower_designs/red_king_tower_REFERENCE.png"
+      ],
+      "parts": [
+        "structure-base",
+        "socket-platform",
+        "front-rim"
+      ],
+      "poses": [
+        "idle",
+        "aim-south"
+      ],
+      "status": "produced, refined in slice 2.1, owner art approval pending",
+      "missing": [
+        "fire frame sequence (recoil and muzzle flash are code cues today)",
+        "destroy or rubble art (code dims the base)"
+      ]
+    },
+    {
+      "role": "lane-blue",
+      "kind": "tower",
+      "team": "blue (viewer, bottom)",
+      "defender": "Chog Guardian",
+      "identity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/07_chog_guardian.png",
+      "reference": [
+        "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/03_tower_designs/blue_lane_tower_REFERENCE.png",
+        "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/04_tower_defenders/bottom_blue_chog_guardian_REFERENCE.png",
+        "Chog_Royale_Devin_Asset_Reference_Pack_v1/06_ANIMATION_AND_ANCHOR_POSE_REFERENCES/bottom_blue_chog_guardian_pose_sequence_reference.png"
+      ],
+      "parts": [
+        "structure-base",
+        "socket-platform",
+        "front-rim"
+      ],
+      "poses": [
+        "idle",
+        "aim-north"
+      ],
+      "status": "produced, refined in slice 2.1, owner art approval pending",
+      "missing": [
+        "fire frame sequence (recoil and muzzle flash are code cues today)",
+        "destroy or rubble art (code dims the base)"
+      ]
+    },
+    {
+      "role": "king-blue",
+      "kind": "core",
+      "team": "blue (viewer, bottom)",
+      "defender": "Chog Guardian",
+      "identity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/07_chog_guardian.png",
+      "reference": [
+        "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/03_tower_designs/blue_king_tower_REFERENCE.png"
+      ],
+      "parts": [
+        "structure-base",
+        "socket-platform",
+        "front-rim"
+      ],
+      "poses": [
+        "idle",
+        "aim-north"
+      ],
+      "status": "produced, refined in slice 2.1, owner art approval pending",
+      "missing": [
+        "fire frame sequence (recoil and muzzle flash are code cues today)",
+        "destroy or rubble art (code dims the base)"
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "id": 1,
+      "name": "Choglings",
+      "repoId": "choglings",
+      "group": "troops",
+      "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/01_choglings.png",
+      "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/01_choglings.png",
+      "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/01_choglings_compare.jpg",
+      "poseReference": "Chog_Royale_Devin_Asset_Reference_Pack_v1/06_ANIMATION_AND_ANCHOR_POSE_REFERENCES/choglings_pose_sequence_reference.png",
+      "vfxReference": null,
+      "live": {
+        "battle": "unit:choglings (chog-units v001 animated sheet; troop:choglings v001 static is the fallback)",
+        "card": "v001 card:choglings (original 2D card art, owner decision in slice 4.1; chog-units/v001/choglings/card-portrait.png is an unused 3D render)"
+      },
+      "required": [
+        {
+          "asset": "battle atlas",
+          "states": [
+            "idle",
+            "move",
+            "attack",
+            "hit",
+            "defeat"
+          ],
+          "pivot": "feet/base shared across frames",
+          "status": "produced in slice 3, identity refined in slice 3.1 with front and rear three-quarter views (each mirrored on X), owner art approval pending"
+        },
+        {
+          "asset": "card art",
+          "sizes": [
+            "72x96",
+            "46x61"
+          ],
+          "status": "regenerated in slice 3.1 from 1024 masters, checked at native 72x96 and 46x61, owner art approval pending"
+        }
+      ],
+      "priority": "slice 3.1 done, owner review",
+      "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
+    },
+    {
+      "id": 2,
+      "name": "Chaos Archer",
+      "repoId": "chaos_archer",
+      "group": "troops",
+      "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/02_chaos_archer.png",
+      "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/02_chaos_archer.png",
+      "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/02_chaos_archer_compare.jpg",
+      "poseReference": null,
+      "vfxReference": null,
+      "live": {
+        "battle": "unit:chaos_archer (chog-units v001 animated sheet; troop:chaos_archer v001 static is the fallback)",
+        "card": "v001 card:chaos_archer (original 2D card art, owner decision in slice 4.1; chog-units/v001/chaos_archer/card-portrait.png is an unused 3D render)"
+      },
+      "required": [
+        {
+          "asset": "battle atlas",
+          "states": [
+            "idle",
+            "move",
+            "attack",
+            "hit",
+            "defeat"
+          ],
+          "pivot": "feet/base shared across frames",
+          "status": "produced in slice 4 (build_roster.py) with front and rear three-quarter views (rear mirrors the whole model), owner art approval pending"
+        },
+        {
+          "asset": "card art",
+          "sizes": [
+            "72x96",
+            "46x61"
+          ],
+          "status": "produced in slice 4 from 1024 masters, checked at native 72x96 and 46x61, owner art approval pending"
+        }
+      ],
+      "priority": "slice 4 done, owner review",
+      "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
+    },
+    {
+      "id": 3,
+      "name": "Boulderback",
+      "repoId": "boulderback",
+      "group": "troops",
+      "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/03_boulderback.png",
+      "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/03_boulderback.png",
+      "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/03_boulderback_compare.jpg",
+      "poseReference": "Chog_Royale_Devin_Asset_Reference_Pack_v1/06_ANIMATION_AND_ANCHOR_POSE_REFERENCES/boulderback_pose_sequence_reference.png",
+      "vfxReference": null,
+      "live": {
+        "battle": "unit:boulderback (chog-units v001 animated sheet; troop:boulderback v001 static is the fallback)",
+        "card": "v001 card:boulderback (original 2D card art, owner decision in slice 4.1; chog-units/v001/boulderback/card-portrait.png is an unused 3D render)"
+      },
+      "required": [
+        {
+          "asset": "battle atlas",
+          "states": [
+            "idle",
+            "move",
+            "attack",
+            "hit",
+            "defeat"
+          ],
+          "pivot": "feet/base shared across frames",
+          "status": "produced in slice 3, identity refined in slice 3.1 with front and rear three-quarter views (each mirrored on X), owner art approval pending"
+        },
+        {
+          "asset": "card art",
+          "sizes": [
+            "72x96",
+            "46x61"
+          ],
+          "status": "regenerated in slice 3.1 from 1024 masters, checked at native 72x96 and 46x61, owner art approval pending"
+        }
+      ],
+      "priority": "slice 3.1 done, owner review",
+      "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
+    },
+    {
+      "id": 4,
+      "name": "Frostshell",
+      "repoId": "frostshell",
+      "group": "troops",
+      "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/04_frostshell.png",
+      "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/04_frostshell.png",
+      "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/04_frostshell_compare.jpg",
+      "poseReference": null,
+      "vfxReference": null,
+      "live": {
+        "battle": "unit:frostshell (chog-units v001 animated sheet; troop:frostshell v001 static is the fallback)",
+        "card": "v001 card:frostshell (original 2D card art, owner decision in slice 4.1; chog-units/v001/frostshell/card-portrait.png is an unused 3D render)"
+      },
+      "required": [
+        {
+          "asset": "battle atlas",
+          "states": [
+            "idle",
+            "move",
+            "attack",
+            "hit",
+            "defeat"
+          ],
+          "pivot": "feet/base shared across frames",
+          "status": "produced in slice 4 (build_roster.py) with front and rear three-quarter views (rear mirrors the whole model), owner art approval pending"
+        },
+        {
+          "asset": "card art",
+          "sizes": [
+            "72x96",
+            "46x61"
+          ],
+          "status": "produced in slice 4 from 1024 masters, checked at native 72x96 and 46x61, owner art approval pending"
+        }
+      ],
+      "priority": "slice 4 done, owner review",
+      "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
+    },
+    {
+      "id": 5,
+      "name": "Rift Runner",
+      "repoId": "rift_runner",
+      "group": "troops",
+      "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/05_rift_runner.png",
+      "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/05_rift_runner.png",
+      "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/05_rift_runner_compare.jpg",
+      "poseReference": null,
+      "vfxReference": null,
+      "live": {
+        "battle": "unit:rift_runner (chog-units v001 animated sheet; troop:rift_runner v001 static is the fallback)",
+        "card": "v001 card:rift_runner (original 2D card art, owner decision in slice 4.1; chog-units/v001/rift_runner/card-portrait.png is an unused 3D render)"
+      },
+      "required": [
+        {
+          "asset": "battle atlas",
+          "states": [
+            "idle",
+            "move",
+            "attack",
+            "hit",
+            "defeat"
+          ],
+          "pivot": "feet/base shared across frames",
+          "status": "produced in slice 4 (build_roster.py) with front and rear three-quarter views (rear mirrors the whole model), owner art approval pending"
+        },
+        {
+          "asset": "card art",
+          "sizes": [
+            "72x96",
+            "46x61"
+          ],
+          "status": "produced in slice 4 from 1024 masters, checked at native 72x96 and 46x61, owner art approval pending"
+        }
+      ],
+      "priority": "slice 4 done, owner review",
+      "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
+    },
+    {
+      "id": 6,
+      "name": "Sparkcaster",
+      "repoId": "sparkcaster",
+      "group": "troops",
+      "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/06_sparkcaster.png",
+      "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/06_sparkcaster.png",
+      "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/06_sparkcaster_compare.jpg",
+      "poseReference": null,
+      "vfxReference": null,
+      "live": {
+        "battle": "unit:sparkcaster (chog-units v001 animated sheet; troop:sparkcaster v001 static is the fallback)",
+        "card": "v001 card:sparkcaster (original 2D card art, owner decision in slice 4.1; chog-units/v001/sparkcaster/card-portrait.png is an unused 3D render)"
+      },
+      "required": [
+        {
+          "asset": "battle atlas",
+          "states": [
+            "idle",
+            "move",
+            "attack",
+            "hit",
+            "defeat"
+          ],
+          "pivot": "feet/base shared across frames",
+          "status": "produced in slice 4 (build_roster.py) with front and rear three-quarter views (rear mirrors the whole model), owner art approval pending"
+        },
+        {
+          "asset": "card art",
+          "sizes": [
+            "72x96",
+            "46x61"
+          ],
+          "status": "produced in slice 4 from 1024 masters, checked at native 72x96 and 46x61, owner art approval pending"
+        }
+      ],
+      "priority": "slice 4 done, owner review",
+      "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
+    },
+    {
+      "id": 7,
+      "name": "Chog Guardian",
+      "repoId": "chog_guardian",
+      "group": "troops",
+      "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/07_chog_guardian.png",
+      "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/07_chog_guardian.png",
+      "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/07_chog_guardian_compare.jpg",
+      "poseReference": null,
+      "vfxReference": null,
+      "live": {
+        "battle": "unit:chog_guardian (chog-units v001 animated sheet; troop:chog_guardian v001 static is the fallback)",
+        "card": "v001 card:chog_guardian (original 2D card art, owner decision in slice 4.1; chog-units/v001/chog_guardian/card-portrait.png is an unused 3D render)"
+      },
+      "required": [
+        {
+          "asset": "battle atlas",
+          "states": [
+            "idle",
+            "move",
+            "attack",
+            "hit",
+            "defeat"
+          ],
+          "pivot": "feet/base shared across frames",
+          "status": "produced in slice 4 (build_roster.py) with front and rear three-quarter views (rear mirrors the whole model), owner art approval pending"
+        },
+        {
+          "asset": "card art",
+          "sizes": [
+            "72x96",
+            "46x61"
+          ],
+          "status": "produced in slice 4 from 1024 masters, checked at native 72x96 and 46x61, owner art approval pending"
+        }
+      ],
+      "priority": "slice 4 done, owner review",
+      "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
+    },
+    {
+      "id": 8,
+      "name": "Hexwing",
+      "repoId": "hexwing",
+      "group": "troops",
+      "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/08_hexwing.png",
+      "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/08_hexwing.png",
+      "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/08_hexwing_compare.jpg",
+      "poseReference": null,
+      "vfxReference": null,
+      "live": {
+        "battle": "unit:hexwing (chog-units v001 animated sheet; troop:hexwing v001 static is the fallback)",
+        "card": "v001 card:hexwing (original 2D card art, owner decision in slice 4.1; chog-units/v001/hexwing/card-portrait.png is an unused 3D render)"
+      },
+      "required": [
+        {
+          "asset": "battle atlas",
+          "states": [
+            "idle",
+            "move",
+            "attack",
+            "hit",
+            "defeat"
+          ],
+          "pivot": "feet/base shared across frames",
+          "status": "produced in slice 4 (build_roster.py) with front and rear three-quarter views (rear mirrors the whole model), owner art approval pending"
+        },
+        {
+          "asset": "card art",
+          "sizes": [
+            "72x96",
+            "46x61"
+          ],
+          "status": "produced in slice 4 from 1024 masters, checked at native 72x96 and 46x61, owner art approval pending"
+        }
+      ],
+      "priority": "slice 4 done, owner review",
+      "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
+    },
+    {
+      "id": 9,
+      "name": "Rift Sprites",
+      "repoId": "rift_sprites",
+      "group": "troops",
+      "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/09_rift_sprites.png",
+      "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/09_rift_sprites.png",
+      "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/09_rift_sprites_compare.jpg",
+      "poseReference": null,
+      "vfxReference": null,
+      "live": {
+        "battle": "unit:rift_sprites (chog-units v001 animated sheet; troop:rift_sprites v001 static is the fallback)",
+        "card": "v001 card:rift_sprites (original 2D card art, owner decision in slice 4.1; chog-units/v001/rift_sprites/card-portrait.png is an unused 3D render)"
+      },
+      "required": [
+        {
+          "asset": "battle atlas",
+          "states": [
+            "idle",
+            "move",
+            "attack",
+            "hit",
+            "defeat"
+          ],
+          "pivot": "feet/base shared across frames",
+          "status": "produced in slice 4 (build_roster.py) with front and rear three-quarter views (rear mirrors the whole model), owner art approval pending"
+        },
+        {
+          "asset": "card art",
+          "sizes": [
+            "72x96",
+            "46x61"
+          ],
+          "status": "produced in slice 4 from 1024 masters, checked at native 72x96 and 46x61, owner art approval pending"
+        }
+      ],
+      "priority": "slice 4 done, owner review",
+      "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
+    },
+    {
+      "id": 10,
+      "name": "Gale Netter",
+      "repoId": "gale_netter",
+      "group": "troops",
+      "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/10_gale_netter.png",
+      "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/10_gale_netter.png",
+      "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/10_gale_netter_compare.jpg",
+      "poseReference": null,
+      "vfxReference": null,
+      "live": {
+        "battle": "unit:gale_netter (chog-units v001 animated sheet; troop:gale_netter v001 static is the fallback)",
+        "card": "v001 card:gale_netter (original 2D card art, owner decision in slice 4.1; chog-units/v001/gale_netter/card-portrait.png is an unused 3D render)"
+      },
+      "required": [
+        {
+          "asset": "battle atlas",
+          "states": [
+            "idle",
+            "move",
+            "attack",
+            "hit",
+            "defeat"
+          ],
+          "pivot": "feet/base shared across frames",
+          "status": "produced in slice 4 (build_roster.py) with front and rear three-quarter views (rear mirrors the whole model), owner art approval pending"
+        },
+        {
+          "asset": "card art",
+          "sizes": [
+            "72x96",
+            "46x61"
+          ],
+          "status": "produced in slice 4 from 1024 masters, checked at native 72x96 and 46x61, owner art approval pending"
+        }
+      ],
+      "priority": "slice 4 done, owner review",
+      "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
+    },
+    {
+      "id": 11,
+      "name": "Riftbreaker",
+      "repoId": "riftbreaker",
+      "group": "troops",
+      "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/11_riftbreaker.png",
+      "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/11_riftbreaker.png",
+      "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/11_riftbreaker_compare.jpg",
+      "poseReference": null,
+      "vfxReference": null,
+      "live": {
+        "battle": "unit:riftbreaker (chog-units v001 animated sheet; troop:riftbreaker v001 static is the fallback)",
+        "card": "v001 card:riftbreaker (original 2D card art, owner decision in slice 4.1; chog-units/v001/riftbreaker/card-portrait.png is an unused 3D render)"
+      },
+      "required": [
+        {
+          "asset": "battle atlas",
+          "states": [
+            "idle",
+            "move",
+            "attack",
+            "hit",
+            "defeat"
+          ],
+          "pivot": "feet/base shared across frames",
+          "status": "produced in slice 4 (build_roster.py) with front and rear three-quarter views (rear mirrors the whole model), owner art approval pending"
+        },
+        {
+          "asset": "card art",
+          "sizes": [
+            "72x96",
+            "46x61"
+          ],
+          "status": "produced in slice 4 from 1024 masters, checked at native 72x96 and 46x61, owner art approval pending"
+        }
+      ],
+      "priority": "slice 4 done, owner review",
+      "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
+    },
+    {
+      "id": 12,
+      "name": "Ember Mauler",
+      "repoId": "ember_mauler",
+      "group": "troops",
+      "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/12_ember_mauler.png",
+      "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/12_ember_mauler.png",
+      "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/12_ember_mauler_compare.jpg",
+      "poseReference": null,
+      "vfxReference": null,
+      "live": {
+        "battle": "unit:ember_mauler (chog-units v001 animated sheet; troop:ember_mauler v001 static is the fallback)",
+        "card": "v001 card:ember_mauler (original 2D card art, owner decision in slice 4.1; chog-units/v001/ember_mauler/card-portrait.png is an unused 3D render)"
+      },
+      "required": [
+        {
+          "asset": "battle atlas",
+          "states": [
+            "idle",
+            "move",
+            "attack",
+            "hit",
+            "defeat"
+          ],
+          "pivot": "feet/base shared across frames",
+          "status": "produced in slice 4 (build_roster.py) with front and rear three-quarter views (rear mirrors the whole model), owner art approval pending"
+        },
+        {
+          "asset": "card art",
+          "sizes": [
+            "72x96",
+            "46x61"
+          ],
+          "status": "produced in slice 4 from 1024 masters, checked at native 72x96 and 46x61, owner art approval pending"
+        }
+      ],
+      "priority": "slice 4 done, owner review",
+      "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
+    },
+    {
+      "id": 13,
+      "name": "Rift Sentry",
+      "repoId": "rift_sentry",
+      "group": "buildings",
+      "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/13_rift_sentry.png",
+      "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/13_rift_sentry.png",
+      "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/13_rift_sentry_compare.jpg",
+      "poseReference": null,
+      "vfxReference": null,
+      "live": {
+        "battle": "unit:rift_sentry (chog-units v001 animated sheet, building:rift_sentry v001 static fallback)",
+        "card": "v001 card:rift_sentry (original 2D card art kept as the card art in every interface (owner decision, slice 4.1); no 3D card portrait produced)"
+      },
+      "required": [
+        {
+          "asset": "battle atlas",
+          "states": [
+            "idle",
+            "deploy",
+            "attack (presentation engagement, Sentry has no public fire event)",
+            "hit",
+            "defeat"
+          ],
+          "views": "front and rear three-quarter",
+          "pivot": "base shared across frames, muzzle anchors for Sentry and Mortar",
+          "status": "produced in the final asset milestone, owner art approval pending",
+          "source": "tools/blender/chog-units-v001/scripts/build_final.py"
+        },
+        {
+          "asset": "card art",
+          "status": "original 2D card art kept as the card art in every interface (owner decision, slice 4.1); no 3D card portrait produced"
+        }
+      ],
+      "priority": "final milestone done, owner review",
+      "note": "Only the states the building exposes. Rift Sentry and Rift Mortar fire; Decoy Totem and Chog Burrow do not attack."
+    },
+    {
+      "id": 14,
+      "name": "Decoy Totem",
+      "repoId": "decoy_totem",
+      "group": "buildings",
+      "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/14_decoy_totem.png",
+      "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/14_decoy_totem.png",
+      "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/14_decoy_totem_compare.jpg",
+      "poseReference": null,
+      "vfxReference": null,
+      "live": {
+        "battle": "unit:decoy_totem (chog-units v001 animated sheet, building:decoy_totem v001 static fallback)",
+        "card": "v001 card:decoy_totem (original 2D card art kept as the card art in every interface (owner decision, slice 4.1); no 3D card portrait produced)"
+      },
+      "required": [
+        {
+          "asset": "battle atlas",
+          "states": [
+            "idle",
+            "deploy",
+            "attack (lure, presentation only)",
+            "hit",
+            "defeat"
+          ],
+          "views": "front only",
+          "pivot": "base shared across frames, muzzle anchors for Sentry and Mortar",
+          "status": "produced in the final asset milestone, owner art approval pending",
+          "source": "tools/blender/chog-units-v001/scripts/build_final.py"
+        },
+        {
+          "asset": "card art",
+          "status": "original 2D card art kept as the card art in every interface (owner decision, slice 4.1); no 3D card portrait produced"
+        }
+      ],
+      "priority": "final milestone done, owner review",
+      "note": "Only the states the building exposes. Rift Sentry and Rift Mortar fire; Decoy Totem and Chog Burrow do not attack."
+    },
+    {
+      "id": 15,
+      "name": "Chog Burrow",
+      "repoId": "chog_burrow",
+      "group": "buildings",
+      "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/15_chog_burrow.png",
+      "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/15_chog_burrow.png",
+      "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/15_chog_burrow_compare.jpg",
+      "poseReference": null,
+      "vfxReference": null,
+      "live": {
+        "battle": "unit:chog_burrow (chog-units v001 animated sheet, building:chog_burrow v001 static fallback)",
+        "card": "v001 card:chog_burrow (original 2D card art kept as the card art in every interface (owner decision, slice 4.1); no 3D card portrait produced)"
+      },
+      "required": [
+        {
+          "asset": "battle atlas",
+          "states": [
+            "idle",
+            "deploy",
+            "attack (spawn, on unit_spawned)",
+            "hit",
+            "defeat"
+          ],
+          "views": "front only",
+          "pivot": "base shared across frames, muzzle anchors for Sentry and Mortar",
+          "status": "produced in the final asset milestone, owner art approval pending",
+          "source": "tools/blender/chog-units-v001/scripts/build_final.py"
+        },
+        {
+          "asset": "card art",
+          "status": "original 2D card art kept as the card art in every interface (owner decision, slice 4.1); no 3D card portrait produced"
+        }
+      ],
+      "priority": "final milestone done, owner review",
+      "note": "Only the states the building exposes. Rift Sentry and Rift Mortar fire; Decoy Totem and Chog Burrow do not attack."
+    },
+    {
+      "id": 16,
+      "name": "Rift Mortar",
+      "repoId": "rift_mortar",
+      "group": "buildings",
+      "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/16_rift_mortar.png",
+      "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/16_rift_mortar.png",
+      "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/16_rift_mortar_compare.jpg",
+      "poseReference": null,
+      "vfxReference": null,
+      "live": {
+        "battle": "unit:rift_mortar (chog-units v001 animated sheet, building:rift_mortar v001 static fallback)",
+        "card": "v001 card:rift_mortar (original 2D card art kept as the card art in every interface (owner decision, slice 4.1); no 3D card portrait produced)"
+      },
+      "required": [
+        {
+          "asset": "battle atlas",
+          "states": [
+            "idle",
+            "deploy",
+            "attack (recoil, on siege_fired)",
+            "hit",
+            "defeat"
+          ],
+          "views": "front and rear three-quarter",
+          "pivot": "base shared across frames, muzzle anchors for Sentry and Mortar",
+          "status": "produced in the final asset milestone, owner art approval pending",
+          "source": "tools/blender/chog-units-v001/scripts/build_final.py"
+        },
+        {
+          "asset": "card art",
+          "status": "original 2D card art kept as the card art in every interface (owner decision, slice 4.1); no 3D card portrait produced"
+        }
+      ],
+      "priority": "final milestone done, owner review",
+      "note": "Only the states the building exposes. Rift Sentry and Rift Mortar fire; Decoy Totem and Chog Burrow do not attack."
+    },
+    {
+      "id": 17,
+      "name": "Chaos Bolt",
+      "repoId": "chaos_bolt",
+      "group": "spells",
+      "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/17_chaos_bolt.png",
+      "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/17_chaos_bolt.png",
+      "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/17_chaos_bolt_compare.jpg",
+      "poseReference": null,
+      "vfxReference": "Chog_Royale_Devin_Asset_Reference_Pack_v1/05_VFX_AND_SPELLS/chaos_bolt_REFERENCE.png",
+      "live": {
+        "battle": "battle-vfx v001: bolt sheet (3 seeded strikes), ring at the 8-unit radius, burst and sparks on spell_cast (v001 spell sprite and Graphics cues as fallback)",
+        "card": "v001 card:chaos_bolt (original 2D card art kept as the card art in every interface (owner decision, slice 4.1); no 3D card portrait produced)"
+      },
+      "required": [
+        {
+          "asset": "spell VFX",
+          "status": "produced in the final asset milestone, owner art approval pending",
+          "source": "tools/vfx/build_vfx.cjs, build_vfx_props.py, battle-vfx.ts"
+        },
+        {
+          "asset": "card art",
+          "status": "original 2D card art kept as the card art in every interface (owner decision, slice 4.1); no 3D card portrait produced"
+        }
+      ],
+      "priority": "final milestone done, owner review",
+      "note": "Only the phases the spell mechanic has."
+    },
+    {
+      "id": 18,
+      "name": "Rally Horn",
+      "repoId": "rally_horn",
+      "group": "spells",
+      "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/18_rally_horn.png",
+      "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/18_rally_horn.png",
+      "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/18_rally_horn_compare.jpg",
+      "poseReference": null,
+      "vfxReference": "Chog_Royale_Devin_Asset_Reference_Pack_v1/05_VFX_AND_SPELLS/rally_horn_REFERENCE.png",
+      "live": {
+        "battle": "battle-vfx v001: Blender horn prop, three gold soundwave rings to the 12-unit radius on spell_cast, gold markers on buffed friendly troops for 120 ticks (v001 spell sprite and Graphics cues as fallback)",
+        "card": "v001 card:rally_horn (original 2D card art kept as the card art in every interface (owner decision, slice 4.1); no 3D card portrait produced)"
+      },
+      "required": [
+        {
+          "asset": "spell VFX",
+          "status": "produced in the final asset milestone, owner art approval pending",
+          "source": "tools/vfx/build_vfx.cjs, build_vfx_props.py, battle-vfx.ts"
+        },
+        {
+          "asset": "card art",
+          "status": "original 2D card art kept as the card art in every interface (owner decision, slice 4.1); no 3D card portrait produced"
+        }
+      ],
+      "priority": "final milestone done, owner review",
+      "note": "Only the phases the spell mechanic has."
+    },
+    {
+      "id": 19,
+      "name": "Chaos Comet",
+      "repoId": "chaos_comet",
+      "group": "spells",
+      "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/19_chaos_comet.png",
+      "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/19_chaos_comet.png",
+      "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/19_chaos_comet_compare.jpg",
+      "poseReference": null,
+      "vfxReference": "Chog_Royale_Devin_Asset_Reference_Pack_v1/05_VFX_AND_SPELLS/chaos_comet_REFERENCE.png",
+      "live": {
+        "battle": "battle-vfx v001: Blender comet rock (6 rotation frames) and flame trail falling over the pending impact, exact-radius telegraph, burst, ring, smoke and debris on spell_impact (v001 spell sprite and Graphics cues as fallback)",
+        "card": "v001 card:chaos_comet (original 2D card art kept as the card art in every interface (owner decision, slice 4.1); no 3D card portrait produced)"
+      },
+      "required": [
+        {
+          "asset": "spell VFX",
+          "status": "produced in the final asset milestone, owner art approval pending",
+          "source": "tools/vfx/build_vfx.cjs, build_vfx_props.py, battle-vfx.ts"
+        },
+        {
+          "asset": "card art",
+          "status": "original 2D card art kept as the card art in every interface (owner decision, slice 4.1); no 3D card portrait produced"
+        }
+      ],
+      "priority": "final milestone done, owner review",
+      "note": "Only the phases the spell mechanic has."
+    },
+    {
+      "id": 20,
+      "name": "Rift Snare",
+      "repoId": "rift_snare",
+      "group": "spells",
+      "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/20_rift_snare.png",
+      "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/20_rift_snare.png",
+      "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/20_rift_snare_compare.jpg",
+      "poseReference": null,
+      "vfxReference": "Chog_Royale_Devin_Asset_Reference_Pack_v1/05_VFX_AND_SPELLS/rift_snare_REFERENCE.png",
+      "live": {
+        "battle": "battle-vfx v001: circular sigil at the 7-unit radius on spell_cast, binding rings under snared enemy troops and commanders for the 50-tick slow (v001 spell sprite and Graphics cues as fallback)",
+        "card": "v001 card:rift_snare (original 2D card art kept as the card art in every interface (owner decision, slice 4.1); no 3D card portrait produced)"
+      },
+      "required": [
+        {
+          "asset": "spell VFX",
+          "status": "produced in the final asset milestone, owner art approval pending",
+          "source": "tools/vfx/build_vfx.cjs, build_vfx_props.py, battle-vfx.ts"
+        },
+        {
+          "asset": "card art",
+          "status": "original 2D card art kept as the card art in every interface (owner decision, slice 4.1); no 3D card portrait produced"
+        }
+      ],
+      "priority": "final milestone done, owner review",
+      "note": "Only the phases the spell mechanic has."
+    },
+    {
+      "id": 21,
+      "name": "Bulwark",
+      "repoId": "commander class bulwark",
+      "group": "commanders",
+      "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/21_bulwark.png",
+      "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/21_bulwark.png",
+      "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/21_bulwark_compare.jpg",
+      "poseReference": null,
+      "vfxReference": null,
+      "live": {
+        "battle": "unit:commander_commander class bulwark (class sheet shared by every commander class bulwark commander, never a specific NFT; commander:commander class bulwark v001 static fallback)",
+        "card": "v001 commander_commander class bulwark class card art (original 2D card art kept as the card art in every interface (owner decision, slice 4.1); no 3D card portrait produced)"
+      },
+      "required": [
+        {
+          "asset": "battle atlas",
+          "states": [
+            "idle",
+            "move",
+            "attack",
+            "hit",
+            "defeat",
+            "ability (on active ability_fired)"
+          ],
+          "views": "front and rear three-quarter",
+          "status": "produced in the final asset milestone, owner art approval pending",
+          "source": "tools/blender/chog-units-v001/scripts/final_chars.py"
+        },
+        {
+          "asset": "ability VFX",
+          "status": "undefined; produced in the final asset milestone, owner art approval pending"
+        },
+        {
+          "asset": "card art",
+          "status": "original 2D card art kept as the card art in every interface (owner decision, slice 4.1); no 3D card portrait produced"
+        }
+      ],
+      "priority": "final milestone done, owner review",
+      "note": "Commander class art is shared by every NFT of the class and must stay labelled class art. NFT-specific features need the token art, not this pack."
+    },
+    {
+      "id": 22,
+      "name": "Reaver",
+      "repoId": "commander class reaver",
+      "group": "commanders",
+      "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/22_reaver.png",
+      "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/22_reaver.png",
+      "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/22_reaver_compare.jpg",
+      "poseReference": null,
+      "vfxReference": null,
+      "live": {
+        "battle": "unit:commander_commander class reaver (class sheet shared by every commander class reaver commander, never a specific NFT; commander:commander class reaver v001 static fallback)",
+        "card": "v001 commander_commander class reaver class card art (original 2D card art kept as the card art in every interface (owner decision, slice 4.1); no 3D card portrait produced)"
+      },
+      "required": [
+        {
+          "asset": "battle atlas",
+          "states": [
+            "idle",
+            "move",
+            "attack",
+            "hit",
+            "defeat",
+            "ability (on active ability_fired)"
+          ],
+          "views": "front and rear three-quarter",
+          "status": "produced in the final asset milestone, owner art approval pending",
+          "source": "tools/blender/chog-units-v001/scripts/final_chars.py"
+        },
+        {
+          "asset": "ability VFX",
+          "status": "undefined; produced in the final asset milestone, owner art approval pending"
+        },
+        {
+          "asset": "card art",
+          "status": "original 2D card art kept as the card art in every interface (owner decision, slice 4.1); no 3D card portrait produced"
+        }
+      ],
+      "priority": "final milestone done, owner review",
+      "note": "Commander class art is shared by every NFT of the class and must stay labelled class art. NFT-specific features need the token art, not this pack."
+    },
+    {
+      "id": 23,
+      "name": "Deadeye",
+      "repoId": "commander class deadeye",
+      "group": "commanders",
+      "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/23_deadeye.png",
+      "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/23_deadeye.png",
+      "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/23_deadeye_compare.jpg",
+      "poseReference": null,
+      "vfxReference": null,
+      "live": {
+        "battle": "unit:commander_commander class deadeye (class sheet shared by every commander class deadeye commander, never a specific NFT; commander:commander class deadeye v001 static fallback)",
+        "card": "v001 commander_commander class deadeye class card art (original 2D card art kept as the card art in every interface (owner decision, slice 4.1); no 3D card portrait produced)"
+      },
+      "required": [
+        {
+          "asset": "battle atlas",
+          "states": [
+            "idle",
+            "move",
+            "attack",
+            "hit",
+            "defeat",
+            "ability (on active ability_fired)"
+          ],
+          "views": "front and rear three-quarter",
+          "status": "produced in the final asset milestone, owner art approval pending",
+          "source": "tools/blender/chog-units-v001/scripts/final_chars.py"
+        },
+        {
+          "asset": "ability VFX",
+          "status": "undefined; produced in the final asset milestone, owner art approval pending"
+        },
+        {
+          "asset": "card art",
+          "status": "original 2D card art kept as the card art in every interface (owner decision, slice 4.1); no 3D card portrait produced"
+        }
+      ],
+      "priority": "final milestone done, owner review",
+      "note": "Commander class art is shared by every NFT of the class and must stay labelled class art. NFT-specific features need the token art, not this pack."
+    },
+    {
+      "id": 24,
+      "name": "Scout",
+      "repoId": "commander class scout",
+      "group": "commanders",
+      "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/24_scout.png",
+      "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/24_scout.png",
+      "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/24_scout_compare.jpg",
+      "poseReference": null,
+      "vfxReference": null,
+      "live": {
+        "battle": "unit:commander_commander class scout (class sheet shared by every commander class scout commander, never a specific NFT; commander:commander class scout v001 static fallback)",
+        "card": "v001 commander_commander class scout class card art (original 2D card art kept as the card art in every interface (owner decision, slice 4.1); no 3D card portrait produced)"
+      },
+      "required": [
+        {
+          "asset": "battle atlas",
+          "states": [
+            "idle",
+            "move",
+            "attack",
+            "hit",
+            "defeat",
+            "ability (on active ability_fired)"
+          ],
+          "views": "front and rear three-quarter",
+          "status": "produced in the final asset milestone, owner art approval pending",
+          "source": "tools/blender/chog-units-v001/scripts/final_chars.py"
+        },
+        {
+          "asset": "ability VFX",
+          "status": "undefined; produced in the final asset milestone, owner art approval pending"
+        },
+        {
+          "asset": "card art",
+          "status": "original 2D card art kept as the card art in every interface (owner decision, slice 4.1); no 3D card portrait produced"
+        }
+      ],
+      "priority": "final milestone done, owner review",
+      "note": "Commander class art is shared by every NFT of the class and must stay labelled class art. NFT-specific features need the token art, not this pack."
+    },
+    {
+      "id": 25,
+      "name": "Warden",
+      "repoId": "commander class warden",
+      "group": "commanders",
+      "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/25_warden.png",
+      "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/25_warden.png",
+      "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/25_warden_compare.jpg",
+      "poseReference": null,
+      "vfxReference": null,
+      "live": {
+        "battle": "unit:commander_commander class warden (class sheet shared by every commander class warden commander, never a specific NFT; commander:commander class warden v001 static fallback)",
+        "card": "v001 commander_commander class warden class card art (original 2D card art kept as the card art in every interface (owner decision, slice 4.1); no 3D card portrait produced)"
+      },
+      "required": [
+        {
+          "asset": "battle atlas",
+          "states": [
+            "idle",
+            "move",
+            "attack",
+            "hit",
+            "defeat",
+            "ability (on active ability_fired)"
+          ],
+          "views": "front and rear three-quarter",
+          "status": "produced in the final asset milestone, owner art approval pending",
+          "source": "tools/blender/chog-units-v001/scripts/final_chars.py"
+        },
+        {
+          "asset": "ability VFX",
+          "status": "undefined; produced in the final asset milestone, owner art approval pending"
+        },
+        {
+          "asset": "card art",
+          "status": "original 2D card art kept as the card art in every interface (owner decision, slice 4.1); no 3D card portrait produced"
+        }
+      ],
+      "priority": "final milestone done, owner review",
+      "note": "Commander class art is shared by every NFT of the class and must stay labelled class art. NFT-specific features need the token art, not this pack."
+    }
+  ],
+  "spawnOnly": [
+    {
+      "repoId": "burrow_scrapper",
+      "live": "unit:burrow_scrapper (chog-units v001 animated sheet, spawned:burrow_scrapper v001 static fallback)",
+      "reference": "v001 battle sprite (no card)",
+      "required": [
+        {
+          "asset": "battle atlas",
+          "states": [
+            "idle",
+            "move",
+            "attack",
+            "hit",
+            "defeat"
+          ],
+          "views": "front and rear three-quarter",
+          "status": "produced in the final asset milestone, owner art approval pending",
+          "source": "final_chars.py"
+        }
+      ]
+    }
+  ],
+  "effects": [
+    {
+      "id": "battle VFX pack",
+      "status": "produced in the final asset milestone, owner art approval pending",
+      "live": "public/assets/battle-vfx/v001 (20 textures, 1.3 MB RGBA), battle-vfx.ts planners, vfx-layer.ts",
+      "fallback": "Graphics cues and v001 effect primitives when the pack fails to load"
+    },
+    {
+      "id": "deploy and spawn summon circles",
+      "status": "produced in the final asset milestone, owner art approval pending",
+      "live": "allegiance tint, friendly blue and enemy red"
+    },
+    {
+      "id": "tower muzzle flash and tracer",
+      "status": "produced in the final asset milestone, owner art approval pending",
+      "live": "sprite flash, tracer and spark on authoritative tower_fired, same anchor and 120 ms window"
+    },
+    {
+      "id": "melee contact sparks, ranged tracers",
+      "status": "produced in the final asset milestone, owner art approval pending",
+      "live": "on the attack clip's impact frame (Chaos Archer and Deadeye arrows, Warden star bolt, Sentry crystal tracer)"
+    },
+    {
+      "id": "projectiles",
+      "status": "produced in the final asset milestone, owner art approval pending",
+      "live": "element-coloured bolts with trails styled by the nearest same-owner shooter (Sparkcaster, Hexwing, Gale Netter net)"
+    },
+    {
+      "id": "defeat, building removal, tower destruction",
+      "status": "produced in the final asset milestone, owner art approval pending",
+      "live": "dust puffs, sparkles, debris"
+    },
+    {
+      "id": "contact shadow",
+      "status": "unchanged",
+      "live": "code ellipse under mounts and units"
+    }
   ]
- },
- "towers": [
-  {
-   "role": "lane-red",
-   "kind": "tower",
-   "team": "red (opponent, top)",
-   "defender": "Bulwark",
-   "identity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/21_bulwark.png",
-   "reference": [
-    "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/03_tower_designs/red_lane_tower_REFERENCE.png",
-    "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/04_tower_defenders/top_red_bulwark_REFERENCE.png",
-    "Chog_Royale_Devin_Asset_Reference_Pack_v1/06_ANIMATION_AND_ANCHOR_POSE_REFERENCES/top_red_bulwark_pose_sequence_reference.png"
-   ],
-   "parts": [
-    "structure-base",
-    "socket-platform",
-    "front-rim"
-   ],
-   "poses": [
-    "idle",
-    "aim-south"
-   ],
-   "status": "produced, refined in slice 2.1, owner art approval pending",
-   "missing": [
-    "fire frame sequence (recoil and muzzle flash are code cues today)",
-    "destroy or rubble art (code dims the base)"
-   ]
-  },
-  {
-   "role": "king-red",
-   "kind": "core",
-   "team": "red (opponent, top)",
-   "defender": "Bulwark",
-   "identity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/21_bulwark.png",
-   "reference": [
-    "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/03_tower_designs/red_king_tower_REFERENCE.png"
-   ],
-   "parts": [
-    "structure-base",
-    "socket-platform",
-    "front-rim"
-   ],
-   "poses": [
-    "idle",
-    "aim-south"
-   ],
-   "status": "produced, refined in slice 2.1, owner art approval pending",
-   "missing": [
-    "fire frame sequence (recoil and muzzle flash are code cues today)",
-    "destroy or rubble art (code dims the base)"
-   ]
-  },
-  {
-   "role": "lane-blue",
-   "kind": "tower",
-   "team": "blue (viewer, bottom)",
-   "defender": "Chog Guardian",
-   "identity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/07_chog_guardian.png",
-   "reference": [
-    "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/03_tower_designs/blue_lane_tower_REFERENCE.png",
-    "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/04_tower_defenders/bottom_blue_chog_guardian_REFERENCE.png",
-    "Chog_Royale_Devin_Asset_Reference_Pack_v1/06_ANIMATION_AND_ANCHOR_POSE_REFERENCES/bottom_blue_chog_guardian_pose_sequence_reference.png"
-   ],
-   "parts": [
-    "structure-base",
-    "socket-platform",
-    "front-rim"
-   ],
-   "poses": [
-    "idle",
-    "aim-north"
-   ],
-   "status": "produced, refined in slice 2.1, owner art approval pending",
-   "missing": [
-    "fire frame sequence (recoil and muzzle flash are code cues today)",
-    "destroy or rubble art (code dims the base)"
-   ]
-  },
-  {
-   "role": "king-blue",
-   "kind": "core",
-   "team": "blue (viewer, bottom)",
-   "defender": "Chog Guardian",
-   "identity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/07_chog_guardian.png",
-   "reference": [
-    "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/03_tower_designs/blue_king_tower_REFERENCE.png"
-   ],
-   "parts": [
-    "structure-base",
-    "socket-platform",
-    "front-rim"
-   ],
-   "poses": [
-    "idle",
-    "aim-north"
-   ],
-   "status": "produced, refined in slice 2.1, owner art approval pending",
-   "missing": [
-    "fire frame sequence (recoil and muzzle flash are code cues today)",
-    "destroy or rubble art (code dims the base)"
-   ]
-  }
- ],
- "cards": [
-  {
-   "id": 1,
-   "name": "Choglings",
-   "repoId": "choglings",
-   "group": "troops",
-   "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/01_choglings.png",
-   "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/01_choglings.png",
-   "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/01_choglings_compare.jpg",
-   "poseReference": "Chog_Royale_Devin_Asset_Reference_Pack_v1/06_ANIMATION_AND_ANCHOR_POSE_REFERENCES/choglings_pose_sequence_reference.png",
-   "vfxReference": null,
-   "live": {
-    "battle": "unit:choglings (chog-units v001 animated sheet; troop:choglings v001 static is the fallback)",
-    "card": "v001 card:choglings (original 2D card art, owner decision in slice 4.1; chog-units/v001/choglings/card-portrait.png is an unused 3D render)"
-   },
-   "required": [
-    {
-     "asset": "battle atlas",
-     "states": [
-      "idle",
-      "move",
-      "attack",
-      "hit",
-      "defeat"
-     ],
-     "pivot": "feet/base shared across frames",
-     "status": "produced in slice 3, identity refined in slice 3.1 with front and rear three-quarter views (each mirrored on X), owner art approval pending"
-    },
-    {
-     "asset": "card art",
-     "sizes": [
-      "72x96",
-      "46x61"
-     ],
-     "status": "regenerated in slice 3.1 from 1024 masters, checked at native 72x96 and 46x61, owner art approval pending"
-    }
-   ],
-   "priority": "slice 3.1 done, owner review",
-   "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
-  },
-  {
-   "id": 2,
-   "name": "Chaos Archer",
-   "repoId": "chaos_archer",
-   "group": "troops",
-   "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/02_chaos_archer.png",
-   "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/02_chaos_archer.png",
-   "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/02_chaos_archer_compare.jpg",
-   "poseReference": null,
-   "vfxReference": null,
-   "live": {
-    "battle": "unit:chaos_archer (chog-units v001 animated sheet; troop:chaos_archer v001 static is the fallback)",
-    "card": "v001 card:chaos_archer (original 2D card art, owner decision in slice 4.1; chog-units/v001/chaos_archer/card-portrait.png is an unused 3D render)"
-   },
-   "required": [
-    {
-     "asset": "battle atlas",
-     "states": [
-      "idle",
-      "move",
-      "attack",
-      "hit",
-      "defeat"
-     ],
-     "pivot": "feet/base shared across frames",
-     "status": "produced in slice 4 (build_roster.py) with front and rear three-quarter views (rear mirrors the whole model), owner art approval pending"
-    },
-    {
-     "asset": "card art",
-     "sizes": [
-      "72x96",
-      "46x61"
-     ],
-     "status": "produced in slice 4 from 1024 masters, checked at native 72x96 and 46x61, owner art approval pending"
-    }
-   ],
-   "priority": "slice 4 done, owner review",
-   "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
-  },
-  {
-   "id": 3,
-   "name": "Boulderback",
-   "repoId": "boulderback",
-   "group": "troops",
-   "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/03_boulderback.png",
-   "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/03_boulderback.png",
-   "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/03_boulderback_compare.jpg",
-   "poseReference": "Chog_Royale_Devin_Asset_Reference_Pack_v1/06_ANIMATION_AND_ANCHOR_POSE_REFERENCES/boulderback_pose_sequence_reference.png",
-   "vfxReference": null,
-   "live": {
-    "battle": "unit:boulderback (chog-units v001 animated sheet; troop:boulderback v001 static is the fallback)",
-    "card": "v001 card:boulderback (original 2D card art, owner decision in slice 4.1; chog-units/v001/boulderback/card-portrait.png is an unused 3D render)"
-   },
-   "required": [
-    {
-     "asset": "battle atlas",
-     "states": [
-      "idle",
-      "move",
-      "attack",
-      "hit",
-      "defeat"
-     ],
-     "pivot": "feet/base shared across frames",
-     "status": "produced in slice 3, identity refined in slice 3.1 with front and rear three-quarter views (each mirrored on X), owner art approval pending"
-    },
-    {
-     "asset": "card art",
-     "sizes": [
-      "72x96",
-      "46x61"
-     ],
-     "status": "regenerated in slice 3.1 from 1024 masters, checked at native 72x96 and 46x61, owner art approval pending"
-    }
-   ],
-   "priority": "slice 3.1 done, owner review",
-   "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
-  },
-  {
-   "id": 4,
-   "name": "Frostshell",
-   "repoId": "frostshell",
-   "group": "troops",
-   "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/04_frostshell.png",
-   "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/04_frostshell.png",
-   "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/04_frostshell_compare.jpg",
-   "poseReference": null,
-   "vfxReference": null,
-   "live": {
-    "battle": "unit:frostshell (chog-units v001 animated sheet; troop:frostshell v001 static is the fallback)",
-    "card": "v001 card:frostshell (original 2D card art, owner decision in slice 4.1; chog-units/v001/frostshell/card-portrait.png is an unused 3D render)"
-   },
-   "required": [
-    {
-     "asset": "battle atlas",
-     "states": [
-      "idle",
-      "move",
-      "attack",
-      "hit",
-      "defeat"
-     ],
-     "pivot": "feet/base shared across frames",
-     "status": "produced in slice 4 (build_roster.py) with front and rear three-quarter views (rear mirrors the whole model), owner art approval pending"
-    },
-    {
-     "asset": "card art",
-     "sizes": [
-      "72x96",
-      "46x61"
-     ],
-     "status": "produced in slice 4 from 1024 masters, checked at native 72x96 and 46x61, owner art approval pending"
-    }
-   ],
-   "priority": "slice 4 done, owner review",
-   "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
-  },
-  {
-   "id": 5,
-   "name": "Rift Runner",
-   "repoId": "rift_runner",
-   "group": "troops",
-   "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/05_rift_runner.png",
-   "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/05_rift_runner.png",
-   "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/05_rift_runner_compare.jpg",
-   "poseReference": null,
-   "vfxReference": null,
-   "live": {
-    "battle": "unit:rift_runner (chog-units v001 animated sheet; troop:rift_runner v001 static is the fallback)",
-    "card": "v001 card:rift_runner (original 2D card art, owner decision in slice 4.1; chog-units/v001/rift_runner/card-portrait.png is an unused 3D render)"
-   },
-   "required": [
-    {
-     "asset": "battle atlas",
-     "states": [
-      "idle",
-      "move",
-      "attack",
-      "hit",
-      "defeat"
-     ],
-     "pivot": "feet/base shared across frames",
-     "status": "produced in slice 4 (build_roster.py) with front and rear three-quarter views (rear mirrors the whole model), owner art approval pending"
-    },
-    {
-     "asset": "card art",
-     "sizes": [
-      "72x96",
-      "46x61"
-     ],
-     "status": "produced in slice 4 from 1024 masters, checked at native 72x96 and 46x61, owner art approval pending"
-    }
-   ],
-   "priority": "slice 4 done, owner review",
-   "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
-  },
-  {
-   "id": 6,
-   "name": "Sparkcaster",
-   "repoId": "sparkcaster",
-   "group": "troops",
-   "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/06_sparkcaster.png",
-   "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/06_sparkcaster.png",
-   "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/06_sparkcaster_compare.jpg",
-   "poseReference": null,
-   "vfxReference": null,
-   "live": {
-    "battle": "unit:sparkcaster (chog-units v001 animated sheet; troop:sparkcaster v001 static is the fallback)",
-    "card": "v001 card:sparkcaster (original 2D card art, owner decision in slice 4.1; chog-units/v001/sparkcaster/card-portrait.png is an unused 3D render)"
-   },
-   "required": [
-    {
-     "asset": "battle atlas",
-     "states": [
-      "idle",
-      "move",
-      "attack",
-      "hit",
-      "defeat"
-     ],
-     "pivot": "feet/base shared across frames",
-     "status": "produced in slice 4 (build_roster.py) with front and rear three-quarter views (rear mirrors the whole model), owner art approval pending"
-    },
-    {
-     "asset": "card art",
-     "sizes": [
-      "72x96",
-      "46x61"
-     ],
-     "status": "produced in slice 4 from 1024 masters, checked at native 72x96 and 46x61, owner art approval pending"
-    }
-   ],
-   "priority": "slice 4 done, owner review",
-   "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
-  },
-  {
-   "id": 7,
-   "name": "Chog Guardian",
-   "repoId": "chog_guardian",
-   "group": "troops",
-   "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/07_chog_guardian.png",
-   "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/07_chog_guardian.png",
-   "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/07_chog_guardian_compare.jpg",
-   "poseReference": null,
-   "vfxReference": null,
-   "live": {
-    "battle": "unit:chog_guardian (chog-units v001 animated sheet; troop:chog_guardian v001 static is the fallback)",
-    "card": "v001 card:chog_guardian (original 2D card art, owner decision in slice 4.1; chog-units/v001/chog_guardian/card-portrait.png is an unused 3D render)"
-   },
-   "required": [
-    {
-     "asset": "battle atlas",
-     "states": [
-      "idle",
-      "move",
-      "attack",
-      "hit",
-      "defeat"
-     ],
-     "pivot": "feet/base shared across frames",
-     "status": "produced in slice 4 (build_roster.py) with front and rear three-quarter views (rear mirrors the whole model), owner art approval pending"
-    },
-    {
-     "asset": "card art",
-     "sizes": [
-      "72x96",
-      "46x61"
-     ],
-     "status": "produced in slice 4 from 1024 masters, checked at native 72x96 and 46x61, owner art approval pending"
-    }
-   ],
-   "priority": "slice 4 done, owner review",
-   "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
-  },
-  {
-   "id": 8,
-   "name": "Hexwing",
-   "repoId": "hexwing",
-   "group": "troops",
-   "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/08_hexwing.png",
-   "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/08_hexwing.png",
-   "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/08_hexwing_compare.jpg",
-   "poseReference": null,
-   "vfxReference": null,
-   "live": {
-    "battle": "unit:hexwing (chog-units v001 animated sheet; troop:hexwing v001 static is the fallback)",
-    "card": "v001 card:hexwing (original 2D card art, owner decision in slice 4.1; chog-units/v001/hexwing/card-portrait.png is an unused 3D render)"
-   },
-   "required": [
-    {
-     "asset": "battle atlas",
-     "states": [
-      "idle",
-      "move",
-      "attack",
-      "hit",
-      "defeat"
-     ],
-     "pivot": "feet/base shared across frames",
-     "status": "produced in slice 4 (build_roster.py) with front and rear three-quarter views (rear mirrors the whole model), owner art approval pending"
-    },
-    {
-     "asset": "card art",
-     "sizes": [
-      "72x96",
-      "46x61"
-     ],
-     "status": "produced in slice 4 from 1024 masters, checked at native 72x96 and 46x61, owner art approval pending"
-    }
-   ],
-   "priority": "slice 4 done, owner review",
-   "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
-  },
-  {
-   "id": 9,
-   "name": "Rift Sprites",
-   "repoId": "rift_sprites",
-   "group": "troops",
-   "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/09_rift_sprites.png",
-   "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/09_rift_sprites.png",
-   "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/09_rift_sprites_compare.jpg",
-   "poseReference": null,
-   "vfxReference": null,
-   "live": {
-    "battle": "unit:rift_sprites (chog-units v001 animated sheet; troop:rift_sprites v001 static is the fallback)",
-    "card": "v001 card:rift_sprites (original 2D card art, owner decision in slice 4.1; chog-units/v001/rift_sprites/card-portrait.png is an unused 3D render)"
-   },
-   "required": [
-    {
-     "asset": "battle atlas",
-     "states": [
-      "idle",
-      "move",
-      "attack",
-      "hit",
-      "defeat"
-     ],
-     "pivot": "feet/base shared across frames",
-     "status": "produced in slice 4 (build_roster.py) with front and rear three-quarter views (rear mirrors the whole model), owner art approval pending"
-    },
-    {
-     "asset": "card art",
-     "sizes": [
-      "72x96",
-      "46x61"
-     ],
-     "status": "produced in slice 4 from 1024 masters, checked at native 72x96 and 46x61, owner art approval pending"
-    }
-   ],
-   "priority": "slice 4 done, owner review",
-   "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
-  },
-  {
-   "id": 10,
-   "name": "Gale Netter",
-   "repoId": "gale_netter",
-   "group": "troops",
-   "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/10_gale_netter.png",
-   "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/10_gale_netter.png",
-   "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/10_gale_netter_compare.jpg",
-   "poseReference": null,
-   "vfxReference": null,
-   "live": {
-    "battle": "unit:gale_netter (chog-units v001 animated sheet; troop:gale_netter v001 static is the fallback)",
-    "card": "v001 card:gale_netter (original 2D card art, owner decision in slice 4.1; chog-units/v001/gale_netter/card-portrait.png is an unused 3D render)"
-   },
-   "required": [
-    {
-     "asset": "battle atlas",
-     "states": [
-      "idle",
-      "move",
-      "attack",
-      "hit",
-      "defeat"
-     ],
-     "pivot": "feet/base shared across frames",
-     "status": "produced in slice 4 (build_roster.py) with front and rear three-quarter views (rear mirrors the whole model), owner art approval pending"
-    },
-    {
-     "asset": "card art",
-     "sizes": [
-      "72x96",
-      "46x61"
-     ],
-     "status": "produced in slice 4 from 1024 masters, checked at native 72x96 and 46x61, owner art approval pending"
-    }
-   ],
-   "priority": "slice 4 done, owner review",
-   "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
-  },
-  {
-   "id": 11,
-   "name": "Riftbreaker",
-   "repoId": "riftbreaker",
-   "group": "troops",
-   "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/11_riftbreaker.png",
-   "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/11_riftbreaker.png",
-   "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/11_riftbreaker_compare.jpg",
-   "poseReference": null,
-   "vfxReference": null,
-   "live": {
-    "battle": "unit:riftbreaker (chog-units v001 animated sheet; troop:riftbreaker v001 static is the fallback)",
-    "card": "v001 card:riftbreaker (original 2D card art, owner decision in slice 4.1; chog-units/v001/riftbreaker/card-portrait.png is an unused 3D render)"
-   },
-   "required": [
-    {
-     "asset": "battle atlas",
-     "states": [
-      "idle",
-      "move",
-      "attack",
-      "hit",
-      "defeat"
-     ],
-     "pivot": "feet/base shared across frames",
-     "status": "produced in slice 4 (build_roster.py) with front and rear three-quarter views (rear mirrors the whole model), owner art approval pending"
-    },
-    {
-     "asset": "card art",
-     "sizes": [
-      "72x96",
-      "46x61"
-     ],
-     "status": "produced in slice 4 from 1024 masters, checked at native 72x96 and 46x61, owner art approval pending"
-    }
-   ],
-   "priority": "slice 4 done, owner review",
-   "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
-  },
-  {
-   "id": 12,
-   "name": "Ember Mauler",
-   "repoId": "ember_mauler",
-   "group": "troops",
-   "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/12_ember_mauler.png",
-   "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/12_ember_mauler.png",
-   "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/12_ember_mauler_compare.jpg",
-   "poseReference": null,
-   "vfxReference": null,
-   "live": {
-    "battle": "unit:ember_mauler (chog-units v001 animated sheet; troop:ember_mauler v001 static is the fallback)",
-    "card": "v001 card:ember_mauler (original 2D card art, owner decision in slice 4.1; chog-units/v001/ember_mauler/card-portrait.png is an unused 3D render)"
-   },
-   "required": [
-    {
-     "asset": "battle atlas",
-     "states": [
-      "idle",
-      "move",
-      "attack",
-      "hit",
-      "defeat"
-     ],
-     "pivot": "feet/base shared across frames",
-     "status": "produced in slice 4 (build_roster.py) with front and rear three-quarter views (rear mirrors the whole model), owner art approval pending"
-    },
-    {
-     "asset": "card art",
-     "sizes": [
-      "72x96",
-      "46x61"
-     ],
-     "status": "produced in slice 4 from 1024 masters, checked at native 72x96 and 46x61, owner art approval pending"
-    }
-   ],
-   "priority": "slice 4 done, owner review",
-   "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
-  },
-  {
-   "id": 13,
-   "name": "Rift Sentry",
-   "repoId": "rift_sentry",
-   "group": "buildings",
-   "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/13_rift_sentry.png",
-   "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/13_rift_sentry.png",
-   "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/13_rift_sentry_compare.jpg",
-   "poseReference": null,
-   "vfxReference": null,
-   "live": {
-    "battle": "building:rift_sentry (v001 static, fallback)",
-    "card": "card:rift_sentry (v001 derivative, fallback)"
-   },
-   "required": [
-    {
-     "asset": "battle atlas",
-     "states": [
-      "idle",
-      "activate",
-      "fire",
-      "hit",
-      "destroy"
-     ],
-     "pivot": "feet/base shared across frames",
-     "status": "missing"
-    },
-    {
-     "asset": "card art",
-     "sizes": [
-      "72x96",
-      "46x61"
-     ],
-     "status": "missing"
-    }
-   ],
-   "priority": "after exemplar approval",
-   "note": "Only the states the building exposes. Rift Sentry and Rift Mortar fire; Decoy Totem and Chog Burrow do not attack."
-  },
-  {
-   "id": 14,
-   "name": "Decoy Totem",
-   "repoId": "decoy_totem",
-   "group": "buildings",
-   "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/14_decoy_totem.png",
-   "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/14_decoy_totem.png",
-   "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/14_decoy_totem_compare.jpg",
-   "poseReference": null,
-   "vfxReference": null,
-   "live": {
-    "battle": "building:decoy_totem (v001 static, fallback)",
-    "card": "card:decoy_totem (v001 derivative, fallback)"
-   },
-   "required": [
-    {
-     "asset": "battle atlas",
-     "states": [
-      "idle",
-      "activate",
-      "fire",
-      "hit",
-      "destroy"
-     ],
-     "pivot": "feet/base shared across frames",
-     "status": "missing"
-    },
-    {
-     "asset": "card art",
-     "sizes": [
-      "72x96",
-      "46x61"
-     ],
-     "status": "missing"
-    }
-   ],
-   "priority": "after exemplar approval",
-   "note": "Only the states the building exposes. Rift Sentry and Rift Mortar fire; Decoy Totem and Chog Burrow do not attack."
-  },
-  {
-   "id": 15,
-   "name": "Chog Burrow",
-   "repoId": "chog_burrow",
-   "group": "buildings",
-   "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/15_chog_burrow.png",
-   "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/15_chog_burrow.png",
-   "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/15_chog_burrow_compare.jpg",
-   "poseReference": null,
-   "vfxReference": null,
-   "live": {
-    "battle": "building:chog_burrow (v001 static, fallback)",
-    "card": "card:chog_burrow (v001 derivative, fallback)"
-   },
-   "required": [
-    {
-     "asset": "battle atlas",
-     "states": [
-      "idle",
-      "activate",
-      "fire",
-      "hit",
-      "destroy"
-     ],
-     "pivot": "feet/base shared across frames",
-     "status": "missing"
-    },
-    {
-     "asset": "card art",
-     "sizes": [
-      "72x96",
-      "46x61"
-     ],
-     "status": "missing"
-    }
-   ],
-   "priority": "after exemplar approval",
-   "note": "Only the states the building exposes. Rift Sentry and Rift Mortar fire; Decoy Totem and Chog Burrow do not attack."
-  },
-  {
-   "id": 16,
-   "name": "Rift Mortar",
-   "repoId": "rift_mortar",
-   "group": "buildings",
-   "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/16_rift_mortar.png",
-   "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/16_rift_mortar.png",
-   "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/16_rift_mortar_compare.jpg",
-   "poseReference": null,
-   "vfxReference": null,
-   "live": {
-    "battle": "building:rift_mortar (v001 static, fallback)",
-    "card": "card:rift_mortar (v001 derivative, fallback)"
-   },
-   "required": [
-    {
-     "asset": "battle atlas",
-     "states": [
-      "idle",
-      "activate",
-      "fire",
-      "hit",
-      "destroy"
-     ],
-     "pivot": "feet/base shared across frames",
-     "status": "missing"
-    },
-    {
-     "asset": "card art",
-     "sizes": [
-      "72x96",
-      "46x61"
-     ],
-     "status": "missing"
-    }
-   ],
-   "priority": "after exemplar approval",
-   "note": "Only the states the building exposes. Rift Sentry and Rift Mortar fire; Decoy Totem and Chog Burrow do not attack."
-  },
-  {
-   "id": 17,
-   "name": "Chaos Bolt",
-   "repoId": "chaos_bolt",
-   "group": "spells",
-   "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/17_chaos_bolt.png",
-   "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/17_chaos_bolt.png",
-   "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/17_chaos_bolt_compare.jpg",
-   "poseReference": null,
-   "vfxReference": "Chog_Royale_Devin_Asset_Reference_Pack_v1/05_VFX_AND_SPELLS/chaos_bolt_REFERENCE.png",
-   "live": {
-    "battle": "spell:chaos_bolt (v001 static, fallback)",
-    "card": "card:chaos_bolt (v001 derivative, fallback)"
-   },
-   "required": [
-    {
-     "asset": "battle atlas",
-     "states": [
-      "cast",
-      "travel",
-      "impact",
-      "area_loop"
-     ],
-     "pivot": "feet/base shared across frames",
-     "status": "missing"
-    },
-    {
-     "asset": "card art",
-     "sizes": [
-      "72x96",
-      "46x61"
-     ],
-     "status": "missing"
-    }
-   ],
-   "priority": "after exemplar approval",
-   "note": "Only the phases the spell mechanic has."
-  },
-  {
-   "id": 18,
-   "name": "Rally Horn",
-   "repoId": "rally_horn",
-   "group": "spells",
-   "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/18_rally_horn.png",
-   "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/18_rally_horn.png",
-   "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/18_rally_horn_compare.jpg",
-   "poseReference": null,
-   "vfxReference": "Chog_Royale_Devin_Asset_Reference_Pack_v1/05_VFX_AND_SPELLS/rally_horn_REFERENCE.png",
-   "live": {
-    "battle": "spell:rally_horn (v001 static, fallback)",
-    "card": "card:rally_horn (v001 derivative, fallback)"
-   },
-   "required": [
-    {
-     "asset": "battle atlas",
-     "states": [
-      "cast",
-      "travel",
-      "impact",
-      "area_loop"
-     ],
-     "pivot": "feet/base shared across frames",
-     "status": "missing"
-    },
-    {
-     "asset": "card art",
-     "sizes": [
-      "72x96",
-      "46x61"
-     ],
-     "status": "missing"
-    }
-   ],
-   "priority": "after exemplar approval",
-   "note": "Only the phases the spell mechanic has."
-  },
-  {
-   "id": 19,
-   "name": "Chaos Comet",
-   "repoId": "chaos_comet",
-   "group": "spells",
-   "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/19_chaos_comet.png",
-   "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/19_chaos_comet.png",
-   "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/19_chaos_comet_compare.jpg",
-   "poseReference": null,
-   "vfxReference": "Chog_Royale_Devin_Asset_Reference_Pack_v1/05_VFX_AND_SPELLS/chaos_comet_REFERENCE.png",
-   "live": {
-    "battle": "spell:chaos_comet (v001 static, fallback)",
-    "card": "card:chaos_comet (v001 derivative, fallback)"
-   },
-   "required": [
-    {
-     "asset": "battle atlas",
-     "states": [
-      "cast",
-      "travel",
-      "impact",
-      "area_loop"
-     ],
-     "pivot": "feet/base shared across frames",
-     "status": "missing"
-    },
-    {
-     "asset": "card art",
-     "sizes": [
-      "72x96",
-      "46x61"
-     ],
-     "status": "missing"
-    }
-   ],
-   "priority": "after exemplar approval",
-   "note": "Only the phases the spell mechanic has."
-  },
-  {
-   "id": 20,
-   "name": "Rift Snare",
-   "repoId": "rift_snare",
-   "group": "spells",
-   "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/20_rift_snare.png",
-   "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/20_rift_snare.png",
-   "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/20_rift_snare_compare.jpg",
-   "poseReference": null,
-   "vfxReference": "Chog_Royale_Devin_Asset_Reference_Pack_v1/05_VFX_AND_SPELLS/rift_snare_REFERENCE.png",
-   "live": {
-    "battle": "spell:rift_snare (v001 static, fallback)",
-    "card": "card:rift_snare (v001 derivative, fallback)"
-   },
-   "required": [
-    {
-     "asset": "battle atlas",
-     "states": [
-      "cast",
-      "travel",
-      "impact",
-      "area_loop"
-     ],
-     "pivot": "feet/base shared across frames",
-     "status": "missing"
-    },
-    {
-     "asset": "card art",
-     "sizes": [
-      "72x96",
-      "46x61"
-     ],
-     "status": "missing"
-    }
-   ],
-   "priority": "after exemplar approval",
-   "note": "Only the phases the spell mechanic has."
-  },
-  {
-   "id": 21,
-   "name": "Bulwark",
-   "repoId": "commander class bulwark",
-   "group": "commanders",
-   "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/21_bulwark.png",
-   "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/21_bulwark.png",
-   "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/21_bulwark_compare.jpg",
-   "poseReference": null,
-   "vfxReference": null,
-   "live": {
-    "battle": "commander:bulwark (v001 static, fallback)",
-    "card": "card:commander_bulwark (v001 derivative, fallback)"
-   },
-   "required": [
-    {
-     "asset": "battle atlas",
-     "states": [
-      "idle",
-      "move",
-      "attack",
-      "hit",
-      "defeat",
-      "ability"
-     ],
-     "pivot": "feet/base shared across frames",
-     "status": "missing"
-    },
-    {
-     "asset": "card art",
-     "sizes": [
-      "72x96",
-      "46x61"
-     ],
-     "status": "missing"
-    }
-   ],
-   "priority": "first commander card-art validation",
-   "note": "Commander class art is shared by every NFT of the class and must stay labelled class art. NFT-specific features need the token art, not this pack."
-  },
-  {
-   "id": 22,
-   "name": "Reaver",
-   "repoId": "commander class reaver",
-   "group": "commanders",
-   "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/22_reaver.png",
-   "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/22_reaver.png",
-   "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/22_reaver_compare.jpg",
-   "poseReference": null,
-   "vfxReference": null,
-   "live": {
-    "battle": "commander:reaver (v001 static, fallback)",
-    "card": "card:commander_reaver (v001 derivative, fallback)"
-   },
-   "required": [
-    {
-     "asset": "battle atlas",
-     "states": [
-      "idle",
-      "move",
-      "attack",
-      "hit",
-      "defeat",
-      "ability"
-     ],
-     "pivot": "feet/base shared across frames",
-     "status": "missing"
-    },
-    {
-     "asset": "card art",
-     "sizes": [
-      "72x96",
-      "46x61"
-     ],
-     "status": "missing"
-    }
-   ],
-   "priority": "after exemplar approval",
-   "note": "Commander class art is shared by every NFT of the class and must stay labelled class art. NFT-specific features need the token art, not this pack."
-  },
-  {
-   "id": 23,
-   "name": "Deadeye",
-   "repoId": "commander class deadeye",
-   "group": "commanders",
-   "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/23_deadeye.png",
-   "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/23_deadeye.png",
-   "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/23_deadeye_compare.jpg",
-   "poseReference": null,
-   "vfxReference": null,
-   "live": {
-    "battle": "commander:deadeye (v001 static, fallback)",
-    "card": "card:commander_deadeye (v001 derivative, fallback)"
-   },
-   "required": [
-    {
-     "asset": "battle atlas",
-     "states": [
-      "idle",
-      "move",
-      "attack",
-      "hit",
-      "defeat",
-      "ability"
-     ],
-     "pivot": "feet/base shared across frames",
-     "status": "missing"
-    },
-    {
-     "asset": "card art",
-     "sizes": [
-      "72x96",
-      "46x61"
-     ],
-     "status": "missing"
-    }
-   ],
-   "priority": "after exemplar approval",
-   "note": "Commander class art is shared by every NFT of the class and must stay labelled class art. NFT-specific features need the token art, not this pack."
-  },
-  {
-   "id": 24,
-   "name": "Scout",
-   "repoId": "commander class scout",
-   "group": "commanders",
-   "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/24_scout.png",
-   "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/24_scout.png",
-   "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/24_scout_compare.jpg",
-   "poseReference": null,
-   "vfxReference": null,
-   "live": {
-    "battle": "commander:scout (v001 static, fallback)",
-    "card": "card:commander_scout (v001 derivative, fallback)"
-   },
-   "required": [
-    {
-     "asset": "battle atlas",
-     "states": [
-      "idle",
-      "move",
-      "attack",
-      "hit",
-      "defeat",
-      "ability"
-     ],
-     "pivot": "feet/base shared across frames",
-     "status": "missing"
-    },
-    {
-     "asset": "card art",
-     "sizes": [
-      "72x96",
-      "46x61"
-     ],
-     "status": "missing"
-    }
-   ],
-   "priority": "after exemplar approval",
-   "note": "Commander class art is shared by every NFT of the class and must stay labelled class art. NFT-specific features need the token art, not this pack."
-  },
-  {
-   "id": 25,
-   "name": "Warden",
-   "repoId": "commander class warden",
-   "group": "commanders",
-   "canonicalIdentity": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/25_warden.png",
-   "styleStudy": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/25_warden.png",
-   "identityComparison": "Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/03_SIDE_BY_SIDE_IDENTITY_CHECK/25_warden_compare.jpg",
-   "poseReference": null,
-   "vfxReference": null,
-   "live": {
-    "battle": "commander:warden (v001 static, fallback)",
-    "card": "card:commander_warden (v001 derivative, fallback)"
-   },
-   "required": [
-    {
-     "asset": "battle atlas",
-     "states": [
-      "idle",
-      "move",
-      "attack",
-      "hit",
-      "defeat",
-      "ability"
-     ],
-     "pivot": "feet/base shared across frames",
-     "status": "missing"
-    },
-    {
-     "asset": "card art",
-     "sizes": [
-      "72x96",
-      "46x61"
-     ],
-     "status": "missing"
-    }
-   ],
-   "priority": "after exemplar approval",
-   "note": "Commander class art is shared by every NFT of the class and must stay labelled class art. NFT-specific features need the token art, not this pack."
-  }
- ],
- "spawnOnly": [
-  {
-   "repoId": "burrow_scrapper",
-   "live": "spawned:burrow_scrapper (v001 static, fallback)",
-   "reference": "none in pack",
-   "required": [
-    {
-     "asset": "battle atlas",
-     "states": [
-      "idle",
-      "move",
-      "attack",
-      "hit",
-      "defeat"
-     ],
-     "status": "missing"
-    }
-   ]
-  }
- ],
- "effects": [
-  {
-   "id": "muzzle flash and tracer",
-   "status": "fallback",
-   "live": "code-drawn on authoritative tower_fired",
-   "reference": []
-  },
-  {
-   "id": "contact shadow",
-   "status": "fallback",
-   "live": "code ellipse under mounts and units",
-   "reference": [
-    "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/05_effects/contact_shadow_REFERENCE.png"
-   ]
-  },
-  {
-   "id": "deployment ring",
-   "status": "fallback",
-   "live": "code band overlay",
-   "reference": [
-    "Chog_Royale_Devin_Asset_Reference_Pack_v1/01_ARENA/05_effects/deployment_ring_REFERENCE.png"
-   ]
-  },
-  {
-   "id": "projectile, impact, shield, frost, aura, heal",
-   "status": "fallback",
-   "live": "effect:* v001 static",
-   "reference": []
-  }
- ]
 }

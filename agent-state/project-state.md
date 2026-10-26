@@ -1,5 +1,9 @@
 # Project State
 
+## Final 3D assets (2026-10-26, branch visual-overhaul/v3-final-assets)
+
+- Buildings, five commander classes (`commander_<class>`) and `burrow_scrapper` animate from the `chog-units/v001` manifest (22 sheets, 31.9 MB RGBA) with v001 static fallbacks. Battle VFX pack in `public/assets/battle-vfx/v001` with pure planners in `battle-vfx.ts` and `vfx-layer.ts`. Readiness doc section 16.
+
 ## Visual overhaul v3, slice 4.1 (2026-10-26)
 
 - Seven troop models corrected toward their cards (Frostshell, Rift Runner, Sparkcaster, Gale Netter, Riftbreaker, Chaos Archer, Chog Guardian). Clip counts and timing unchanged. Twelve sheets 16.7 MB RGBA. Readiness doc section 15.

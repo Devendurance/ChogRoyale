@@ -1,3 +1,10 @@
+## Final 3D asset production (2026-10-26)
+
+- Doing: buildings, spells, commanders, Burrow Scrapper and shared VFX on branch `visual-overhaul/v3-final-assets` (from main b3c0d7e, no upstream). Branding PR #5 still open. Draft PR only, never merge (main auto-deploys).
+- Done: all 14 remaining assets plus `burrow_scrapper` animated and wired, battle VFX pack, 153/153 battle tests, three fixtures covering every building, spell and all ten abilities, both-seat and fallback captures with 0 errors. Readiness doc section 16, asset manifest, review in `docs/visual-overhaul/review/final/`.
+- Work dirs: `ChogRoyale-Assets/final-assets/{masters,preview,review,qa}`. Fixture `qa/generate-final-fixture.ts` (run from the repo with `npx tsx --tsconfig tsconfig.json`), captures `qa/capture-final.cjs`, `qa/probe-clips.cjs`. The qa-units harness page is temporary and never committed.
+- Next: owner art review. Live two-player match, phone/touch and real-device performance unverified.
+
 ## Visual overhaul v3, slice 4.1 (2026-10-26)
 
 - Doing: bounded identity correction of the Slice 4 roster on `visual-overhaul/v3-slice2` after `d7fb366`. Local commit only, no push, PR, merge or deploy.
