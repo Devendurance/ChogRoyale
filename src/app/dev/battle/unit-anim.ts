@@ -4,6 +4,10 @@
 // distance to enemies. It never predicts damage, targeting or movement.
 
 export type UnitClipName = "idle" | "move" | "attack" | "hit" | "defeat";
+/** Authored view: front three-quarter (toward the camera) or rear three-quarter
+ * (away from it, for units heading up the screen). Both face screen right and
+ * the renderer mirrors on X for leftward motion. */
+export type UnitView = "front" | "rear";
 
 export interface UnitClip {
   /** First frame index in the sheet. */
@@ -32,7 +36,11 @@ export interface UnitAnimRecord {
   /** Board px per sheet px. */
   displayScale: number;
   facing: "right";
+  /** Front three-quarter clips. */
   clips: Record<UnitClipName, UnitClip>;
+  /** Rear three-quarter clips with the same counts and timing as `clips`, so
+   * a view change mid-clip keeps its frame index. Optional for older sheets. */
+  rearClips?: Record<UnitClipName, UnitClip>;
   /** attackIntervalTicks x 100 ms, from the ruleset. */
   attackPeriodMs: number;
   /** Ruleset attack range in arena units. */
@@ -81,18 +89,38 @@ export const newUnitAnimState = (offsetMs = 0): UnitAnimState => ({ engagedSince
 export const updateEngagement = (st: UnitAnimState, engaged: boolean, now: number): UnitAnimState =>
   engaged ? (st.engagedSince === null ? { ...st, engagedSince: now } : st) : st.engagedSince === null ? st : { ...st, engagedSince: null };
 
+/** Clip table for a view. Sheets without rear clips always draw the front. */
+export const clipsFor = (rec: UnitAnimRecord, view: UnitView): Record<UnitClipName, UnitClip> =>
+  view === "rear" && rec.rearClips ? rec.rearClips : rec.clips;
+
+/**
+ * Visual facing from a screen-space direction (x right, y down), for the
+ * unit's own motion or toward the foe it's engaging. Mostly-up reads as the
+ * rear view, mostly-down as the front. Near-horizontal or zero directions
+ * keep the previous view so a unit doesn't flicker while strafing or idle.
+ * Presentation only: it never feeds movement, targeting or position.
+ */
+export function nextView(prev: UnitView, screenDx: number, screenDy: number, bias = 0.3): UnitView {
+  const len = Math.hypot(screenDx, screenDy);
+  if (len < 1e-6) return prev;
+  if (screenDy < -bias * len) return "rear";
+  if (screenDy > bias * len) return "front";
+  return prev;
+}
+
 /**
  * Picks the clip and sheet frame. Priority: defeat, a swing in progress, a hit
  * reaction, movement, then idle. Between swings an engaged unit idles so the
- * next blow reads as a fresh windup.
+ * next blow reads as a fresh windup. The view only swaps the clip table, so
+ * timing and frame index stay continuous across a turn.
  */
 export function unitFrame(
   rec: UnitAnimRecord,
   st: UnitAnimState,
-  input: { now: number; moving: boolean }
+  input: { now: number; moving: boolean; view?: UnitView }
 ): { clip: UnitClipName; frame: number } {
   const { now, moving } = input;
-  const c = rec.clips;
+  const c = clipsFor(rec, input.view ?? "front");
   if (st.goneAt !== null) return { clip: "defeat", frame: clipFrame(c.defeat, now - st.goneAt) };
   if (st.engagedSince !== null) {
     const phase = (now - st.engagedSince) % rec.attackPeriodMs;

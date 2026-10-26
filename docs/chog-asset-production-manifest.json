@@ -1,6 +1,6 @@
 {
  "schemaVersion": 1,
- "slice": "Visual overhaul v3 slice 2, refined in slice 2.1, units in slice 3",
+ "slice": "Visual overhaul v3 slice 2, refined in slice 2.1, units in slice 3, refined in slice 3.1",
  "rules": [
   "Every pack PNG is a reference crop with game_ready=false. None of them is installed as runtime art.",
   "Canonical identity is 02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY. Stylized 3D concepts are quality and lighting references only.",
@@ -263,7 +263,7 @@
       "defeat"
      ],
      "pivot": "feet/base shared across frames",
-     "status": "produced in slice 3 (one front three-quarter view, mirrored on X), owner art approval pending"
+     "status": "produced in slice 3, identity refined in slice 3.1 with front and rear three-quarter views (each mirrored on X), owner art approval pending"
     },
     {
      "asset": "card art",
@@ -271,10 +271,10 @@
       "72x96",
       "46x61"
      ],
-     "status": "produced in slice 3, checked at both sizes, owner art approval pending"
+     "status": "regenerated in slice 3.1 from 1024 masters, checked at native 72x96 and 46x61, owner art approval pending"
     }
    ],
-   "priority": "slice 3 done, owner review",
+   "priority": "slice 3.1 done, owner review",
    "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
   },
   {
@@ -341,7 +341,7 @@
       "defeat"
      ],
      "pivot": "feet/base shared across frames",
-     "status": "produced in slice 3 (one front three-quarter view, mirrored on X), owner art approval pending"
+     "status": "produced in slice 3, identity refined in slice 3.1 with front and rear three-quarter views (each mirrored on X), owner art approval pending"
     },
     {
      "asset": "card art",
@@ -349,10 +349,10 @@
       "72x96",
       "46x61"
      ],
-     "status": "produced in slice 3, checked at both sizes, owner art approval pending"
+     "status": "regenerated in slice 3.1 from 1024 masters, checked at native 72x96 and 46x61, owner art approval pending"
     }
    ],
-   "priority": "slice 3 done, owner review",
+   "priority": "slice 3.1 done, owner review",
    "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
   },
   {

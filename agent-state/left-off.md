@@ -1,3 +1,9 @@
+## Visual overhaul v3, slice 3.1 (2026-10-26)
+
+- Doing: Choglings and Boulderback identity refinement plus a rear three-quarter view, on `visual-overhaul/v3-slice2` after `37a6c93`. Local commit only, no push, PR or deploy.
+- Done: Chogling `sunburst()` spike disc, smaller face, separated eyes. Boulderback `plate()` flagstones, `rock()` boulders, dominant shoulders and forearms, smaller fists, claw toes, magenta blush. Rear view via mirrored pose at yaw 156, `rearClips` and `nextView()` in `unit-anim.ts`, 2x masters downsampled to board resolution, +12%/+8% display height, open hit ring for animated units. Tests 137/137, tsc, scoped TS lint, build. Review set in `docs/visual-overhaul/review/slice3-1/` and `ChogRoyale-Assets/chog-units-v001/review-s31/`.
+- Next: owner review of both units, the rear view and the cards. Then the next roster cards through the same two-view pipeline. Live two-login match, phone and performance still unverified.
+
 ## Visual overhaul v3, slice 3 (2026-10-25)
 
 - Doing: first animated Chogs (Choglings, Boulderback) on `visual-overhaul/v3-slice2`. Slice 2.1 is the approved arena/defender baseline, don't revisit it. Local commit only, no push, PR or deploy.

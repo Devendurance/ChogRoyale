@@ -1,28 +1,29 @@
 {
   "schema": 1,
   "version": "chog-units-v001",
+  "revision": "slice3.1",
   "source": "tools/blender/chog-units-v001",
   "units": {
     "choglings": {
       "entityId": "choglings",
       "sheet": "choglings/sheet.png",
-      "sha256": "785e79df068adb673c03f2f221679dd7f732cecb01f5c9df165654178cd536fe",
-      "width": 896,
-      "height": 448,
-      "frameWidth": 112,
-      "frameHeight": 112,
+      "sha256": "68357b3a35c49bc639a265796c3f47bf8adbe5b2c4363c6954995a113ecf39c6",
+      "width": 592,
+      "height": 592,
+      "frameWidth": 74,
+      "frameHeight": 74,
       "columns": 8,
-      "frameCount": 31,
+      "frameCount": 62,
       "pivot": [
-        56,
-        94
+        37,
+        62
       ],
       "pivotNormalized": [
         0.5,
-        0.8392857142857143
+        0.8378378378378378
       ],
-      "visibleHeight": 59,
-      "displayScale": 0.576,
+      "visibleHeight": 39,
+      "displayScale": 0.974,
       "facing": "right",
       "clips": {
         "idle": {
@@ -57,37 +58,71 @@
           "loop": false
         }
       },
+      "rearClips": {
+        "idle": {
+          "start": 31,
+          "count": 6,
+          "fps": 8,
+          "loop": true
+        },
+        "move": {
+          "start": 37,
+          "count": 8,
+          "fps": 14,
+          "loop": true
+        },
+        "attack": {
+          "start": 45,
+          "count": 6,
+          "fps": 16,
+          "loop": false,
+          "impact": 3
+        },
+        "hit": {
+          "start": 51,
+          "count": 3,
+          "fps": 14,
+          "loop": false
+        },
+        "defeat": {
+          "start": 54,
+          "count": 8,
+          "fps": 14,
+          "loop": false
+        }
+      },
       "attackPeriodMs": 800,
       "reach": 2,
       "defeatMs": 571,
       "portrait": "choglings/card-portrait.png",
-      "portraitSha256": "49d491609fede46f905c3a38b7489b1c6fd1d9cd3183e7bb968fdabafb7a0ad0",
+      "portraitSha256": "fef7cc6c04e6bc67158608470ca6126a3b0e26fd1f7464c57ab9f57ebc3b1493",
       "camera": {
         "tiltDeg": 52,
         "yawDeg": 24.000000000000004,
-        "pxPerUnit": 12
+        "rearYawDeg": 156,
+        "pxPerUnit": 8
       }
     },
     "boulderback": {
       "entityId": "boulderback",
       "sheet": "boulderback/sheet.png",
-      "sha256": "9ea864b495462b8c0bba3bc35e0cf5cb157ee5c6501dd6fcc4b491c73b45dfab",
-      "width": 1280,
-      "height": 880,
-      "frameWidth": 160,
-      "frameHeight": 176,
+      "sha256": "a8c21684cfca694483639ea74be9091cf1af1185bc97e95488193a87447fe1d8",
+      "width": 800,
+      "height": 990,
+      "frameWidth": 100,
+      "frameHeight": 110,
       "columns": 8,
-      "frameCount": 35,
+      "frameCount": 70,
       "pivot": [
-        80,
-        126
+        50,
+        79
       ],
       "pivotNormalized": [
         0.5,
-        0.7159090909090909
+        0.7181818181818181
       ],
-      "visibleHeight": 83,
-      "displayScale": 0.578,
+      "visibleHeight": 58,
+      "displayScale": 0.897,
       "facing": "right",
       "clips": {
         "idle": {
@@ -122,15 +157,49 @@
           "loop": false
         }
       },
+      "rearClips": {
+        "idle": {
+          "start": 35,
+          "count": 6,
+          "fps": 6,
+          "loop": true
+        },
+        "move": {
+          "start": 41,
+          "count": 8,
+          "fps": 9,
+          "loop": true
+        },
+        "attack": {
+          "start": 49,
+          "count": 8,
+          "fps": 11,
+          "loop": false,
+          "impact": 4
+        },
+        "hit": {
+          "start": 57,
+          "count": 4,
+          "fps": 12,
+          "loop": false
+        },
+        "defeat": {
+          "start": 61,
+          "count": 9,
+          "fps": 10,
+          "loop": false
+        }
+      },
       "attackPeriodMs": 1200,
       "reach": 2,
       "defeatMs": 900,
       "portrait": "boulderback/card-portrait.png",
-      "portraitSha256": "e03aa627a9f54d3eea3f7b9f3ecd4cbfc642ddff493c200196d5eac0e2b012b1",
+      "portraitSha256": "493ebec3b73791814aed44814ed6ad38d3f88c41202eb26829a7b42b5d999029",
       "camera": {
         "tiltDeg": 52,
         "yawDeg": 24.000000000000004,
-        "pxPerUnit": 18
+        "rearYawDeg": 156,
+        "pxPerUnit": 11.25
       }
     }
   }

@@ -8,15 +8,20 @@ Run headless from this folder:
 
 Env flags:
   PREVIEW=1   identity and gameplay stills only, 16 samples
+  PCLIP=, PFRAME=  which clip/frame the preview poses (default idle 0)
+  VIEWS=front,rear  which gameplay views to render (default both)
   CLIPS=a,b   render only these clips
   NOCARD=1    skip the card portrait
-  CARDONLY=1  render only the identity still and card portrait
+  CARDONLY=1  render only the identity stills and card portrait
 
 Outputs per unit under <out_dir>/<unit>/:
-  frames/<clip>_<nn>.png   one transparent cell per frame, shared ground pivot
-  card-portrait@2x.png     512x512 card portrait master
-  identity-front.png       front three-quarter identity still
-  record.json              cell, pivot, clips and fps for the packer
+  frames/<clip>_<nn>.png        front three-quarter cell per frame, shared ground pivot
+  frames/rear/<clip>_<nn>.png   rear three-quarter cell per frame, same pivot and timing
+  card-portrait@4x.png          1024x1024 card portrait master
+  identity-front.png, identity-rear.png   near-level identity stills
+  record.json                   cell, pivot, views, clips and fps for the packer
+
+Gameplay cells render at 2x the runtime sheet. pack_units.cjs halves them.
 """
 import json
 import math
@@ -25,7 +30,7 @@ import random
 import sys
 
 import bpy
-from mathutils import Vector
+from mathutils import Matrix, Vector
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "..", "chaos-crossing-v003", "scripts"))
@@ -39,8 +44,17 @@ CARDONLY = bool(os.environ.get("CARDONLY"))
 CLIPS = set(filter(None, os.environ.get("CLIPS", "").split(",")))
 
 # Facing: front three-quarter, turned toward screen right. Phaser mirrors on X
-# for left-moving units, which is the renderer's existing single-view contract.
+# for left-moving units. Slice 3.1 adds the rear three-quarter view (facing
+# screen right and away) for units heading up the board. The rear view is the
+# front view reflected through the screen-horizontal plane: yaw 180 - 24 plus
+# a left/right mirrored pose, so lunges and leans still travel screen-right.
 YAW = math.radians(24)
+VIEWS = {"front": YAW, "rear": math.pi - YAW}
+VIEW = ["front"]
+# Head lift per view (radians). Gameplay frames tip the face toward the high
+# board camera. Identity and card stills use the near-level value.
+LIFT = {"front": 0.12, "rear": 0.12}
+VIEWS_ON = [v for v in os.environ.get("VIEWS", "front,rear").split(",") if v in VIEWS]
 
 M = {}
 OUTLINES = []
@@ -56,19 +70,21 @@ def mats():
         "mouth": C.mat("Mouth", "#2a1a1e", rough=0.6),
         "tongue": C.mat("Tongue", "#ff7d93", rough=0.5),
         # Choglings: cyan spikes from the card art, two tones plus a deep core.
-        "cyan": C.mat("ChogCyan", "#13b9cc", rough=0.55, coat=0.05, spec=0.3),
-        "cyanLight": C.mat("ChogCyanLight", "#45dbe8", rough=0.55, coat=0.05, spec=0.3),
-        "cyanDeep": C.mat("ChogCyanDeep", "#0b8fa6", rough=0.58, coat=0.05, spec=0.3),
-        # Boulderback: charcoal suit and spikes, three-tone stone plates.
+        "cyan": C.mat("ChogCyan", "#14c0cc", rough=0.6, coat=0.04, spec=0.25),
+        "cyanLight": C.mat("ChogCyanLight", "#4ee0e4", rough=0.6, coat=0.04, spec=0.25),
+        "cyanDeep": C.mat("ChogCyanDeep", "#0c97a6", rough=0.62, coat=0.04, spec=0.25),
+        # Boulderback: charcoal suit and spikes.
         "suit": C.mat("Suit", "#2c2a31", rough=0.62),
         "suitLight": C.mat("SuitLight", "#3c3943", rough=0.6),
         "bSpike": C.mat("BoulderSpike", "#2a272f", rough=0.6, coat=0.08),
         "bSpike2": C.mat("BoulderSpikeLight", "#48444f", rough=0.58, coat=0.08),
-        "stoneA": C.mat("StoneLight", "#cbbba3", rough=0.66, coat=0.12),
-        "stoneB": C.mat("StoneMid", "#ad9d87", rough=0.68, coat=0.1),
-        "stoneC": C.mat("StoneCool", "#938571", rough=0.7, coat=0.08),
-        "stoneD": C.mat("StoneDeep", "#7a6e5f", rough=0.74),
-        "dust": C.mat("Dust", "#d9cdb8", rough=0.9),
+        "dust": C.mat("Dust", "#cfcbc4", rough=0.9),
+        "magenta": C.mat("Magenta", "#ec3c93", rough=0.5, emit="#e8338f", emit_strength=0.22),
+        # Slice 3.1 Boulderback stone: the card's neutral grey, three tones.
+        "rockA": C.mat("RockLight", "#cbc1b0", rough=0.62, coat=0.12),
+        "rockB": C.mat("RockMid", "#aea392", rough=0.66, coat=0.1),
+        "rockC": C.mat("RockCool", "#938978", rough=0.7, coat=0.08),
+
     })
 
 
@@ -104,16 +120,38 @@ def bind(rig, pivot, o):
     o.matrix_parent_inverse = p.matrix_world.inverted()
 
 
+SWAP = {"armL": "armR", "armR": "armL", "legL": "legR", "legR": "legL"}
+
+
+def mirror_pose(p):
+    """Reflect a pose through the rig's sagittal plane (x -> -x): locations
+    negate x, XYZ eulers negate y and z, left and right limbs swap."""
+    q = {}
+    for k, v in p.items():
+        base, _, suffix = k.partition("_")
+        name = (SWAP.get(base, base) + "_" + suffix) if suffix else k
+        if k == "yaw":
+            v = -v
+        elif suffix == "loc":
+            v = (-v[0], v[1], v[2])
+        elif suffix == "rot":
+            v = (v[0], -v[1], -v[2])
+        q[name] = v
+    return q
+
+
 def pose(rig, p):
     piv = rig["piv"]
-    piv["yaw"].rotation_euler = (0, 0, YAW + p.get("yaw", 0.0))
+    if VIEW[0] == "rear":
+        p = mirror_pose(p)
+    piv["yaw"].rotation_euler = (0, 0, VIEWS[VIEW[0]] + p.get("yaw", 0.0))
     for name, rest in rig["rest"].items():
         o = piv[name]
         d = p.get(name + "_loc", (0, 0, 0))
         o.location = (rest[0] + d[0], rest[1] + d[1], rest[2] + d[2])
         rot = p.get(name + "_rot", (0, 0, 0))
-        # A small constant chin lift keeps the face readable from the high camera.
-        o.rotation_euler = (rot[0] - 0.12, rot[1], rot[2]) if name == "head" else rot
+        # A constant chin lift keeps the face readable from the high camera.
+        o.rotation_euler = (rot[0] - LIFT[VIEW[0]], rot[1], rot[2]) if name == "head" else rot
         s = p.get(name + "_scale", 1.0)
         o.scale = (s, s, s) if isinstance(s, (int, float)) else s
     for key, objs in rig["sets"].items():
@@ -169,46 +207,16 @@ def capsule(rig, pivot, p0, p1, r, material, ol=0.05, r1=None):
     part(rig, pivot, "sphere", p1, (r1, r1, r1), material, ol=ol, segments=20, ring_count=10)
 
 
-def spike(rig, pivot, base, dirv, L, rad, material, flat=1.0, ol=0.05, verts=8, smooth=False):
-    dirv = Vector(dirv).normalized()
-    q = dirv.to_track_quat("Z", "Y")
-    return part(rig, pivot, "cone", Vector(base) + dirv * (L / 2), (rad, rad * flat, L), material, rot=q.to_euler(), ol=ol,
+def blade(rig, pivot, base, dirv, L, rad, material, flat_axis, flat=0.45, ol=0.05, verts=10, smooth=True):
+    """Broad soft spike: a cone pointing along `dirv`, flattened along
+    `flat_axis`, so a ring of them reads as the card's painted sunburst."""
+    z = Vector(dirv).normalized()
+    y = Vector(flat_axis)
+    y = (y - z * y.dot(z)).normalized()
+    x = y.cross(z)
+    rot = Matrix((x, y, z)).transposed().to_euler()
+    return part(rig, pivot, "cone", Vector(base) + z * (L / 2), (rad, rad * flat, L), material, rot=rot, ol=ol,
                 vertices=verts, radius1=1.0, radius2=0.0, smooth=smooth)
-
-
-def stone(rig, pivot, center, size, rnd, rot=(0, 0, 0), material=None, ol=0.05, crumble=True, body=Vector((0, 0, 2.0))):
-    """Chiselled stylised boulder: jittered box, bevelled, flat-shaded faces."""
-    import bmesh
-
-    o = C.prim("cube", f"{pivot}_stone", loc=center, scale=size, rot=rot, material=material or rnd.choice((M["stoneA"], M["stoneB"], M["stoneC"])), smooth=False, size=1.0)
-    bm = bmesh.new()
-    bm.from_mesh(o.data)
-    for v in bm.verts:
-        v.co += Vector((rnd.uniform(-0.13, 0.13), rnd.uniform(-0.13, 0.13), rnd.uniform(-0.1, 0.1)))
-    bm.to_mesh(o.data)
-    bm.free()
-    apply_tf(o)
-    b = C.bevel(o, min(size) * 0.34, 3)
-    b.limit_method = "NONE"
-    b.harden_normals = False
-    for poly in o.data.polygons:
-        poly.use_smooth = True
-    outline(o, ol)
-    bind(rig, pivot, o)
-    if crumble:
-        out = (Vector(center) - body)
-        out.z = abs(out.z) * 0.3 + 0.2
-        rig["stones"].append((o, o.location.copy(), out.normalized() * 0.9))
-    return o
-
-
-def crown(rig, hc, r, mats2, rnd, rad, verts=6):
-    """Upward-back crown spikes that cover the smooth scalp between the ring and fan."""
-    for i in range(8):
-        a = i / 8 * math.tau
-        b = Vector((math.cos(a) * 0.5, 0.25 + math.sin(a) * 0.45, 0.82)).normalized()
-        dv = b + Vector((0, 0.35, 0.2))
-        spike(rig, "spikes", hc + b * r * 0.7, dv, r * rnd.uniform(0.75, 0.95), r * rad, mats2[i % 2], verts=verts)
 
 
 def facemask_material(name, spike_hex, mask_hex, front_min=0.22, top_max=0.62):
@@ -274,7 +282,7 @@ def chog_face(rig, pivot, center, r, style):
         yaw = yaw_for(d)
         part(rig, pivot, "sphere", p, (r * ew, r * 0.08, r * eh), M["eyeWhite"], rot=(0, 0, yaw), ol=0.07, segments=24, ring_count=12, sets=["eyes_default"])
         pp = p + d * (r * 0.05) + Vector((sx * 0.02 * r, 0, -0.02 * r))
-        part(rig, pivot, "sphere", pp, (r * ew * 0.82, r * 0.06, r * eh * 0.84), M["pupil"], rot=(0, 0, yaw), ol=0, segments=20, ring_count=10, sets=["eyes_default"])
+        part(rig, pivot, "sphere", pp, (r * ew * 0.89, r * 0.06, r * eh * 0.9), M["pupil"], rot=(0, 0, yaw), ol=0, segments=20, ring_count=10, sets=["eyes_default"])
         hp = pp + d * (r * 0.06) + Vector((-0.07 * r, 0, 0.1 * r))
         part(rig, pivot, "sphere", hp, (r * 0.075, r * 0.03, r * 0.085), M["eyeWhite"], rot=(0, 0, yaw), ol=0, segments=12, ring_count=6, sets=["eyes_default"])
         # Closed eye: a chevron pointing toward the nose bridge.
@@ -282,7 +290,7 @@ def chog_face(rig, pivot, center, r, style):
             cp = p + d * (r * 0.03) + Vector((0, 0, k * eh * r * 0.28))
             part(rig, pivot, "cube", cp, (r * ew * 1.5, r * 0.06, r * 0.08), M["pupil"], rot=(0, k * sx * math.radians(28), yaw), ol=0, bev=0.02, sets=["eyes_closed"])
         bp, bd = on_head(center, r, (sx * 0.66, -0.72, ez - 0.36), -0.06)
-        part(rig, pivot, "sphere", bp, (r * style.get("blush", 0.17), r * 0.05, r * 0.11), M["blush"], rot=(0, 0, yaw_for(bd)), ol=0, segments=16, ring_count=8)
+        part(rig, pivot, "sphere", bp, (r * style.get("blush", 0.17), r * 0.05, r * 0.11), M[style.get("blush_mat", "blush")], rot=(0, 0, yaw_for(bd)), ol=0, segments=16, ring_count=8)
         # Angled brow, inner end low: the card's mischievous / stern V.
         brp, brd = on_head(center, r, (sx * (spread + 0.02), -0.86, ez + eh * 1.2 + 0.05), -0.02)
         part(rig, pivot, "cube", brp, (r * 0.4, r * 0.09, r * 0.11), M["pupil"], rot=(0, -sx * brow, yaw_for(brd)), ol=0, bev=0.035)
@@ -304,61 +312,89 @@ def chog_face(rig, pivot, center, r, style):
 
 CHOG_JOINTS = {
     "root": ("yaw", (0, 0, 0)),
-    "hips": ("root", (0, 0, 0.9)),
-    "head": ("hips", (0, 0, 2.0)),
-    "spikes": ("head", (0, 0.05, 3.05)),
-    "armL": ("hips", (-0.66, 0, 1.78)),
-    "armR": ("hips", (0.66, 0, 1.78)),
-    "legL": ("root", (-0.36, 0, 0.82)),
-    "legR": ("root", (0.36, 0, 0.82)),
+    "hips": ("root", (0, 0, 1.02)),
+    "head": ("hips", (0, 0, 2.12)),
+    "spikes": ("head", (0, 0.05, 3.18)),
+    "armL": ("hips", (-0.6, 0, 1.88)),
+    "armR": ("hips", (0.6, 0, 1.88)),
+    "legL": ("root", (-0.34, 0, 0.95)),
+    "legR": ("root", (0.34, 0, 0.95)),
 }
 
 
+def sunburst(rig, hc, r, rnd, mats3, tilt=math.radians(16), k=1.0, scalp=True):
+    """Card-01 spike silhouette: broad soft blades in a disc behind the face,
+    wrapping the top, both sides and down past the cheeks, a second offset
+    ring behind it, and a rear burst so the back view reads as a cyan crown.
+    Returns the disc normal (toward the camera side of the face)."""
+    light, mid, deep = mats3
+    nrm = Vector((0, -math.cos(tilt), math.sin(tilt)))
+    back = -nrm
+    u = Vector((1, 0, 0))
+    v = nrm.cross(u).normalized() * -1
+    if v.z < 0:
+        v = -v
+
+    def d(th):
+        return u * math.sin(th) + v * math.cos(th)
+
+    n = 11
+    for i in range(n):
+        th = math.radians(-160 + 320 * i / (n - 1))
+        side = max(0.0, abs(math.degrees(th)) - 95) / 65
+        L = k * r * (1.22 + rnd.uniform(-0.05, 0.12)) * (1 - 0.3 * side)
+        blade(rig, "spikes", hc + back * (0.02 * r) + d(th) * (0.55 * r), d(th) + back * 0.2, L, r * 0.6,
+              light if i % 2 else mid, nrm, flat=0.34, ol=0.05, verts=16)
+    for i in range(n):
+        th = math.radians(-170 + 340 * (i + 0.5) / n)
+        side = max(0.0, abs(math.degrees(th)) - 100) / 70
+        L = k * r * (1.32 + rnd.uniform(-0.05, 0.1)) * (1 - 0.3 * side)
+        blade(rig, "spikes", hc + back * (0.35 * r) + d(th) * (0.45 * r), d(th) + back * 0.45, L, r * 0.6,
+              mid if i % 2 else deep, nrm, flat=0.4, ol=0.05, verts=16)
+    # Rear burst: short broad blades fanning out of the back of the head.
+    for i in range(7):
+        th = math.radians(-150 + 300 * i / 6)
+        tang = u * math.cos(th) - v * math.sin(th)
+        blade(rig, "spikes", hc + back * (0.3 * r), back + d(th) * 0.9, k * r * (1.05 + rnd.uniform(-0.05, 0.08)), r * 0.5,
+              deep if i % 2 else mid, tang, flat=0.55, ol=0.05, verts=16)
+    blade(rig, "spikes", hc + back * (0.3 * r), back + v * 0.3, k * r * 1.05, r * 0.5, mid, u, flat=0.55, ol=0.05, verts=16)
+    # Scalp blades: break up the smooth dome the high camera sees above the face.
+    for x, kk in ((-0.42, 0.9), (0.0, 1.0), (0.42, 0.9)) if scalp else ():
+        dv = v * 1.0 + back * 0.55 + u * x
+        blade(rig, "spikes", hc + (v * 0.55 + back * 0.05 + u * x * 0.5) * r, dv, k * r * 0.78 * kk, r * 0.5, light if x else mid, nrm, flat=0.4, ol=0.05, verts=16)
+    return nrm
+
+
 def chogling():
-    """Choglings (card 01): cream Chog body, big cream face mask on a cyan
-    spiky head, sunburst spikes with a backswept rear fan, white-ring round
-    eyes, mischievous V brows, pink blush, small smile, short limbs."""
+    """Choglings (card 01): short cream Chog body, round cream face on a cyan
+    head framed by a broad sunburst of soft spikes that wraps the sides and
+    rear, white-ring round eyes, mischievous V brows, pink blush, small smile,
+    little mitten hands and toed feet."""
     rig = make_rig(CHOG_JOINTS)
     rnd = random.Random(101)
-    hc, r = Vector((0, 0, 3.05)), 1.22
+    hc, r = Vector((0, 0, 3.18)), 1.12
     # Legs and round feet.
     for sx, key in ((-1, "legL"), (1, "legR")):
-        x = sx * 0.36
-        capsule(rig, key, (x, 0, 0.8), (x * 1.08, -0.02, 0.32), 0.25, M["cream"], r1=0.24)
-        part(rig, key, "sphere", (x * 1.1, -0.16, 0.17), (0.38, 0.52, 0.21), M["cream"], ol=0.05)
+        x = sx * 0.34
+        capsule(rig, key, (x, 0, 0.95), (x * 1.08, -0.02, 0.3), 0.23, M["cream"], r1=0.22)
+        part(rig, key, "sphere", (x * 1.1, -0.17, 0.16), (0.36, 0.5, 0.2), M["cream"], ol=0.05)
         for k in (-1, 0, 1):
-            part(rig, key, "sphere", (x * 1.1 + k * 0.16, -0.6, 0.15), (0.12, 0.12, 0.11), M["cream"], ol=0.03)
-    # Pear body with a soft belly.
-    part(rig, "hips", "sphere", (0, 0, 1.36), (0.8, 0.7, 0.84), M["cream"], ol=0.055, segments=32, ring_count=16)
-    part(rig, "hips", "sphere", (0, -0.2, 1.18), (0.62, 0.55, 0.52), M["cream"], ol=0.0, segments=24, ring_count=12)
+            part(rig, key, "sphere", (x * 1.1 + k * 0.15, -0.6, 0.14), (0.115, 0.115, 0.105), M["cream"], ol=0.03)
+    # Small pear body with a soft belly.
+    part(rig, "hips", "sphere", (0, 0, 1.5), (0.7, 0.62, 0.8), M["cream"], ol=0.055, segments=32, ring_count=16)
+    part(rig, "hips", "sphere", (0, -0.18, 1.32), (0.56, 0.5, 0.5), M["cream"], ol=0.0, segments=24, ring_count=12)
     # Short arms with round mitten hands and a thumb.
     for sx, key in ((-1, "armL"), (1, "armR")):
-        sh = Vector((sx * 0.66, 0, 1.78))
-        hand = Vector((sx * 0.98, -0.12, 1.12))
-        capsule(rig, key, sh, hand, 0.2, M["cream"], r1=0.19)
-        part(rig, key, "sphere", hand + Vector((0, -0.02, -0.06)), (0.26, 0.25, 0.25), M["cream"], ol=0.05)
-        part(rig, key, "sphere", hand + Vector((-sx * 0.14, -0.16, 0.04)), (0.1, 0.1, 0.11), M["cream"], ol=0.03)
-    # Head: cream mask in front, cyan behind.
-    part(rig, "head", "sphere", hc, (r, r * 0.95, r * 0.94), facemask_material("ChoglingHead", "#13b9cc", "#ffeacb", front_min=0.24, top_max=0.66),
+        sh = Vector((sx * 0.6, 0, 1.88))
+        hand = Vector((sx * 0.92, -0.12, 1.22))
+        capsule(rig, key, sh, hand, 0.18, M["cream"], r1=0.17)
+        part(rig, key, "sphere", hand + Vector((0, -0.02, -0.06)), (0.24, 0.23, 0.23), M["cream"], ol=0.05)
+        part(rig, key, "sphere", hand + Vector((-sx * 0.13, -0.15, 0.04)), (0.09, 0.09, 0.1), M["cream"], ol=0.03)
+    # Head: round cream face in front, cyan scalp showing around it.
+    part(rig, "head", "sphere", hc, (r, r * 0.84, r * 0.97), facemask_material("ChoglingHead", "#14c0cc", "#ffeacb", front_min=0.3, top_max=0.88),
          ol=0.06, segments=48, ring_count=24)
-    chog_face(rig, "head", hc, r, {"spread": 0.38, "eye_z": 0.04, "eye": (0.25, 0.3), "brow": math.radians(24), "mouth_tilt": -12})
-    # Sunburst ring framing the mask, sweeping back.
-    n = 15
-    for i in range(n):
-        th = math.radians(-152 + 304 * i / (n - 1))
-        b = Vector((math.sin(th) * 0.82, 0.5, math.cos(th) * 0.82)).normalized()
-        dv = Vector((math.sin(th) * 1.15, 0.45, math.cos(th) * 1.05 + 0.08))
-        L = r * (0.98 - 0.26 * abs(th) / math.radians(152) + rnd.uniform(-0.05, 0.1))
-        spike(rig, "spikes", hc + b * r * 0.6, dv, L, r * 0.44, M["cyanLight"] if i % 2 else M["cyan"], verts=6)
-    # Backswept rear fan: the long spikes that give the back silhouette.
-    for (x, z, s) in ((-0.75, 0.5, 1.0), (0.75, 0.5, 1.0), (0.0, 0.9, 1.1), (-0.95, -0.2, 0.85), (0.95, -0.2, 0.85), (-0.4, -0.65, 0.8), (0.4, -0.65, 0.8), (0.0, 0.2, 1.15)):
-        dv = Vector((x * 1.3, 1.0, z * 1.2 + 0.25)).normalized()
-        spike(rig, "spikes", hc, dv, r * 1.75 * s, r * 0.5, M["cyanDeep"] if (x + z) > 0.3 else M["cyan"], verts=7)
-    crown(rig, hc, r, (M["cyan"], M["cyanLight"]), rnd, 0.42)
-    # Front forelock tuft over the brow.
-    for sx, L in ((-0.3, 0.62), (0.05, 0.75), (0.36, 0.56)):
-        bb = Vector((sx, -0.35, 0.94)).normalized()
-        spike(rig, "spikes", hc + bb * r * 0.78, Vector((sx * 1.2, -0.25, 1.0)), r * L, r * 0.28, M["cyanLight"], verts=7)
+    chog_face(rig, "head", hc, r, {"spread": 0.4, "eye_z": 0.0, "eye": (0.26, 0.31), "brow": math.radians(27), "blush": 0.22, "mouth_tilt": -14})
+    sunburst(rig, hc, r, rnd, (M["cyanLight"], M["cyan"], M["cyanDeep"]))
     return rig
 
 
@@ -366,78 +402,147 @@ BOULDER_JOINTS = {
     "root": ("yaw", (0, 0, 0)),
     "hips": ("root", (0, 0, 1.2)),
     "head": ("hips", (0, -0.15, 2.7)),
-    "spikes": ("head", (0, -0.3, 3.42)),
-    "armL": ("hips", (-1.3, 0.05, 2.7)),
-    "armR": ("hips", (1.3, 0.05, 2.7)),
-    "legL": ("root", (-0.58, 0, 1.15)),
-    "legR": ("root", (0.58, 0, 1.15)),
+    "spikes": ("head", (0, -0.3, 3.64)),
+    "armL": ("hips", (-1.38, 0.05, 2.75)),
+    "armR": ("hips", (1.38, 0.05, 2.75)),
+    "legL": ("root", (-0.6, 0, 1.15)),
+    "legR": ("root", (0.6, 0, 1.15)),
 }
 
 
+def orient(z, up=Vector((0, 0, 1))):
+    z = Vector(z).normalized()
+    up = Vector(up)
+    y = up - z * up.dot(z)
+    if y.length < 1e-4:
+        y = Vector((0, 1, 0)) - z * z.y
+    y.normalize()
+    return Matrix((y.cross(z), y, z)).transposed()
+
+
+def finish_rock(rig, pivot, o, bev, ol, crumble, body):
+    apply_tf(o)
+    b = C.bevel(o, bev, 3)
+    b.limit_method = "NONE"
+    b.harden_normals = False
+    for poly in o.data.polygons:
+        poly.use_smooth = True
+    outline(o, ol)
+    bind(rig, pivot, o)
+    if crumble:
+        out = o.matrix_world.translation - Vector(body)
+        out.z = abs(out.z) * 0.3 + 0.2
+        rig["stones"].append((o, o.location.copy(), out.normalized() * 0.9))
+    return o
+
+
+def plate(rig, pivot, center, normal, radius, thick, rnd, up=(0, 0, 1), aspect=1.0, material=None, ol=0.05, crumble=True, body=(0, 0, 2.0)):
+    """Irregular flagstone armour plate: a 5-7 sided convex slab laid on the
+    body surface, top face inset for a chiselled edge, heavily bevelled."""
+    sides = rnd.randint(5, 7)
+    ring = []
+    for i in range(sides):
+        a = (i + rnd.uniform(-0.28, 0.28)) / sides * math.tau
+        rr = radius * rnd.uniform(0.84, 1.12)
+        ring.append((math.cos(a) * rr * aspect, math.sin(a) * rr))
+    verts = [(x, y, -thick / 2) for x, y in ring] + [(x * 0.84, y * 0.84, thick / 2) for x, y in ring]
+    faces = [list(range(sides))[::-1], list(range(sides, 2 * sides))]
+    faces += [[i, (i + 1) % sides, sides + (i + 1) % sides, sides + i] for i in range(sides)]
+    o = C.new_mesh_obj(f"{pivot}_plate", verts, faces, material or rnd.choice((M["rockA"], M["rockB"], M["rockB"], M["rockC"])))
+    o.matrix_world = Matrix.Translation(Vector(center)) @ orient(normal, up).to_4x4()
+    return finish_rock(rig, pivot, o, thick * 0.42, ol, crumble, body)
+
+
+def rock(rig, pivot, center, size, rnd, rot=(0, 0, 0), material=None, ol=0.05, crumble=True, body=(0, 0, 2.0), taper=0.18):
+    """Rounded boulder mass: subdivided box with jittered, tapered corners so
+    no two read as the same block, then a soft bevel."""
+    import bmesh
+
+    o = C.prim("cube", f"{pivot}_rock", loc=center, scale=size, rot=rot, material=material or rnd.choice((M["rockA"], M["rockB"], M["rockC"])), smooth=False, size=1.0)
+    bm = bmesh.new()
+    bm.from_mesh(o.data)
+    bmesh.ops.subdivide_edges(bm, edges=bm.edges[:], cuts=1, use_grid_fill=True)
+    tx, ty = rnd.uniform(-taper, taper), rnd.uniform(-taper, taper)
+    for v in bm.verts:
+        v.co.x *= 1 + tx * v.co.z * 2
+        v.co.y *= 1 + ty * v.co.z * 2
+        v.co += Vector((rnd.uniform(-0.07, 0.07), rnd.uniform(-0.07, 0.07), rnd.uniform(-0.06, 0.06)))
+    bm.to_mesh(o.data)
+    bm.free()
+    return finish_rock(rig, pivot, o, min(size) * 0.3, ol, crumble, body)
+
+
+def on_body(c, rad, th, h, lift=0.0):
+    """Point and outward normal on an ellipsoid body at horizontal angle th
+    (0 = front, positive = character's left) and normalised height h."""
+    k = math.sqrt(max(0.0, 1 - h * h))
+    d = Vector((math.sin(th) * k, -math.cos(th) * k, h))
+    p = Vector(c) + Vector((d.x * rad[0], d.y * rad[1], d.z * rad[2]))
+    n = Vector((d.x / rad[0], d.y / rad[1], d.z / rad[2])).normalized()
+    return p + n * lift, n
+
+
 def boulderback():
-    """Boulderback (card 03): Chog face mask with white-ring eyes, stern brows
-    and big blush inside a crown of dark rocky spikes, charcoal body, massive
-    layered stone shoulders and arms, stone chest and back plates, big cream
-    fists and feet. Compact, heavy, slightly hunched."""
+    """Boulderback (card 03): cream Chog face with white-ring eyes, stern
+    brows and magenta blush inside a crown of dark rocky spikes. Massive
+    layered stone shoulders and boulder forearms dominate the silhouette.
+    Charcoal body under interlocking irregular grey stone plates, a boulder
+    hump, short legs with stone knees, broad cream clawed feet, modest fists."""
     rig = make_rig(BOULDER_JOINTS)
     rnd = random.Random(303)
-    hc, r = Vector((0, -0.3, 3.42)), 1.13
-    # Legs: short thick charcoal limbs, stone knee caps, cream toed feet.
+    hc, r = Vector((0, -0.3, 3.64)), 1.18
+    # Legs: short thick charcoal limbs, stone knee caps, broad cream feet with claw toes.
     for sx, key in ((-1, "legL"), (1, "legR")):
-        x = sx * 0.6
-        capsule(rig, key, (x, 0, 1.12), (x * 1.08, -0.05, 0.42), 0.4, M["suit"], r1=0.36)
-        stone(rig, key, (x * 1.12, -0.36, 0.72), (0.5, 0.36, 0.42), rnd, rot=(0.2, sx * 0.2, 0))
-        part(rig, key, "sphere", (x * 1.1, -0.2, 0.22), (0.5, 0.66, 0.26), M["cream"], ol=0.05)
+        x = sx * 0.62
+        capsule(rig, key, (x, 0, 1.12), (x * 1.06, -0.05, 0.42), 0.42, M["suit"], r1=0.38)
+        plate(rig, key, (x * 1.1, -0.38, 0.78), (sx * 0.25, -1, 0.15), 0.36, 0.2, rnd, ol=0.045, body=(x, 0, 0.8))
+        part(rig, key, "sphere", (x * 1.08, -0.22, 0.22), (0.56, 0.62, 0.26), M["cream"], ol=0.05)
         for k in (-1, 0, 1):
-            part(rig, key, "sphere", (x * 1.1 + k * 0.21, -0.78, 0.18), (0.15, 0.15, 0.14), M["cream"], ol=0.035)
-    # Charcoal torso, hunched forward.
-    part(rig, "hips", "sphere", (0, 0.05, 2.0), (1.15, 0.98, 1.08), M["suit"], ol=0.06, segments=32, ring_count=16)
-    part(rig, "hips", "sphere", (0, 0.05, 1.3), (0.95, 0.85, 0.5), M["suitLight"], ol=0.04)
-    # Chest and belly plates.
-    for (x, z, w, h, roll) in ((-0.44, 2.28, 0.86, 0.66, -0.12), (0.44, 2.28, 0.86, 0.66, 0.1), (0.02, 1.62, 0.9, 0.5, 0.06)):
-        stone(rig, "hips", (x, -0.88, z), (w, 0.36, h), rnd, rot=(rnd.uniform(-0.12, 0.12), roll, x * 0.3))
+            tx = x * 1.08 + k * 0.26
+            part(rig, key, "sphere", (tx, -0.72, 0.17), (0.15, 0.2, 0.14), M["cream"], ol=0.035)
+            blade(rig, key, (tx, -0.84, 0.15), (k * 0.15, -1, -0.25), 0.2, 0.09, M["creamShade"], (0, 0, 1), flat=0.7, ol=0.03, verts=8)
+    # Charcoal torso, hunched forward, under interlocking stone plates.
+    tc, trad = Vector((0, 0.05, 2.05)), (1.15, 0.98, 1.1)
+    part(rig, "hips", "sphere", tc, trad, M["suit"], ol=0.06, segments=32, ring_count=16)
+    part(rig, "hips", "sphere", (0, 0.05, 1.3), (0.98, 0.86, 0.52), M["suitLight"], ol=0.04)
+    layout = ((-0.4, 0.4, 0.5), (0.42, 0.42, 0.52), (-0.02, -0.08, 0.48), (-0.86, -0.1, 0.42), (0.84, -0.14, 0.42),
+              (-0.4, -0.62, 0.42), (0.4, -0.64, 0.42))
+    for th, h, R in layout:
+        pc, n = on_body(tc, trad, th, h, 0.03)
+        plate(rig, "hips", pc, n, R, 0.17, rnd, up=(0, 0, 1), aspect=rnd.uniform(1.0, 1.2), body=tc)
+
     # Back hump: the layered boulders the unit is named for.
-    for (x, y, z, s) in ((0, 0.85, 2.7, 1.0), (-0.65, 0.75, 2.3, 0.8), (0.65, 0.75, 2.3, 0.8), (0, 0.95, 1.9, 0.85), (0, 0.55, 3.2, 0.7)):
-        stone(rig, "hips", (x, y, z), (0.95 * s, 0.6 * s, 0.7 * s), rnd, rot=(rnd.uniform(-0.3, 0.3), rnd.uniform(-0.3, 0.3), rnd.uniform(-0.3, 0.3)))
-    # Massive arms: boulder pauldrons, stone upper arm and forearm bands, cream fists.
+    for th, h, s in ((math.pi, 0.45, 1.0), (math.pi - 0.75, 0.15, 0.85), (math.pi + 0.75, 0.15, 0.85), (math.pi, -0.2, 0.9), (math.pi - 0.4, 0.75, 0.7), (math.pi + 0.45, 0.72, 0.7)):
+        pc, n = on_body(tc, trad, th, h, 0.12 * s)
+        rock(rig, "hips", pc, (0.95 * s, 0.6 * s, 0.75 * s), rnd, rot=(rnd.uniform(-0.3, 0.3), rnd.uniform(-0.3, 0.3), rnd.uniform(-0.3, 0.3)), body=tc)
+    # Massive shoulders: a crowning boulder pauldron on the torso, layered
+    # stones down the outside of the upper arm, then boulder forearms.
     for sx, key in ((-1, "armL"), (1, "armR")):
-        sh = Vector((sx * 1.3, 0.05, 2.7))
-        el = Vector((sx * 1.72, -0.12, 1.85))
-        fist = Vector((sx * 1.62, -0.42, 1.0))
+        sh = Vector((sx * 1.38, 0.05, 2.75))
+        el = Vector((sx * 1.86, -0.1, 1.82))
+        fist = Vector((sx * 1.76, -0.4, 0.98))
+        rock(rig, "hips", sh + Vector((sx * 0.36, 0.08, 0.3)), (1.45, 1.3, 0.95), rnd, rot=(0.05, sx * 0.32, sx * 0.1), material=M["rockA"], body=tc)
+        rock(rig, "hips", sh + Vector((sx * 0.3, -0.5, 0.04)), (0.95, 0.55, 0.8), rnd,
+ rot=(0.3, sx * 0.4, 0.15 * sx), material=M["rockB"], body=tc)
         capsule(rig, key, sh, el, 0.42, M["suit"])
-        capsule(rig, key, el, fist, 0.38, M["suit"])
-        for (dx, dy, dz, w, d, h) in ((0.1, 0.0, 0.45, 1.25, 1.1, 0.75), (0.35, -0.25, 0.05, 0.9, 0.8, 0.7), (0.2, 0.35, 0.15, 0.85, 0.75, 0.7)):
-            stone(rig, key, sh + Vector((sx * dx, dy, dz)), (w, d, h), rnd, rot=(rnd.uniform(-0.25, 0.25), sx * rnd.uniform(0.1, 0.35), rnd.uniform(-0.2, 0.2)))
-        mid = (sh + el) / 2
-        stone(rig, key, mid + Vector((sx * 0.25, -0.1, -0.05)), (0.62, 0.75, 0.6), rnd, rot=(0.1, sx * 0.4, 0.1))
+        capsule(rig, key, el, fist, 0.4, M["suit"])
+        rock(rig, key, sh + Vector((sx * 0.62, 0.0, -0.18)), (0.7, 1.15, 1.0), rnd, rot=(0.1, sx * 0.55, 0.0), material=M["rockB"], body=sh)
+        rock(rig, key, (sh + el) / 2 + Vector((sx * 0.3, -0.05, -0.1)), (0.6, 0.9, 0.62), rnd, rot=(0.15, sx * 0.4, 0.1), material=M["rockC"], body=sh)
         fm = (el + fist) / 2
-        for k, off in enumerate((Vector((sx * 0.12, -0.15, 0.18)), Vector((sx * 0.1, -0.05, -0.18)))):
-            stone(rig, key, fm + off, (0.82, 0.78, 0.4), rnd, rot=(0.15 * k, sx * 0.25, rnd.uniform(-0.2, 0.2)))
-        part(rig, key, "sphere", fist + Vector((0, -0.05, -0.12)), (0.56, 0.52, 0.5), M["cream"], ol=0.055)
+        rock(rig, key, fm + Vector((sx * 0.05, -0.08, 0.2)), (1.15, 1.08, 0.62), rnd, rot=(0.1, sx * 0.2, 0.1), material=M["rockA"], body=el)
+        rock(rig, key, fm + Vector((sx * 0.02, -0.12, -0.28)), (1.02, 0.98, 0.5), rnd, rot=(-0.12, sx * 0.15, -0.1), material=M["rockB"], body=el)
+        part(rig, key, "sphere", fist + Vector((0, -0.04, -0.16)), (0.42, 0.4, 0.38), M["cream"], ol=0.05)
         for k in (-1, 0, 1):
-            part(rig, key, "sphere", fist + Vector((k * 0.2, -0.42, -0.02)), (0.17, 0.16, 0.18), M["cream"], ol=0.035)
-    # Head: cream mask, dark rock spikes.
-    part(rig, "head", "sphere", hc, (r, r * 0.95, r * 0.94), facemask_material("BoulderHead", "#2a2730", "#ffeacb", front_min=0.26, top_max=0.66),
+            part(rig, key, "sphere", fist + Vector((k * 0.17, -0.34, -0.1)), (0.13, 0.12, 0.13), M["cream"], ol=0.03)
+    # Head: cream mask, dark rocky spikes wrapping the face.
+    part(rig, "head", "sphere", hc, (r, r * 0.86, r * 0.97), facemask_material("BoulderHead", "#2a2730", "#ffeacb", front_min=0.3, top_max=0.86),
          ol=0.06, segments=48, ring_count=24)
-    chog_face(rig, "head", hc, r, {"spread": 0.4, "eye_z": 0.05, "eye": (0.27, 0.3), "brow": math.radians(26), "blush": 0.22, "mouth_tilt": -6})
-    n = 13
-    for i in range(n):
-        th = math.radians(-148 + 296 * i / (n - 1))
-        b = Vector((math.sin(th) * 0.82, 0.5, math.cos(th) * 0.82)).normalized()
-        dv = Vector((math.sin(th) * 1.15, 0.55, math.cos(th) * 1.05 + 0.12))
-        L = r * (1.05 - 0.3 * abs(th) / math.radians(148) + rnd.uniform(-0.05, 0.1))
-        spike(rig, "spikes", hc + b * r * 0.55, dv, L, r * 0.4, M["bSpike2"] if i % 2 else M["bSpike"], verts=6)
-    for (x, z, s) in ((-0.7, 0.55, 1.0), (0.7, 0.55, 1.0), (0.0, 0.95, 1.1), (-0.95, -0.1, 0.8), (0.95, -0.1, 0.8), (0.0, 0.25, 1.1)):
-        dv = Vector((x * 1.3, 1.0, z * 1.2 + 0.25)).normalized()
-        spike(rig, "spikes", hc, dv, r * 1.65 * s, r * 0.45, M["bSpike"] if (x + z) > 0.3 else M["bSpike2"], verts=6)
-    crown(rig, hc, r, (M["bSpike"], M["bSpike2"]), rnd, 0.44, verts=5)
-    for sx, L in ((-0.28, 0.55), (0.08, 0.68), (0.4, 0.5)):
-        bb = Vector((sx, -0.35, 0.94)).normalized()
-        spike(rig, "spikes", hc + bb * r * 0.78, Vector((sx * 1.2, -0.2, 1.0)), r * L, r * 0.3, M["bSpike2"], verts=6)
+    chog_face(rig, "head", hc, r, {"spread": 0.41, "eye_z": 0.02, "eye": (0.255, 0.3), "brow": math.radians(30), "blush": 0.24, "blush_mat": "magenta", "mouth_tilt": -6})
+    sunburst(rig, hc, r, rnd, (M["bSpike2"], M["bSpike"], M["bSpike"]), k=1.12)
     # Impact chips for the slam, hidden outside the impact frames.
     for i in range(6):
         a = i / 6 * math.tau
-        part(rig, "yaw", "ico", (math.cos(a) * 0.9, -1.6 + math.sin(a) * 0.5, 0.2), (0.16, 0.14, 0.12), M["stoneB"] if i % 2 else M["dust"],
+        part(rig, "yaw", "ico", (math.cos(a) * 0.9, -1.6 + math.sin(a) * 0.5, 0.2), (0.16, 0.14, 0.12), M["rockB"] if i % 2 else M["dust"],
              ol=0.03, subdivisions=1, smooth=False, sets=["chips"])
     return rig
 
@@ -552,10 +657,15 @@ def boulder_clips():
 
 
 UNITS = {
-    "choglings": {"build": chogling, "clips": chog_clips, "cell": (112, 112), "pivot": (56, 94), "px": 12.0, "outlineK": 1.5,
-                  "card": {"center": (-0.15, 0, 3.1), "scale": 5.0, "pose": {"yaw": -0.42, "armL_rot": (-0.7, 0.5, 0), "armR_rot": (-0.7, -0.5, 0), "head_rot": (0.04, -0.1, 0.06), "root_rot": (0.08, 0, 0)}}},
-    "boulderback": {"build": boulderback, "clips": boulder_clips, "cell": (160, 176), "pivot": (80, 126), "px": 18.0, "outlineK": 1.4,
-                    "card": {"center": (0.0, 0, 3.15), "scale": 5.3, "pose": {"yaw": -0.3, "root_rot": (0.12, 0, 0), "armL_rot": (-0.85, 0.3, 0), "armR_rot": (-0.85, -0.3, 0), "head_rot": (0.06, 0, 0)}}},
+    "choglings": {"build": chogling, "clips": chog_clips, "cell": (148, 148), "pivot": (74, 124), "px": 16.0, "outlineK": 1.5,
+                  "identityScale": 6.4, "identityLook": 2.6, "lift": {"front": 0.3, "rear": 0.05},
+                  "card": {"center": (0.0, 0, 2.72), "scale": 5.9, "pitch": 80, "outline": 1.3,
+                           "pose": {"yaw": -0.2, "armL_rot": (-0.25, 0.35, 0), "armR_rot": (-0.25, -0.35, 0), "head_rot": (0.05, -0.08, 0.08), "legL_rot": (0, 0.08, 0), "legR_rot": (0, -0.08, 0)}}},
+    "boulderback": {"build": boulderback, "clips": boulder_clips, "cell": (200, 220), "pivot": (100, 158), "px": 22.5, "outlineK": 1.4,
+                    "identityScale": 7.6, "identityLook": 2.6, "lift": {"front": 0.26, "rear": 0.05},
+                    "card": {"center": (0.0, 0, 2.55), "scale": 6.7, "pitch": 80, "outline": 1.3,
+                             "pose": {"yaw": -0.16, "root_rot": (0.06, 0, 0), "armL_rot": (-0.4, 0.12, 0), "armR_rot": (-0.4, -0.12, 0), "head_rot": (0.05, -0.06, 0.05)}}},
+
 }
 
 
@@ -566,9 +676,10 @@ def set_outline(k):
 
 def apply_chips(rig, p):
     up = p.get("chips_up", 0)
+    sx = -1 if VIEW[0] == "rear" else 1
     for i, o in enumerate(rig["sets"].get("chips", [])):
         a = i / 6 * math.tau
-        o.location = (0.9 + math.cos(a) * (0.8 + 0.35 * up), -1.5 + math.sin(a) * (0.5 + 0.2 * up), 0.2 + 0.45 * up * (1 + (i % 3) * 0.3))
+        o.location = (sx * (0.9 + math.cos(a) * (0.8 + 0.35 * up)), -1.5 + math.sin(a) * (0.5 + 0.2 * up), 0.2 + 0.45 * up * (1 + (i % 3) * 0.3))
 
 
 def build_unit(name, spec):
@@ -591,57 +702,70 @@ def build_unit(name, spec):
     record = {"unit": name, "cell": [cw, ch], "pivot": list(spec["pivot"]), "pxPerUnit": spec["px"], "yawDeg": math.degrees(YAW),
               "tiltDeg": math.degrees(C.TILT), "clips": {}}
     set_outline(spec["outlineK"])
+    LIFT.update(spec.get("lift", {}))
     if CARDONLY:
         pass
     elif PREVIEW:
-        pose(rig, clips["idle"]["frames"][0])
-        C.render_to(os.path.join(out_dir, "preview-game.png"))
-        sc.render.resolution_x, sc.render.resolution_y = cw * 4, ch * 4
-        cam.data.ortho_scale = max(cw, ch) / spec["px"]
-        C.render_to(os.path.join(out_dir, "preview-game@4x.png"))
-        sc.render.resolution_x, sc.render.resolution_y = cw, ch
+        for view in VIEWS_ON:
+            VIEW[0] = view
+            pose(rig, clips[os.environ.get("PCLIP", "idle")]["frames"][int(os.environ.get("PFRAME", "0"))])
+            C.render_to(os.path.join(out_dir, f"preview-game-{view}.png"))
+            sc.render.resolution_x, sc.render.resolution_y = cw * 4, ch * 4
+            C.render_to(os.path.join(out_dir, f"preview-game-{view}@4x.png"))
+            sc.render.resolution_x, sc.render.resolution_y = cw, ch
     else:
-        for clip, cd in clips.items():
-            if CLIPS and clip not in CLIPS:
-                continue
-            files = []
-            for i, fr in enumerate(cd["frames"]):
-                pose(rig, fr)
-                apply_chips(rig, fr)
-                path = os.path.join(out_dir, "frames", f"{clip}_{i:02d}.png")
-                C.render_to(path)
-                files.append(os.path.relpath(path, out_dir).replace("\\", "/"))
-            record["clips"][clip] = {"fps": cd["fps"], "loop": cd["loop"], "impact": cd.get("impact"), "files": files}
+        record["views"] = {}
+        for view in VIEWS_ON:
+            VIEW[0] = view
+            vclips = {}
+            for clip, cd in clips.items():
+                if CLIPS and clip not in CLIPS:
+                    continue
+                files = []
+                for i, fr in enumerate(cd["frames"]):
+                    pose(rig, fr)
+                    apply_chips(rig, fr)
+                    sub = "frames" if view == "front" else os.path.join("frames", view)
+                    path = os.path.join(out_dir, sub, f"{clip}_{i:02d}.png")
+                    os.makedirs(os.path.dirname(path), exist_ok=True)
+                    C.render_to(path)
+                    files.append(os.path.relpath(path, out_dir).replace("\\", "/"))
+                vclips[clip] = {"fps": cd["fps"], "loop": cd["loop"], "impact": cd.get("impact"), "files": files}
+            record["views"][view] = vclips
+        record["clips"] = record["views"].get("front", {})
+    VIEW[0] = "front"
     gp = C.project(cam, Vector((0, 0, 0)))
     record["groundAnchorCheck"] = [round(gp[0], 3), round(gp[1], 3)]
 
-    # Identity still: front three-quarter at a near-level camera, larger scale.
-    pose(rig, clips["idle"]["frames"][0])
+    # Identity stills: front and rear three-quarter at a near-level camera.
+    LIFT.update({"front": 0.12, "rear": 0.12})
     set_outline(1.0)
     idc = bpy.data.cameras.new("IdCam")
     idc.type = "ORTHO"
-    idc.ortho_scale = 6.4 if name == "choglings" else 7.4
+    idc.ortho_scale = spec["identityScale"]
     ido = bpy.data.objects.new("IdCam", idc)
     sc.collection.objects.link(ido)
     ido.rotation_euler = (math.radians(80), 0, 0)
-    look = Vector((0, 0, 2.5 if name == "choglings" else 2.6))
+    look = Vector((0, 0, spec["identityLook"]))
     ido.location = look - Vector((0, math.sin(math.radians(80)), -math.cos(math.radians(80)))) * 60
     sc.camera = ido
-    sc.render.resolution_x, sc.render.resolution_y = 384, 512
-    if name == "choglings":
-        idc.ortho_scale = 6.0
-    C.render_to(os.path.join(out_dir, "identity-front.png"))
+    sc.render.resolution_x, sc.render.resolution_y = 768, 1024
+    for view in ("front", "rear"):
+        VIEW[0] = view
+        pose(rig, clips["idle"]["frames"][0])
+        C.render_to(os.path.join(out_dir, f"identity-{view}.png"))
+    VIEW[0] = "front"
 
     if not os.environ.get("NOCARD"):
         card = spec["card"]
         pose(rig, card["pose"])
         idc.ortho_scale = card["scale"]
-        ido.rotation_euler = (math.radians(76), 0, 0)
+        ido.rotation_euler = (math.radians(card.get("pitch", 76)), 0, 0)
         look = Vector(card["center"])
-        ido.location = look - Vector((0, math.sin(math.radians(76)), -math.cos(math.radians(76)))) * 60
-        set_outline(0.85)
-        sc.render.resolution_x, sc.render.resolution_y = 512, 512
-        C.render_to(os.path.join(out_dir, "card-portrait@2x.png"))
+        ido.location = look - Vector((0, math.sin(ido.rotation_euler[0]), -math.cos(ido.rotation_euler[0]))) * 60
+        set_outline(card.get("outline", 0.85))
+        sc.render.resolution_x, sc.render.resolution_y = 1024, 1024
+        C.render_to(os.path.join(out_dir, "card-portrait@4x.png"))
     sc.camera = cam
     sc.render.resolution_x, sc.render.resolution_y = cw, ch
     if not PREVIEW and not CARDONLY:

@@ -55,6 +55,7 @@ import {
   defeatAlpha,
   engagedFoe,
   newUnitAnimState,
+  nextView,
   unitAnimFor,
   unitFrame,
   unitTextureKey,
@@ -63,6 +64,7 @@ import {
   type UnitAnimManifest,
   type UnitAnimRecord,
   type UnitAnimState,
+  type UnitView,
 } from "./unit-anim";
 
 // First arena manifest that loads wins: v003 pre-rendered 2.5D art, else v002.
@@ -106,6 +108,9 @@ interface Fx {
   color: number;
   until: number;
   pulseState?: "warning" | "active" | "expired";
+  /** Animated-unit hit: an open ring and sparks around the body, lifted this
+   * many px off the ground point, so a tiny unit is never covered. */
+  lift?: number;
 }
 
 interface Props {
@@ -123,6 +128,9 @@ interface UnitMotion {
   moving: boolean;
   foe: Foe | null;
   dx: number;
+  /** Screen-space heading for the visual view: toward the foe when engaged,
+   * else the motion delta, else null to keep the last view. */
+  heading: { x: number; y: number } | null;
 }
 
 const hashPhase = (id: string) => {
@@ -194,6 +202,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
         /** Pre-rendered animation sheet, or null for the static v001 sprite. */
         anim: UnitAnimRecord | null;
         animSt: UnitAnimState;
+        view: UnitView;
       }
       interface FxImg {
         img: import("phaser").GameObjects.Image;
@@ -497,6 +506,9 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                 phase: hashPhase(id),
                 anim,
                 animSt: newUnitAnimState(hashPhase(id) * 1000),
+                // Until it first moves, a unit faces the far side: the viewer's
+                // troops show their backs, the opponent's their faces.
+                view: owner === seat ? "rear" : "front",
               };
               pool.set(id, e);
             }
@@ -520,13 +532,15 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             if (e.lastHp >= 0 && hp < e.lastHp) {
               e.flashUntil = now + 140;
               e.animSt.hitAt = now;
+              const drawn = e.anim ? e.anim.visibleHeight * e.anim.displayScale : 0;
               fx.push({
                 kind: "hit",
                 x: px,
                 y: py,
-                r: Math.max(1.5, e.rec.proposedDisplaySize.visibleHeight * displayScale(e.rec) * 0.14),
+                r: e.anim ? (drawn * 0.42) / S : Math.max(1.5, e.rec.proposedDisplaySize.visibleHeight * displayScale(e.rec) * 0.14),
                 color: owner === seat ? 0x9be7ff : 0xffa29a,
                 until: frame.tick + (reduced ? 2 : 4),
+                ...(e.anim ? { lift: drawn * 0.48 + (e.air ? 10 : 0) } : {}),
               });
             }
             e.lastHp = hp;
@@ -539,13 +553,15 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             if (e.anim) {
               // Pre-rendered sheet: the frames carry bob, stride, swing, hit
               // and defeat, so the procedural offsets below are skipped.
-              const m = motion ?? { moving, foe: null, dx: px - e.lastX };
+              const m = motion ?? { moving, foe: null, dx: px - e.lastX, heading: null };
               e.animSt = updateEngagement(e.animSt, !m.moving && m.foe !== null, now);
               if (m.foe && Math.abs(m.foe.x - px) > 0.01) e.facingX = m.foe.x < px ? -1 : 1;
               else if (m.moving && Math.abs(m.dx) > 1e-3) e.facingX = m.dx < 0 ? -1 : 1;
-              e.img.setFrame(unitFrame(e.anim, { ...e.animSt, goneAt: e.gone }, { now, moving: m.moving }).frame);
+              if (m.heading) e.view = nextView(e.view, m.heading.x, m.heading.y);
+              e.img.setFrame(unitFrame(e.anim, { ...e.animSt, goneAt: e.gone }, { now, moving: m.moving, view: e.view }).frame);
               e.img.setPosition(0, e.air ? -10 : 0).setScale(scaleX, scaleY).setFlipX(e.facingX < 0).setRotation(0);
-              if (e.flashUntil > now) e.img.setTint(0xff8a8a);
+              // A light warm flash: the sheet's own hit clip carries the reaction.
+              if (e.flashUntil > now) e.img.setTint(0xffc2b8);
               else e.img.clearTint();
               e.lastX = px;
               e.lastY = py;
@@ -874,9 +890,14 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             if (anim) {
               const before = prevPos.get(u.id);
               const dx = before ? u.x - before.x : 0;
-              const moving = !!before && Math.hypot(dx, u.y - before.y) > 0.01;
+              const dy = before ? u.y - before.y : 0;
+              const moving = !!before && Math.hypot(dx, dy) > 0.01;
               if (!foeCache.has(u.owner)) foeCache.set(u.owner, foesOf(u.owner));
-              motion = { moving, dx, foe: moving ? null : engagedFoe(u, anim.reach, foeCache.get(u.owner)!) };
+              const foe = moving ? null : engagedFoe(u, anim.reach, foeCache.get(u.owner)!);
+              // Screen y grows downward and seat 0 sees arena y flipped.
+              const up = seat === 0 ? -1 : 1;
+              const heading = foe ? { x: foe.x - u.x, y: up * (foe.y - u.y) } : moving ? { x: dx, y: up * dy } : null;
+              motion = { moving, dx, foe, heading };
             }
             spriteOrFallback(
               u.id,
@@ -1159,6 +1180,16 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             else if (e.kind === "boom") {
               og.fillStyle(e.color, 0.5).fillCircle(x, y, e.r * S);
               og.lineStyle(3, 0xffe4a8, 0.9).strokeCircle(x, y, e.r * S * 1.25);
+            } else if (e.kind === "hit" && e.lift !== undefined) {
+              // Animated unit: open ring around the body plus four short
+              // sparks outside it. No fill, so the face and hit pose stay visible.
+              const cy = y - e.lift;
+              const rr = e.r * S;
+              og.lineStyle(1.5, e.color, 0.9).strokeCircle(x, cy, rr);
+              og.lineStyle(2, 0xfff8df, 0.95);
+              for (const [ux, uy] of [[0.7, -0.7], [-0.7, -0.7], [0.95, 0.3], [-0.95, 0.3]] as const) {
+                og.lineBetween(x + ux * (rr + 1), cy + uy * (rr + 1), x + ux * (rr + 5), cy + uy * (rr + 5));
+              }
             } else if (e.kind === "hit") {
               og.fillStyle(0xfff8df, 0.45).fillCircle(x, y, Math.max(4, e.r * S * 0.7));
               og.lineStyle(2, e.color, 0.95).strokeCircle(x, y, e.r * S);
@@ -1207,7 +1238,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             if (e.anim) {
               // Animated units play their defeat clip in place, then fade.
               const el = now - e.gone;
-              e.img.setFrame(unitFrame(e.anim, { ...e.animSt, goneAt: e.gone }, { now, moving: false }).frame).clearTint().setAlpha(1);
+              e.img.setFrame(unitFrame(e.anim, { ...e.animSt, goneAt: e.gone }, { now, moving: false, view: e.view }).frame).clearTint().setAlpha(1);
               e.root.setAlpha(defeatAlpha(e.anim, el));
               if (el < e.anim.defeatMs) continue;
             } else if (now - e.gone < 220) continue;

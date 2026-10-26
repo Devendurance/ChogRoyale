@@ -8,9 +8,11 @@ import {
   UNITS_URL,
   clipDurationMs,
   clipFrame,
+  clipsFor,
   defeatAlpha,
   engagedFoe,
   newUnitAnimState,
+  nextView,
   reachSq,
   unitAnimFor,
   unitFrame,
@@ -55,7 +57,7 @@ describe("unit animation manifest", () => {
     }
   });
 
-  it("lays out the five clips contiguously with a shared pivot", () => {
+  it("lays out front then rear clips contiguously with a shared pivot", () => {
     for (const u of Object.values(manifest.units)) {
       let next = 0;
       for (const name of ORDER) {
@@ -63,6 +65,13 @@ describe("unit animation manifest", () => {
         expect(c.start, `${u.entityId} ${name}`).toBe(next);
         expect(c.count).toBeGreaterThanOrEqual(3);
         next += c.count;
+      }
+      // Rear three-quarter clips mirror the front ones in count, fps, loop and impact.
+      for (const name of ORDER) {
+        const r = u.rearClips![name];
+        expect(r.start, `${u.entityId} rear ${name}`).toBe(next);
+        expect({ ...r, start: 0 }).toEqual({ ...u.clips[name], start: 0 });
+        next += r.count;
       }
       expect(next).toBe(u.frameCount);
       expect(u.clips.idle.loop && u.clips.move.loop).toBe(true);
@@ -171,7 +180,37 @@ describe("unit animation state", () => {
     expect(engagedFoe({ x: 30, y: 20 }, 2, [tower])).toBeNull();
   });
 
+  it("faces the rear view when heading up the screen and the front when heading down", () => {
+    expect(nextView("front", 0, -1)).toBe("rear");
+    expect(nextView("rear", 0.4, 1)).toBe("front");
+    expect(nextView("front", -1, -1)).toBe("rear");
+    // Near-horizontal or no heading keeps the current view, so there's no flicker.
+    expect(nextView("rear", 1, 0.1)).toBe("rear");
+    expect(nextView("front", -1, -0.2)).toBe("front");
+    expect(nextView("rear", 0, 0)).toBe("rear");
+  });
+
+  it("swaps only the clip table between views, keeping the frame index in step", () => {
+    const st = newUnitAnimState(0);
+    for (const [moving, clip] of [[false, "idle"], [true, "move"]] as const) {
+      for (const now of [0, 130, 777]) {
+        const f = unitFrame(rec, st, { now, moving, view: "front" });
+        const r = unitFrame(rec, st, { now, moving, view: "rear" });
+        expect(f.clip).toBe(clip);
+        expect(r.clip).toBe(clip);
+        expect(r.frame - rec.rearClips![clip].start).toBe(f.frame - rec.clips[clip].start);
+      }
+    }
+    const dying = { ...st, goneAt: 0 };
+    expect(unitFrame(rec, dying, { now: 200, moving: false, view: "rear" }).frame).toBeGreaterThanOrEqual(rec.rearClips!.defeat.start);
+    // Older sheets without rear clips fall back to the front table.
+    const frontOnly = { ...rec, rearClips: undefined };
+    expect(clipsFor(frontOnly, "rear")).toBe(frontOnly.clips);
+    expect(unitFrame(frontOnly, st, { now: 0, moving: false, view: "rear" }).frame).toBe(rec.clips.idle.start);
+  });
+
   it("returns null for cards without an animation sheet", () => {
+
     expect(unitAnimFor(manifest, "chaos_archer")).toBeNull();
     expect(unitAnimFor(null, "choglings")).toBeNull();
     expect(unitAnimFor(manifest, "choglings")?.entityId).toBe("choglings");

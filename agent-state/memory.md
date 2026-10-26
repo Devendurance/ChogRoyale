@@ -1,5 +1,10 @@
 # Memory
 
+- Slice 3.1 unit loop: `PREVIEW=1 build_units.py -- <out> <unit>` renders identity front/rear, gameplay front/rear at 1x and 4x and the 1024 card in about 25 s per unit. `VIEWS=front` and `CARDONLY=1` cut it further. A full both-unit, both-view render takes about 7 minutes. Masters live in `ChogRoyale-Assets/chog-units-v001/masters-s31`, Slice 3 masters in `masters-slice3`, Slice 3 runtime sheets in `slice3-runtime`. `qa/compare-s31.cjs` and `qa/capture-s31.cjs` make the review set.
+- The high board camera sees the top of a Chog head, so a smooth scalp reads as a helmet. Scalp blades plus a 0.3 rad gameplay head lift fix it. Chog eyes read as spectacles when the white ring is wide or the two eye outlines touch, so keep pupils near 0.9 of the white and a visible gap between eyes.
+- Long bash heredocs through the exec tool get truncated around 130 lines. Write patch files with the write tool and apply them with a small script instead.
+- The tower hit cue is a filled disc at the structure centre on the top graphics layer, so it can overlap melee units hitting a tower. It's tower presentation and was left unchanged in Slice 3.1.
+
 - Unit animation loop: `PREVIEW=1 build_units.py -- <out>` renders identity and gameplay stills at 16 samples in about 20 s. A full both-unit render is about 2.5 minutes. Python locals named like helper functions (`lean`) shadow them for the whole function, so loop variables use other names.
 - Fixture playback harnesses must keep the `StartMessage` object identity stable. BattleCanvas clears every presentation pool when `start` changes, so a fresh object per render restarts swings and hides hit and defeat.
 - Headless Chromium plays the battle canvas at about 1.7 ticks/s on this machine unless launched with `--use-angle=d3d11 --enable-gpu --ignore-gpu-blocklist`, which restores the real 10 ticks/s.

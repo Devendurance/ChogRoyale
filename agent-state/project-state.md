@@ -1,5 +1,10 @@
 # Project State
 
+## Visual overhaul v3, slice 3.1 (2026-10-26)
+
+- Same v001 unit package, manifest path and Phaser wiring. Both models refined toward cards 01 and 03. Every clip now has a front and a rear three-quarter view in one sheet (`clips` then `rearClips`), chosen by `nextView()` from screen-space heading. Sheets are near board resolution (Choglings 592x592, Boulderback 800x990, about 4.6 MB RGBA total).
+- Animated units use an open hit ring around the body. Readiness doc section 13 records the details and limits.
+
 ## Visual overhaul v3, slice 3 (2026-10-25)
 
 - Choglings and Boulderback animate from pre-rendered sheets in `public/assets/chog-units/v001` (idle, move, attack, hit, defeat; one front three-quarter view mirrored on X). Source in `tools/blender/chog-units-v001`, masters in `ChogRoyale-Assets/chog-units-v001`.
