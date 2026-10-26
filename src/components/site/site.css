@@ -107,6 +107,17 @@ html.site-doc {
 .site-header__brand {
   color: inherit;
 }
+.site-header__logo {
+  display: block;
+  width: auto;
+  height: 42px;
+  filter: drop-shadow(0 2px 8px rgb(var(--site-scrim) / 0.35));
+}
+@media (min-width: 768px) {
+  .site-header__logo {
+    height: 48px;
+  }
+}
 .site-header[data-state="scrolled"] .site-header__brand,
 .site-header[data-state="open"] .site-header__brand {
   color: var(--color-chog-royal);
@@ -247,18 +258,6 @@ html.site-doc {
   flex-direction: column;
   align-items: center;
   gap: clamp(16px, 2vw, 24px);
-}
-.site-wordmark {
-  font-size: clamp(42px, 5.6vw, 80px);
-  line-height: 0.92;
-  letter-spacing: 0.01em;
-  background: linear-gradient(180deg, #fff3c4 0%, #ffd45c 48%, #ffa318 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  -webkit-text-stroke: 5px #120b45;
-  paint-order: stroke fill;
-  filter: drop-shadow(0 6px 0 #1b0e52);
 }
 .site-hero__headline {
   max-width: 16ch;
@@ -409,9 +408,6 @@ html.site-doc {
   }
   .site-hero__actions .site-btn {
     width: 100%;
-  }
-  .site-wordmark {
-    -webkit-text-stroke-width: 4px;
   }
   .site-hero__scrim {
     background:

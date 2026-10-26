@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -15,6 +15,16 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Chog Royale",
   description: "Chog Royale is a 1v1 card battler where a real Chog changes the match.",
+  applicationName: "Chog Royale",
+  appleWebApp: {
+    capable: true,
+    title: "Chog Royale",
+    statusBarStyle: "black",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#1d1458",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -74,9 +74,14 @@ export default function SiteFooter() {
         <div className="site-footer__inner">
           <div className="site-footer__brand">
             <p className="site-footer__wordmark">
-              <span className="site-footer__mark" aria-hidden="true">
-                CR
-              </span>
+              <Image
+                src="/assets/brand/v1/chog-royale-crown.webp"
+                alt=""
+                width={256}
+                height={236}
+                sizes="44px"
+                className="site-footer__mark"
+              />
               <span className="site-footer__name">{FOOTER.wordmark}</span>
             </p>
             <p className="site-footer__tagline">

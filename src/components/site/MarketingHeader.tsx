@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 
@@ -53,8 +54,16 @@ export default function MarketingHeader({ links, play }: Props) {
       <div ref={sentinel} aria-hidden className="pointer-events-none absolute top-0 left-0 h-12 w-px" />
       <header data-site-header data-state={state} className="site-header fixed inset-x-0 top-0 z-50">
         <div className="mx-auto flex h-16 max-w-[1280px] items-center justify-between gap-6 px-5 md:px-10">
-          <Link href="/" className="site-header__brand site-focus inline-flex h-11 items-center rounded-md font-game text-[22px] leading-none tracking-[0.01em]">
-            Chog Royale
+          <Link href="/" className="site-header__brand site-focus inline-flex h-12 shrink-0 items-center rounded-md">
+            <Image
+              src="/assets/brand/v1/chog-royale-horizontal.webp"
+              alt="Chog Royale"
+              width={800}
+              height={305}
+              sizes="(min-width: 768px) 126px, 110px"
+              priority
+              className="site-header__logo"
+            />
           </Link>
 
           <nav aria-label="Primary" className="hidden items-center gap-8 md:flex">
