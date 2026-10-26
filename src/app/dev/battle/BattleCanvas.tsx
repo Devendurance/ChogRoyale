@@ -27,27 +27,64 @@ import {
   type SpriteRecord,
 } from "./sprite-registry";
 import {
-  ARENA_URL,
+  ARENA_URLS,
+  TEAM_COLORS,
+  defenderCue,
   defenderPose,
+  directionalAim,
   fireFresh,
   fireKey,
+  layerFlipY,
   layerVisible,
   mountRoleFor,
+  mountRoleForStructure,
   mountVisualOffsetY,
   newDefenderState,
   placementFor,
   structureTeamFor,
+  teamTrimHalves,
+  tintsTeamTrim,
   updateDefender,
   weaponScreen,
   type ArenaManifest,
   type DefenderState,
 } from "./arena-registry";
+import {
+  UNITS_MANIFEST_URL,
+  UNITS_URL,
+  defeatAlpha,
+  engagedFoe,
+  newUnitAnimState,
+  nextView,
+  unitAnimFor,
+  unitFrame,
+  unitTextureKey,
+  updateEngagement,
+  type Foe,
+  type UnitAnimManifest,
+  type UnitAnimRecord,
+  type UnitAnimState,
+  type UnitView,
+} from "./unit-anim";
+
+// First arena manifest that loads wins: v003 pre-rendered 2.5D art, else v002.
+const loadArena = async (): Promise<{ arena: ArenaManifest; base: string } | null> => {
+  for (const base of ARENA_URLS) {
+    try {
+      const r = await fetch(`${base}/manifests/arena.runtime.json`);
+      if (r.ok) return { arena: (await r.json()) as ArenaManifest, base };
+    } catch {
+      // Try the next manifest.
+    }
+  }
+  return null;
+};
 
 const S = 5; // pixels per arena unit
-const OWN = 0x36dbe8;
-const FOE = 0xf27978;
-const FRIENDLY_STRUCTURE = 0x36dbe8;
-const OPPONENT_STRUCTURE = 0xf27978;
+// Allegiance follows the v3 orientation lock: the viewer is blue, the
+// opponent red, derived from owner === seat for both perspectives.
+const OWN = TEAM_COLORS.friendly;
+const FOE = TEAM_COLORS.opponent;
 const KIT_URL = "/assets/chog-kit/v001";
 
 export interface CanvasFeed {
@@ -71,6 +108,9 @@ interface Fx {
   color: number;
   until: number;
   pulseState?: "warning" | "active" | "expired";
+  /** Animated-unit hit: an open ring and sparks around the body, lifted this
+   * many px off the ground point, so a tiny unit is never covered. */
+  lift?: number;
 }
 
 interface Props {
@@ -81,6 +121,16 @@ interface Props {
   seat?: 0 | 1;
   /** Optional overrides for the host div (e.g. HUD sizes by height). */
   hostStyle?: React.CSSProperties;
+}
+
+/** Authoritative motion for an animated unit: frame-to-frame position delta and the foe in reach. */
+interface UnitMotion {
+  moving: boolean;
+  foe: Foe | null;
+  dx: number;
+  /** Screen-space heading for the visual view: toward the foe when engaged,
+   * else the motion delta, else null to keep the last view. */
+  heading: { x: number; y: number } | null;
 }
 
 const hashPhase = (id: string) => {
@@ -114,11 +164,14 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
       fetch(`${KIT_URL}/manifests/phaser-assets.runtime.json`)
         .then((r) => (r.ok ? (r.json() as Promise<SpriteManifest>) : null))
         .catch(() => null),
-      fetch(`${ARENA_URL}/manifests/arena.runtime.json`)
-        .then((r) => (r.ok ? (r.json() as Promise<ArenaManifest>) : null))
+      loadArena(),
+      fetch(UNITS_MANIFEST_URL)
+        .then((r) => (r.ok ? (r.json() as Promise<UnitAnimManifest>) : null))
         .catch(() => null),
-    ]).then(([Phaser, manifest, arena]) => {
+    ]).then(([Phaser, manifest, arenaLoad, unitManifest]) => {
       if (cancelled || !host.current) return;
+      const arena = arenaLoad?.arena ?? null;
+      const arenaBase = arenaLoad?.base ?? "";
       if (!manifest) console.warn("battle sprites: kit manifest unavailable; vector placeholders only");
       const reduced = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
       const W = 100 * S;
@@ -146,6 +199,10 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
         rubble: boolean;
         baseScale: number;
         phase: number;
+        /** Pre-rendered animation sheet, or null for the static v001 sprite. */
+        anim: UnitAnimRecord | null;
+        animSt: UnitAnimState;
+        view: UnitView;
       }
       interface FxImg {
         img: import("phaser").GameObjects.Image;
@@ -173,7 +230,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
         rim: import("phaser").GameObjects.Image;
         rubble: boolean;
       }
-      const envLayers = new Map<string, import("phaser").GameObjects.Image>();
+      const envLayers = new Map<string, import("phaser").GameObjects.Image[]>();
       const mountPool = new Map<string, MountEnt>();
       const defenderStates = new Map<string, DefenderState>();
       let eventStart: StartMessage | null = null;
@@ -223,11 +280,14 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
         preload() {
           this.load.on("loaderror", (file: { key: string }) => missing.add(file.key));
           if (manifest) for (const a of manifest.assets) this.load.image(a.stableAssetId, `${KIT_URL}/${a.path}`);
+          for (const u of Object.values(unitManifest?.units ?? {})) {
+            this.load.spritesheet(unitTextureKey(u.entityId), `${UNITS_URL}/${u.sheet}`, { frameWidth: u.frameWidth, frameHeight: u.frameHeight });
+          }
           if (arena) {
-            for (const l of arena.layers) this.load.image(`arena:layer:${l.id}`, `${ARENA_URL}/${l.path}`);
+            for (const l of arena.layers) this.load.image(`arena:layer:${l.id}`, `${arenaBase}/${l.path}`);
             for (const [role, r] of Object.entries(arena.mounts)) {
-              for (const p of Object.values(r.parts)) if (p) this.load.image(`${role}:${p.split("/").pop()!.replace(".png", "")}`, `${ARENA_URL}/${p}`);
-              for (const [pose, p] of Object.entries(r.poses)) this.load.image(`${role}:defender-${pose}`, `${ARENA_URL}/${p.path}`);
+              for (const p of Object.values(r.parts)) if (p) this.load.image(`${role}:${p.split("/").pop()!.replace(".png", "")}`, `${arenaBase}/${p}`);
+              for (const [pose, p] of Object.entries(r.poses)) this.load.image(`${role}:defender-${pose}`, `${arenaBase}/${p.path}`);
             }
           }
         }
@@ -236,8 +296,19 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
           // (bars, telegraphs, ghost) above every sprite and effect image.
           // v002 arena art sits below both as a textured underlay.
           for (const l of arena?.layers ?? []) {
-            const img = this.add.image(-50, -60, `arena:layer:${l.id}`).setOrigin(0, 0).setDepth(-500 + l.zOrder);
-            envLayers.set(l.id, img);
+            const mk = () => this.add.image(-50, -60, `arena:layer:${l.id}`).setOrigin(0, 0).setDepth(-500 + l.zOrder);
+            const img = mk();
+            if (!tintsTeamTrim(l)) {
+              envLayers.set(l.id, [img]);
+              continue;
+            }
+            // Player-relative team trim: the same texture cropped into an
+            // opponent (top) half and a friendly (bottom) half, each tinted.
+            const halves = teamTrimHalves(img.width, img.height);
+            envLayers.set(
+              l.id,
+              halves.map((h, i) => (i === 0 ? img : mk()).setCrop(...h.crop).setTint(TEAM_COLORS[h.team]))
+            );
           }
           this.g = this.add.graphics().setDepth(-100);
           this.og = this.add.graphics().setDepth(3000);
@@ -262,8 +333,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
           const sx = (x: number) => x * S;
           const sy = (y: number) => (seat === 0 ? 160 - y : y) * S;
           const col = (owner: number) => (owner === seat ? OWN : FOE);
-          const structureCol = (owner: number) =>
-            structureTeamFor(owner, seat) === "friendly" ? FRIENDLY_STRUCTURE : OPPONENT_STRUCTURE;
+          const structureCol = (owner: number) => TEAM_COLORS[structureTeamFor(owner, seat)];
           const t = Math.min(1, (now - f.receivedAt) / 100);
           const prevPos = new Map<string, { x: number; y: number }>();
           for (const u of [...(prev?.troops ?? []), ...(prev?.commanders ?? [])]) prevPos.set(u.id, u);
@@ -278,8 +348,9 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             return { y: Math.min(a, b), h: Math.abs(a - b) };
           };
           // v002 environment underlay. Every layer image shares the entity
-          // transform: placed at (-50,-60) half-size into the board, and for
-          // seat 1 only flipped vertically (the entity transform mirrors y).
+          // transform: placed at (-50,-60) half-size into the board. For
+          // seat 1 board-coupled layers flip vertically (the entity transform
+          // mirrors y) while camera-space layers stay upright (layerFlipY).
           const arenaOk =
             !!arena &&
             arena.layers.every((l) => !missing.has(`arena:layer:${l.id}`)) &&
@@ -291,9 +362,8 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             const boardWide = (st: string) => frame.chaos.some((c) => c.state === st && c.zones.length === 0);
             const rippleAlt = !reduced && Math.floor(now / 700) % 2 === 1;
             for (const l of arena.layers) {
-              const img = envLayers.get(l.id);
-              if (!img) continue;
-              img.setFlipY(seat === 1);
+              const imgs = envLayers.get(l.id);
+              if (!imgs) continue;
               const vis = layerVisible(l, {
                 riftOpen: frame.riftOpen,
                 anyWarning,
@@ -302,14 +372,18 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                 now,
                 rippleAlt,
               });
-              img.setVisible(vis);
               // The authored chaos overlays are board-centred illustrations.
               // Zone-specific chaos keeps them at low alpha so they never
               // contradict the authoritative per-zone bands drawn below.
-              if (l.state === "chaos-warning") img.setAlpha(boardWide("warning") ? 1 : 0.35);
-              else if (l.state === "chaos-active") img.setAlpha(boardWide("active") ? 1 : 0.35);
-              else if (l.state === "chaos-expiry") img.setAlpha(0.6);
-              else img.setAlpha(1);
+              const alpha =
+                l.state === "chaos-warning"
+                  ? boardWide("warning") ? 1 : 0.35
+                  : l.state === "chaos-active"
+                    ? boardWide("active") ? 1 : 0.35
+                    : l.state === "chaos-expiry"
+                      ? 0.6
+                      : 1;
+              for (const img of imgs) img.setFlipY(layerFlipY(l, seat)).setVisible(vis).setAlpha(alpha);
             }
           }
           // Ground, own territory, river, bridges, ford. When the v002
@@ -391,7 +465,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
           // ground point; shadow + owner ring hug the ground while the sprite
           // image hangs from its authored pivot. Motion offsets only move the
           // image, so hp bars and rings stay put.
-          const ensure = (id: string, r: SpriteRecord, air: boolean, owner: number): PoolEnt => {
+          const ensure = (id: string, r: SpriteRecord, air: boolean, owner: number, anim: UnitAnimRecord | null = null): PoolEnt => {
             let e = pool.get(id);
             if (!e) {
               const root = this.add.container(0, 0);
@@ -399,13 +473,19 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
               // color with a brighter outline, sized to the sprite's visible
               // footprint so structures read larger. The art itself is never
               // tinted; the dark contact shadow sits on top of the marker.
-              const vis = r.proposedDisplaySize.visibleHeight * displayScale(r);
+              // Animated sheets size it from half their drawn height, the same
+              // proportion the v001 records produce.
+              const scale = anim ? anim.displayScale : displayScale(r);
+              const vis = anim ? anim.visibleHeight * scale * 0.5 : r.proposedDisplaySize.visibleHeight * scale;
               const ew = Math.max(16, vis * 0.85);
               const marker = this.add.ellipse(0, 0, ew, ew * 0.45, col(owner), 0.35);
               marker.setStrokeStyle(2, owner === seat ? 0x93c5fd : 0xfca5a5, 0.95);
-              const shadow = this.add.ellipse(0, 0, ew * 0.8, ew * 0.35, 0x000000, 0.28);
-              const img = this.add.image(0, air ? -10 : 0, r.stableAssetId);
-              img.setOrigin(r.pivotNormalized[0], r.pivotNormalized[1]).setScale(displayScale(r));
+              const shadow = this.add.ellipse(0, 0, ew * 0.8, ew * 0.35, 0x000000, anim ? 0.34 : 0.28);
+              const img = anim
+                ? this.add.image(0, air ? -10 : 0, unitTextureKey(anim.entityId), anim.clips.idle.start)
+                : this.add.image(0, air ? -10 : 0, r.stableAssetId);
+              const pivot = anim ? anim.pivotNormalized : r.pivotNormalized;
+              img.setOrigin(pivot[0], pivot[1]).setScale(scale);
               root.add([marker, shadow, img]);
               e = {
                 root,
@@ -422,8 +502,13 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                 facingX: 1,
                 gone: null,
                 rubble: false,
-                baseScale: displayScale(r),
+                baseScale: scale,
                 phase: hashPhase(id),
+                anim,
+                animSt: newUnitAnimState(hashPhase(id) * 1000),
+                // Until it first moves, a unit faces the far side: the viewer's
+                // troops show their backs, the opponent's their faces.
+                view: owner === seat ? "rear" : "front",
               };
               pool.set(id, e);
             }
@@ -436,7 +521,8 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             py: number,
             hp: number,
             moving: boolean,
-            owner: number
+            owner: number,
+            motion?: UnitMotion
           ) => {
             const X = sx(px);
             const Y = sy(py);
@@ -445,13 +531,16 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             const firstSample = e.lastHp < 0;
             if (e.lastHp >= 0 && hp < e.lastHp) {
               e.flashUntil = now + 140;
+              e.animSt.hitAt = now;
+              const drawn = e.anim ? e.anim.visibleHeight * e.anim.displayScale : 0;
               fx.push({
                 kind: "hit",
                 x: px,
                 y: py,
-                r: Math.max(1.5, e.rec.proposedDisplaySize.visibleHeight * displayScale(e.rec) * 0.14),
+                r: e.anim ? (drawn * 0.42) / S : Math.max(1.5, e.rec.proposedDisplaySize.visibleHeight * displayScale(e.rec) * 0.14),
                 color: owner === seat ? 0x9be7ff : 0xffa29a,
                 until: frame.tick + (reduced ? 2 : 4),
+                ...(e.anim ? { lift: drawn * 0.48 + (e.air ? 10 : 0) } : {}),
               });
             }
             e.lastHp = hp;
@@ -461,6 +550,23 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             let scaleX = e.baseScale * pop;
             let scaleY = e.baseScale * pop;
             e.img.setAlpha(e.gone === null ? 0.55 + 0.45 * dp : e.img.alpha);
+            if (e.anim) {
+              // Pre-rendered sheet: the frames carry bob, stride, swing, hit
+              // and defeat, so the procedural offsets below are skipped.
+              const m = motion ?? { moving, foe: null, dx: px - e.lastX, heading: null };
+              e.animSt = updateEngagement(e.animSt, !m.moving && m.foe !== null, now);
+              if (m.foe && Math.abs(m.foe.x - px) > 0.01) e.facingX = m.foe.x < px ? -1 : 1;
+              else if (m.moving && Math.abs(m.dx) > 1e-3) e.facingX = m.dx < 0 ? -1 : 1;
+              if (m.heading) e.view = nextView(e.view, m.heading.x, m.heading.y);
+              e.img.setFrame(unitFrame(e.anim, { ...e.animSt, goneAt: e.gone }, { now, moving: m.moving, view: e.view }).frame);
+              e.img.setPosition(0, e.air ? -10 : 0).setScale(scaleX, scaleY).setFlipX(e.facingX < 0).setRotation(0);
+              // A light warm flash: the sheet's own hit clip carries the reaction.
+              if (e.flashUntil > now) e.img.setTint(0xffc2b8);
+              else e.img.clearTint();
+              e.lastX = px;
+              e.lastY = py;
+              return;
+            }
             // Idle bob and move bounce/tilt, all timestamp-driven.
             let ox = 0;
             let oy = 0;
@@ -532,13 +638,21 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             air: boolean,
             owner: number,
             drawPh: () => void,
-            name: string
+            name: string,
+            anim: UnitAnimRecord | null = null,
+            motion?: UnitMotion
           ) => {
             if (r) {
-              const e = ensure(id, r, air, owner);
+              const e = ensure(id, r, air, owner, anim);
               const moving = Math.hypot(x - e.lastX, y - e.lastY) > 0.05;
-              updateEnt(e, id, x, y, hp, moving, owner);
+              updateEnt(e, id, x, y, hp, moving, owner, motion);
               const hpx = sx(x);
+              if (e.anim) {
+                // Animated sheets carry their measured idle height: the bar sits just above the head.
+                const drawn = e.anim.visibleHeight * e.anim.displayScale;
+                hpBar(hpx, sy(y) - drawn - (air ? 14 : 3), Math.max(16, drawn * 0.6), hp, maxHp, shield);
+                return;
+              }
               const hpy = sy(y) - r.proposedDisplaySize.visibleHeight * displayScale(r) - (air ? 14 : 4);
               hpBar(hpx, hpy, Math.max(16, r.proposedDisplaySize.visibleHeight * displayScale(r) * 0.6), hp, maxHp, shield);
             } else {
@@ -562,26 +676,34 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             const y = sy(s.y);
             const r0 = (s.kind === "core" ? 4 : 3) * S + S / 2;
             const r = ent("structure", s.kind);
-            const role = mountRoleFor(s.kind);
+            // Schema 2 manifests pick the mount from the viewer's relation to the
+            // owner (red Bulwark for the opponent, blue Chog Guardian for the
+            // viewer); v002 shares one role per structure kind.
+            const role = arena ? mountRoleForStructure(arena, s.kind, s.owner, seat) : mountRoleFor(s.kind);
             const mrole = arenaOk && arena ? arena.mounts[role] : undefined;
+            const core = s.kind === "core";
+            const aimPose = directionalAim(y);
             const mounted =
               !!mrole &&
               !missing.has(`${role}:structure-base`) &&
               !missing.has(`${role}:defender-idle`) &&
-              !missing.has(`${role}:defender-aim-north`) &&
-              !missing.has(`${role}:defender-aim-south`);
+              (!mrole.poses[aimPose] || !missing.has(`${role}:defender-${aimPose}`));
             if (mounted && mrole) {
               // v002 mounted assembly replaces the v001 structure sprite.
+              const authoredTeam = !!mrole.authoredTeamColors;
               let me = mountPool.get(s.id);
               if (!me) {
                 const mk = (key: string) => this.add.image(0, 0, key).setOrigin(0.5, 0.875).setScale(0.5);
                 // A low contact shadow anchors each authored mount to the
                 // terrain without changing the authoritative ground point.
                 // The subtle green edge keeps the V002 base readable over the
-                // textured banks while the dark centre supplies depth.
-                const core = role === "core-keeper";
-                const shadow = this.add.ellipse(0, core ? 5 : 3, core ? 116 : 94, core ? 24 : 19, 0x07111a, 0.38);
-                shadow.setStrokeStyle(1, core ? 0xf5c96b : 0x9fe3bf, 0.18).setDepth(-1);
+                // textured banks while the dark centre supplies depth. The v003
+                // towers sit centred on the anchor, so their shadow is tighter.
+                const shadow = authoredTeam
+                  ? this.add.ellipse(0, core ? 9 : 7, core ? 62 : 50, core ? 22 : 18, 0x0b2a14, 0.3)
+                  : this.add.ellipse(0, core ? 5 : 3, core ? 116 : 94, core ? 24 : 19, 0x07111a, 0.38);
+                if (!authoredTeam) shadow.setStrokeStyle(1, core ? 0xf5c96b : 0x9fe3bf, 0.18);
+                shadow.setDepth(-1);
                 const teamAccent = this.add.graphics();
                 const base = mk(`${role}:structure-base`);
                 const socket = mk(`${role}:socket-platform`);
@@ -592,29 +714,32 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                 mountPool.set(s.id, me);
               }
               me.root.setPosition(x, y).setDepth(y);
-              const artOffsetY = mountVisualOffsetY(role, y);
+              const artOffsetY = mountVisualOffsetY(s.kind, y, mrole.artTopLocalBoardPixels);
               const partY = (part: import("phaser").GameObjects.Image) => part.setY(artOffsetY);
               partY(me.base);
               partY(me.socket);
               partY(me.defender);
               partY(me.rim);
-              me.shadow.setPosition(0, artOffsetY + (role === "core-keeper" ? 5 : 3)).setAlpha(s.alive ? 0.38 : 0.22);
+              me.shadow.setPosition(0, artOffsetY + (authoredTeam ? (core ? 9 : 7) : core ? 5 : 3)).setAlpha(s.alive ? (authoredTeam ? 0.3 : 0.38) : 0.22);
               me.teamAccent.clear();
-              const accent = structureCol(s.owner);
-              const flagTop = role === "core-keeper" ? -47 : -40;
-              const flagHeight = role === "core-keeper" ? 23 : 19;
-              const flagWidth = role === "core-keeper" ? 10 : 8;
-              // Small pennants and a halo make the seat colour legible without
-              // tinting the authored stone and Chog art as one flat sprite.
-              me.teamAccent.fillStyle(accent, 0.96);
-              me.teamAccent.fillRect(-20, flagTop, flagWidth, flagHeight);
-              me.teamAccent.fillTriangle(-20, flagTop + flagHeight, -20 + flagWidth, flagTop + flagHeight, -20 + flagWidth / 2, flagTop + flagHeight + 6);
-              me.teamAccent.fillRect(12, flagTop, flagWidth, flagHeight);
-              me.teamAccent.fillTriangle(12, flagTop + flagHeight, 12 + flagWidth, flagTop + flagHeight, 12 + flagWidth / 2, flagTop + flagHeight + 6);
-              me.teamAccent.lineStyle(1, 0xfff7d6, 0.72);
-              me.teamAccent.strokeRect(-20, flagTop, flagWidth, flagHeight);
-              me.teamAccent.strokeRect(12, flagTop, flagWidth, flagHeight);
-              me.teamAccent.lineStyle(2, accent, 0.88).strokeCircle(0, role === "core-keeper" ? -26 : -23, role === "core-keeper" ? 16 : 13);
+              if (!authoredTeam) {
+                const accent = structureCol(s.owner);
+                const flagTop = core ? -47 : -40;
+                const flagHeight = core ? 23 : 19;
+                const flagWidth = core ? 10 : 8;
+                // Small pennants and a halo make the seat colour legible without
+                // tinting the authored stone and Chog art as one flat sprite.
+                // v003 art paints its own red/blue banners and gems instead.
+                me.teamAccent.fillStyle(accent, 0.96);
+                me.teamAccent.fillRect(-20, flagTop, flagWidth, flagHeight);
+                me.teamAccent.fillTriangle(-20, flagTop + flagHeight, -20 + flagWidth, flagTop + flagHeight, -20 + flagWidth / 2, flagTop + flagHeight + 6);
+                me.teamAccent.fillRect(12, flagTop, flagWidth, flagHeight);
+                me.teamAccent.fillTriangle(12, flagTop + flagHeight, 12 + flagWidth, flagTop + flagHeight, 12 + flagWidth / 2, flagTop + flagHeight + 6);
+                me.teamAccent.lineStyle(1, 0xfff7d6, 0.72);
+                me.teamAccent.strokeRect(-20, flagTop, flagWidth, flagHeight);
+                me.teamAccent.strokeRect(12, flagTop, flagWidth, flagHeight);
+                me.teamAccent.lineStyle(2, accent, 0.88).strokeCircle(0, core ? -26 : -23, core ? 16 : 13);
+              }
               me.teamAccent.setPosition(0, artOffsetY).setAlpha(s.alive ? 1 : 0.18);
               const fire = towerFires.get(s.id) ?? null;
               const prevDef = defenderStates.get(s.id) ?? newDefenderState();
@@ -623,7 +748,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                   kind: "hit",
                   x: s.x,
                   y: s.y,
-                  r: role === "core-keeper" ? 4.5 : 3.5,
+                  r: core ? 4.5 : 3.5,
                   color: s.owner === seat ? 0x9be7ff : 0xffa29a,
                   until: frame.tick + (reduced ? 2 : 4),
                 });
@@ -647,15 +772,19 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                 const placement = arena ? placementFor(arena, s.kind, s.x, s.y) : null;
                 // Defender art stays upright, so the directional stance is
                 // chosen by screen hemisphere, not the authored placement
-                // direction (which is fixed per P0/P1 side).
-                const dir = y > H / 2 ? "north" : "south";
+                // direction (which is fixed per P0/P1 side). The top half
+                // always aims down and the bottom half always aims up, even
+                // while firing or hit.
                 let pose = defenderPose(st, true, y, now, s.alive);
-                // The authored static stance for this board is the directional
-                // aim (placements encode directionRequested), so idle falls
-                // back to the hemisphere aim when that pose exists.
-                if (pose === "idle" && mrole.poses[`aim-${dir}`]) pose = `aim-${dir}`;
-                if (missing.has(`${role}:defender-${pose}`)) pose = mrole.poses[`aim-${dir}`] ? `aim-${dir}` : "idle";
+                if (missing.has(`${role}:defender-${pose}`) || !mrole.poses[pose]) pose = "idle";
                 me.defender.setTexture(`${role}:defender-${pose}`);
+                // Fire and hit read as overlay cues on the directional pose: a
+                // short recoil away from the aim direction and a warm flash.
+                const cue = defenderCue(st, now);
+                const recoil = cue === "fire" && !reduced ? (pose === "aim-north" ? 1.5 : -1.5) : 0;
+                me.defender.setY(artOffsetY + recoil);
+                if (cue === "hit") me.defender.setTint(0xff8a8a);
+                else me.defender.clearTint();
                 // Muzzle flash + instant tracer from the measured weapon
                 // anchor of the firing pose to the authoritative target.
                 if (accepted && fire && placement) {
@@ -743,9 +872,34 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
               og.lineStyle(2, 0xa78bfa, 0.9).beginPath().arc(x, top, 4, -Math.PI / 2, -Math.PI / 2 + frac * Math.PI * 2).strokePath();
             }
           }
+          // Foes per owner for presentation-only engagement (air flagged, so
+          // ground-only hitters skip it). Radii follow combat reach2: units by
+          // center distance, footprints by ring.
+          const foesOf = (owner: number): Foe[] => [
+            ...frame.troops.filter((t) => t.owner !== owner).map((t) => ({ x: t.x, y: t.y, r: 0, air: t.air })),
+            ...frame.commanders.filter((c) => c.owner !== owner).map((c) => ({ x: c.x, y: c.y, r: 0 })),
+            ...frame.buildings.filter((b) => b.owner !== owner).map((b) => ({ x: b.x, y: b.y, r: b.footprint })),
+            ...frame.structures.filter((s) => s.alive && s.owner !== owner).map((s) => ({ x: s.x, y: s.y, r: s.kind === "core" ? 4 : 3 })),
+          ];
+          const foeCache = new Map<number, Foe[]>();
           for (const u of frame.troops) {
             const p = lerp(u.id, u.x, u.y);
             const r = ent("troop", u.cardId);
+            const anim0 = unitAnimFor(unitManifest, u.cardId);
+            const anim = anim0 && !missing.has(unitTextureKey(anim0.entityId)) && this.textures.exists(unitTextureKey(anim0.entityId)) ? anim0 : null;
+            let motion: UnitMotion | undefined;
+            if (anim) {
+              const before = prevPos.get(u.id);
+              const dx = before ? u.x - before.x : 0;
+              const dy = before ? u.y - before.y : 0;
+              const moving = !!before && Math.hypot(dx, dy) > 0.01;
+              if (!foeCache.has(u.owner)) foeCache.set(u.owner, foesOf(u.owner));
+              const foe = moving ? null : engagedFoe(u, anim.reach, foeCache.get(u.owner)!, undefined, anim.hitsAir);
+              // Screen y grows downward and seat 0 sees arena y flipped.
+              const up = seat === 0 ? -1 : 1;
+              const heading = foe ? { x: foe.x - u.x, y: up * (foe.y - u.y) } : moving ? { x: dx, y: up * dy } : null;
+              motion = { moving, dx, foe, heading };
+            }
             spriteOrFallback(
               u.id,
               r,
@@ -765,7 +919,9 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                 } else og.fillStyle(col(u.owner), 1).fillCircle(x, y, 6);
                 hpBar(x, y - 14, 14, u.hp, u.maxHp, u.shield);
               },
-              (start.catalog[u.cardId]?.name ?? u.cardId).slice(0, 2)
+              (start.catalog[u.cardId]?.name ?? u.cardId).slice(0, 2),
+              anim,
+              motion
             );
           }
           for (const c of frame.commanders) {
@@ -974,7 +1130,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             } else if (e.type === "siege_fired") {
               lungeTo(e.buildingId, Number(e.x), Number(e.y));
             } else if (e.type === "building_spawned") {
-              fx.push({ kind: "ring", x: Number(e.x), y: Number(e.y), r: 4, color: Number(e.player) === seat ? 0x36dbe8 : 0xf27978, until: frame.tick + (reduced ? 3 : 5) });
+              fx.push({ kind: "ring", x: Number(e.x), y: Number(e.y), r: 4, color: Number(e.player) === seat ? OWN : FOE, until: frame.tick + (reduced ? 3 : 5) });
               const prim = manifest ? byId(manifest, "effect:aura") : null;
               if (prim) spawnFx(prim, Number(e.x), Number(e.y), 0.9, 220);
             } else if (e.type === "unit_spawned") {
@@ -1025,6 +1181,16 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             else if (e.kind === "boom") {
               og.fillStyle(e.color, 0.5).fillCircle(x, y, e.r * S);
               og.lineStyle(3, 0xffe4a8, 0.9).strokeCircle(x, y, e.r * S * 1.25);
+            } else if (e.kind === "hit" && e.lift !== undefined) {
+              // Animated unit: open ring around the body plus four short
+              // sparks outside it. No fill, so the face and hit pose stay visible.
+              const cy = y - e.lift;
+              const rr = e.r * S;
+              og.lineStyle(1.5, e.color, 0.9).strokeCircle(x, cy, rr);
+              og.lineStyle(2, 0xfff8df, 0.95);
+              for (const [ux, uy] of [[0.7, -0.7], [-0.7, -0.7], [0.95, 0.3], [-0.95, 0.3]] as const) {
+                og.lineBetween(x + ux * (rr + 1), cy + uy * (rr + 1), x + ux * (rr + 5), cy + uy * (rr + 5));
+              }
             } else if (e.kind === "hit") {
               og.fillStyle(0xfff8df, 0.45).fillCircle(x, y, Math.max(4, e.r * S * 0.7));
               og.lineStyle(2, e.color, 0.95).strokeCircle(x, y, e.r * S);
@@ -1070,10 +1236,22 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
           }
           for (const [id, e] of pool) {
             if (e.gone === null) continue;
-            if (now - e.gone >= 220) {
-              e.root.destroy(true);
-              pool.delete(id);
+            if (e.anim) {
+              // Animated units play their defeat clip in place, then fade.
+              const el = now - e.gone;
+              e.img.setFrame(unitFrame(e.anim, { ...e.animSt, goneAt: e.gone }, { now, moving: false, view: e.view }).frame).clearTint().setAlpha(1);
+              e.root.setAlpha(defeatAlpha(e.anim, el));
+              if (el < e.anim.defeatMs) continue;
+            } else {
+              // Static fallback sprites: updateEnt only runs for entities still
+              // in the frame, so the death fade is applied here.
+              const gp = Math.min(1, (now - e.gone) / (reduced ? 110 : 220));
+              e.img.setAlpha(1 - gp);
+              e.root.setAlpha(1 - gp * 0.6);
+              if (now - e.gone < 220) continue;
             }
+            e.root.destroy(true);
+            pool.delete(id);
           }
           // Placement ghost: green when the advisory check passes, red otherwise.
           if (f.ghost) {

@@ -1,0 +1,23 @@
+CHOG ROYALE INDIVIDUAL REFERENCE PACK
+
+source_boards: 8
+arena_environment: 18
+towers: 4
+tower_defender: 2
+arena_effect: 2
+material_style: 13
+style_lighting: 5
+spell_vfx: 4
+troops: 36
+buildings: 12
+spells: 12
+commanders: 15
+animation_reference: 4
+team_colors: 2
+optional_logo: 4
+orientation: 1
+
+Total individual reference files: 142
+Game-ready animation atlases: 0
+
+Additional 50 temporary UI-size preview PNGs (25 at 72x96, 25 at 46x61); NOT final approved card art.

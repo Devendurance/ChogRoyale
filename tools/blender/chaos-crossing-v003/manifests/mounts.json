@@ -1,0 +1,265 @@
+{
+ "schemaVersion": 2,
+ "roles": [
+  {
+   "role": "lane-red",
+   "kind": "tower",
+   "team": "red",
+   "defender": "bulwark",
+   "aim": "aim-south",
+   "authoredTeamColors": true,
+   "pivotNormalized": [
+    0.5,
+    0.875
+   ],
+   "displayScale": 0.5,
+   "assembledAlphaBoundsRuntimePx": [
+    86,
+    149,
+    169,
+    301
+   ],
+   "artTopLocalBoardPixels": -131,
+   "artBottomLocalBoardPixels": 21,
+   "artWidthBoardPixels": 42,
+   "healthBarLocalBoardRectangle": [
+    -40,
+    -143,
+    80,
+    5
+   ],
+   "renderOrder": [
+    "structure-base",
+    "socket-platform",
+    "defender-pose",
+    "front-rim"
+   ],
+   "parts": {
+    "structure-base": "mounts/lane-red/structure-base.png",
+    "socket-platform": "mounts/lane-red/socket-platform.png",
+    "front-rim": "mounts/lane-red/front-rim.png"
+   },
+   "poses": {
+    "idle": {
+     "pose": "idle",
+     "path": "mounts/lane-red/defender-idle.png",
+     "weaponAnchorLocalBoardPixels": [
+      17.5,
+      -42.475
+     ],
+     "firingAllowed": false,
+     "weaponAnchorSource": "projected 3D muzzle centre"
+    },
+    "aim-south": {
+     "pose": "aim-south",
+     "path": "mounts/lane-red/defender-aim-south.png",
+     "weaponAnchorLocalBoardPixels": [
+      17.5,
+      -25.511
+     ],
+     "firingAllowed": true,
+     "weaponAnchorSource": "projected 3D muzzle centre"
+    }
+   },
+   "groundAnchorCheckMasterPixels": [
+    256,
+    560
+   ]
+  },
+  {
+   "role": "lane-blue",
+   "kind": "tower",
+   "team": "blue",
+   "defender": "guardian",
+   "aim": "aim-north",
+   "authoredTeamColors": true,
+   "pivotNormalized": [
+    0.5,
+    0.875
+   ],
+   "displayScale": 0.5,
+   "assembledAlphaBoundsRuntimePx": [
+    86,
+    168,
+    169,
+    301
+   ],
+   "artTopLocalBoardPixels": -112,
+   "artBottomLocalBoardPixels": 21,
+   "artWidthBoardPixels": 42,
+   "healthBarLocalBoardRectangle": [
+    -40,
+    -124,
+    80,
+    5
+   ],
+   "renderOrder": [
+    "structure-base",
+    "socket-platform",
+    "defender-pose",
+    "front-rim"
+   ],
+   "parts": {
+    "structure-base": "mounts/lane-blue/structure-base.png",
+    "socket-platform": "mounts/lane-blue/socket-platform.png",
+    "front-rim": "mounts/lane-blue/front-rim.png"
+   },
+   "poses": {
+    "idle": {
+     "pose": "idle",
+     "path": "mounts/lane-blue/defender-idle.png",
+     "weaponAnchorLocalBoardPixels": [
+      20,
+      -84.124
+     ],
+     "firingAllowed": false,
+     "weaponAnchorSource": "projected 3D muzzle centre"
+    },
+    "aim-north": {
+     "pose": "aim-north",
+     "path": "mounts/lane-blue/defender-aim-north.png",
+     "weaponAnchorLocalBoardPixels": [
+      20,
+      -82.149
+     ],
+     "firingAllowed": true,
+     "weaponAnchorSource": "projected 3D muzzle centre"
+    }
+   },
+   "groundAnchorCheckMasterPixels": [
+    256,
+    560
+   ]
+  },
+  {
+   "role": "king-red",
+   "kind": "core",
+   "team": "red",
+   "defender": "bulwark",
+   "aim": "aim-south",
+   "authoredTeamColors": true,
+   "pivotNormalized": [
+    0.5,
+    0.875
+   ],
+   "displayScale": 0.5,
+   "assembledAlphaBoundsRuntimePx": [
+    71,
+    134,
+    184,
+    310
+   ],
+   "artTopLocalBoardPixels": -146,
+   "artBottomLocalBoardPixels": 30,
+   "artWidthBoardPixels": 57,
+   "healthBarLocalBoardRectangle": [
+    -50,
+    -158,
+    100,
+    5
+   ],
+   "renderOrder": [
+    "structure-base",
+    "socket-platform",
+    "defender-pose",
+    "front-rim"
+   ],
+   "parts": {
+    "structure-base": "mounts/king-red/structure-base.png",
+    "socket-platform": "mounts/king-red/socket-platform.png",
+    "front-rim": "mounts/king-red/front-rim.png"
+   },
+   "poses": {
+    "idle": {
+     "pose": "idle",
+     "path": "mounts/king-red/defender-idle.png",
+     "weaponAnchorLocalBoardPixels": [
+      17.5,
+      -48.779
+     ],
+     "firingAllowed": false,
+     "weaponAnchorSource": "projected 3D muzzle centre"
+    },
+    "aim-south": {
+     "pose": "aim-south",
+     "path": "mounts/king-red/defender-aim-south.png",
+     "weaponAnchorLocalBoardPixels": [
+      17.5,
+      -31.815
+     ],
+     "firingAllowed": true,
+     "weaponAnchorSource": "projected 3D muzzle centre"
+    }
+   },
+   "groundAnchorCheckMasterPixels": [
+    256,
+    560
+   ]
+  },
+  {
+   "role": "king-blue",
+   "kind": "core",
+   "team": "blue",
+   "defender": "guardian",
+   "aim": "aim-north",
+   "authoredTeamColors": true,
+   "pivotNormalized": [
+    0.5,
+    0.875
+   ],
+   "displayScale": 0.5,
+   "assembledAlphaBoundsRuntimePx": [
+    71,
+    155,
+    184,
+    310
+   ],
+   "artTopLocalBoardPixels": -125,
+   "artBottomLocalBoardPixels": 30,
+   "artWidthBoardPixels": 57,
+   "healthBarLocalBoardRectangle": [
+    -50,
+    -137,
+    100,
+    5
+   ],
+   "renderOrder": [
+    "structure-base",
+    "socket-platform",
+    "defender-pose",
+    "front-rim"
+   ],
+   "parts": {
+    "structure-base": "mounts/king-blue/structure-base.png",
+    "socket-platform": "mounts/king-blue/socket-platform.png",
+    "front-rim": "mounts/king-blue/front-rim.png"
+   },
+   "poses": {
+    "idle": {
+     "pose": "idle",
+     "path": "mounts/king-blue/defender-idle.png",
+     "weaponAnchorLocalBoardPixels": [
+      20,
+      -90.429
+     ],
+     "firingAllowed": false,
+     "weaponAnchorSource": "projected 3D muzzle centre"
+    },
+    "aim-north": {
+     "pose": "aim-north",
+     "path": "mounts/king-blue/defender-aim-north.png",
+     "weaponAnchorLocalBoardPixels": [
+      20,
+      -88.453
+     ],
+     "firingAllowed": true,
+     "weaponAnchorSource": "projected 3D muzzle centre"
+    }
+   },
+   "groundAnchorCheckMasterPixels": [
+    256,
+    560
+   ]
+  }
+ ]
+}

@@ -1,0 +1,134 @@
+[
+ {
+  "seat": 0,
+  "viewport": [
+   390,
+   844
+  ],
+  "errors": [],
+  "failed": [],
+  "census": {
+   "boulderback:rear:attack": 453,
+   "choglings:rear:attack": 769,
+   "boulderback:front:attack": 448,
+   "choglings:rear:defeat": 142,
+   "choglings:front:idle": 381,
+   "boulderback:front:move": 273,
+   "boulderback:front:defeat": 56,
+   "choglings:front:move": 31,
+   "choglings:front:hit": 8,
+   "choglings:front:attack": 360,
+   "boulderback:rear:idle": 144,
+   "boulderback:rear:hit": 134,
+   "choglings:front:defeat": 100,
+   "boulderback:front:idle": 189,
+   "choglings:rear:idle": 810,
+   "choglings:rear:move": 614,
+   "boulderback:rear:move": 236,
+   "choglings:rear:hit": 29,
+   "boulderback:front:hit": 140,
+   "boulderback:rear:defeat": 54
+  },
+  "marker": {
+   "ok": 1738,
+   "bad": 0,
+   "colors": {
+    "2f80ed": 477,
+    "e0393e": 1261
+   }
+  },
+  "views": {
+   "own:front": 8,
+   "opp:front": 260,
+   "own:rear": 221
+  }
+ },
+ {
+  "seat": 1,
+  "viewport": [
+   390,
+   844
+  ],
+  "errors": [],
+  "failed": [],
+  "census": {
+   "boulderback:rear:idle": 209,
+   "choglings:front:idle": 857,
+   "boulderback:front:idle": 159,
+   "boulderback:rear:defeat": 56,
+   "boulderback:rear:move": 223,
+   "choglings:rear:idle": 394,
+   "choglings:front:defeat": 141,
+   "boulderback:front:attack": 486,
+   "choglings:rear:hit": 9,
+   "choglings:rear:move": 30,
+   "choglings:rear:attack": 361,
+   "boulderback:front:hit": 134,
+   "choglings:rear:defeat": 89,
+   "choglings:front:move": 500,
+   "choglings:front:attack": 794,
+   "boulderback:front:move": 188,
+   "choglings:front:hit": 38,
+   "boulderback:rear:hit": 140,
+   "boulderback:rear:attack": 486,
+   "boulderback:front:defeat": 53
+  },
+  "marker": {
+   "ok": 1660,
+   "bad": 0,
+   "colors": {
+    "e0393e": 427,
+    "2f80ed": 1233
+   }
+  },
+  "views": {
+   "opp:rear": 8,
+   "own:rear": 210,
+   "opp:front": 172
+  }
+ },
+ {
+  "seat": 0,
+  "viewport": [
+   1366,
+   768
+  ],
+  "errors": [],
+  "failed": [],
+  "census": {
+   "boulderback:rear:idle": 167,
+   "choglings:rear:idle": 857,
+   "boulderback:front:idle": 212,
+   "choglings:rear:defeat": 141,
+   "choglings:front:idle": 311,
+   "boulderback:front:move": 273,
+   "boulderback:front:defeat": 55,
+   "choglings:front:move": 32,
+   "choglings:front:hit": 30,
+   "boulderback:rear:attack": 452,
+   "choglings:front:attack": 309,
+   "boulderback:rear:hit": 123,
+   "choglings:front:defeat": 105,
+   "choglings:rear:move": 644,
+   "choglings:rear:attack": 795,
+   "boulderback:rear:move": 238,
+   "choglings:rear:hit": 40,
+   "boulderback:front:hit": 140,
+   "boulderback:front:attack": 481,
+   "boulderback:rear:defeat": 54
+  },
+  "marker": {
+   "ok": 1854,
+   "bad": 0,
+   "colors": {
+    "2f80ed": 498,
+    "e0393e": 1356
+   }
+  },
+  "views": {
+   "own:front": 7,
+   "opp:front": 260,
+   "own:rear": 223
+  }
+ }
+]

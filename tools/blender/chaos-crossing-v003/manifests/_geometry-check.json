@@ -1,0 +1,142 @@
+{
+ "bridgeL_sw": {
+  "logical": [
+   23.5,
+   73.5
+  ],
+  "projected": [
+   335.0,
+   985.0
+  ],
+  "expected": [
+   335.0,
+   985.0
+  ]
+ },
+ "bridgeL_ne": {
+  "logical": [
+   36.5,
+   86.5
+  ],
+  "projected": [
+   465.0,
+   855.0
+  ],
+  "expected": [
+   465.0,
+   855.0
+  ]
+ },
+ "bridgeR_sw": {
+  "logical": [
+   63.5,
+   73.5
+  ],
+  "projected": [
+   735.0,
+   985.0
+  ],
+  "expected": [
+   735.0,
+   985.0
+  ]
+ },
+ "bridgeR_ne": {
+  "logical": [
+   76.5,
+   86.5
+  ],
+  "projected": [
+   865.0,
+   855.0
+  ],
+  "expected": [
+   865.0,
+   855.0
+  ]
+ },
+ "ford_sw": {
+  "logical": [
+   43.5,
+   73.5
+  ],
+  "projected": [
+   535.0,
+   985.0
+  ],
+  "expected": [
+   535.0,
+   985.0
+  ]
+ },
+ "ford_ne": {
+  "logical": [
+   56.5,
+   86.5
+  ],
+  "projected": [
+   665.0,
+   855.0
+  ],
+  "expected": [
+   665.0,
+   855.0
+  ]
+ },
+ "core_p0": {
+  "logical": [
+   50,
+   8
+  ],
+  "projected": [
+   600.0,
+   1640.0
+  ],
+  "expected": [
+   600,
+   1640
+  ]
+ },
+ "core_p1": {
+  "logical": [
+   50,
+   152
+  ],
+  "projected": [
+   600.0,
+   200.0
+  ],
+  "expected": [
+   600,
+   200
+  ]
+ },
+ "tower_p0_west": {
+  "logical": [
+   30,
+   40
+  ],
+  "projected": [
+   400.0,
+   1320.0
+  ],
+  "expected": [
+   400,
+   1320
+  ]
+ },
+ "tower_p1_east": {
+  "logical": [
+   70,
+   120
+  ],
+  "projected": [
+   800.0,
+   520.0
+  ],
+  "expected": [
+   800,
+   520
+  ]
+ }
+}

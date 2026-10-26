@@ -10,6 +10,10 @@
 // board pixels (10 px/unit) and halve to board pixels.
 
 export const ARENA_URL = "/assets/arena/chaos-crossing/v002";
+// v003 (visual overhaul v3 slice 2) is preferred at runtime. v002 stays as the
+// fallback when the v003 manifest is unavailable.
+export const ARENA_V003_URL = "/assets/arena/chaos-crossing/v003";
+export const ARENA_URLS = [ARENA_V003_URL, ARENA_URL] as const;
 export const BOARD_W = 500;
 export const BOARD_H = 800;
 export const MASTER_ORIGIN_X = 100;
@@ -34,6 +38,10 @@ export interface ArenaLayer {
   defaultVisible: boolean;
   state: LayerState;
   stateRule: string;
+  /** Schema 2: "camera" art renders upright for both seats, "board" art mirrors with seat 1. */
+  space?: "camera" | "board";
+  /** Schema 2: the layer already paints red (top) and blue (bottom), so it is not cropped and tinted. */
+  authoredTeamColors?: boolean;
 }
 
 export interface MountPose {
@@ -43,10 +51,16 @@ export interface MountPose {
 }
 
 export interface MountRole {
+  kind?: StructureKind;
+  team?: "red" | "blue";
+  /** Schema 2: team banners and gems are painted into the art, so no code pennants are drawn. */
+  authoredTeamColors?: boolean;
   pivotNormalized: [number, number];
   displayScale: number;
   seatLocalBoardPixels: [number, number];
   healthBarLocalBoardRectangle: [number, number, number, number];
+  /** Schema 2: top of the assembled aim silhouette, master board px relative to the ground anchor. */
+  artTopLocalBoardPixels?: number;
   renderOrder: string[];
   parts: Record<"structure-base" | "socket-platform" | "front-rim", string | undefined>;
   poses: Record<string, MountPose>;
@@ -54,9 +68,11 @@ export interface MountRole {
 
 export interface MountPlacement {
   id: string;
-  mountRole: string;
+  /** Schema 2 placements are keyed by structure kind; the role depends on the viewer. */
+  kind?: StructureKind;
+  mountRole?: string;
   groundAnchorPixels: [number, number];
-  directionRequested: string;
+  directionRequested?: string;
 }
 
 export interface ArenaManifest {
@@ -71,6 +87,8 @@ export interface ArenaManifest {
     masterPxPerUnit: number;
   };
   layers: ArenaLayer[];
+  /** Schema 2: player-relative mount role per structure kind. */
+  structureMounts?: Record<StructureKind, Record<StructureTeam, string>>;
   mounts: Record<string, MountRole>;
   placements: MountPlacement[];
 }
@@ -130,18 +148,71 @@ export type StructureTeam = "friendly" | "opponent";
 export const structureTeamFor = (owner: number, seat: Seat): StructureTeam =>
   owner === seat ? "friendly" : "opponent";
 
+// Schema 2 manifests key mounts by the viewer's relation to the owner: the
+// opponent's structures use the red Bulwark role, the viewer's the blue Chog
+// Guardian role. Older manifests keep the shared v002 role per kind.
+export const mountRoleForStructure = (m: ArenaManifest, kind: StructureKind, owner: number, seat: Seat): string =>
+  m.structureMounts?.[kind]?.[structureTeamFor(owner, seat)] ?? mountRoleFor(kind);
+
+// v3 orientation lock: the viewing player is always BLUE at the bottom and the
+// opponent RED at the top, derived from owner === seat, never from a seat id.
+export const TEAM_COLORS: Record<StructureTeam, number> = { friendly: 0x2f80ed, opponent: 0xe0393e };
+
+// Layers authored in camera space instead of board space. The tower pads sit
+// under the upright mounts, the trim carries one team per screen half, and the
+// background and foreground are the far and near arena edges. The board is
+// symmetric about y = 80, so these render unflipped for both seats and seat 1
+// sees the same composition as seat 0. Board-coupled layers keep the mirror.
+export const CAMERA_SPACE_LAYERS: ReadonlySet<string> = new Set(["background", "foundations", "team-trim", "foreground"]);
+
+// Schema 2 layers declare their space. The v003 pre-rendered 2.5D art is lit
+// and modelled from the viewer's side, so a vertical flip would turn trees,
+// posts and banners upside down. The geometry is symmetric about y = 80, so
+// the unflipped image stays aligned for seat 1 as well.
+export const layerFlipY = (layer: string | Pick<ArenaLayer, "id" | "space">, seat: Seat): boolean => {
+  if (seat !== 1) return false;
+  if (typeof layer !== "string" && layer.space) return layer.space === "board";
+  return !CAMERA_SPACE_LAYERS.has(typeof layer === "string" ? layer : layer.id);
+};
+
+export const TEAM_TRIM_LAYER = "team-trim";
+
+/** v002 trim is cropped into halves and tinted; authored v003 trim is drawn as-is. */
+export const tintsTeamTrim = (l: Pick<ArenaLayer, "id" | "authoredTeamColors">): boolean =>
+  l.id === TEAM_TRIM_LAYER && !l.authoredTeamColors;
+
+// The authored trim paints one team per half. Unflipped, the top half is
+// always the opponent and the bottom half the viewing player, so each half is
+// cropped from the same texture and tinted with its player-relative colour.
+export const teamTrimHalves = (
+  width: number,
+  height: number
+): { team: StructureTeam; crop: [number, number, number, number] }[] => {
+  const half = Math.floor(height / 2);
+  return [
+    { team: "opponent", crop: [0, 0, width, half] },
+    { team: "friendly", crop: [0, half, width, height - half] },
+  ];
+};
+
 // The authored Core Keeper extends above the top gameplay edge. Keep the
 // authoritative ground point and weapon anchors fixed, then lower only the
 // visual assembly enough to keep its art and health bar inside the canvas.
-export const mountVisualOffsetY = (role: string, screenY: number): number =>
-  role === "core-keeper" && screenY < 90 ? Math.max(0, 80 - screenY) : 0;
+// When the manifest measures the art top, the far Core also drops far enough
+// to keep that top and its health bar 18 px inside the canvas.
+export const mountVisualOffsetY = (role: string, screenY: number, artTopLocalBoardPixels?: number): number => {
+  if (!(role === "core-keeper" || role === "core") || screenY >= 90) return 0;
+  const fit = artTopLocalBoardPixels === undefined ? 0 : 18 - (screenY + artTopLocalBoardPixels / 2);
+  return Math.max(0, 80 - screenY, fit);
+};
 
 export const placementFor = (m: ArenaManifest, kind: StructureKind, x: number, y: number): MountPlacement | null => {
   const [ax, ay] = boardPoint(x, y, 0);
   // Ground anchors are seat-agnostic master coordinates; match by arena point.
   for (const p of m.placements) {
     const [mx, my] = masterToScreen(p.groundAnchorPixels[0], p.groundAnchorPixels[1], 0);
-    if (Math.abs(mx - ax) < 2 && Math.abs(my - ay) < 2 && p.mountRole === mountRoleFor(kind)) return p;
+    const sameKind = p.kind ? p.kind === kind : p.mountRole === mountRoleFor(kind);
+    if (Math.abs(mx - ax) < 2 && Math.abs(my - ay) < 2 && sameKind) return p;
   }
   return null;
 };
@@ -244,8 +315,11 @@ export const updateDefender = (
   return out;
 };
 
-// Priority: destroyed > hit > fire > aim. The renderer only draws a defender
-// for live structures; "destroyed" maps to the rubble path (no pose art).
+// v3 orientation lock: top defenders always face down and bottom defenders
+// always face up. The authored fire pose aims sideways and the hit pose faces
+// the camera, so neither may replace the directional aim. Fire and hit become
+// overlay cues (see defenderCue) on the directional pose instead. The renderer
+// only draws a defender for live structures; "destroyed" maps to rubble.
 export const defenderPose = (
   s: DefenderState,
   aiming: boolean,
@@ -254,11 +328,16 @@ export const defenderPose = (
   alive = true
 ): string => {
   if (!alive) return "destroyed";
-  if (now < s.hitUntil) return "hit";
-  if (now < s.fireUntil) return "fire";
-  if (aiming) return directionalAim(screenY);
+  if (aiming || now < s.hitUntil || now < s.fireUntil) return directionalAim(screenY);
   return "idle";
 };
+
+export type DefenderCue = "hit" | "fire" | null;
+
+// Priority: hit > fire, both driven only by authoritative hp drops and fresh
+// tower_fired events through updateDefender.
+export const defenderCue = (s: DefenderState, now: number): DefenderCue =>
+  now < s.hitUntil ? "hit" : now < s.fireUntil ? "fire" : null;
 
 // Deterministic projectile attribution: a projectile whose first-seen arena
 // position is within `maxDist` units of a same-owner structure's weapon

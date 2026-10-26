@@ -23,7 +23,7 @@ import type { BoardMapper, CanvasFeed } from "./BattleCanvas";
 const BattleCanvas = dynamic(() => import("./BattleCanvas"), { ssr: false });
 import { Portrait } from "./portrait";
 import { useSpriteManifest } from "./use-sprite-manifest";
-import { portraitForCard, portraitForCommanderClass, type SpriteManifest } from "./sprite-registry";
+import { portraitCandidatesForCard, portraitForCommanderClass, type SpriteManifest } from "./sprite-registry";
 import { abilityView, scoreView, timerView } from "./hud-view";
 import { satoshi, georama, lilitaOne } from "@/components/site/fonts";
 import type { BattleCue } from "./battle-audio";
@@ -91,10 +91,10 @@ export interface BattleHudProps {
   placePreview: (el: HTMLDivElement | null, clientX: number, clientY: number) => void;
 }
 
-function portraitSrc(manifest: SpriteManifest | null, cardId: string, commanderCls: string): string | null {
+function portraitSrc(manifest: SpriteManifest | null, cardId: string, commanderCls: string): string | string[] | null {
   if (!manifest) return null;
   if (isCommanderCard(cardId)) return portraitForCommanderClass(manifest, commanderCls);
-  return portraitForCard(manifest, cardId);
+  return portraitCandidatesForCard(manifest, cardId);
 }
 
 function CardButton({

@@ -1,0 +1,1220 @@
+{
+  "schema": 1,
+  "version": "chog-units-v001",
+  "revision": "slice4.1",
+  "source": "tools/blender/chog-units-v001",
+  "units": {
+    "choglings": {
+      "entityId": "choglings",
+      "sheet": "choglings/sheet.png",
+      "sha256": "68357b3a35c49bc639a265796c3f47bf8adbe5b2c4363c6954995a113ecf39c6",
+      "width": 592,
+      "height": 592,
+      "frameWidth": 74,
+      "frameHeight": 74,
+      "columns": 8,
+      "frameCount": 62,
+      "pivot": [
+        37,
+        62
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.8378378378378378
+      ],
+      "visibleHeight": 39,
+      "displayScale": 0.974,
+      "facing": "right",
+      "clips": {
+        "idle": {
+          "start": 0,
+          "count": 6,
+          "fps": 8,
+          "loop": true
+        },
+        "move": {
+          "start": 6,
+          "count": 8,
+          "fps": 14,
+          "loop": true
+        },
+        "attack": {
+          "start": 14,
+          "count": 6,
+          "fps": 16,
+          "loop": false,
+          "impact": 3
+        },
+        "hit": {
+          "start": 20,
+          "count": 3,
+          "fps": 14,
+          "loop": false
+        },
+        "defeat": {
+          "start": 23,
+          "count": 8,
+          "fps": 14,
+          "loop": false
+        }
+      },
+      "rearClips": {
+        "idle": {
+          "start": 31,
+          "count": 6,
+          "fps": 8,
+          "loop": true
+        },
+        "move": {
+          "start": 37,
+          "count": 8,
+          "fps": 14,
+          "loop": true
+        },
+        "attack": {
+          "start": 45,
+          "count": 6,
+          "fps": 16,
+          "loop": false,
+          "impact": 3
+        },
+        "hit": {
+          "start": 51,
+          "count": 3,
+          "fps": 14,
+          "loop": false
+        },
+        "defeat": {
+          "start": 54,
+          "count": 8,
+          "fps": 14,
+          "loop": false
+        }
+      },
+      "attackPeriodMs": 800,
+      "reach": 2,
+      "hitsAir": false,
+      "air": false,
+      "defeatMs": 571,
+      "portrait": "choglings/card-portrait.png",
+      "portraitSha256": "99fc5c765d0dee6650934e59a469f277d7e02c8be07145445ce66daa1eb304d2",
+      "camera": {
+        "tiltDeg": 52,
+        "yawDeg": 24.000000000000004,
+        "rearYawDeg": 156,
+        "pxPerUnit": 8
+      }
+    },
+    "boulderback": {
+      "entityId": "boulderback",
+      "sheet": "boulderback/sheet.png",
+      "sha256": "a8c21684cfca694483639ea74be9091cf1af1185bc97e95488193a87447fe1d8",
+      "width": 800,
+      "height": 990,
+      "frameWidth": 100,
+      "frameHeight": 110,
+      "columns": 8,
+      "frameCount": 70,
+      "pivot": [
+        50,
+        79
+      ],
+      "pivotNormalized": [
+        0.5,
+        0.7181818181818181
+      ],
+      "visibleHeight": 58,
+      "displayScale": 0.897,
+      "facing": "right",
+      "clips": {
+        "idle": {
+          "start": 0,
+          "count": 6,
+          "fps": 6,
+          "loop": true
+        },
+        "move": {
+          "start": 6,
+          "count": 8,
+          "fps": 9,
+          "loop": true
+        },
+        "attack": {
+          "start": 14,
+          "count": 8,
+          "fps": 11,
+          "loop": false,
+          "impact": 4
+        },
+        "hit": {
+          "start": 22,
+          "count": 4,
+          "fps": 12,
+          "loop": false
+        },
+        "defeat": {
+          "start": 26,
+          "count": 9,
+          "fps": 10,
+          "loop": false
+        }
+      },
+      "rearClips": {
+        "idle": {
+          "start": 35,
+          "count": 6,
+          "fps": 6,
+          "loop": true
+        },
+        "move": {
+          "start": 41,
+          "count": 8,
+          "fps": 9,
+          "loop": true
+        },
+        "attack": {
+          "start": 49,
+          "count": 8,
+          "fps": 11,
+          "loop": false,
+          "impact": 4
+        },
+        "hit": {
+          "start": 57,
+          "count": 4,
+          "fps": 12,
+          "loop": false
+        },
+        "defeat": {
+          "start": 61,
+          "count": 9,
+          "fps": 10,
+          "loop": false
+        }
+      },
+      "attackPeriodMs": 1200,
+      "reach": 2,
+      "hitsAir": false,
+      "air": false,
+      "defeatMs": 900,
+      "portrait": "boulderback/card-portrait.png",
+      "portraitSha256": "1c6cc8b1773a9a0e44fd44d5b65465ee7ca0b0004c08121c3fce656794354529",
+      "camera": {
+        "tiltDeg": 52,
+        "yawDeg": 24.000000000000004,
+        "rearYawDeg": 156,
+        "pxPerUnit": 11.25
+      }
+    },
+    "chaos_archer": {
+      "entityId": "chaos_archer",
+      "sheet": "chaos_archer/sheet.png",
+      "sha256": "61bf486a14cd4cd9b2b3ebec40aee44f182eb33c16e612db69d30ab43a0e1766",
+      "width": 472,
+      "height": 528,
+      "frameWidth": 59,
+      "frameHeight": 66,
+      "columns": 8,
+      "frameCount": 62,
+      "pivot": [
+        35,
+        48
+      ],
+      "pivotNormalized": [
+        0.5932203389830508,
+        0.7272727272727273
+      ],
+      "visibleHeight": 43,
+      "displayScale": 1.023,
+      "facing": "right",
+      "clips": {
+        "idle": {
+          "start": 0,
+          "count": 6,
+          "fps": 8,
+          "loop": true
+        },
+        "move": {
+          "start": 6,
+          "count": 8,
+          "fps": 12,
+          "loop": true
+        },
+        "attack": {
+          "start": 14,
+          "count": 7,
+          "fps": 12,
+          "loop": false,
+          "impact": 3
+        },
+        "hit": {
+          "start": 21,
+          "count": 3,
+          "fps": 14,
+          "loop": false
+        },
+        "defeat": {
+          "start": 24,
+          "count": 7,
+          "fps": 12,
+          "loop": false
+        }
+      },
+      "rearClips": {
+        "idle": {
+          "start": 31,
+          "count": 6,
+          "fps": 8,
+          "loop": true
+        },
+        "move": {
+          "start": 37,
+          "count": 8,
+          "fps": 12,
+          "loop": true
+        },
+        "attack": {
+          "start": 45,
+          "count": 7,
+          "fps": 12,
+          "loop": false,
+          "impact": 3
+        },
+        "hit": {
+          "start": 52,
+          "count": 3,
+          "fps": 14,
+          "loop": false
+        },
+        "defeat": {
+          "start": 55,
+          "count": 7,
+          "fps": 12,
+          "loop": false
+        }
+      },
+      "attackPeriodMs": 1000,
+      "reach": 18,
+      "hitsAir": true,
+      "air": false,
+      "defeatMs": 583,
+      "portrait": "chaos_archer/card-portrait.png",
+      "portraitSha256": "352c5213405f14770adb2caf96d944d592d718e6294d09121f372be68c8a0862",
+      "camera": {
+        "tiltDeg": 52,
+        "yawDeg": 24.000000000000004,
+        "rearYawDeg": 156,
+        "pxPerUnit": 9
+      }
+    },
+    "frostshell": {
+      "entityId": "frostshell",
+      "sheet": "frostshell/sheet.png",
+      "sha256": "782ce1da22b5b1cc3767afeec2c3a8e6020f30448eb471e3a66d76b3653c987c",
+      "width": 584,
+      "height": 672,
+      "frameWidth": 73,
+      "frameHeight": 84,
+      "columns": 8,
+      "frameCount": 64,
+      "pivot": [
+        40,
+        60
+      ],
+      "pivotNormalized": [
+        0.547945205479452,
+        0.7142857142857143
+      ],
+      "visibleHeight": 55,
+      "displayScale": 0.945,
+      "facing": "right",
+      "clips": {
+        "idle": {
+          "start": 0,
+          "count": 6,
+          "fps": 6,
+          "loop": true
+        },
+        "move": {
+          "start": 6,
+          "count": 8,
+          "fps": 9,
+          "loop": true
+        },
+        "attack": {
+          "start": 14,
+          "count": 7,
+          "fps": 10,
+          "loop": false,
+          "impact": 4
+        },
+        "hit": {
+          "start": 21,
+          "count": 4,
+          "fps": 12,
+          "loop": false
+        },
+        "defeat": {
+          "start": 25,
+          "count": 7,
+          "fps": 11,
+          "loop": false
+        }
+      },
+      "rearClips": {
+        "idle": {
+          "start": 32,
+          "count": 6,
+          "fps": 6,
+          "loop": true
+        },
+        "move": {
+          "start": 38,
+          "count": 8,
+          "fps": 9,
+          "loop": true
+        },
+        "attack": {
+          "start": 46,
+          "count": 7,
+          "fps": 10,
+          "loop": false,
+          "impact": 4
+        },
+        "hit": {
+          "start": 53,
+          "count": 4,
+          "fps": 12,
+          "loop": false
+        },
+        "defeat": {
+          "start": 57,
+          "count": 7,
+          "fps": 11,
+          "loop": false
+        }
+      },
+      "attackPeriodMs": 1200,
+      "reach": 2,
+      "hitsAir": false,
+      "air": false,
+      "defeatMs": 636,
+      "portrait": "frostshell/card-portrait.png",
+      "portraitSha256": "37c9a13fa084374440f1a609ce3812990207ec2aa6572963b493b9336a328cda",
+      "camera": {
+        "tiltDeg": 52,
+        "yawDeg": 24.000000000000004,
+        "rearYawDeg": 156,
+        "pxPerUnit": 10.4
+      }
+    },
+    "rift_runner": {
+      "entityId": "rift_runner",
+      "sheet": "rift_runner/sheet.png",
+      "sha256": "f8a163bd50fa118ebd38f1ce7dc220f5ec520411a15c7217d5048f3182727dd2",
+      "width": 528,
+      "height": 480,
+      "frameWidth": 66,
+      "frameHeight": 60,
+      "columns": 8,
+      "frameCount": 60,
+      "pivot": [
+        37,
+        48
+      ],
+      "pivotNormalized": [
+        0.5606060606060606,
+        0.8
+      ],
+      "visibleHeight": 40,
+      "displayScale": 1.1,
+      "facing": "right",
+      "clips": {
+        "idle": {
+          "start": 0,
+          "count": 6,
+          "fps": 10,
+          "loop": true
+        },
+        "move": {
+          "start": 6,
+          "count": 8,
+          "fps": 16,
+          "loop": true
+        },
+        "attack": {
+          "start": 14,
+          "count": 6,
+          "fps": 14,
+          "loop": false,
+          "impact": 2
+        },
+        "hit": {
+          "start": 20,
+          "count": 3,
+          "fps": 14,
+          "loop": false
+        },
+        "defeat": {
+          "start": 23,
+          "count": 7,
+          "fps": 13,
+          "loop": false
+        }
+      },
+      "rearClips": {
+        "idle": {
+          "start": 30,
+          "count": 6,
+          "fps": 10,
+          "loop": true
+        },
+        "move": {
+          "start": 36,
+          "count": 8,
+          "fps": 16,
+          "loop": true
+        },
+        "attack": {
+          "start": 44,
+          "count": 6,
+          "fps": 14,
+          "loop": false,
+          "impact": 2
+        },
+        "hit": {
+          "start": 50,
+          "count": 3,
+          "fps": 14,
+          "loop": false
+        },
+        "defeat": {
+          "start": 53,
+          "count": 7,
+          "fps": 13,
+          "loop": false
+        }
+      },
+      "attackPeriodMs": 900,
+      "reach": 2,
+      "hitsAir": false,
+      "air": false,
+      "defeatMs": 538,
+      "portrait": "rift_runner/card-portrait.png",
+      "portraitSha256": "5e2be1a3124caf666d29c8a45d4212552cca9d05fecff16dfcf66cd93760e853",
+      "camera": {
+        "tiltDeg": 52,
+        "yawDeg": 24.000000000000004,
+        "rearYawDeg": 156,
+        "pxPerUnit": 9
+      }
+    },
+    "sparkcaster": {
+      "entityId": "sparkcaster",
+      "sheet": "sparkcaster/sheet.png",
+      "sha256": "3c8ecfe77fddb6dd56d30773141b793ef025994d4821d21220edb4fe61917eee",
+      "width": 568,
+      "height": 568,
+      "frameWidth": 71,
+      "frameHeight": 71,
+      "columns": 8,
+      "frameCount": 64,
+      "pivot": [
+        38,
+        52
+      ],
+      "pivotNormalized": [
+        0.5352112676056338,
+        0.7323943661971831
+      ],
+      "visibleHeight": 47,
+      "displayScale": 1.021,
+      "facing": "right",
+      "clips": {
+        "idle": {
+          "start": 0,
+          "count": 6,
+          "fps": 8,
+          "loop": true
+        },
+        "move": {
+          "start": 6,
+          "count": 8,
+          "fps": 11,
+          "loop": true
+        },
+        "attack": {
+          "start": 14,
+          "count": 8,
+          "fps": 10,
+          "loop": false,
+          "impact": 4
+        },
+        "hit": {
+          "start": 22,
+          "count": 3,
+          "fps": 14,
+          "loop": false
+        },
+        "defeat": {
+          "start": 25,
+          "count": 7,
+          "fps": 12,
+          "loop": false
+        }
+      },
+      "rearClips": {
+        "idle": {
+          "start": 32,
+          "count": 6,
+          "fps": 8,
+          "loop": true
+        },
+        "move": {
+          "start": 38,
+          "count": 8,
+          "fps": 11,
+          "loop": true
+        },
+        "attack": {
+          "start": 46,
+          "count": 8,
+          "fps": 10,
+          "loop": false,
+          "impact": 4
+        },
+        "hit": {
+          "start": 54,
+          "count": 3,
+          "fps": 14,
+          "loop": false
+        },
+        "defeat": {
+          "start": 57,
+          "count": 7,
+          "fps": 12,
+          "loop": false
+        }
+      },
+      "attackPeriodMs": 1400,
+      "reach": 20,
+      "hitsAir": true,
+      "air": false,
+      "defeatMs": 583,
+      "portrait": "sparkcaster/card-portrait.png",
+      "portraitSha256": "b2a9095a67c8ac88861d299459f2a334f4594288ad389a62595a3b2e3207b47b",
+      "camera": {
+        "tiltDeg": 52,
+        "yawDeg": 24.000000000000004,
+        "rearYawDeg": 156,
+        "pxPerUnit": 9.6
+      }
+    },
+    "chog_guardian": {
+      "entityId": "chog_guardian",
+      "sheet": "chog_guardian/sheet.png",
+      "sha256": "4cac95336fab4655845f5a77ec7f5a65e5e8249351d7aa9a152fe39a939e2332",
+      "width": 552,
+      "height": 576,
+      "frameWidth": 69,
+      "frameHeight": 72,
+      "columns": 8,
+      "frameCount": 64,
+      "pivot": [
+        36,
+        53
+      ],
+      "pivotNormalized": [
+        0.5217391304347826,
+        0.7361111111111112
+      ],
+      "visibleHeight": 49,
+      "displayScale": 1.02,
+      "facing": "right",
+      "clips": {
+        "idle": {
+          "start": 0,
+          "count": 6,
+          "fps": 7,
+          "loop": true
+        },
+        "move": {
+          "start": 6,
+          "count": 8,
+          "fps": 11,
+          "loop": true
+        },
+        "attack": {
+          "start": 14,
+          "count": 7,
+          "fps": 12,
+          "loop": false,
+          "impact": 3
+        },
+        "hit": {
+          "start": 21,
+          "count": 4,
+          "fps": 12,
+          "loop": false
+        },
+        "defeat": {
+          "start": 25,
+          "count": 7,
+          "fps": 12,
+          "loop": false
+        }
+      },
+      "rearClips": {
+        "idle": {
+          "start": 32,
+          "count": 6,
+          "fps": 7,
+          "loop": true
+        },
+        "move": {
+          "start": 38,
+          "count": 8,
+          "fps": 11,
+          "loop": true
+        },
+        "attack": {
+          "start": 46,
+          "count": 7,
+          "fps": 12,
+          "loop": false,
+          "impact": 3
+        },
+        "hit": {
+          "start": 53,
+          "count": 4,
+          "fps": 12,
+          "loop": false
+        },
+        "defeat": {
+          "start": 57,
+          "count": 7,
+          "fps": 12,
+          "loop": false
+        }
+      },
+      "attackPeriodMs": 1000,
+      "reach": 2,
+      "hitsAir": false,
+      "air": false,
+      "defeatMs": 583,
+      "portrait": "chog_guardian/card-portrait.png",
+      "portraitSha256": "33cb891c44b6fbbcba43d376fb022568df5b73513994ac90e9a71ac8e8e43a14",
+      "camera": {
+        "tiltDeg": 52,
+        "yawDeg": 24.000000000000004,
+        "rearYawDeg": 156,
+        "pxPerUnit": 10
+      }
+    },
+    "hexwing": {
+      "entityId": "hexwing",
+      "sheet": "hexwing/sheet.png",
+      "sha256": "0adcfae580fdb6ae41aa24ed9a8fd6b996ad775f755162d6c62481436608d4eb",
+      "width": 600,
+      "height": 576,
+      "frameWidth": 75,
+      "frameHeight": 72,
+      "columns": 8,
+      "frameCount": 58,
+      "pivot": [
+        39,
+        58
+      ],
+      "pivotNormalized": [
+        0.52,
+        0.8055555555555556
+      ],
+      "visibleHeight": 48,
+      "displayScale": 1.042,
+      "facing": "right",
+      "clips": {
+        "idle": {
+          "start": 0,
+          "count": 6,
+          "fps": 12,
+          "loop": true
+        },
+        "move": {
+          "start": 6,
+          "count": 6,
+          "fps": 14,
+          "loop": true
+        },
+        "attack": {
+          "start": 12,
+          "count": 7,
+          "fps": 12,
+          "loop": false,
+          "impact": 3
+        },
+        "hit": {
+          "start": 19,
+          "count": 3,
+          "fps": 14,
+          "loop": false
+        },
+        "defeat": {
+          "start": 22,
+          "count": 7,
+          "fps": 12,
+          "loop": false
+        }
+      },
+      "rearClips": {
+        "idle": {
+          "start": 29,
+          "count": 6,
+          "fps": 12,
+          "loop": true
+        },
+        "move": {
+          "start": 35,
+          "count": 6,
+          "fps": 14,
+          "loop": true
+        },
+        "attack": {
+          "start": 41,
+          "count": 7,
+          "fps": 12,
+          "loop": false,
+          "impact": 3
+        },
+        "hit": {
+          "start": 48,
+          "count": 3,
+          "fps": 14,
+          "loop": false
+        },
+        "defeat": {
+          "start": 51,
+          "count": 7,
+          "fps": 12,
+          "loop": false
+        }
+      },
+      "attackPeriodMs": 1000,
+      "reach": 14,
+      "hitsAir": true,
+      "air": true,
+      "defeatMs": 583,
+      "portrait": "hexwing/card-portrait.png",
+      "portraitSha256": "7009a5a537349df8def7e83c5af2b60badffbe40120b03a30e39e4185cf7858d",
+      "camera": {
+        "tiltDeg": 52,
+        "yawDeg": 24.000000000000004,
+        "rearYawDeg": 156,
+        "pxPerUnit": 8.5
+      }
+    },
+    "rift_sprites": {
+      "entityId": "rift_sprites",
+      "sheet": "rift_sprites/sheet.png",
+      "sha256": "56a8b86a245b0f2dfd681e5dc387563fa0a0f463044bf56855304145d75134d1",
+      "width": 448,
+      "height": 343,
+      "frameWidth": 56,
+      "frameHeight": 49,
+      "columns": 8,
+      "frameCount": 54,
+      "pivot": [
+        30,
+        40
+      ],
+      "pivotNormalized": [
+        0.5357142857142857,
+        0.8163265306122449
+      ],
+      "visibleHeight": 35,
+      "displayScale": 0.971,
+      "facing": "right",
+      "clips": {
+        "idle": {
+          "start": 0,
+          "count": 6,
+          "fps": 14,
+          "loop": true
+        },
+        "move": {
+          "start": 6,
+          "count": 6,
+          "fps": 16,
+          "loop": true
+        },
+        "attack": {
+          "start": 12,
+          "count": 5,
+          "fps": 14,
+          "loop": false,
+          "impact": 2
+        },
+        "hit": {
+          "start": 17,
+          "count": 3,
+          "fps": 14,
+          "loop": false
+        },
+        "defeat": {
+          "start": 20,
+          "count": 7,
+          "fps": 14,
+          "loop": false
+        }
+      },
+      "rearClips": {
+        "idle": {
+          "start": 27,
+          "count": 6,
+          "fps": 14,
+          "loop": true
+        },
+        "move": {
+          "start": 33,
+          "count": 6,
+          "fps": 16,
+          "loop": true
+        },
+        "attack": {
+          "start": 39,
+          "count": 5,
+          "fps": 14,
+          "loop": false,
+          "impact": 2
+        },
+        "hit": {
+          "start": 44,
+          "count": 3,
+          "fps": 14,
+          "loop": false
+        },
+        "defeat": {
+          "start": 47,
+          "count": 7,
+          "fps": 14,
+          "loop": false
+        }
+      },
+      "attackPeriodMs": 800,
+      "reach": 2,
+      "hitsAir": false,
+      "air": true,
+      "defeatMs": 500,
+      "portrait": "rift_sprites/card-portrait.png",
+      "portraitSha256": "5b3c36b7dcdd871ef92283e01200c6248f62c0c5d3e2659352487f11abc5052f",
+      "camera": {
+        "tiltDeg": 52,
+        "yawDeg": 24.000000000000004,
+        "rearYawDeg": 156,
+        "pxPerUnit": 6.5
+      }
+    },
+    "gale_netter": {
+      "entityId": "gale_netter",
+      "sheet": "gale_netter/sheet.png",
+      "sha256": "87cfb174f493e1578d4da42d21c55e4f173e1dcfb810a2c309a4265e136758bb",
+      "width": 544,
+      "height": 536,
+      "frameWidth": 68,
+      "frameHeight": 67,
+      "columns": 8,
+      "frameCount": 62,
+      "pivot": [
+        36,
+        49
+      ],
+      "pivotNormalized": [
+        0.5294117647058824,
+        0.7313432835820896
+      ],
+      "visibleHeight": 44,
+      "displayScale": 1.045,
+      "facing": "right",
+      "clips": {
+        "idle": {
+          "start": 0,
+          "count": 6,
+          "fps": 8,
+          "loop": true
+        },
+        "move": {
+          "start": 6,
+          "count": 8,
+          "fps": 12,
+          "loop": true
+        },
+        "attack": {
+          "start": 14,
+          "count": 7,
+          "fps": 12,
+          "loop": false,
+          "impact": 3
+        },
+        "hit": {
+          "start": 21,
+          "count": 3,
+          "fps": 14,
+          "loop": false
+        },
+        "defeat": {
+          "start": 24,
+          "count": 7,
+          "fps": 12,
+          "loop": false
+        }
+      },
+      "rearClips": {
+        "idle": {
+          "start": 31,
+          "count": 6,
+          "fps": 8,
+          "loop": true
+        },
+        "move": {
+          "start": 37,
+          "count": 8,
+          "fps": 12,
+          "loop": true
+        },
+        "attack": {
+          "start": 45,
+          "count": 7,
+          "fps": 12,
+          "loop": false,
+          "impact": 3
+        },
+        "hit": {
+          "start": 52,
+          "count": 3,
+          "fps": 14,
+          "loop": false
+        },
+        "defeat": {
+          "start": 55,
+          "count": 7,
+          "fps": 12,
+          "loop": false
+        }
+      },
+      "attackPeriodMs": 1000,
+      "reach": 16,
+      "hitsAir": true,
+      "air": false,
+      "defeatMs": 583,
+      "portrait": "gale_netter/card-portrait.png",
+      "portraitSha256": "bc0c1fb4464bd37b08873c261e4b39d8e7d91452ab0233ef0fecca5e75beef39",
+      "camera": {
+        "tiltDeg": 52,
+        "yawDeg": 24.000000000000004,
+        "rearYawDeg": 156,
+        "pxPerUnit": 9.2
+      }
+    },
+    "riftbreaker": {
+      "entityId": "riftbreaker",
+      "sheet": "riftbreaker/sheet.png",
+      "sha256": "5a94dded4deb369497da648c89574a4f2e02023ee37224e587d72aa20a750f60",
+      "width": 632,
+      "height": 711,
+      "frameWidth": 79,
+      "frameHeight": 79,
+      "columns": 8,
+      "frameCount": 66,
+      "pivot": [
+        44,
+        59
+      ],
+      "pivotNormalized": [
+        0.5569620253164557,
+        0.7468354430379747
+      ],
+      "visibleHeight": 53,
+      "displayScale": 1.019,
+      "facing": "right",
+      "clips": {
+        "idle": {
+          "start": 0,
+          "count": 6,
+          "fps": 6,
+          "loop": true
+        },
+        "move": {
+          "start": 6,
+          "count": 8,
+          "fps": 9,
+          "loop": true
+        },
+        "attack": {
+          "start": 14,
+          "count": 8,
+          "fps": 11,
+          "loop": false,
+          "impact": 4
+        },
+        "hit": {
+          "start": 22,
+          "count": 4,
+          "fps": 12,
+          "loop": false
+        },
+        "defeat": {
+          "start": 26,
+          "count": 7,
+          "fps": 11,
+          "loop": false
+        }
+      },
+      "rearClips": {
+        "idle": {
+          "start": 33,
+          "count": 6,
+          "fps": 6,
+          "loop": true
+        },
+        "move": {
+          "start": 39,
+          "count": 8,
+          "fps": 9,
+          "loop": true
+        },
+        "attack": {
+          "start": 47,
+          "count": 8,
+          "fps": 11,
+          "loop": false,
+          "impact": 4
+        },
+        "hit": {
+          "start": 55,
+          "count": 4,
+          "fps": 12,
+          "loop": false
+        },
+        "defeat": {
+          "start": 59,
+          "count": 7,
+          "fps": 11,
+          "loop": false
+        }
+      },
+      "attackPeriodMs": 1100,
+      "reach": 2,
+      "hitsAir": false,
+      "air": false,
+      "defeatMs": 636,
+      "portrait": "riftbreaker/card-portrait.png",
+      "portraitSha256": "c104dc44eeec18d5de4997eefad9e45039aedcb9a603b1920f8babe20b720b98",
+      "camera": {
+        "tiltDeg": 52,
+        "yawDeg": 24.000000000000004,
+        "rearYawDeg": 156,
+        "pxPerUnit": 10.8
+      }
+    },
+    "ember_mauler": {
+      "entityId": "ember_mauler",
+      "sheet": "ember_mauler/sheet.png",
+      "sha256": "7eaee09fffe7d4be5ef32ed69d978329144814bff8ef0d75e8a5749fe3f131d5",
+      "width": 640,
+      "height": 720,
+      "frameWidth": 80,
+      "frameHeight": 80,
+      "columns": 8,
+      "frameCount": 66,
+      "pivot": [
+        39,
+        59
+      ],
+      "pivotNormalized": [
+        0.4875,
+        0.7375
+      ],
+      "visibleHeight": 54,
+      "displayScale": 1,
+      "facing": "right",
+      "clips": {
+        "idle": {
+          "start": 0,
+          "count": 6,
+          "fps": 6,
+          "loop": true
+        },
+        "move": {
+          "start": 6,
+          "count": 8,
+          "fps": 8,
+          "loop": true
+        },
+        "attack": {
+          "start": 14,
+          "count": 8,
+          "fps": 11,
+          "loop": false,
+          "impact": 4
+        },
+        "hit": {
+          "start": 22,
+          "count": 4,
+          "fps": 12,
+          "loop": false
+        },
+        "defeat": {
+          "start": 26,
+          "count": 7,
+          "fps": 11,
+          "loop": false
+        }
+      },
+      "rearClips": {
+        "idle": {
+          "start": 33,
+          "count": 6,
+          "fps": 6,
+          "loop": true
+        },
+        "move": {
+          "start": 39,
+          "count": 8,
+          "fps": 8,
+          "loop": true
+        },
+        "attack": {
+          "start": 47,
+          "count": 8,
+          "fps": 11,
+          "loop": false,
+          "impact": 4
+        },
+        "hit": {
+          "start": 55,
+          "count": 4,
+          "fps": 12,
+          "loop": false
+        },
+        "defeat": {
+          "start": 59,
+          "count": 7,
+          "fps": 11,
+          "loop": false
+        }
+      },
+      "attackPeriodMs": 1200,
+      "reach": 2,
+      "hitsAir": false,
+      "air": false,
+      "defeatMs": 636,
+      "portrait": "ember_mauler/card-portrait.png",
+      "portraitSha256": "4b86b1a9489e929d85e85f3a1dce4a49f77ff86a638ee5a46e1bc3a8f8aaafa8",
+      "camera": {
+        "tiltDeg": 52,
+        "yawDeg": 24.000000000000004,
+        "rearYawDeg": 156,
+        "pxPerUnit": 10.8
+      }
+    }
+  }
+}

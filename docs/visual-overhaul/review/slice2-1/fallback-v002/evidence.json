@@ -1,0 +1,320 @@
+[
+ {
+  "name": "active-endy-seat1-390x844.png",
+  "who": "endy",
+  "seat": 1,
+  "viewport": [
+   390,
+   844
+  ],
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "failed": [
+   "http://127.0.0.1:3000/assets/arena/chaos-crossing/v003/manifests/arena.runtime.json",
+   "http://127.0.0.1:3000/assets/arena/chaos-crossing/v003/manifests/arena.runtime.json"
+  ],
+  "layers": [
+   {
+    "key": "background",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "base-terrain",
+    "flipY": true,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "river-water",
+    "flipY": true,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "water-ripples-0",
+    "flipY": true,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "water-ripples-1",
+    "flipY": true,
+    "tint": "ffffff",
+    "visible": false
+   },
+   {
+    "key": "rift-ford-open",
+    "flipY": true,
+    "tint": "ffffff",
+    "visible": false
+   },
+   {
+    "key": "rift-ford-closing",
+    "flipY": true,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "banks-bridges",
+    "flipY": true,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "foundations",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "border-scenery",
+    "flipY": true,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "chaos-warning",
+    "flipY": true,
+    "tint": "ffffff",
+    "visible": false
+   },
+   {
+    "key": "chaos-active",
+    "flipY": true,
+    "tint": "ffffff",
+    "visible": false
+   },
+   {
+    "key": "chaos-expiry",
+    "flipY": true,
+    "tint": "ffffff",
+    "visible": false
+   },
+   {
+    "key": "ambient",
+    "flipY": true,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "team-trim",
+    "flipY": false,
+    "tint": "e0393e",
+    "visible": true
+   },
+   {
+    "key": "team-trim",
+    "flipY": false,
+    "tint": "2f80ed",
+    "visible": true
+   },
+   {
+    "key": "foreground",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   }
+  ],
+  "defenders": [
+   {
+    "pose": "core-keeper:defender-aim-south",
+    "x": 250,
+    "y": 40,
+    "half": "top"
+   },
+   {
+    "pose": "sentinel:defender-aim-south",
+    "x": 150,
+    "y": 200,
+    "half": "top"
+   },
+   {
+    "pose": "sentinel:defender-aim-south",
+    "x": 350,
+    "y": 200,
+    "half": "top"
+   },
+   {
+    "pose": "sentinel:defender-aim-north",
+    "x": 150,
+    "y": 600,
+    "half": "bottom"
+   },
+   {
+    "pose": "sentinel:defender-aim-north",
+    "x": 350,
+    "y": 600,
+    "half": "bottom"
+   },
+   {
+    "pose": "core-keeper:defender-aim-north",
+    "x": 250,
+    "y": 760,
+    "half": "bottom"
+   }
+  ]
+ },
+ {
+  "name": "active-phantom-seat0-390x844.png",
+  "who": "phantom",
+  "seat": 0,
+  "viewport": [
+   390,
+   844
+  ],
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "failed": [
+   "http://127.0.0.1:3000/assets/arena/chaos-crossing/v003/manifests/arena.runtime.json",
+   "http://127.0.0.1:3000/assets/arena/chaos-crossing/v003/manifests/arena.runtime.json"
+  ],
+  "layers": [
+   {
+    "key": "background",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "base-terrain",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "river-water",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "water-ripples-0",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": false
+   },
+   {
+    "key": "water-ripples-1",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "rift-ford-open",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": false
+   },
+   {
+    "key": "rift-ford-closing",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "banks-bridges",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "foundations",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "border-scenery",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "chaos-warning",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": false
+   },
+   {
+    "key": "chaos-active",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": false
+   },
+   {
+    "key": "chaos-expiry",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": false
+   },
+   {
+    "key": "ambient",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "team-trim",
+    "flipY": false,
+    "tint": "e0393e",
+    "visible": true
+   },
+   {
+    "key": "team-trim",
+    "flipY": false,
+    "tint": "2f80ed",
+    "visible": true
+   },
+   {
+    "key": "foreground",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   }
+  ],
+  "defenders": [
+   {
+    "pose": "core-keeper:defender-aim-south",
+    "x": 250,
+    "y": 40,
+    "half": "top"
+   },
+   {
+    "pose": "sentinel:defender-aim-south",
+    "x": 150,
+    "y": 200,
+    "half": "top"
+   },
+   {
+    "pose": "sentinel:defender-aim-south",
+    "x": 350,
+    "y": 200,
+    "half": "top"
+   },
+   {
+    "pose": "sentinel:defender-aim-north",
+    "x": 150,
+    "y": 600,
+    "half": "bottom"
+   },
+   {
+    "pose": "sentinel:defender-aim-north",
+    "x": 350,
+    "y": 600,
+    "half": "bottom"
+   },
+   {
+    "pose": "core-keeper:defender-aim-north",
+    "x": 250,
+    "y": 760,
+    "half": "bottom"
+   }
+  ]
+ }
+]

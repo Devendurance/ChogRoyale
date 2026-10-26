@@ -1,0 +1,66 @@
+[
+ {
+  "seat": 0,
+  "viewport": [
+   390,
+   844
+  ],
+  "errors": [],
+  "failed": [],
+  "census": {
+   "troop:chaos_archer:static": 1627,
+   "troop:gale_netter:static": 493,
+   "troop:riftbreaker:static": 1561,
+   "troop:frostshell:static": 1309,
+   "troop:rift_runner:static": 395,
+   "troop:ember_mauler:static": 752,
+   "troop:choglings:static": 805,
+   "troop:sparkcaster:static": 437,
+   "troop:boulderback:static": 911,
+   "troop:chog_guardian:static": 490,
+   "troop:hexwing:static": 554,
+   "troop:rift_sprites:static": 370
+  },
+  "marker": {
+   "ok": 4897,
+   "bad": 0,
+   "colors": {
+    "e0393e": 3124,
+    "2f80ed": 1773
+   }
+  },
+  "views": {}
+ },
+ {
+  "seat": 1,
+  "viewport": [
+   390,
+   844
+  ],
+  "errors": [],
+  "failed": [],
+  "census": {
+   "troop:chaos_archer:static": 1552,
+   "troop:gale_netter:static": 491,
+   "troop:frostshell:static": 1303,
+   "troop:riftbreaker:static": 1567,
+   "troop:rift_runner:static": 395,
+   "troop:ember_mauler:static": 787,
+   "troop:choglings:static": 869,
+   "troop:sparkcaster:static": 440,
+   "troop:chog_guardian:static": 485,
+   "troop:boulderback:static": 915,
+   "troop:hexwing:static": 564,
+   "troop:rift_sprites:static": 376
+  },
+  "marker": {
+   "ok": 4953,
+   "bad": 0,
+   "colors": {
+    "2f80ed": 3215,
+    "e0393e": 1738
+   }
+  },
+  "views": {}
+ }
+]

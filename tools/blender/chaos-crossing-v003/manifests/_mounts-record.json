@@ -1,0 +1,258 @@
+[
+ {
+  "role": "lane-red",
+  "kind": "tower",
+  "team": "red",
+  "defender": "bulwark",
+  "aim": "aim-south",
+  "w": 7.2,
+  "h": 5.0,
+  "scale": 1.5,
+  "pxPerUnit": 20,
+  "canvas": [
+   512,
+   640
+  ],
+  "pivot": [
+   256,
+   560
+  ],
+  "parts": {
+   "structure-base": "lane-red/structure-base.png",
+   "socket-platform": "lane-red/socket-platform.png",
+   "front-rim": "lane-red/front-rim.png"
+  },
+  "poses": {
+   "defender-idle": "lane-red/defender-idle.png",
+   "defender-aim-south": "lane-red/defender-aim-south.png"
+  },
+  "weapon": {
+   "idle": {
+    "world": [
+     1.75,
+     -3.5825,
+     8.1891
+    ],
+    "masterPixels": [
+     291.0,
+     475.05
+    ],
+    "weaponAnchorLocalBoardPixels": [
+     17.5,
+     -42.475
+    ]
+   },
+   "aim-south": {
+    "world": [
+     1.75,
+     -3.4649,
+     5.9445
+    ],
+    "masterPixels": [
+     291.0,
+     508.977
+    ],
+    "weaponAnchorLocalBoardPixels": [
+     17.5,
+     -25.511
+    ]
+   }
+  },
+  "groundAnchorCheck": [
+   256.0,
+   560.0
+  ]
+ },
+ {
+  "role": "lane-blue",
+  "kind": "tower",
+  "team": "blue",
+  "defender": "guardian",
+  "aim": "aim-north",
+  "w": 7.2,
+  "h": 5.0,
+  "scale": 1.5,
+  "pxPerUnit": 20,
+  "canvas": [
+   512,
+   640
+  ],
+  "pivot": [
+   256,
+   560
+  ],
+  "parts": {
+   "structure-base": "lane-blue/structure-base.png",
+   "socket-platform": "lane-blue/socket-platform.png",
+   "front-rim": "lane-blue/front-rim.png"
+  },
+  "poses": {
+   "defender-idle": "lane-blue/defender-idle.png",
+   "defender-aim-north": "lane-blue/defender-aim-north.png"
+  },
+  "weapon": {
+   "idle": {
+    "world": [
+     2.0,
+     3.1825,
+     8.1891
+    ],
+    "masterPixels": [
+     296.0,
+     391.751
+    ],
+    "weaponAnchorLocalBoardPixels": [
+     20.0,
+     -84.124
+    ]
+   },
+   "aim-north": {
+    "world": [
+     2.0,
+     3.2675,
+     7.872
+    ],
+    "masterPixels": [
+     296.0,
+     395.702
+    ],
+    "weaponAnchorLocalBoardPixels": [
+     20.0,
+     -82.149
+    ]
+   }
+  },
+  "groundAnchorCheck": [
+   256.0,
+   560.0
+  ]
+ },
+ {
+  "role": "king-red",
+  "kind": "core",
+  "team": "red",
+  "defender": "bulwark",
+  "aim": "aim-south",
+  "w": 9.0,
+  "h": 5.8,
+  "scale": 1.65,
+  "pxPerUnit": 20,
+  "canvas": [
+   512,
+   640
+  ],
+  "pivot": [
+   256,
+   560
+  ],
+  "parts": {
+   "structure-base": "king-red/structure-base.png",
+   "socket-platform": "king-red/socket-platform.png",
+   "front-rim": "king-red/front-rim.png"
+  },
+  "poses": {
+   "defender-idle": "king-red/defender-idle.png",
+   "defender-aim-south": "king-red/defender-aim-south.png"
+  },
+  "weapon": {
+   "idle": {
+    "world": [
+     1.75,
+     -3.5825,
+     8.9891
+    ],
+    "masterPixels": [
+     291.0,
+     462.442
+    ],
+    "weaponAnchorLocalBoardPixels": [
+     17.5,
+     -48.779
+    ]
+   },
+   "aim-south": {
+    "world": [
+     1.75,
+     -3.4649,
+     6.7445
+    ],
+    "masterPixels": [
+     291.0,
+     496.369
+    ],
+    "weaponAnchorLocalBoardPixels": [
+     17.5,
+     -31.815
+    ]
+   }
+  },
+  "groundAnchorCheck": [
+   256.0,
+   560.0
+  ]
+ },
+ {
+  "role": "king-blue",
+  "kind": "core",
+  "team": "blue",
+  "defender": "guardian",
+  "aim": "aim-north",
+  "w": 9.0,
+  "h": 5.8,
+  "scale": 1.65,
+  "pxPerUnit": 20,
+  "canvas": [
+   512,
+   640
+  ],
+  "pivot": [
+   256,
+   560
+  ],
+  "parts": {
+   "structure-base": "king-blue/structure-base.png",
+   "socket-platform": "king-blue/socket-platform.png",
+   "front-rim": "king-blue/front-rim.png"
+  },
+  "poses": {
+   "defender-idle": "king-blue/defender-idle.png",
+   "defender-aim-north": "king-blue/defender-aim-north.png"
+  },
+  "weapon": {
+   "idle": {
+    "world": [
+     2.0,
+     3.1825,
+     8.9891
+    ],
+    "masterPixels": [
+     296.0,
+     379.143
+    ],
+    "weaponAnchorLocalBoardPixels": [
+     20.0,
+     -90.429
+    ]
+   },
+   "aim-north": {
+    "world": [
+     2.0,
+     3.2675,
+     8.672
+    ],
+    "masterPixels": [
+     296.0,
+     383.094
+    ],
+    "weaponAnchorLocalBoardPixels": [
+     20.0,
+     -88.453
+    ]
+   }
+  },
+  "groundAnchorCheck": [
+   256.0,
+   560.0
+  ]
+ }
+]

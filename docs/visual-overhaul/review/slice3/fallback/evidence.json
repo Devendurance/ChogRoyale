@@ -1,0 +1,44 @@
+[
+ {
+  "seat": 0,
+  "viewport": [
+   390,
+   844
+  ],
+  "errors": [],
+  "failed": [],
+  "census": {
+   "troop:boulderback:static": 2114,
+   "troop:choglings:static": 3122
+  },
+  "marker": {
+   "ok": 1782,
+   "bad": 2,
+   "colors": {
+    "2f80ed": 480,
+    "e0393e": 1304
+   }
+  }
+ },
+ {
+  "seat": 1,
+  "viewport": [
+   390,
+   844
+  ],
+  "errors": [],
+  "failed": [],
+  "census": {
+   "troop:boulderback:static": 2151,
+   "troop:choglings:static": 3228
+  },
+  "marker": {
+   "ok": 1758,
+   "bad": 2,
+   "colors": {
+    "e0393e": 483,
+    "2f80ed": 1277
+   }
+  }
+ }
+]

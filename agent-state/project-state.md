@@ -1,5 +1,44 @@
 # Project State
 
+## Visual overhaul v3, slice 4.1 (2026-10-26)
+
+- Seven troop models corrected toward their cards (Frostshell, Rift Runner, Sparkcaster, Gale Netter, Riftbreaker, Chaos Archer, Chog Guardian). Clip counts and timing unchanged. Twelve sheets 16.7 MB RGBA. Readiness doc section 15.
+- Card art: original 2D illustrations everywhere (owner decision). 3D models are battlefield units only. Static fallback troops fade on death again.
+
+## Visual overhaul v3, slice 4 (2026-10-26)
+
+- All twelve troop cards animate from v001 sheets (front and rear views, five clips each) with new 256 card portraits and v001 fallbacks. New sources `build_roster.py` and `roster_lib.py`. The rear view of Slice 4 units mirrors the whole model (`mirror_geo`). Flying units hover. The manifest adds ruleset `hitsAir`/`air`, and `engagedFoe` counts air foes only for `hitsAir` units.
+- Twelve sheets total 16.5 MB RGBA and 3.2 MB on disk, all loaded at scene start. Readiness doc section 14 records the details and limits.
+
+## Visual overhaul v3, slice 3.1 (2026-10-26)
+
+- Same v001 unit package, manifest path and Phaser wiring. Both models refined toward cards 01 and 03. Every clip now has a front and a rear three-quarter view in one sheet (`clips` then `rearClips`), chosen by `nextView()` from screen-space heading. Sheets are near board resolution (Choglings 592x592, Boulderback 800x990, about 4.6 MB RGBA total).
+- Animated units use an open hit ring around the body. Readiness doc section 13 records the details and limits.
+
+## Visual overhaul v3, slice 3 (2026-10-25)
+
+- Choglings and Boulderback animate from pre-rendered sheets in `public/assets/chog-units/v001` (idle, move, attack, hit, defeat; one front three-quarter view mirrored on X). Source in `tools/blender/chog-units-v001`, masters in `ChogRoyale-Assets/chog-units-v001`.
+- `unit-anim.ts` picks frames from authoritative data only (stationary with a ground foe in ruleset reach = swing, HP drop = hit, removal = defeat). BattleCanvas falls back to the v001 static sprite per unit. New 256x256 card portraits are served first with v001 portraits as fallback.
+- Troop and building allegiance markers use the tower `TEAM_COLORS`. Readiness doc section 12 records the details.
+
+## Visual overhaul v3, slice 2.1 (2026-10-25)
+
+- Same v003 package and manifest schema, re-rendered from refined scripts. Defender identities corrected against cards 21 and 07, towers and arena polished. Weapon anchors, pivots, ground anchors, geometry projections, ripple layers and Chaos overlays unchanged. Only health-bar tops moved 2 to 5 board px. Runtime size about 1.8 MB.
+- Readiness doc section 11 records the changes and limits.
+
+## Visual overhaul v3, slice 2 (2026-10-25)
+
+- Reference pack v1 sits at the repo root (`Chog_Royale_Devin_Asset_Reference_Pack_v1/`). It's reference only, every file `game_ready: false`, and its art bible is identical to the v3 handoff.
+- New runtime arena `public/assets/arena/chaos-crossing/v003`: 12 procedural Blender layers plus the v002 chaos overlays, all camera-space, and four team mounts (`lane-red`, `king-red` Bulwark aiming south; `lane-blue`, `king-blue` Chog Guardian aiming north). Importer `scripts/import-arena-v003.ts`, sources in `ChogRoyale-Assets/arena-worlds/chaos-crossing/v003`.
+- Renderer prefers v003 and falls back to v002. Schema 2 manifest fields: `layer.space`, `authoredTeamColors`, `structureMounts`, `placement.kind`, `artTopLocalBoardPixels`.
+- Full asset queue in `docs/chog-asset-production-manifest.json`. Choglings and Boulderback atlases come next.
+
+## Visual overhaul v3, slice 1 (2026-10-25)
+
+- Handoff v3 lives at repo root (`Chog_Royale_Visual_Overhaul_Handoff_v3_CORRECTED/`). Readiness report in `docs/chog-visual-overhaul-readiness.md`: all 25 cards map to repo ids, commanders are domain classes, `burrow_scrapper` is an extra spawned sprite, and no approved-style asset exists yet.
+- `arena-registry.ts` gained `TEAM_COLORS`, `CAMERA_SPACE_LAYERS`/`layerFlipY`, `teamTrimHalves` and `defenderCue`. `defenderPose` now always returns the directional aim for live defenders that are aiming, firing or hit.
+- Presentation only. No geometry, pointer mapping, gameplay, server or asset file changes.
+
 ## Battle identity and perspective hotfix (2026-10-25)
 
 - Root cause: BattlePanel read `lobby.players[start.seat]`. Lobby players are indexed by join slot, battle seats are shuffled at start, so a swapped shuffle showed the opponent's name as your own on both devices.

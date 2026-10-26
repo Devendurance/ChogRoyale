@@ -1,0 +1,731 @@
+{
+ "schemaVersion": 2,
+ "arenaId": "chaos-crossing-v003",
+ "assets": [
+  {
+   "kind": "layer",
+   "id": "base-terrain",
+   "path": "layers/base-terrain.png",
+   "zOrder": 10,
+   "defaultVisible": true,
+   "stateRule": "static",
+   "space": "camera",
+   "source": "masters/layers/base-terrain.png",
+   "sha256": "82ac86f9c389a1c9357c630587a8a72ff2139d7adf4e8011900e0c40285cce0d",
+   "size": [
+    600,
+    920
+   ],
+   "alphaBounds": [
+    0,
+    0,
+    599,
+    919
+   ],
+   "coverage": 1,
+   "transparentPixels": 0
+  },
+  {
+   "kind": "layer",
+   "id": "river-water",
+   "path": "layers/river-water.png",
+   "zOrder": 20,
+   "defaultVisible": true,
+   "stateRule": "static",
+   "space": "camera",
+   "source": "masters/layers/river-water.png",
+   "sha256": "115bb08868acaae63d626aed3791742b896a8c3ea28f6d0f97d760047e903bca",
+   "size": [
+    600,
+    920
+   ],
+   "alphaBounds": [
+    0,
+    429,
+    599,
+    494
+   ],
+   "coverage": 0.0717,
+   "transparentPixels": 511200
+  },
+  {
+   "kind": "layer",
+   "id": "water-ripples-0",
+   "path": "layers/water-ripples-0.png",
+   "zOrder": 30,
+   "defaultVisible": true,
+   "stateRule": "alternate ripple phase A",
+   "space": "camera",
+   "source": "masters/layers/water-ripples-0.png",
+   "sha256": "03525f62eec3bbb36ed870f51cd938426929d8f037f21068a70b8c4726176a9b",
+   "size": [
+    600,
+    920
+   ],
+   "alphaBounds": [
+    0,
+    428,
+    599,
+    494
+   ],
+   "coverage": 0.0361,
+   "transparentPixels": 524541
+  },
+  {
+   "kind": "layer",
+   "id": "water-ripples-1",
+   "path": "layers/water-ripples-1.png",
+   "zOrder": 40,
+   "defaultVisible": false,
+   "stateRule": "alternate ripple phase B",
+   "space": "camera",
+   "source": "masters/layers/water-ripples-1.png",
+   "sha256": "76bb8c599c6381a31611bd99faafb1ddb23495ce2d42179047f7b45c9a5b7926",
+   "size": [
+    600,
+    920
+   ],
+   "alphaBounds": [
+    0,
+    428,
+    599,
+    494
+   ],
+   "coverage": 0.0365,
+   "transparentPixels": 524325
+  },
+  {
+   "kind": "layer",
+   "id": "rift-ford-open",
+   "path": "layers/rift-ford-open.png",
+   "zOrder": 50,
+   "defaultVisible": false,
+   "stateRule": "authoritative frame.riftOpen === true only",
+   "space": "camera",
+   "source": "masters/layers/rift-ford-open.png",
+   "sha256": "1594308b09fff6955ce2136891bc9c7598385e6319f3d9e7318a83169546c434",
+   "size": [
+    600,
+    920
+   ],
+   "alphaBounds": [
+    276,
+    432,
+    321,
+    495
+   ],
+   "coverage": 0.0033,
+   "transparentPixels": 549794
+  },
+  {
+   "kind": "layer",
+   "id": "rift-ford-closing",
+   "path": "layers/rift-ford-closing.png",
+   "zOrder": 60,
+   "defaultVisible": false,
+   "stateRule": "frame.riftOpen === false only; disconnected sparks never open ford",
+   "space": "camera",
+   "source": "masters/layers/rift-ford-closing.png",
+   "sha256": "877bec41fbdd76059acbefc00c31f6a4902f75f8362243aca6e4c444c6a2ea33",
+   "size": [
+    600,
+    920
+   ],
+   "alphaBounds": [
+    273,
+    426,
+    323,
+    493
+   ],
+   "coverage": 0.0002,
+   "transparentPixels": 551794
+  },
+  {
+   "kind": "layer",
+   "id": "banks-bridges",
+   "path": "layers/banks-bridges.png",
+   "zOrder": 70,
+   "defaultVisible": true,
+   "stateRule": "static",
+   "space": "camera",
+   "source": "masters/layers/banks-bridges.png",
+   "sha256": "c3245217ddf1e1a5efc80d5d34162cf07d4d338415f827a532f71d2a36afbb1c",
+   "size": [
+    600,
+    920
+   ],
+   "alphaBounds": [
+    32,
+    404,
+    565,
+    504
+   ],
+   "coverage": 0.0376,
+   "transparentPixels": 528400
+  },
+  {
+   "kind": "layer",
+   "id": "foundations",
+   "path": "layers/foundations.png",
+   "zOrder": 80,
+   "defaultVisible": true,
+   "stateRule": "static",
+   "space": "camera",
+   "source": "masters/layers/foundations.png",
+   "sha256": "fe4c94bc37bf34293442f38d45c8fa701763ae5342ee14dd0a82b4d5f7ba9cc1",
+   "size": [
+    600,
+    920
+   ],
+   "alphaBounds": [
+    172,
+    65,
+    426,
+    850
+   ],
+   "coverage": 0.0215,
+   "transparentPixels": 538587
+  },
+  {
+   "kind": "layer",
+   "id": "border-scenery",
+   "path": "layers/border-scenery.png",
+   "zOrder": 90,
+   "defaultVisible": true,
+   "stateRule": "static",
+   "space": "camera",
+   "source": "masters/layers/border-scenery.png",
+   "sha256": "d74911825142af396e4907aae0ffdc6ccfc7ad1e5ae90426f457c228876b0a68",
+   "size": [
+    600,
+    920
+   ],
+   "alphaBounds": [
+    40,
+    50,
+    558,
+    855
+   ],
+   "coverage": 0.0306,
+   "transparentPixels": 530690
+  },
+  {
+   "kind": "layer",
+   "id": "chaos-warning",
+   "path": "layers/chaos-warning.png",
+   "zOrder": 100,
+   "defaultVisible": false,
+   "stateRule": "explicit Chaos visual state; never opens ford (v002 art reused byte-identical)",
+   "space": "board",
+   "source": "../v002/gameplay/layers/chaos-warning.png",
+   "sha256": "126f705bcdc170b65db494fe6dfe079cd3e23a6318ddc056485ea546475e3b08",
+   "size": [
+    600,
+    920
+   ],
+   "alphaBounds": [
+    137,
+    299,
+    463,
+    620
+   ],
+   "coverage": 0.0434,
+   "transparentPixels": 526814
+  },
+  {
+   "kind": "layer",
+   "id": "chaos-active",
+   "path": "layers/chaos-active.png",
+   "zOrder": 110,
+   "defaultVisible": false,
+   "stateRule": "explicit Chaos visual state; never opens ford (v002 art reused byte-identical)",
+   "space": "board",
+   "source": "../v002/gameplay/layers/chaos-active.png",
+   "sha256": "459303a649c32f3d363661e432e3cabe6c4ae5d9a4fe8c4b5baf9554b9e5e784",
+   "size": [
+    600,
+    920
+   ],
+   "alphaBounds": [
+    137,
+    299,
+    463,
+    620
+   ],
+   "coverage": 0.0441,
+   "transparentPixels": 526810
+  },
+  {
+   "kind": "layer",
+   "id": "chaos-expiry",
+   "path": "layers/chaos-expiry.png",
+   "zOrder": 120,
+   "defaultVisible": false,
+   "stateRule": "explicit Chaos visual state; never opens ford (v002 art reused byte-identical)",
+   "space": "board",
+   "source": "../v002/gameplay/layers/chaos-expiry.png",
+   "sha256": "d2770a30bff10ff41478d9f5081c731966ad7ee42d046a509486bee480b1c5f3",
+   "size": [
+    600,
+    920
+   ],
+   "alphaBounds": [
+    137,
+    300,
+    462,
+    620
+   ],
+   "coverage": 0.0425,
+   "transparentPixels": 527214
+  },
+  {
+   "kind": "layer",
+   "id": "ambient",
+   "path": "layers/ambient.png",
+   "zOrder": 130,
+   "defaultVisible": true,
+   "stateRule": "static",
+   "space": "camera",
+   "source": "masters/layers/ambient.png",
+   "sha256": "92121633190a42cb03dfb8b37a903a65507b00fac44465200306e1710ce6fc0d",
+   "size": [
+    600,
+    920
+   ],
+   "alphaBounds": [
+    34,
+    63,
+    558,
+    852
+   ],
+   "coverage": 0.0208,
+   "transparentPixels": 533099
+  },
+  {
+   "kind": "layer",
+   "id": "team-trim",
+   "path": "layers/team-trim.png",
+   "zOrder": 140,
+   "defaultVisible": true,
+   "stateRule": "static; authored red top and blue bottom",
+   "space": "camera",
+   "source": "masters/layers/team-trim.png",
+   "sha256": "329824e1b08b943cd03b2bd38ec132b8df48a8ead872a788578851323bbee256",
+   "size": [
+    600,
+    920
+   ],
+   "alphaBounds": [
+    68,
+    110,
+    531,
+    857
+   ],
+   "coverage": 0.0026,
+   "transparentPixels": 549968
+  },
+  {
+   "kind": "layer",
+   "id": "foreground",
+   "path": "layers/foreground.png",
+   "zOrder": 150,
+   "defaultVisible": true,
+   "stateRule": "static",
+   "space": "camera",
+   "source": "masters/layers/foreground.png",
+   "sha256": "3f65a2803efd90556680c3046395dfc98d55d74315d718485a6e12de4a7605f5",
+   "size": [
+    600,
+    920
+   ],
+   "alphaBounds": [
+    49,
+    844,
+    548,
+    864
+   ],
+   "coverage": 0.0013,
+   "transparentPixels": 551090
+  },
+  {
+   "kind": "mount-part",
+   "id": "lane-red:structure-base",
+   "path": "mounts/lane-red/structure-base.png",
+   "source": "masters/mounts/lane-red/structure-base.png",
+   "sha256": "9235f1b764ceb81f0123a1517dbb15d5167c5694f829bb8d95fdeefc79f5f5b3",
+   "size": [
+    256,
+    320
+   ],
+   "alphaBounds": [
+    86,
+    198,
+    169,
+    301
+   ],
+   "coverage": 0.0903,
+   "transparentPixels": 74068
+  },
+  {
+   "kind": "mount-part",
+   "id": "lane-red:socket-platform",
+   "path": "mounts/lane-red/socket-platform.png",
+   "source": "masters/mounts/lane-red/socket-platform.png",
+   "sha256": "2b0e6cb2d4d7b74b479ea2dab1878063ddacf820738bd697a6d3b72430d6479a",
+   "size": [
+    256,
+    320
+   ],
+   "alphaBounds": [
+    129,
+    228,
+    157,
+    247
+   ],
+   "coverage": 0.0056,
+   "transparentPixels": 81374
+  },
+  {
+   "kind": "mount-part",
+   "id": "lane-red:front-rim",
+   "path": "mounts/lane-red/front-rim.png",
+   "source": "masters/mounts/lane-red/front-rim.png",
+   "sha256": "a9e993958a73fa84ec62820fc906e3a290b91b0487c218c2ba6051214f45e02d",
+   "size": [
+    256,
+    320
+   ],
+   "alphaBounds": [
+    92,
+    247,
+    163,
+    258
+   ],
+   "coverage": 0.0084,
+   "transparentPixels": 81055
+  },
+  {
+   "kind": "mount-part",
+   "id": "lane-red:defender-idle",
+   "path": "mounts/lane-red/defender-idle.png",
+   "source": "masters/mounts/lane-red/defender-idle.png",
+   "sha256": "a45d0efc19b51270faa71484eff9dcf882ab76fdd1b68ed7e68fb707b0384e49",
+   "size": [
+    256,
+    320
+   ],
+   "alphaBounds": [
+    91,
+    149,
+    154,
+    243
+   ],
+   "coverage": 0.051,
+   "transparentPixels": 77404
+  },
+  {
+   "kind": "mount-part",
+   "id": "lane-red:defender-aim-south",
+   "path": "mounts/lane-red/defender-aim-south.png",
+   "source": "masters/mounts/lane-red/defender-aim-south.png",
+   "sha256": "fa1e3249f3aae3b421ed072e535051624671a633339cc587842fc540f6d44bbb",
+   "size": [
+    256,
+    320
+   ],
+   "alphaBounds": [
+    91,
+    149,
+    154,
+    256
+   ],
+   "coverage": 0.053,
+   "transparentPixels": 77200
+  },
+  {
+   "kind": "mount-part",
+   "id": "lane-blue:structure-base",
+   "path": "mounts/lane-blue/structure-base.png",
+   "source": "masters/mounts/lane-blue/structure-base.png",
+   "sha256": "bd17f8b3c8763adc4340bcb7cc86425dc65e60a40101c87621c5d2f7f942969f",
+   "size": [
+    256,
+    320
+   ],
+   "alphaBounds": [
+    86,
+    198,
+    169,
+    301
+   ],
+   "coverage": 0.0903,
+   "transparentPixels": 74068
+  },
+  {
+   "kind": "mount-part",
+   "id": "lane-blue:socket-platform",
+   "path": "mounts/lane-blue/socket-platform.png",
+   "source": "masters/mounts/lane-blue/socket-platform.png",
+   "sha256": "239bd46f863d6032b01648a1c9676e59072898062e249f3b3c76d9cba16fe825",
+   "size": [
+    256,
+    320
+   ],
+   "alphaBounds": [
+    129,
+    228,
+    157,
+    247
+   ],
+   "coverage": 0.0056,
+   "transparentPixels": 81374
+  },
+  {
+   "kind": "mount-part",
+   "id": "lane-blue:front-rim",
+   "path": "mounts/lane-blue/front-rim.png",
+   "source": "masters/mounts/lane-blue/front-rim.png",
+   "sha256": "441060861b34ce8b4702866d1f8bbdc0dc9415c7ea272ac28a8804fcaea4493a",
+   "size": [
+    256,
+    320
+   ],
+   "alphaBounds": [
+    92,
+    247,
+    163,
+    258
+   ],
+   "coverage": 0.0084,
+   "transparentPixels": 81055
+  },
+  {
+   "kind": "mount-part",
+   "id": "lane-blue:defender-idle",
+   "path": "mounts/lane-blue/defender-idle.png",
+   "source": "masters/mounts/lane-blue/defender-idle.png",
+   "sha256": "fe81afc13998e4c3fcaa4666fa058a1e613c97ade59b1f1da67f7f408365d1fd",
+   "size": [
+    256,
+    320
+   ],
+   "alphaBounds": [
+    92,
+    168,
+    162,
+    245
+   ],
+   "coverage": 0.0402,
+   "transparentPixels": 78331
+  },
+  {
+   "kind": "mount-part",
+   "id": "lane-blue:defender-aim-north",
+   "path": "mounts/lane-blue/defender-aim-north.png",
+   "source": "masters/mounts/lane-blue/defender-aim-north.png",
+   "sha256": "11fef5af3324c4423d17ebe9ff698227f636f0edd68d7e15f967f20fede32c1b",
+   "size": [
+    256,
+    320
+   ],
+   "alphaBounds": [
+    92,
+    168,
+    162,
+    245
+   ],
+   "coverage": 0.0402,
+   "transparentPixels": 78336
+  },
+  {
+   "kind": "mount-part",
+   "id": "king-red:structure-base",
+   "path": "mounts/king-red/structure-base.png",
+   "source": "masters/mounts/king-red/structure-base.png",
+   "sha256": "96bf80b1709dea0a65f182f46bb78f923819539a2d03819e2e46d4d268b7b02c",
+   "size": [
+    256,
+    320
+   ],
+   "alphaBounds": [
+    71,
+    186,
+    184,
+    306
+   ],
+   "coverage": 0.1424,
+   "transparentPixels": 69763
+  },
+  {
+   "kind": "mount-part",
+   "id": "king-red:socket-platform",
+   "path": "mounts/king-red/socket-platform.png",
+   "source": "masters/mounts/king-red/socket-platform.png",
+   "sha256": "89fec07fbcab215fdc387ee9d56b769ba29b05da636f2b8b3df3d0bf03b555ab",
+   "size": [
+    256,
+    320
+   ],
+   "alphaBounds": [
+    129,
+    221,
+    157,
+    241
+   ],
+   "coverage": 0.0057,
+   "transparentPixels": 81368
+  },
+  {
+   "kind": "mount-part",
+   "id": "king-red:front-rim",
+   "path": "mounts/king-red/front-rim.png",
+   "source": "masters/mounts/king-red/front-rim.png",
+   "sha256": "9a3923f9cdf8c3347de4d04c36c44d25198bcfa066ed8da557d84cfe72153773",
+   "size": [
+    256,
+    320
+   ],
+   "alphaBounds": [
+    71,
+    237,
+    184,
+    310
+   ],
+   "coverage": 0.0404,
+   "transparentPixels": 78106
+  },
+  {
+   "kind": "mount-part",
+   "id": "king-red:defender-idle",
+   "path": "mounts/king-red/defender-idle.png",
+   "source": "masters/mounts/king-red/defender-idle.png",
+   "sha256": "53070e1e7a67fc4cf2bdbfdfa7069de25803cfdd12848fd483c2b4ee89bcb2e1",
+   "size": [
+    256,
+    320
+   ],
+   "alphaBounds": [
+    88,
+    134,
+    157,
+    238
+   ],
+   "coverage": 0.0608,
+   "transparentPixels": 76576
+  },
+  {
+   "kind": "mount-part",
+   "id": "king-red:defender-aim-south",
+   "path": "mounts/king-red/defender-aim-south.png",
+   "source": "masters/mounts/king-red/defender-aim-south.png",
+   "sha256": "6624251e67d45229f9cb4b8acef3875a1d2f6b9bea4249bf178f17639556d914",
+   "size": [
+    256,
+    320
+   ],
+   "alphaBounds": [
+    88,
+    134,
+    157,
+    249
+   ],
+   "coverage": 0.063,
+   "transparentPixels": 76373
+  },
+  {
+   "kind": "mount-part",
+   "id": "king-blue:structure-base",
+   "path": "mounts/king-blue/structure-base.png",
+   "source": "masters/mounts/king-blue/structure-base.png",
+   "sha256": "471abd97584afe221afe867daa61c303f23703d3ecc8387b1e0ef9d8d8f62680",
+   "size": [
+    256,
+    320
+   ],
+   "alphaBounds": [
+    71,
+    186,
+    184,
+    306
+   ],
+   "coverage": 0.1424,
+   "transparentPixels": 69763
+  },
+  {
+   "kind": "mount-part",
+   "id": "king-blue:socket-platform",
+   "path": "mounts/king-blue/socket-platform.png",
+   "source": "masters/mounts/king-blue/socket-platform.png",
+   "sha256": "b10993347b0e6204d533f48045f01efd76bb6943884ba592a59c73185392ef55",
+   "size": [
+    256,
+    320
+   ],
+   "alphaBounds": [
+    129,
+    221,
+    157,
+    241
+   ],
+   "coverage": 0.0057,
+   "transparentPixels": 81368
+  },
+  {
+   "kind": "mount-part",
+   "id": "king-blue:front-rim",
+   "path": "mounts/king-blue/front-rim.png",
+   "source": "masters/mounts/king-blue/front-rim.png",
+   "sha256": "bb9589776916f7e2487ac08de09039c33f7d7dde276d4c6efe59f093daab30a9",
+   "size": [
+    256,
+    320
+   ],
+   "alphaBounds": [
+    71,
+    237,
+    184,
+    310
+   ],
+   "coverage": 0.0404,
+   "transparentPixels": 78106
+  },
+  {
+   "kind": "mount-part",
+   "id": "king-blue:defender-idle",
+   "path": "mounts/king-blue/defender-idle.png",
+   "source": "masters/mounts/king-blue/defender-idle.png",
+   "sha256": "e293cf1b1e0aafdf4085f94649746b92c3155344af635307aad5524fcac4cbe0",
+   "size": [
+    256,
+    320
+   ],
+   "alphaBounds": [
+    89,
+    155,
+    166,
+    239
+   ],
+   "coverage": 0.0474,
+   "transparentPixels": 77705
+  },
+  {
+   "kind": "mount-part",
+   "id": "king-blue:defender-aim-north",
+   "path": "mounts/king-blue/defender-aim-north.png",
+   "source": "masters/mounts/king-blue/defender-aim-north.png",
+   "sha256": "93581dbe3cb5393c4a9335ea48667c35ea96a224144c0de74c743d7e560f2083",
+   "size": [
+    256,
+    320
+   ],
+   "alphaBounds": [
+    89,
+    155,
+    166,
+    239
+   ],
+   "coverage": 0.0475,
+   "transparentPixels": 77701
+  }
+ ]
+}

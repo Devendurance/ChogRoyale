@@ -128,6 +128,15 @@ export function portraitForCard(manifest: SpriteManifest, cardId: string): strin
   return portraitUrl(rec);
 }
 
+/** Portrait sources for an ordinary card. Owner decision (Slice 4.1): every
+ * card interface keeps the original Chog Royale 2D illustration. The 3D
+ * renders in chog-units/v001/<id>/card-portrait.png stay on disk but are
+ * never card art. The 3D models are battlefield units only. */
+export function portraitCandidatesForCard(manifest: SpriteManifest, cardId: string): string[] {
+  const legacy = portraitForCard(manifest, cardId);
+  return legacy ? [legacy] : [];
+}
+
 /** Class-template portrait for a commander, resolved by server-verified class
  * only. Never resolves an NFT token id to portrait art. */
 export function portraitForCommanderClass(manifest: SpriteManifest, cls: string): string | null {

@@ -1,3 +1,45 @@
+## Visual overhaul v3, slice 4.1 (2026-10-26)
+
+- Doing: bounded identity correction of the Slice 4 roster on `visual-overhaul/v3-slice2` after `d7fb366`. Local commit only, no push, PR, merge or deploy.
+- Done: Frostshell, Rift Runner, Sparkcaster, Gale Netter, Riftbreaker rebuilt toward their cards, Archer bow +15%, Guardian pauldrons. Seven sheets re-rendered, five byte-identical. Owner decision: original 2D card art in every card interface, 3D is battlefield-only (`portraitCandidatesForCard` returns v001 only, 3D portraits kept unused). Fallback ring mismatch root-caused (static death fade never ran) and fixed, 0 bad samples. Masters in `ChogRoyale-Assets/chog-units-v001/masters-s41`, review in `review-s41` and `docs/visual-overhaul/review/slice4-1/`.
+- Next: owner review of the corrected units. Live two-login match, phone, touch and performance still unverified.
+
+## Visual overhaul v3, slice 4 (2026-10-26)
+
+- Doing: remaining ten troop cards on the Slice 3.1 pipeline, on `visual-overhaul/v3-slice2` after `04fffaf`. Local commits only (checkpoint `1838fbe` plus the Slice 4 commit), no push, PR, merge or deploy.
+- Done: `build_roster.py` + `roster_lib.py` for all ten units, masters in `ChogRoyale-Assets/chog-units-v001/masters-s4` (with copies of the s31 Choglings/Boulderback masters), all twelve sheets and portraits packed, `hitsAir`/`air` in the manifest, `engagedFoe` air rule, portraits for all twelve. Battle tests 138/138, tsc, scoped TS lint, build green. Review set in `docs/visual-overhaul/review/slice4/` and `ChogRoyale-Assets/chog-units-v001/review-s4/`.
+- Next: owner review of the ten new units and cards. Then buildings, spells, commanders and `burrow_scrapper`. Live two-login match, phone, touch and performance still unverified.
+
+## Visual overhaul v3, slice 3.1 (2026-10-26)
+
+- Doing: Choglings and Boulderback identity refinement plus a rear three-quarter view, on `visual-overhaul/v3-slice2` after `37a6c93`. Local commit only, no push, PR or deploy.
+- Done: Chogling `sunburst()` spike disc, smaller face, separated eyes. Boulderback `plate()` flagstones, `rock()` boulders, dominant shoulders and forearms, smaller fists, claw toes, magenta blush. Rear view via mirrored pose at yaw 156, `rearClips` and `nextView()` in `unit-anim.ts`, 2x masters downsampled to board resolution, +12%/+8% display height, open hit ring for animated units. Tests 137/137, tsc, scoped TS lint, build. Review set in `docs/visual-overhaul/review/slice3-1/` and `ChogRoyale-Assets/chog-units-v001/review-s31/`.
+- Next: owner review of both units, the rear view and the cards. Then the next roster cards through the same two-view pipeline. Live two-login match, phone and performance still unverified.
+
+## Visual overhaul v3, slice 3 (2026-10-25)
+
+- Doing: first animated Chogs (Choglings, Boulderback) on `visual-overhaul/v3-slice2`. Slice 2.1 is the approved arena/defender baseline, don't revisit it. Local commit only, no push, PR or deploy.
+- Done: `tools/blender/chog-units-v001` (build_units.py, pack_units.cjs, card_check.cjs), sheets and card portraits in `public/assets/chog-units/v001`, `unit-anim.ts` (+ tests), BattleCanvas spritesheet wiring with v001 fallback, portrait candidates with v001 fallback, blue/red troop rings. Battle tests 135/135, tsc, scoped lint green. Review set in `ChogRoyale-Assets/chog-units-v001/review/` and `docs/visual-overhaul/review/slice3/`.
+- Next: owner review of both units and card art. Then the other 23 cards and `burrow_scrapper`, spell VFX. Live two-login match, phone pass and performance still unverified.
+
+## Visual overhaul v3, slice 2.1 (2026-10-25)
+
+- Doing: defender identity correction and arena polish on `visual-overhaul/v3-slice2`, refining the existing slice 2 Blender scripts. Local commit only, no push, PR or deploy.
+- Done: Bulwark (Corinthian helmet, V brow, striped crest band, black spikes, studded tunic, faceted star shield) and Chog Guardian (taller cream mask, black oval eyes, angled brow, faceted spike sunburst and rear starburst, thick scarf with back tail, layered plate, riveted blue-field shield) rebuilt in `build_mounts.py`. Tower masonry, quoins and crystal bezels. Arena ground hierarchy, flagstone lanes, river foam and glints, grey banks, bridge posts, clustered flora, warmer light. Tests 121/121, tsc, scoped lint, build green. Review set in `ChogRoyale-Assets/visual-overhaul-v3-slice2-1/`.
+- Next: owner review of both defenders and the arena. Then Choglings and Boulderback atlases. Live two-login match, phone pass and the troop ring colour decision are still open.
+
+## Visual overhaul v3, slice 2 (2026-10-25)
+
+- Doing: asset reference pack v1 plus the first genuine production slice on branch `visual-overhaul/v3-slice2` from slice 1 commit 1e1fa56. Local commits only, with no push, PR or deploy without owner approval.
+- Done: pack extracted to the repo root. v003 arena (12 procedural Blender layers) and four red/blue team mounts are installed with v002 as the fallback. `docs/chog-asset-production-manifest.json` is written and readiness doc section 10 is updated. Battle tests pass 121/121, typecheck, scoped lint and build are green. Both-seat captures and the fallback capture are in `ChogRoyale-Assets/visual-overhaul-v3-slice2/`.
+- Next: owner art review of the arena and defenders (identity sheet `identity-vs-original.png`). Then Choglings and Boulderback atlases (idle, move, attack, hit, defeat) and their card art. A live two-login match and a phone pass are still unverified. The troop ring colour decision is still open.
+
+## Visual overhaul v3, slice 1 (2026-10-25)
+
+- Doing: v3 corrected handoff, Prompt 01 bounded slice on branch `visual-overhaul/v3-slice1` from origin/main 6307f1b. Local commit only, no push without owner approval.
+- Done: handoff folder copied to repo root, `docs/chog-visual-overhaul-readiness.md`, player-relative orientation fix (red top/blue bottom pennants and tinted team-trim, camera-space layers upright for seat 1, defenders keep directional aim during fire/hit). Tests 115/115 battle, tsc, scoped lint, build green. Before/after two-seat captures in `C:/Users/USER/Documents/ChogRoyale-Assets/visual-overhaul-v3-slice1/`.
+- Next: owner review and push approval. Then blocker 1 (approved-style arena layer pack on the v002 canvas), blocker 2 (Bulwark red and Chog Guardian blue defender mounts), then Choglings/Boulderback atlases. Owner decision pending on troop ring colours.
+
 ## Battle identity hotfix (2026-10-25)
 
 - Doing: fix live name swap (Endychog/phantom both saw the opponent's name twice), keep self-blue/enemy-red per device, small mobile/desktop/result polish. Branch `hotfix/battle-identity-perspective` from origin/main 80f9e82.

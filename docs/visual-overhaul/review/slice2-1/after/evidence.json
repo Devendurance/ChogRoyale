@@ -1,0 +1,566 @@
+[
+ {
+  "name": "active-endy-seat1-390x844.png",
+  "who": "endy",
+  "seat": 1,
+  "viewport": [
+   390,
+   844
+  ],
+  "errors": [],
+  "failed": [],
+  "layers": [
+   {
+    "key": "base-terrain",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "river-water",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "water-ripples-0",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "water-ripples-1",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": false
+   },
+   {
+    "key": "rift-ford-open",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": false
+   },
+   {
+    "key": "rift-ford-closing",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "banks-bridges",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "foundations",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "border-scenery",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "chaos-warning",
+    "flipY": true,
+    "tint": "ffffff",
+    "visible": false
+   },
+   {
+    "key": "chaos-active",
+    "flipY": true,
+    "tint": "ffffff",
+    "visible": false
+   },
+   {
+    "key": "chaos-expiry",
+    "flipY": true,
+    "tint": "ffffff",
+    "visible": false
+   },
+   {
+    "key": "ambient",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "team-trim",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "foreground",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   }
+  ],
+  "defenders": [
+   {
+    "pose": "king-red:defender-aim-south",
+    "x": 250,
+    "y": 40,
+    "half": "top"
+   },
+   {
+    "pose": "lane-red:defender-aim-south",
+    "x": 150,
+    "y": 200,
+    "half": "top"
+   },
+   {
+    "pose": "lane-red:defender-aim-south",
+    "x": 350,
+    "y": 200,
+    "half": "top"
+   },
+   {
+    "pose": "lane-blue:defender-aim-north",
+    "x": 150,
+    "y": 600,
+    "half": "bottom"
+   },
+   {
+    "pose": "lane-blue:defender-aim-north",
+    "x": 350,
+    "y": 600,
+    "half": "bottom"
+   },
+   {
+    "pose": "king-blue:defender-aim-north",
+    "x": 250,
+    "y": 760,
+    "half": "bottom"
+   }
+  ]
+ },
+ {
+  "name": "active-phantom-seat0-390x844.png",
+  "who": "phantom",
+  "seat": 0,
+  "viewport": [
+   390,
+   844
+  ],
+  "errors": [],
+  "failed": [],
+  "layers": [
+   {
+    "key": "base-terrain",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "river-water",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "water-ripples-0",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "water-ripples-1",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": false
+   },
+   {
+    "key": "rift-ford-open",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": false
+   },
+   {
+    "key": "rift-ford-closing",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "banks-bridges",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "foundations",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "border-scenery",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "chaos-warning",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": false
+   },
+   {
+    "key": "chaos-active",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": false
+   },
+   {
+    "key": "chaos-expiry",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": false
+   },
+   {
+    "key": "ambient",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "team-trim",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "foreground",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   }
+  ],
+  "defenders": [
+   {
+    "pose": "king-red:defender-aim-south",
+    "x": 250,
+    "y": 40,
+    "half": "top"
+   },
+   {
+    "pose": "lane-red:defender-aim-south",
+    "x": 150,
+    "y": 200,
+    "half": "top"
+   },
+   {
+    "pose": "lane-red:defender-aim-south",
+    "x": 350,
+    "y": 200,
+    "half": "top"
+   },
+   {
+    "pose": "lane-blue:defender-aim-north",
+    "x": 150,
+    "y": 600,
+    "half": "bottom"
+   },
+   {
+    "pose": "lane-blue:defender-aim-north",
+    "x": 350,
+    "y": 600,
+    "half": "bottom"
+   },
+   {
+    "pose": "king-blue:defender-aim-north",
+    "x": 250,
+    "y": 760,
+    "half": "bottom"
+   }
+  ]
+ },
+ {
+  "name": "active-endy-seat1-1366x768.png",
+  "who": "endy",
+  "seat": 1,
+  "viewport": [
+   1366,
+   768
+  ],
+  "errors": [],
+  "failed": [],
+  "layers": [
+   {
+    "key": "base-terrain",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "river-water",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "water-ripples-0",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "water-ripples-1",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": false
+   },
+   {
+    "key": "rift-ford-open",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": false
+   },
+   {
+    "key": "rift-ford-closing",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "banks-bridges",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "foundations",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "border-scenery",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "chaos-warning",
+    "flipY": true,
+    "tint": "ffffff",
+    "visible": false
+   },
+   {
+    "key": "chaos-active",
+    "flipY": true,
+    "tint": "ffffff",
+    "visible": false
+   },
+   {
+    "key": "chaos-expiry",
+    "flipY": true,
+    "tint": "ffffff",
+    "visible": false
+   },
+   {
+    "key": "ambient",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "team-trim",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "foreground",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   }
+  ],
+  "defenders": [
+   {
+    "pose": "king-red:defender-aim-south",
+    "x": 250,
+    "y": 40,
+    "half": "top"
+   },
+   {
+    "pose": "lane-red:defender-aim-south",
+    "x": 150,
+    "y": 200,
+    "half": "top"
+   },
+   {
+    "pose": "lane-red:defender-aim-south",
+    "x": 350,
+    "y": 200,
+    "half": "top"
+   },
+   {
+    "pose": "lane-blue:defender-aim-north",
+    "x": 150,
+    "y": 600,
+    "half": "bottom"
+   },
+   {
+    "pose": "lane-blue:defender-aim-north",
+    "x": 350,
+    "y": 600,
+    "half": "bottom"
+   },
+   {
+    "pose": "king-blue:defender-aim-north",
+    "x": 250,
+    "y": 760,
+    "half": "bottom"
+   }
+  ]
+ },
+ {
+  "name": "active-phantom-seat0-1366x768.png",
+  "who": "phantom",
+  "seat": 0,
+  "viewport": [
+   1366,
+   768
+  ],
+  "errors": [],
+  "failed": [],
+  "layers": [
+   {
+    "key": "base-terrain",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "river-water",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "water-ripples-0",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": false
+   },
+   {
+    "key": "water-ripples-1",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "rift-ford-open",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": false
+   },
+   {
+    "key": "rift-ford-closing",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "banks-bridges",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "foundations",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "border-scenery",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "chaos-warning",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": false
+   },
+   {
+    "key": "chaos-active",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": false
+   },
+   {
+    "key": "chaos-expiry",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": false
+   },
+   {
+    "key": "ambient",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "team-trim",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   },
+   {
+    "key": "foreground",
+    "flipY": false,
+    "tint": "ffffff",
+    "visible": true
+   }
+  ],
+  "defenders": [
+   {
+    "pose": "king-red:defender-aim-south",
+    "x": 250,
+    "y": 40,
+    "half": "top"
+   },
+   {
+    "pose": "lane-red:defender-aim-south",
+    "x": 150,
+    "y": 200,
+    "half": "top"
+   },
+   {
+    "pose": "lane-red:defender-aim-south",
+    "x": 350,
+    "y": 200,
+    "half": "top"
+   },
+   {
+    "pose": "lane-blue:defender-aim-north",
+    "x": 150,
+    "y": 600,
+    "half": "bottom"
+   },
+   {
+    "pose": "lane-blue:defender-aim-north",
+    "x": 350,
+    "y": 600,
+    "half": "bottom"
+   },
+   {
+    "pose": "king-blue:defender-aim-north",
+    "x": 250,
+    "y": 760,
+    "half": "bottom"
+   }
+  ]
+ }
+]
