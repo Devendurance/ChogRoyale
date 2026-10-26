@@ -1,5 +1,9 @@
 # Project State
 
+## Official branding v1 (2026-10-26)
+
+- Logo pack v1 installed from `public/assets/brand/v1` (stacked opening, horizontal header, crown footer). Installable app identity via `src/app/manifest.ts`, `favicon.ico`, `icon.png`, `apple-icon.png` and `public/icons`. Main includes V3 (PR #3) and LICENSE (PR #4).
+
 ## Visual overhaul v3, slice 4.1 (2026-10-26)
 
 - Seven troop models corrected toward their cards (Frostshell, Rift Runner, Sparkcaster, Gale Netter, Riftbreaker, Chaos Archer, Chog Guardian). Clip counts and timing unchanged. Twelve sheets 16.7 MB RGBA. Readiness doc section 15.
