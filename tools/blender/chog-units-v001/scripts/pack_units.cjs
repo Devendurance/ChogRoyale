@@ -1,11 +1,18 @@
 // Packs build_units.py frames into Phaser spritesheets, downsamples the card
 // portraits to the 256x256 contract and writes units.runtime.json.
 //   node pack_units.cjs <masters_dir> <public_out_dir> [review_dir]
+// UNITS=a,b packs a subset for review. Its manifest lists only those units, so
+// point <public_out_dir> somewhere other than public/ for subset runs.
 // Every frame shares one cell size and ground pivot. The packer fails if a
 // frame touches its cell border, which would mean a cropped pose.
 // Slice 3.1: masters render at 2x and are Lanczos-downsampled here, so the
 // sheet lands near 1 sheet px per board px (the canvas backing resolution).
 // Front clips come first, then the rear three-quarter clips in the same order.
+// Slice 4: units marked `trim` are cropped to the union of their painted
+// pixels across every frame and both views (plus a margin) before the
+// downsample, so generous render cells don't cost texture memory. The shared
+// pivot moves with the crop. Choglings and Boulderback stay untrimmed, so
+// their Slice 3.1 sheets repack byte for byte.
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
@@ -21,10 +28,24 @@ const DOWN = 2;
 // checks these against the live ruleset so they can't silently drift.
 // Board heights are +12% and +8% over Slice 3 for readability. Art only: the
 // hitbox, anchor and spacing come from the ruleset and don't change.
+// `hitsAir` and `air` mirror the ruleset too (presentation engagement and the
+// flying lift). Slice 4 heights keep the roster's relative sizes readable.
 const RULES = {
-  choglings: { attackIntervalTicks: 8, range: 2, targetBoardHeight: 38 },
-  boulderback: { attackIntervalTicks: 12, range: 2, targetBoardHeight: 52 },
+  choglings: { attackIntervalTicks: 8, range: 2, hitsAir: false, air: false, targetBoardHeight: 38 },
+  boulderback: { attackIntervalTicks: 12, range: 2, hitsAir: false, air: false, targetBoardHeight: 52 },
+  chaos_archer: { attackIntervalTicks: 10, range: 18, hitsAir: true, air: false, targetBoardHeight: 44, trim: true },
+  frostshell: { attackIntervalTicks: 12, range: 2, hitsAir: false, air: false, targetBoardHeight: 52, trim: true },
+  rift_runner: { attackIntervalTicks: 9, range: 2, hitsAir: false, air: false, targetBoardHeight: 44, trim: true },
+  sparkcaster: { attackIntervalTicks: 14, range: 20, hitsAir: true, air: false, targetBoardHeight: 48, trim: true },
+  chog_guardian: { attackIntervalTicks: 10, range: 2, hitsAir: false, air: false, targetBoardHeight: 50, trim: true },
+  hexwing: { attackIntervalTicks: 10, range: 14, hitsAir: true, air: true, targetBoardHeight: 50, trim: true },
+  rift_sprites: { attackIntervalTicks: 8, range: 2, hitsAir: false, air: true, targetBoardHeight: 34, trim: true },
+  gale_netter: { attackIntervalTicks: 10, range: 16, hitsAir: true, air: false, targetBoardHeight: 46, trim: true },
+  riftbreaker: { attackIntervalTicks: 11, range: 2, hitsAir: false, air: false, targetBoardHeight: 54, trim: true },
+  ember_mauler: { attackIntervalTicks: 12, range: 2, hitsAir: false, air: false, targetBoardHeight: 54, trim: true },
 };
+const MARGIN = 6;
+const even = (n, up) => (up ? Math.ceil(n / 2) * 2 : Math.floor(n / 2) * 2);
 
 const sha = (buf) => crypto.createHash("sha256").update(buf).digest("hex");
 const write = (file, buf) => {
@@ -63,13 +84,12 @@ const label = (text, w, h, size = 13) =>
   Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><text x="4" y="${size + 2}" font-family="Arial" font-weight="700" font-size="${size}" fill="#ffffff" stroke="#1d1424" stroke-width="3" paint-order="stroke">${text}</text></svg>`);
 
 (async () => {
-  const manifest = { schema: 1, version: "chog-units-v001", revision: "slice3.1", source: "tools/blender/chog-units-v001", units: {} };
+  const manifest = { schema: 1, version: "chog-units-v001", revision: "slice4", source: "tools/blender/chog-units-v001", units: {} };
+  const only = process.env.UNITS ? process.env.UNITS.split(",") : null;
   for (const unit of Object.keys(RULES)) {
+    if (only && !only.includes(unit)) continue;
     const rec = JSON.parse(fs.readFileSync(path.join(mastersDir, unit, "record.json"), "utf8"));
-    const [mw, mh] = rec.cell;
-    if (mw % DOWN || mh % DOWN || rec.pivot[0] % DOWN || rec.pivot[1] % DOWN) throw new Error(`${unit}: cell and pivot must divide by ${DOWN}`);
-    const [cw, ch] = [mw / DOWN, mh / DOWN];
-    const pivot = [rec.pivot[0] / DOWN, rec.pivot[1] / DOWN];
+    const rules = RULES[unit];
     const views = {};
     const frames = [];
     for (const view of VIEWS) {
@@ -86,16 +106,40 @@ const label = (text, w, h, size = 13) =>
     }
     const clips = views.front;
     let worstBorder = 0;
-    let idleTop = ch;
+    const [rw, rh] = rec.cell;
+    const box = { left: rw, top: rh, right: -1, bottom: -1 };
     for (const fr of frames) {
       fr.alpha = await alphaInfo(fr.file);
       worstBorder = Math.max(worstBorder, fr.alpha.border);
-      fr.small = await sharp(fr.file).resize(cw, ch, { kernel: "lanczos3" }).png().toBuffer();
-      if (fr.view === "front" && fr.clip === "idle") idleTop = Math.min(idleTop, (await alphaInfo(fr.small)).top);
+      for (const k of ["left", "top"]) box[k] = Math.min(box[k], fr.alpha[k]);
+      for (const k of ["right", "bottom"]) box[k] = Math.max(box[k], fr.alpha[k]);
     }
     if (worstBorder > 0) {
       const bad = frames.filter((f) => f.alpha.border > 0).map((f) => `${f.view}/${path.basename(f.file)} [${f.alpha.left},${f.alpha.top},${f.alpha.right},${f.alpha.bottom}]`);
-      throw new Error(`${unit}: frames touch their ${mw}x${mh} cell border: ${bad.join(" ")}`);
+      throw new Error(`${unit}: frames touch their ${rw}x${rh} cell border: ${bad.join(" ")}`);
+    }
+    // Crop window in master px: whole cell, or the painted union plus margin,
+    // snapped to even numbers so cell and pivot still halve exactly.
+    const crop = rules.trim
+      ? (() => {
+          const left = even(Math.max(0, box.left - MARGIN), false);
+          const top = even(Math.max(0, box.top - MARGIN), false);
+          const right = even(Math.min(rw, box.right + 1 + MARGIN), true);
+          const bottom = even(Math.min(rh, Math.max(box.bottom + 1 + MARGIN, rec.pivot[1] + 2 * MARGIN)), true);
+          return { left, top, width: right - left, height: bottom - top };
+        })()
+      : { left: 0, top: 0, width: rw, height: rh };
+    const [mw, mh] = [crop.width, crop.height];
+    const mp = [rec.pivot[0] - crop.left, rec.pivot[1] - crop.top];
+    if (mw % DOWN || mh % DOWN || mp[0] % DOWN || mp[1] % DOWN) throw new Error(`${unit}: cell and pivot must divide by ${DOWN}`);
+    if (mp[0] <= 0 || mp[0] >= mw || mp[1] <= 0 || mp[1] >= mh) throw new Error(`${unit}: pivot falls outside the crop`);
+    const [cw, ch] = [mw / DOWN, mh / DOWN];
+    const pivot = [mp[0] / DOWN, mp[1] / DOWN];
+    let idleTop = ch;
+    for (const fr of frames) {
+      fr.master = rules.trim ? await sharp(fr.file).extract(crop).png().toBuffer() : fr.file;
+      fr.small = await sharp(fr.master).resize(cw, ch, { kernel: "lanczos3" }).png().toBuffer();
+      if (fr.view === "front" && fr.clip === "idle") idleTop = Math.min(idleTop, (await alphaInfo(fr.small)).top);
     }
     const rows = Math.ceil(frames.length / COLUMNS);
     const sheet = await sharp({ create: { width: COLUMNS * cw, height: rows * ch, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
@@ -108,7 +152,6 @@ const label = (text, w, h, size = 13) =>
     const portraitRel = `${unit}/card-portrait.png`;
     write(path.join(outDir, portraitRel), portrait);
     const visibleHeight = pivot[1] - idleTop;
-    const rules = RULES[unit];
     const displayScale = Math.round((rules.targetBoardHeight / visibleHeight) * 1000) / 1000;
     const defeat = clips.defeat;
     manifest.units[unit] = {
@@ -130,6 +173,8 @@ const label = (text, w, h, size = 13) =>
       rearClips: views.rear,
       attackPeriodMs: rules.attackIntervalTicks * 100,
       reach: rules.range,
+      hitsAir: rules.hitsAir,
+      air: rules.air,
       defeatMs: Math.round((defeat.count / defeat.fps) * 1000),
       portrait: portraitRel,
       portraitSha256: sha(portrait),
@@ -152,9 +197,9 @@ const label = (text, w, h, size = 13) =>
         comp.push({ input: label(`${vc[clip].fps}fps`, 110, 22, 12), left: 0, top: ri * ch * k + 28 });
         for (let i = 0; i < vc[clip].count; i++) {
           const fr = frames[vc[clip].start + i];
-          comp.push({ input: fr.file, left: 110 + i * cw * k, top: ri * ch * k });
+          comp.push({ input: fr.master, left: 110 + i * cw * k, top: ri * ch * k });
           comp.push({ input: label(String(i) + (vc[clip].impact === i ? " hit" : ""), 60, 20, 12), left: 110 + i * cw * k, top: ri * ch * k });
-          comp.push({ input: { create: { width: 9, height: 2, channels: 4, background: "#ff3355" } }, left: 110 + i * cw * k + rec.pivot[0] - 4, top: ri * ch * k + rec.pivot[1] });
+          comp.push({ input: { create: { width: 9, height: 2, channels: 4, background: "#ff3355" } }, left: 110 + i * cw * k + mp[0] - 4, top: ri * ch * k + mp[1] });
         }
       }
       await sharp({ create: { width: W, height: H, channels: 4, background: "#6f9f55" } }).composite(comp).png().toFile(path.join(reviewDir, `${unit}-contact-sheet.png`));

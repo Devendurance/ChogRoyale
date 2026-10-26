@@ -120,7 +120,7 @@ def bind(rig, pivot, o):
     o.matrix_parent_inverse = p.matrix_world.inverted()
 
 
-SWAP = {"armL": "armR", "armR": "armL", "legL": "legR", "legR": "legL"}
+SWAP = {"armL": "armR", "armR": "armL", "legL": "legR", "legR": "legL", "wingL": "wingR", "wingR": "wingL"}
 
 
 def mirror_pose(p):
@@ -142,9 +142,15 @@ def mirror_pose(p):
 
 def pose(rig, p):
     piv = rig["piv"]
-    if VIEW[0] == "rear":
+    # Slice 4: units holding a prop in one hand mirror the whole model for the
+    # rear view (negative X scale on the yaw root), so the bow or shield stays
+    # in the hand that carries the pose. Symmetric units mirror only the pose.
+    flip = VIEW[0] == "rear" and rig.get("mirror_geo")
+    if VIEW[0] == "rear" and not flip:
         p = mirror_pose(p)
-    piv["yaw"].rotation_euler = (0, 0, VIEWS[VIEW[0]] + p.get("yaw", 0.0))
+    yaw = -p.get("yaw", 0.0) if flip else p.get("yaw", 0.0)
+    piv["yaw"].rotation_euler = (0, 0, VIEWS[VIEW[0]] + yaw)
+    piv["yaw"].scale = (-1, 1, 1) if flip else (1, 1, 1)
     for name, rest in rig["rest"].items():
         o = piv[name]
         d = p.get(name + "_loc", (0, 0, 0))
@@ -775,8 +781,14 @@ def build_unit(name, spec):
     return record
 
 
-os.makedirs(OUT, exist_ok=True)
-for unit_name, unit_spec in UNITS.items():
-    if ONLY and unit_name not in ONLY:
-        continue
-    build_unit(unit_name, unit_spec)
+def main(units):
+    os.makedirs(OUT, exist_ok=True)
+    for unit_name, unit_spec in units.items():
+        if ONLY and unit_name not in ONLY:
+            continue
+        build_unit(unit_name, unit_spec)
+
+
+# build_roster.py imports this module for its helpers and runs its own units.
+if __name__ == "__main__":
+    main(UNITS)
