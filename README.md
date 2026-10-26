@@ -43,14 +43,11 @@ The game combines approachable free-to-play strategy with an identity-rich socia
 
 | Pocket-sized chaos | The last crown |
 |:---:|:---:|
-| **📷 Mobile placeholder** — `04-battle-mobile.webp` | ![Chog Royale animated crown victory result](docs/media/readme/05-victory-result.webp) |
+| <img src="docs/media/readme/04-battle-mobile.webp" alt="Mobile Chog Royale battle with four-card hand" width="300"> | ![Chog Royale animated crown victory result](docs/media/readme/05-victory-result.webp) |
 | Fully playable card battles on mobile | A cinematic, server-confirmed finale |
 
-<!-- Mobile capture pending: 390x844 active match, saved as docs/media/readme/04-battle-mobile.webp, then replace the placeholder cell with:
-![Mobile Chog Royale battle with four-card hand](docs/media/readme/04-battle-mobile.webp)
--->
 
-> Screenshots are captures of the deployed game at chogroyale.vercel.app, taken by the project owner. The mobile image is still to come.
+> Screenshots are captures of the deployed game at chogroyale.vercel.app, taken by the project owner. The mobile image is a phone capture with the status and browser bars cropped out.
 
 ## ⚔️ How to play
 
