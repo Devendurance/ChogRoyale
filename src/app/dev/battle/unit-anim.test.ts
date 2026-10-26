@@ -35,8 +35,9 @@ const png = (file: string) => {
 };
 
 describe("unit animation manifest", () => {
-  it("ships exactly Choglings and Boulderback, each with a legacy static fallback", () => {
-    expect(Object.keys(manifest.units).sort()).toEqual(["boulderback", "choglings"]);
+  it("ships a sheet for every troop card in the ruleset, each with a legacy static fallback", () => {
+    expect(Object.keys(manifest.units).sort()).toEqual(Object.keys(TROOP_CARDS_V1).sort());
+    expect(Object.keys(manifest.units)).toHaveLength(12);
     for (const id of Object.keys(manifest.units)) {
       expect(resolveEntityAsset(kit, "troop", id)?.stableAssetId).toBe(`troop:${id}`);
     }
@@ -55,6 +56,9 @@ describe("unit animation manifest", () => {
       // Mobile texture budget: each sheet stays under 6 MB of RGBA.
       expect(u.width * u.height * 4).toBeLessThan(6 * 1024 * 1024);
     }
+    // All twelve sheets together stay under 24 MB of RGBA.
+    const total = Object.values(manifest.units).reduce((n, u) => n + u.width * u.height * 4, 0);
+    expect(total).toBeLessThan(24 * 1024 * 1024);
   });
 
   it("lays out front then rear clips contiguously with a shared pivot", () => {
@@ -89,8 +93,9 @@ describe("unit animation manifest", () => {
       const card = TROOP_CARDS_V1[u.entityId]!;
       expect(u.attackPeriodMs).toBe((card.attackIntervalTicks * 1000) / TICKS_PER_SECOND);
       expect(u.reach).toBe(card.range);
-      // engagedFoe ignores air targets, which is only right for ground-only hitters.
-      expect(card.hitsAir).toBe(false);
+      // engagedFoe only counts flying foes for units the ruleset lets hit air.
+      expect(u.hitsAir).toBe(card.hitsAir);
+      expect(u.air).toBe(card.moveType === "air");
       // The swing must finish inside one attack interval.
       expect(clipDurationMs(u.clips.attack)).toBeLessThan(u.attackPeriodMs);
     }
@@ -101,7 +106,9 @@ describe("unit animation manifest", () => {
       expect(UNIT_CARD_PORTRAITS[u.entityId]).toBe(`${UNITS_URL}/${u.portrait}`);
       expect(portraitCandidatesForCard(kit, u.entityId)).toEqual([`${UNITS_URL}/${u.portrait}`, `/assets/chog-kit/v001/cards/derivatives/${u.entityId}/portrait.png`]);
     }
-    expect(portraitCandidatesForCard(kit, "chaos_archer")).toEqual(["/assets/chog-kit/v001/cards/derivatives/chaos_archer/portrait.png"]);
+    expect(Object.keys(UNIT_CARD_PORTRAITS).sort()).toEqual(Object.keys(manifest.units).sort());
+    // Spells and buildings keep their approved v001 card art only.
+    expect(portraitCandidatesForCard(kit, "rift_sentry")).toEqual(["/assets/chog-kit/v001/cards/derivatives/rift_sentry/portrait.png"]);
   });
 
   it("keeps Boulderback visibly heavier and slower than Choglings", () => {
@@ -168,6 +175,16 @@ describe("unit animation state", () => {
     }
   });
 
+  it("counts flying foes only for units that can hit air", () => {
+    const u = { x: 30, y: 30 };
+    const flyer = { x: 30, y: 44, r: 0, air: true };
+    expect(engagedFoe(u, 14, [flyer])).toBeNull();
+    expect(engagedFoe(u, 14, [flyer], undefined, true)).toBe(flyer);
+    expect(engagedFoe(u, 12, [flyer], undefined, true)).toBeNull();
+    const archer = manifest.units.chaos_archer!;
+    expect(engagedFoe(u, archer.reach, [flyer], undefined, archer.hitsAir)).toBe(flyer);
+  });
+
   it("engages the nearest ground foe in reach and ignores air", () => {
     // One cell short of the tower's footprint ring: gap 1, inside reach 2.
     const u = { x: 30, y: 35 };
@@ -211,7 +228,8 @@ describe("unit animation state", () => {
 
   it("returns null for cards without an animation sheet", () => {
 
-    expect(unitAnimFor(manifest, "chaos_archer")).toBeNull();
+    expect(unitAnimFor(manifest, "rift_sentry")).toBeNull();
+    expect(unitAnimFor(manifest, "burrow_scrapper")).toBeNull();
     expect(unitAnimFor(null, "choglings")).toBeNull();
     expect(unitAnimFor(manifest, "choglings")?.entityId).toBe("choglings");
   });

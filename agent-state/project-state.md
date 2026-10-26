@@ -1,5 +1,10 @@
 # Project State
 
+## Visual overhaul v3, slice 4 (2026-10-26)
+
+- All twelve troop cards animate from v001 sheets (front and rear views, five clips each) with new 256 card portraits and v001 fallbacks. New sources `build_roster.py` and `roster_lib.py`. The rear view of Slice 4 units mirrors the whole model (`mirror_geo`). Flying units hover. The manifest adds ruleset `hitsAir`/`air`, and `engagedFoe` counts air foes only for `hitsAir` units.
+- Twelve sheets total 16.5 MB RGBA and 3.2 MB on disk, all loaded at scene start. Readiness doc section 14 records the details and limits.
+
 ## Visual overhaul v3, slice 3.1 (2026-10-26)
 
 - Same v001 unit package, manifest path and Phaser wiring. Both models refined toward cards 01 and 03. Every clip now has a front and a rear three-quarter view in one sheet (`clips` then `rearClips`), chosen by `nextView()` from screen-space heading. Sheets are near board resolution (Choglings 592x592, Boulderback 800x990, about 4.6 MB RGBA total).

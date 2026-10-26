@@ -5,12 +5,15 @@
 // row of each block, 3x nearest-neighbour enlargements below them.
 //   node card_check.cjs <repo_public_dir> <out_png> [prev_dir] [prev_label]
 // prev_dir holds <unit>/card-portrait.png from an earlier revision.
+// UNITS=a,b limits the check to some units (default: all twelve troops).
 const path = require("path");
 const sharp = require(path.join(__dirname, "../../../../node_modules/sharp"));
 sharp.cache(false);
 
 const [pub, out, prevDir, prevLabel = "previous"] = process.argv.slice(2);
-const UNITS = ["choglings", "boulderback"];
+const UNITS = process.env.UNITS
+  ? process.env.UNITS.split(",")
+  : ["choglings", "boulderback", "chaos_archer", "frostshell", "rift_runner", "sparkcaster", "chog_guardian", "hexwing", "rift_sprites", "gale_netter", "riftbreaker", "ember_mauler"];
 const COLS = [
   ["v001", (u) => path.join(pub, "assets/chog-kit/v001/cards/derivatives", u, "portrait.png")],
   ...(prevDir ? [[prevLabel, (u) => path.join(prevDir, u, "card-portrait.png")]] : []),

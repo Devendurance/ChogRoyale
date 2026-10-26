@@ -10,7 +10,8 @@ Branch `visual-overhaul/v3-slice2` on `github.com/Devendurance/ChogRoyale`. Not 
 - `5774ee0` slice 2.1: Bulwark and Chog Guardian identity correction, tower and arena polish. Complete, not WIP.
 - `911bb69`: Blender scripts, review images and this handoff.
 - `37a6c93` slice 3: animated Choglings and Boulderback, new card portraits, blue/red troop rings. Approved Slice 2.1 is the arena and defender baseline.
-- Slice 3.1 commit (after `37a6c93`): Choglings and Boulderback identity refinement, rear three-quarter view for upward movement, 2x masters downsampled to board resolution, open hit ring for animated units.
+- `04fffaf` slice 3.1: Choglings and Boulderback identity refinement, rear three-quarter view for upward movement, 2x masters downsampled to board resolution, open hit ring for animated units.
+- `1838fbe` slice 4 checkpoint: Blender sources for the remaining ten troops. The Slice 4 commit after it adds their sheets, portraits, runtime wiring, tests and review set.
 
 ## Status
 
@@ -20,7 +21,9 @@ Slice 3: Choglings and Boulderback animate from pre-rendered sheets (idle, move,
 
 Slice 3.1: both units rebuilt toward their cards (wrap-around cyan sunburst, irregular stone plates and dominant boulder shoulders), every clip rendered in a front and a rear three-quarter view, view picked from screen-space heading in `unit-anim.ts` `nextView()`. Readiness doc section 13 has the details and the limits.
 
-Not done: owner approval of the Slice 3.1 units and card art, the other 23 cards, `burrow_scrapper`, spell VFX, live two-login match, phone test, live tower fire, performance.
+Slice 4: all twelve troop cards animate (idle, move, attack, hit, defeat in front and rear views) with new card portraits. Sources in `tools/blender/chog-units-v001/scripts/build_roster.py` and `roster_lib.py`. Flying units hover, ranged and air-hitting units engage air targets per the ruleset. Readiness doc section 14 has the details and the limits.
+
+Not done: owner approval of the Slice 3.1 and Slice 4 units and card art, buildings, spells, commanders, `burrow_scrapper`, spell VFX, live two-login match, phone test, live tower fire, performance.
 
 ## Where things live
 
@@ -28,8 +31,8 @@ Not done: owner approval of the Slice 3.1 units and card art, the other 23 cards
 - Original 25-card identity (canonical): `Chog_Royale_Devin_Asset_Reference_Pack_v1/02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY/`. 3D style studies: `02_CARDS/02_STYLIZED_3D_CONCEPTS_NOT_FINAL/`. Arena, tower, defender, material and lighting references: `01_ARENA/`, `03_MATERIALS/`, `04_LIGHTING_AND_STYLE/`.
 - Game assets: `public/assets/arena/chaos-crossing/v003/` with runtime manifest `manifests/arena.runtime.json`.
 - Unit sheets and portraits: `public/assets/chog-units/v001/` with `manifests/units.runtime.json`. Frame logic: `src/app/dev/battle/unit-anim.ts`.
-- Asset queue: `docs/chog-asset-production-manifest.json`. History and limits: `docs/chog-visual-overhaul-readiness.md` sections 10 to 12.
-- Review images: `docs/visual-overhaul/review/slice3-1/` (original vs Slice 3 vs 3.1 comparisons, front and rear identity renders, contact sheets, native card check, both seats at 390x844, playback videos, fallback), `docs/visual-overhaul/review/slice3/` (unit comparisons, contact sheets, card check, both seats at 390x844, a short playback video, fallback), `docs/visual-overhaul/review/slice2-1/` (Bulwark and Guardian comparisons, assembled mounts, both seats at 390x844 and 1366x768 in `after/`, before/after, fallback) and `docs/visual-overhaul/review/slice2/` (slice 2 identity sheet and seat comparison).
+- Asset queue: `docs/chog-asset-production-manifest.json`. History and limits: `docs/chog-visual-overhaul-readiness.md` sections 10 to 14.
+- Review images: `docs/visual-overhaul/review/slice4/` (12-unit roster sheet with original card, 3D render, front and rear sprites and card art, batch identity reviews, ten contact sheets, native card checks, both seats at 390x844, desktop, river-fight zoom, two playback videos, air-crossing shots, fallback), `docs/visual-overhaul/review/slice3-1/` (original vs Slice 3 vs 3.1 comparisons, front and rear identity renders, contact sheets, native card check, both seats at 390x844, playback videos, fallback), `docs/visual-overhaul/review/slice3/` (unit comparisons, contact sheets, card check, both seats at 390x844, a short playback video, fallback), `docs/visual-overhaul/review/slice2-1/` (Bulwark and Guardian comparisons, assembled mounts, both seats at 390x844 and 1366x768 in `after/`, before/after, fallback) and `docs/visual-overhaul/review/slice2/` (slice 2 identity sheet and seat comparison).
 - Renderer and registry: `src/app/dev/battle/BattleCanvas.tsx`, `src/app/dev/battle/arena-registry.ts` (tests beside it). Importer: `scripts/import-arena-v003.ts`.
 
 ## Blender pipeline
@@ -51,7 +54,7 @@ Rebuild order:
 3. From the repo root: `node <workspace>/scripts/export_gameplay.cjs`
 4. `npx tsx scripts/import-arena-v003.ts`
 
-Units: `tools/blender/chog-units-v001/scripts/build_units.py` (imports `common.py` from the v003 scripts), then `pack_units.cjs <masters> <public>/assets/chog-units/v001 [review]`. `card_check.cjs <repo>/public <png> [prev_dir] [label]` renders the native-size card sheet. A full unit render with both views takes about 7 minutes. `PREVIEW=1` renders identity and gameplay stills for both views in about 25 seconds per unit.
+Units: `tools/blender/chog-units-v001/scripts/build_units.py` (imports `common.py` from the v003 scripts), then `pack_units.cjs <masters> <public>/assets/chog-units/v001 [review]`. `card_check.cjs <repo>/public <png> [prev_dir] [label]` renders the native-size card sheet. A full unit render with both views takes about 7 minutes. Slice 4 units build from `build_roster.py` with the same arguments and flags (about 5 minutes per unit, two Blender processes can run in parallel). The packer reads all twelve masters from one folder. Copy `masters-s31/choglings` and `masters-s31/boulderback` beside the Slice 4 masters before packing. `PREVIEW=1` renders identity and gameplay stills for both views in about 25 seconds per unit.
 
 Master renders and `.blend` files weren't committed. They regenerate deterministically from the scripts, and full renders take about 14 minutes.
 
@@ -68,7 +71,7 @@ Node and the repo dependencies (`npm ci`, which includes sharp and playwright-co
 
 ## Next step
 
-Get owner review of the Slice 3.1 units and card art in `review/slice3-1/`. Then extend the same unit pipeline, front and rear views included, to the next roster cards, one or two per slice.
+Get owner review of the twelve troops and their cards in `review/slice4/`. Buildings, spells, commanders and `burrow_scrapper` remain on the v001 art.
 
 ## Rules for continuing
 

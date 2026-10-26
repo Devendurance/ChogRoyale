@@ -45,6 +45,10 @@ export interface UnitAnimRecord {
   attackPeriodMs: number;
   /** Ruleset attack range in arena units. */
   reach: number;
+  /** Ruleset hitsAir: flying foes count for engagement. Absent on older sheets. */
+  hitsAir?: boolean;
+  /** Ruleset moveType "air" (the renderer already lifts air units). */
+  air?: boolean;
   defeatMs: number;
   portrait: string;
   portraitSha256: string;
@@ -155,17 +159,18 @@ export const reachSq = (ux: number, uy: number, t: Foe): number => {
 };
 
 /**
- * Presentation-only melee engagement: a stationary unit with a ground foe in
- * reach (plus a little slack for tick quantisation). The public frame has no
- * melee event, so this mirrors the ruleset's own range test instead.
+ * Presentation-only engagement: a stationary unit with a foe in reach (plus a
+ * little slack for tick quantisation). The public frame has no melee or shot
+ * event for every troop, so this mirrors the ruleset's own range test. Air
+ * foes count only for units whose ruleset `hitsAir` is true.
  * Returns the nearest foe in reach, or null.
  */
-export function engagedFoe(u: { x: number; y: number }, reach: number, foes: Foe[], slack = 0.75): Foe | null {
+export function engagedFoe(u: { x: number; y: number }, reach: number, foes: Foe[], slack = 0.75, hitsAir = false): Foe | null {
   const lim = (reach + slack) ** 2;
   let best: Foe | null = null;
   let bestD = Infinity;
   for (const f of foes) {
-    if (f.air) continue;
+    if (f.air && !hitsAir) continue;
     const d = reachSq(u.x, u.y, f);
     if (d <= lim && d < bestD) {
       best = f;

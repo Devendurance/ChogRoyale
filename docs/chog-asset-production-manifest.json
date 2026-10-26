@@ -288,8 +288,8 @@
    "poseReference": null,
    "vfxReference": null,
    "live": {
-    "battle": "troop:chaos_archer (v001 static, fallback)",
-    "card": "card:chaos_archer (v001 derivative, fallback)"
+    "battle": "unit:chaos_archer (chog-units v001 animated sheet; troop:chaos_archer v001 static is the fallback)",
+    "card": "chog-units/v001/chaos_archer/card-portrait.png (v001 card:chaos_archer is the fallback)"
    },
    "required": [
     {
@@ -302,7 +302,7 @@
       "defeat"
      ],
      "pivot": "feet/base shared across frames",
-     "status": "missing"
+     "status": "produced in slice 4 (build_roster.py) with front and rear three-quarter views (rear mirrors the whole model), owner art approval pending"
     },
     {
      "asset": "card art",
@@ -310,10 +310,10 @@
       "72x96",
       "46x61"
      ],
-     "status": "missing"
+     "status": "produced in slice 4 from 1024 masters, checked at native 72x96 and 46x61, owner art approval pending"
     }
    ],
-   "priority": "after exemplar approval",
+   "priority": "slice 4 done, owner review",
    "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
   },
   {
@@ -366,8 +366,8 @@
    "poseReference": null,
    "vfxReference": null,
    "live": {
-    "battle": "troop:frostshell (v001 static, fallback)",
-    "card": "card:frostshell (v001 derivative, fallback)"
+    "battle": "unit:frostshell (chog-units v001 animated sheet; troop:frostshell v001 static is the fallback)",
+    "card": "chog-units/v001/frostshell/card-portrait.png (v001 card:frostshell is the fallback)"
    },
    "required": [
     {
@@ -380,7 +380,7 @@
       "defeat"
      ],
      "pivot": "feet/base shared across frames",
-     "status": "missing"
+     "status": "produced in slice 4 (build_roster.py) with front and rear three-quarter views (rear mirrors the whole model), owner art approval pending"
     },
     {
      "asset": "card art",
@@ -388,10 +388,10 @@
       "72x96",
       "46x61"
      ],
-     "status": "missing"
+     "status": "produced in slice 4 from 1024 masters, checked at native 72x96 and 46x61, owner art approval pending"
     }
    ],
-   "priority": "after exemplar approval",
+   "priority": "slice 4 done, owner review",
    "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
   },
   {
@@ -405,8 +405,8 @@
    "poseReference": null,
    "vfxReference": null,
    "live": {
-    "battle": "troop:rift_runner (v001 static, fallback)",
-    "card": "card:rift_runner (v001 derivative, fallback)"
+    "battle": "unit:rift_runner (chog-units v001 animated sheet; troop:rift_runner v001 static is the fallback)",
+    "card": "chog-units/v001/rift_runner/card-portrait.png (v001 card:rift_runner is the fallback)"
    },
    "required": [
     {
@@ -419,7 +419,7 @@
       "defeat"
      ],
      "pivot": "feet/base shared across frames",
-     "status": "missing"
+     "status": "produced in slice 4 (build_roster.py) with front and rear three-quarter views (rear mirrors the whole model), owner art approval pending"
     },
     {
      "asset": "card art",
@@ -427,10 +427,10 @@
       "72x96",
       "46x61"
      ],
-     "status": "missing"
+     "status": "produced in slice 4 from 1024 masters, checked at native 72x96 and 46x61, owner art approval pending"
     }
    ],
-   "priority": "after exemplar approval",
+   "priority": "slice 4 done, owner review",
    "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
   },
   {
@@ -444,8 +444,8 @@
    "poseReference": null,
    "vfxReference": null,
    "live": {
-    "battle": "troop:sparkcaster (v001 static, fallback)",
-    "card": "card:sparkcaster (v001 derivative, fallback)"
+    "battle": "unit:sparkcaster (chog-units v001 animated sheet; troop:sparkcaster v001 static is the fallback)",
+    "card": "chog-units/v001/sparkcaster/card-portrait.png (v001 card:sparkcaster is the fallback)"
    },
    "required": [
     {
@@ -458,7 +458,7 @@
       "defeat"
      ],
      "pivot": "feet/base shared across frames",
-     "status": "missing"
+     "status": "produced in slice 4 (build_roster.py) with front and rear three-quarter views (rear mirrors the whole model), owner art approval pending"
     },
     {
      "asset": "card art",
@@ -466,10 +466,10 @@
       "72x96",
       "46x61"
      ],
-     "status": "missing"
+     "status": "produced in slice 4 from 1024 masters, checked at native 72x96 and 46x61, owner art approval pending"
     }
    ],
-   "priority": "after exemplar approval",
+   "priority": "slice 4 done, owner review",
    "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
   },
   {
@@ -483,8 +483,8 @@
    "poseReference": null,
    "vfxReference": null,
    "live": {
-    "battle": "troop:chog_guardian (v001 static, fallback)",
-    "card": "card:chog_guardian (v001 derivative, fallback)"
+    "battle": "unit:chog_guardian (chog-units v001 animated sheet; troop:chog_guardian v001 static is the fallback)",
+    "card": "chog-units/v001/chog_guardian/card-portrait.png (v001 card:chog_guardian is the fallback)"
    },
    "required": [
     {
@@ -497,7 +497,7 @@
       "defeat"
      ],
      "pivot": "feet/base shared across frames",
-     "status": "missing"
+     "status": "produced in slice 4 (build_roster.py) with front and rear three-quarter views (rear mirrors the whole model), owner art approval pending"
     },
     {
      "asset": "card art",
@@ -505,10 +505,10 @@
       "72x96",
       "46x61"
      ],
-     "status": "missing"
+     "status": "produced in slice 4 from 1024 masters, checked at native 72x96 and 46x61, owner art approval pending"
     }
    ],
-   "priority": "after exemplar approval",
+   "priority": "slice 4 done, owner review",
    "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
   },
   {
@@ -522,8 +522,8 @@
    "poseReference": null,
    "vfxReference": null,
    "live": {
-    "battle": "troop:hexwing (v001 static, fallback)",
-    "card": "card:hexwing (v001 derivative, fallback)"
+    "battle": "unit:hexwing (chog-units v001 animated sheet; troop:hexwing v001 static is the fallback)",
+    "card": "chog-units/v001/hexwing/card-portrait.png (v001 card:hexwing is the fallback)"
    },
    "required": [
     {
@@ -536,7 +536,7 @@
       "defeat"
      ],
      "pivot": "feet/base shared across frames",
-     "status": "missing"
+     "status": "produced in slice 4 (build_roster.py) with front and rear three-quarter views (rear mirrors the whole model), owner art approval pending"
     },
     {
      "asset": "card art",
@@ -544,10 +544,10 @@
       "72x96",
       "46x61"
      ],
-     "status": "missing"
+     "status": "produced in slice 4 from 1024 masters, checked at native 72x96 and 46x61, owner art approval pending"
     }
    ],
-   "priority": "after exemplar approval",
+   "priority": "slice 4 done, owner review",
    "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
   },
   {
@@ -561,8 +561,8 @@
    "poseReference": null,
    "vfxReference": null,
    "live": {
-    "battle": "troop:rift_sprites (v001 static, fallback)",
-    "card": "card:rift_sprites (v001 derivative, fallback)"
+    "battle": "unit:rift_sprites (chog-units v001 animated sheet; troop:rift_sprites v001 static is the fallback)",
+    "card": "chog-units/v001/rift_sprites/card-portrait.png (v001 card:rift_sprites is the fallback)"
    },
    "required": [
     {
@@ -575,7 +575,7 @@
       "defeat"
      ],
      "pivot": "feet/base shared across frames",
-     "status": "missing"
+     "status": "produced in slice 4 (build_roster.py) with front and rear three-quarter views (rear mirrors the whole model), owner art approval pending"
     },
     {
      "asset": "card art",
@@ -583,10 +583,10 @@
       "72x96",
       "46x61"
      ],
-     "status": "missing"
+     "status": "produced in slice 4 from 1024 masters, checked at native 72x96 and 46x61, owner art approval pending"
     }
    ],
-   "priority": "after exemplar approval",
+   "priority": "slice 4 done, owner review",
    "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
   },
   {
@@ -600,8 +600,8 @@
    "poseReference": null,
    "vfxReference": null,
    "live": {
-    "battle": "troop:gale_netter (v001 static, fallback)",
-    "card": "card:gale_netter (v001 derivative, fallback)"
+    "battle": "unit:gale_netter (chog-units v001 animated sheet; troop:gale_netter v001 static is the fallback)",
+    "card": "chog-units/v001/gale_netter/card-portrait.png (v001 card:gale_netter is the fallback)"
    },
    "required": [
     {
@@ -614,7 +614,7 @@
       "defeat"
      ],
      "pivot": "feet/base shared across frames",
-     "status": "missing"
+     "status": "produced in slice 4 (build_roster.py) with front and rear three-quarter views (rear mirrors the whole model), owner art approval pending"
     },
     {
      "asset": "card art",
@@ -622,10 +622,10 @@
       "72x96",
       "46x61"
      ],
-     "status": "missing"
+     "status": "produced in slice 4 from 1024 masters, checked at native 72x96 and 46x61, owner art approval pending"
     }
    ],
-   "priority": "after exemplar approval",
+   "priority": "slice 4 done, owner review",
    "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
   },
   {
@@ -639,8 +639,8 @@
    "poseReference": null,
    "vfxReference": null,
    "live": {
-    "battle": "troop:riftbreaker (v001 static, fallback)",
-    "card": "card:riftbreaker (v001 derivative, fallback)"
+    "battle": "unit:riftbreaker (chog-units v001 animated sheet; troop:riftbreaker v001 static is the fallback)",
+    "card": "chog-units/v001/riftbreaker/card-portrait.png (v001 card:riftbreaker is the fallback)"
    },
    "required": [
     {
@@ -653,7 +653,7 @@
       "defeat"
      ],
      "pivot": "feet/base shared across frames",
-     "status": "missing"
+     "status": "produced in slice 4 (build_roster.py) with front and rear three-quarter views (rear mirrors the whole model), owner art approval pending"
     },
     {
      "asset": "card art",
@@ -661,10 +661,10 @@
       "72x96",
       "46x61"
      ],
-     "status": "missing"
+     "status": "produced in slice 4 from 1024 masters, checked at native 72x96 and 46x61, owner art approval pending"
     }
    ],
-   "priority": "after exemplar approval",
+   "priority": "slice 4 done, owner review",
    "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
   },
   {
@@ -678,8 +678,8 @@
    "poseReference": null,
    "vfxReference": null,
    "live": {
-    "battle": "troop:ember_mauler (v001 static, fallback)",
-    "card": "card:ember_mauler (v001 derivative, fallback)"
+    "battle": "unit:ember_mauler (chog-units v001 animated sheet; troop:ember_mauler v001 static is the fallback)",
+    "card": "chog-units/v001/ember_mauler/card-portrait.png (v001 card:ember_mauler is the fallback)"
    },
    "required": [
     {
@@ -692,7 +692,7 @@
       "defeat"
      ],
      "pivot": "feet/base shared across frames",
-     "status": "missing"
+     "status": "produced in slice 4 (build_roster.py) with front and rear three-quarter views (rear mirrors the whole model), owner art approval pending"
     },
     {
      "asset": "card art",
@@ -700,10 +700,10 @@
       "72x96",
       "46x61"
      ],
-     "status": "missing"
+     "status": "produced in slice 4 from 1024 masters, checked at native 72x96 and 46x61, owner art approval pending"
     }
    ],
-   "priority": "after exemplar approval",
+   "priority": "slice 4 done, owner review",
    "note": "States follow the live renderer: spawn pop, move, attack windup and release, hit, death. The renderer mirrors horizontally by facing, so asymmetric props need a checked mirror or a second facing."
   },
   {

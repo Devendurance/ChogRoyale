@@ -247,14 +247,14 @@ def rift_runner():
     part(rig, "hips", "torus", (0, 0, 2.18), (0.62, 0.56, 0.6), scarf, ol=0.035, major_radius=1.0, minor_radius=0.3, major_segments=28, minor_segments=10)
     part(rig, "hips", "sphere", (-0.3, 0.42, 2.12), (0.22, 0.2, 0.2), scarfD, ol=0.03)
     # Tail broad side faces up-ish so the high board camera sees cloth, not an edge.
-    tail = [V((-0.3, 0.5, 2.1)), V((-0.6, 0.95, 1.95)), V((-0.95, 1.35, 1.9)), V((-1.3, 1.7, 1.98))]
+    tail = [V((-0.5, 0.3, 2.1)), V((-1.0, 0.42, 1.98)), V((-1.55, 0.5, 1.94)), V((-2.05, 0.55, 2.04))]
     ribbon(rig, "scarf", tail, [0.55, 0.52, 0.46, 0.36], V((0.75, 0.4, 0.55)), scarf, thick=0.08)
     ribbon(rig, "scarf", [p + V((0.2, 0.05, -0.18)) for p in tail[:3]], [0.4, 0.36, 0.3], V((0.75, 0.4, 0.55)), scarfD, thick=0.07)
     chog_head(rig, P)
-    spike_fan(rig, hc, r, rnd, teal, arc=122, k=1.2, tilt=18, sweep=0.22, rear=7, ring2=purple, rear_mats=purple)
+    spike_fan(rig, hc, r, rnd, (purple[0], teal[1], teal[2]), arc=122, k=1.2, tilt=18, sweep=0.22, rear=7, ring2=(teal[0], purple[1]), rear_mats=purple)
     # Long swept crest blades: the card's streaming purple-over-teal mane.
     u, v, back = head_frame(18)
-    for x, L, m in ((-0.5, 1.55, purple[0]), (-0.15, 1.75, purple[1]), (0.2, 1.65, purple[0]), (0.5, 1.4, teal[0])):
+    for x, L, m in ((-0.62, 1.6, purple[0]), (-0.3, 1.85, purple[1]), (0.02, 1.9, purple[0]), (0.32, 1.75, purple[1]), (0.6, 1.45, purple[0])):
         blade(rig, "spikes", hc + (v * 0.5 + back * 0.25 + u * x * 0.6) * r, v * 0.65 + back * 0.8 + u * x * 0.5, r * L, r * 0.5, m, u.cross(v * 0.65 + back * 0.8), flat=0.38, ol=0.05, verts=16)
     return rig
 
@@ -493,8 +493,8 @@ def hexwing():
     rig["mirror_geo"] = True
     rnd = random.Random(808)
     purple = (mat("HexSpikeLight", "#a466ec", rough=0.55, coat=0.05), mat("HexSpike", "#7e3fd0", rough=0.58, coat=0.05), mat("HexSpikeDeep", "#5a2a9e", rough=0.6, coat=0.05))
-    mem = mat("HexMembrane", "#7a3cc8", rough=0.5, sss=0.1, emit="#6a2cc0", emit_strength=0.15)
-    bone = mat("HexBone", "#4a2384", rough=0.5)
+    mem = mat("HexMembrane", "#5a2aa6", rough=0.5, sss=0.1, emit="#4a1c9a", emit_strength=0.12)
+    bone = mat("HexBone", "#2e1458", rough=0.5)
     claw = mat("HexClaw", "#4a2384", rough=0.4)
     hexo = mat("HexOrb", "#e0b8ff", rough=0.1, emit="#b46cff", emit_strength=6.0)
     P = {"name": "Hex", "hc": hc, "r": r, "spike_hex": "#7e3fd0", "body": (0.62, 0.56, 0.72), "body_z": 1.45, "leg_r": 0.2,
@@ -845,16 +845,16 @@ def spec(build, clips, cell, pivot, card_center, card_scale, card_pose, px=16.0,
 
 
 ROSTER = {
-    "chaos_archer": spec(chaos_archer, archer_clips, (220, 200), (100, 160), (0.25, 0, 2.6), 6.8, {"yaw": -0.25, "head_rot": (0.05, -0.06, 0.04)}, px=18.0),
-    "frostshell": spec(frostshell, frost_clips, (220, 212), (104, 170), (0.1, 0, 2.65), 7.2, {"yaw": -0.22, "head_rot": (0.05, -0.06, 0.04)}, identity=(7.4, 2.7), px=20.8),
-    "rift_runner": spec(rift_runner, runner_clips, (220, 196), (100, 160), (-0.1, 0.3, 2.6), 6.8, {"yaw": -0.2, "root_rot": (0.12, 0, 0), "head_rot": (0.08, -0.06, 0.05)}, px=18.0),
-    "sparkcaster": spec(sparkcaster, spark_clips, (220, 220), (100, 180), (0.15, 0, 2.75), 7.2, {"yaw": -0.22, "orb_scale": 1.15, "head_rot": (0.05, -0.06, 0.04)}, identity=(7.4, 2.8), px=19.2),
-    "chog_guardian": spec(chog_guardian, guardian_clips, (220, 204), (100, 166), (0.15, 0, 2.6), 7.0, {"yaw": -0.22, "head_rot": (0.05, -0.06, 0.04)}, identity=(7.2, 2.7), px=20.0),
-    "hexwing": spec(hexwing, hex_clips, (260, 232), (120, 196), (0.0, 0.3, 3.0), 8.8, {"root_loc": (0, 0, 0.6), "wingL_rot": (0, 0.05, 0), "wingR_rot": (0, -0.05, 0), "yaw": -0.2, "head_rot": (0.05, -0.06, 0.04)}, identity=(8.4, 3.4), px=17.0),
-    "rift_sprites": spec(rift_sprites, sprite_clips, (240, 220), (110, 186), (0.0, 0.3, 2.8), 7.0, {"root_loc": (0, 0, 0.5), "wingL_rot": (0, 0.1, 0), "wingR_rot": (0, -0.1, 0), "yaw": -0.2, "head_rot": (0.05, -0.06, 0.04)}, identity=(7.6, 3.2), px=13.0),
-    "gale_netter": spec(gale_netter, netter_clips, (240, 204), (100, 166), (0.35, 0, 2.5), 7.2, {"yaw": -0.25, "head_rot": (0.05, -0.06, 0.04)}, identity=(7.6, 2.6), px=18.4),
-    "riftbreaker": spec(riftbreaker, breaker_clips, (240, 230), (112, 186), (-0.1, 0, 2.8), 7.6, {"yaw": -0.2, "head_rot": (0.05, -0.06, 0.04)}, identity=(7.8, 2.9), px=21.6),
-    "ember_mauler": spec(ember_mauler, mauler_clips, (240, 212), (120, 172), (0.0, 0, 2.55), 7.6, {"yaw": -0.18, "head_rot": (0.05, -0.06, 0.04)}, identity=(7.8, 2.7), px=21.6),
+    "chaos_archer": spec(chaos_archer, archer_clips, (220, 200), (100, 160), (0.3, 0, 2.85), 5.6, {"yaw": -0.25, "head_rot": (0.05, -0.06, 0.04)}, px=18.0),
+    "frostshell": spec(frostshell, frost_clips, (220, 212), (104, 170), (0.15, 0, 2.85), 5.9, {"yaw": -0.22, "head_rot": (0.05, -0.06, 0.04)}, identity=(7.4, 2.7), px=20.8),
+    "rift_runner": spec(rift_runner, runner_clips, (220, 196), (100, 160), (0.0, 0.3, 2.8), 5.6, {"yaw": -0.2, "root_rot": (0.12, 0, 0), "head_rot": (0.08, -0.06, 0.05)}, px=18.0),
+    "sparkcaster": spec(sparkcaster, spark_clips, (220, 220), (100, 180), (0.2, 0, 2.9), 5.9, {"yaw": -0.22, "orb_scale": 1.15, "head_rot": (0.05, -0.06, 0.04)}, identity=(7.4, 2.8), px=19.2),
+    "chog_guardian": spec(chog_guardian, guardian_clips, (220, 204), (100, 166), (0.15, 0, 2.8), 5.8, {"yaw": -0.22, "head_rot": (0.05, -0.06, 0.04)}, identity=(7.2, 2.7), px=20.0),
+    "hexwing": spec(hexwing, hex_clips, (260, 232), (120, 196), (0.0, 0.3, 3.2), 6.6, {"root_loc": (0, 0, 0.6), "wingL_rot": (0, 0.05, 0), "wingR_rot": (0, -0.05, 0), "yaw": -0.2, "head_rot": (0.05, -0.06, 0.04)}, identity=(8.4, 3.4), px=17.0),
+    "rift_sprites": spec(rift_sprites, sprite_clips, (240, 220), (110, 186), (0.0, 0.3, 3.0), 5.8, {"root_loc": (0, 0, 0.5), "wingL_rot": (0, 0.1, 0), "wingR_rot": (0, -0.1, 0), "yaw": -0.2, "head_rot": (0.05, -0.06, 0.04)}, identity=(7.6, 3.2), px=13.0),
+    "gale_netter": spec(gale_netter, netter_clips, (240, 204), (100, 166), (0.4, 0, 2.7), 5.9, {"yaw": -0.25, "head_rot": (0.05, -0.06, 0.04)}, identity=(7.6, 2.6), px=18.4),
+    "riftbreaker": spec(riftbreaker, breaker_clips, (240, 230), (112, 186), (-0.15, 0, 2.95), 6.2, {"yaw": -0.2, "head_rot": (0.05, -0.06, 0.04)}, identity=(7.8, 2.9), px=21.6),
+    "ember_mauler": spec(ember_mauler, mauler_clips, (240, 212), (120, 172), (0.0, 0, 2.8), 6.2, {"yaw": -0.18, "head_rot": (0.05, -0.06, 0.04)}, identity=(7.8, 2.7), px=21.6),
 }
 
 if __name__ == "__main__":

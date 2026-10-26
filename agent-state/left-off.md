@@ -1,3 +1,9 @@
+## Visual overhaul v3, slice 4 (2026-10-26)
+
+- Doing: remaining ten troop cards on the Slice 3.1 pipeline, on `visual-overhaul/v3-slice2` after `04fffaf`. Local commits only (checkpoint `1838fbe` plus the Slice 4 commit), no push, PR, merge or deploy.
+- Done: `build_roster.py` + `roster_lib.py` for all ten units, masters in `ChogRoyale-Assets/chog-units-v001/masters-s4` (with copies of the s31 Choglings/Boulderback masters), all twelve sheets and portraits packed, `hitsAir`/`air` in the manifest, `engagedFoe` air rule, portraits for all twelve. Battle tests 138/138, tsc, scoped TS lint, build green. Review set in `docs/visual-overhaul/review/slice4/` and `ChogRoyale-Assets/chog-units-v001/review-s4/`.
+- Next: owner review of the ten new units and cards. Then buildings, spells, commanders and `burrow_scrapper`. Live two-login match, phone, touch and performance still unverified.
+
 ## Visual overhaul v3, slice 3.1 (2026-10-26)
 
 - Doing: Choglings and Boulderback identity refinement plus a rear three-quarter view, on `visual-overhaul/v3-slice2` after `37a6c93`. Local commit only, no push, PR or deploy.

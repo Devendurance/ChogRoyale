@@ -128,12 +128,14 @@ export function portraitForCard(manifest: SpriteManifest, cardId: string): strin
   return portraitUrl(rec);
 }
 
-/** Slice 3 card portraits rendered from the animated 3D models. The v001
- * portrait stays second so a failed load falls back to the approved art. */
-export const UNIT_CARD_PORTRAITS: Record<string, string> = {
-  choglings: "/assets/chog-units/v001/choglings/card-portrait.png",
-  boulderback: "/assets/chog-units/v001/boulderback/card-portrait.png",
-};
+/** Card portraits rendered from the animated 3D models (Slices 3 and 4, all
+ * twelve troop cards). The v001 portrait stays second so a failed load falls
+ * back to the approved art. */
+export const UNIT_CARD_PORTRAITS: Record<string, string> = Object.fromEntries(
+  ["choglings", "boulderback", "chaos_archer", "frostshell", "rift_runner", "sparkcaster", "chog_guardian", "hexwing", "rift_sprites", "gale_netter", "riftbreaker", "ember_mauler"].map(
+    (id) => [id, `/assets/chog-units/v001/${id}/card-portrait.png`]
+  )
+);
 
 /** Ordered portrait sources for an ordinary card: new art first, then v001. */
 export function portraitCandidatesForCard(manifest: SpriteManifest, cardId: string): string[] {

@@ -872,8 +872,9 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
               og.lineStyle(2, 0xa78bfa, 0.9).beginPath().arc(x, top, 4, -Math.PI / 2, -Math.PI / 2 + frac * Math.PI * 2).strokePath();
             }
           }
-          // Ground foes per owner for presentation-only melee engagement. Radii
-          // follow combat reach2: units by center distance, footprints by ring.
+          // Foes per owner for presentation-only engagement (air flagged, so
+          // ground-only hitters skip it). Radii follow combat reach2: units by
+          // center distance, footprints by ring.
           const foesOf = (owner: number): Foe[] => [
             ...frame.troops.filter((t) => t.owner !== owner).map((t) => ({ x: t.x, y: t.y, r: 0, air: t.air })),
             ...frame.commanders.filter((c) => c.owner !== owner).map((c) => ({ x: c.x, y: c.y, r: 0 })),
@@ -893,7 +894,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
               const dy = before ? u.y - before.y : 0;
               const moving = !!before && Math.hypot(dx, dy) > 0.01;
               if (!foeCache.has(u.owner)) foeCache.set(u.owner, foesOf(u.owner));
-              const foe = moving ? null : engagedFoe(u, anim.reach, foeCache.get(u.owner)!);
+              const foe = moving ? null : engagedFoe(u, anim.reach, foeCache.get(u.owner)!, undefined, anim.hitsAir);
               // Screen y grows downward and seat 0 sees arena y flipped.
               const up = seat === 0 ? -1 : 1;
               const heading = foe ? { x: foe.x - u.x, y: up * (foe.y - u.y) } : moving ? { x: dx, y: up * dy } : null;
