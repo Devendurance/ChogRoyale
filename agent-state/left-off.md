@@ -5,6 +5,12 @@
 - Work dirs: `ChogRoyale-Assets/final-assets/{masters,preview,review,qa}`. Fixture `qa/generate-final-fixture.ts` (run from the repo with `npx tsx --tsconfig tsconfig.json`), captures `qa/capture-final.cjs`, `qa/probe-clips.cjs`. The qa-units harness page is temporary and never committed.
 - Next: owner art review. Live two-player match, phone/touch and real-device performance unverified.
 
+## Main merge + official branding (2026-10-26)
+
+- Doing: consolidate V3 on main and install the official logo pack v1 on branch `brand/official-logo`. PR only, no merge.
+- Done: PR #3 merged by owner (main 41d2035, auto-deployed to production). LICENSE (MIT, owner terms unchanged) merged via PR #4, main b3c0d7e. `handoff/battle-experience-v2-20261025` already in main via squash 80f9e82 (identical tree), nothing to port. Branding: opening stacked logo, header horizontal logo, hero wordmark removed, footer crown, favicon/icon/apple-icon, manifest.ts with 192/512/maskable icons. tsc, scoped lint, build green, Chrome reports installable with 0 errors.
+- Next: owner review of the branding PR and screenshots in docs/branding/review. Cleaner stacked logo export, real iOS Add to Home Screen test. Pre-existing stale `src/components/site/copy.test.ts` (expects /app/play, links are /app since 0666669) still fails 4 tests.
+
 ## Visual overhaul v3, slice 4.1 (2026-10-26)
 
 - Doing: bounded identity correction of the Slice 4 roster on `visual-overhaul/v3-slice2` after `d7fb366`. Local commit only, no push, PR, merge or deploy.

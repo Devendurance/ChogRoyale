@@ -257,3 +257,11 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Set each unit's render px so the packed `displayScale` lands near 1.0, and use packer `trim` instead of tight hand-sized cells.
 - Owner decision (Slice 4.1): every card interface (battle hand, loadout, deck builder, collection, commander cards) uses the original Chog Royale 2D illustrations. The 3D models are for deployed battlefield units and their animations only. `portraitCandidatesForCard()` returns only the v001 card derivative. Keep the generated 3D `card-portrait.png` files on disk, but never route them to a card.
 - A static fallback troop's death fade runs in the removal loop, because `updateEnt()` only runs for entities still in the frame. Fixture ring samplers must skip faded sprites, or a dead troop gets matched to the killer standing on its spot.
+
+## BRAND
+
+- The official logo pack v1 (owner ZIP, archived in `ChogRoyale-Assets/brand/logo-pack-v1`) is the brand source. Runtime copies live in `public/assets/brand/v1` as alpha-trimmed WebP so the intrinsic aspect ratio matches the painted logo. Always size logos by one dimension with `width: auto` or `height: auto`, never both.
+- Stacked logo: the landing opening only, on violet. Its source mask keeps a dark patch behind the left crystals, so never place it on a light background until the owner supplies a cleaner export. Horizontal logo: the site header. Crown emblem: small decorative marks such as the footer. Keep headings, prose, card names and game UI labels as text.
+- The hero has no visible wordmark because the header carries the logo. The `h1` keeps the sr-only "Chog Royale: " prefix before the headline.
+- App icons come from the approved `CHOG_ROYALE_app_icon_1024.png` cropped 76 px per side to remove its baked rounded frame and dark corners. Icons are opaque RGB PNGs, but ICO entries must be RGBA PNGs or Next fails with "The PNG is not in RGBA format". The maskable 512 keeps the face inside the 40% safe circle.
+- `src/app/manifest.ts` starts at `/app` with scope `/`, theme `#1d1458` (app top bar) and background `#241667` (app root). The theme colour goes through the root `viewport` export, not `metadata`.
