@@ -12,6 +12,12 @@ const REAVER = {
   height: 634,
 };
 
+const LOGO = {
+  src: "/assets/brand/v1/chog-royale-stacked.webp",
+  width: 1200,
+  height: 979,
+};
+
 /** Length of the whole sequence, in ms. The CSS uses the same number through
  *  the --opening-cycle custom property, so the fade and the teardown agree. */
 const CYCLE = 2520;
@@ -171,10 +177,17 @@ export default function SeasonOpening() {
         />
       </div>
 
-      <p aria-hidden className="site-opening__mark font-game">
-        Chog Royale
-        <span className="site-opening__rule" />
-      </p>
+      <div aria-hidden className="site-opening__mark">
+        <Image
+          src={LOGO.src}
+          alt=""
+          width={LOGO.width}
+          height={LOGO.height}
+          sizes="(min-width: 768px) 460px, 78vw"
+          priority
+          className="site-opening__logo"
+        />
+      </div>
 
       {ready && (
         <button type="button" ref={skipRef} className="site-opening__skip site-focus" onClick={skip}>

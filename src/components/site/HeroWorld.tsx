@@ -57,8 +57,7 @@ export default function HeroWorld({ headline, lead, primary, secondary }: Props)
 
       <div className="site-hero__content">
         <h1 id="hero-title" className="site-hero__title">
-          <span className="site-wordmark font-game">Chog Royale</span>
-          <span className="sr-only">: </span>
+          <span className="sr-only">Chog Royale: </span>
           <span className="site-hero__headline">{headline}</span>
         </h1>
         <p className="site-hero__lead">{lead}</p>
