@@ -113,19 +113,24 @@ def placed(o, origin, rot3):
     return o
 
 
-def lathe(rig, pivot, prof, material, origin=(0, 0, 0), axis=(0, 0, 1), sy=0.9, sx=1.0, segs=28, ol=0.04, sets=None, cap=(False, False), bev=None):
+def lathe(rig, pivot, prof, material, origin=(0, 0, 0), axis=(0, 0, 1), sy=0.9, sx=1.0, segs=28, ol=0.04, sets=None, cap=(False, False), bev=None, arc=None):
     """Surface of revolution from (radius, height) pairs listed bottom to top:
-    tunics, robes, boots, belts, bracers, pauldrons."""
+    tunics, robes, boots, belts, bracers, pauldrons. `arc` = (a0, a1) radians
+    (0 = front) sweeps only part of the way round, for open collars."""
     vs, fs = [], []
+    ring = segs + 1 if arc else segs
     for rr, z in prof:
-        for k in range(segs):
-            a = k / segs * TAU
+        for k in range(ring):
+            a = arc[0] + (arc[1] - arc[0]) * k / segs if arc else k / segs * TAU
             vs.append((math.sin(a) * rr * sx, -math.cos(a) * rr * sy, z))
     n = len(prof)
     for i in range(n - 1):
         for k in range(segs):
-            a, b = i * segs + k, i * segs + (k + 1) % segs
-            fs.append([a, b, b + segs, a + segs])
+            a, b = i * ring + k, i * ring + (k + 1) % ring
+            fs.append([a, b, b + ring, a + ring])
+    if arc:
+        o = placed(C.new_mesh_obj(f"{pivot}_lathe", vs, fs, material), origin, frame_for(axis))
+        return finish(rig, pivot, o, ol, bev, sets, solid=0.05)
     if cap[0]:
         fs.append(list(range(segs))[::-1])
     if cap[1]:
@@ -208,6 +213,62 @@ def slab(rig, pivot, outline2d, thick, center, normal, up, material, ol=0.045, s
     return finish(rig, pivot, o, ol, bev, sets, flat=flat)
 
 
+def ice_chunk(rig, pivot, center, size, rnd, rot=(0, 0, 0), material=None, ol=0.04, shatter=None, taper=0.22, sets=None):
+    """Faceted crystal block (Slice 4.1 Frostshell armour): a subdivided box
+    with jittered, tapered corners, a small bevel and flat shading."""
+    import bmesh
+
+    o = C.prim("cube", f"{pivot}_ice", loc=center, scale=size, rot=rot, material=material, smooth=False, size=1.0)
+    bm = bmesh.new()
+    bm.from_mesh(o.data)
+    bmesh.ops.subdivide_edges(bm, edges=bm.edges[:], cuts=1, use_grid_fill=True)
+    tx, ty = rnd.uniform(-taper, taper), rnd.uniform(-taper, taper)
+    for vt in bm.verts:
+        vt.co.x *= 1 + tx * vt.co.z * 2
+        vt.co.y *= 1 + ty * vt.co.z * 2
+        vt.co += V((rnd.uniform(-0.09, 0.09), rnd.uniform(-0.09, 0.09), rnd.uniform(-0.08, 0.08)))
+    bm.to_mesh(o.data)
+    bm.free()
+    o = finish(rig, pivot, o, ol, min(size) * 0.1, sets, flat=True)
+    if shatter is not None:
+        out = o.matrix_world.translation - V(shatter)
+        out.z = abs(out.z) * 0.3 + 0.25
+        rig["stones"].append((o, o.location.copy(), out.normalized() * 0.9))
+    return o
+
+
+def gem_slab(rig, pivot, outline2d, thick, center, normal, up, mats, inner=0.58, dome=0.22, ol=0.05, sets=None):
+    """Faceted crystal face (Slice 4.1 Frostshell shield): the outline extruded
+    back by `thick`, the front rising in two facet rings to a centre apex.
+    Facets alternate between the given materials under flat shading."""
+    n = len(outline2d)
+    vs = [(x, y, -thick) for x, y in outline2d] + [(x, y, 0.0) for x, y in outline2d]
+    vs += [(x * inner, y * inner, dome * 0.7) for x, y in outline2d] + [(0.0, 0.0, dome)]
+    fs = [list(range(n))[::-1]]
+    fs += [[i, (i + 1) % n, n + (i + 1) % n, n + i] for i in range(n)]
+    facets = [[n + i, n + (i + 1) % n, 2 * n + (i + 1) % n, 2 * n + i] for i in range(n)]
+    facets += [[2 * n + i, 2 * n + (i + 1) % n, 3 * n] for i in range(n)]
+    o = placed(C.new_mesh_obj(f"{pivot}_gem", vs, fs + facets, mats[0]), center, U.orient(normal, up))
+    for mm in mats[1:]:
+        o.data.materials.append(mm)
+    for i, p in enumerate(o.data.polygons):
+        if i > n:
+            j = i - n - 1
+            p.material_index = (j + (j // n)) % len(mats)
+    return finish(rig, pivot, o, ol, None, sets, flat=True)
+
+
+def add_offset(clips, **deltas):
+    """Add a constant pose offset (a stance lean) to every frame of every
+    clip, on top of whatever the frame sets. Frame counts and timing are
+    untouched."""
+    for cd in clips.values():
+        for f in cd["frames"]:
+            for kk, dv in deltas.items():
+                f[kk] = tuple(a + b for a, b in zip(f.get(kk, (0, 0, 0)), dv))
+    return clips
+
+
 def poly(rig, pivot, pts, material, ol=0.03, sets=None, solid=0.04, flat=False):
     """Flat fan polygon from 3D points, first point the fan centre (wing membranes)."""
     P = [tuple(V(p)) for p in pts]
@@ -232,12 +293,19 @@ def joints(hc=(0, 0, 3.2), sh=(0.6, 0, 1.88), leg=(0.34, 0, 0.95), hips=1.02, ne
     return j
 
 
-def spike_fan(rig, hc, r, rnd, mats, arc=135, n=9, k=1.0, tilt=16, rear=7, scalp=True, sweep=0.0, wid=0.6, ring2=None, rear_mats=None, pivot="spikes"):
+def spike_fan(rig, hc, r, rnd, mats, arc=135, n=9, k=1.0, tilt=16, rear=7, scalp=True, sweep=0.0, wid=0.6, ring2=None, rear_mats=None, pivot="spikes", verts=16, smooth=True, thick=1.0):
     """Card spike silhouette generalised from Slice 3.1's sunburst(): broad
     soft blades behind the face over `arc` degrees each side of the top, an
     offset second ring, a backswept rear fan and scalp blades. `sweep` tips
-    every blade backward for a streamlined crest."""
+    every blade backward for a streamlined crest. Few `verts` with
+    smooth=False turns the blades into faceted shards and `thick` fattens
+    them (Frostshell ice)."""
     light, mid, deep = mats
+
+    def blade(*a, **kw):
+        kw["verts"] = verts
+        kw["flat"] = min(1.0, kw.get("flat", 0.45) * thick)
+        return globals()["blade"](*a, smooth=smooth, **kw)
     r2 = ring2 or (mid, deep)
     rl = rear_mats or (deep, mid)
     t = math.radians(tilt)

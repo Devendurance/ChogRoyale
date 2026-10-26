@@ -1,0 +1,122 @@
+[
+ {
+  "seat": 0,
+  "viewport": [
+   390,
+   844
+  ],
+  "errors": [],
+  "failed": [],
+  "census": {
+   "choglings:front:move": 608,
+   "chaos_archer:rear:attack": 299,
+   "choglings:front:defeat": 184,
+   "chaos_archer:rear:defeat": 131,
+   "choglings:front:idle": 90,
+   "chaos_archer:rear:idle": 166,
+   "chaos_archer:rear:move": 364,
+   "choglings:front:hit": 48,
+   "chaos_archer:rear:hit": 31,
+   "choglings:front:attack": 114,
+   "gale_netter:front:idle": 154,
+   "gale_netter:front:move": 223,
+   "hexwing:front:idle": 70,
+   "hexwing:front:move": 146,
+   "hexwing:front:hit": 71,
+   "hexwing:front:attack": 175,
+   "gale_netter:front:attack": 205,
+   "rift_runner:rear:idle": 20,
+   "rift_runner:rear:move": 102,
+   "hexwing:rear:idle": 68,
+   "rift_sprites:rear:idle": 33,
+   "hexwing:rear:move": 86,
+   "rift_sprites:rear:move": 229,
+   "hexwing:rear:attack": 121,
+   "rift_runner:rear:hit": 29,
+   "gale_netter:rear:attack": 15,
+   "rift_sprites:rear:defeat": 59,
+   "rift_sprites:rear:attack": 21,
+   "rift_runner:rear:attack": 26,
+   "hexwing:rear:hit": 4,
+   "rift_runner:rear:defeat": 32,
+   "hexwing:rear:defeat": 32,
+   "gale_netter:front:hit": 11,
+   "hexwing:front:defeat": 35,
+   "gale_netter:front:defeat": 29,
+   "chaos_archer:front:idle": 10,
+   "chaos_archer:front:move": 372
+  },
+  "marker": {
+   "ok": 1092,
+   "bad": 0,
+   "colors": {
+    "e0393e": 670,
+    "2f80ed": 422
+   }
+  },
+  "views": {
+   "opp:front": 323,
+   "own:rear": 62
+  }
+ },
+ {
+  "seat": 1,
+  "viewport": [
+   390,
+   844
+  ],
+  "errors": [],
+  "failed": [],
+  "census": {
+   "chaos_archer:front:idle": 135,
+   "choglings:rear:idle": 90,
+   "chaos_archer:front:defeat": 126,
+   "choglings:rear:defeat": 188,
+   "chaos_archer:front:move": 374,
+   "choglings:rear:move": 644,
+   "chaos_archer:front:attack": 263,
+   "choglings:rear:hit": 33,
+   "chaos_archer:front:hit": 46,
+   "choglings:rear:attack": 103,
+   "gale_netter:rear:idle": 146,
+   "gale_netter:rear:move": 199,
+   "hexwing:rear:idle": 63,
+   "hexwing:rear:move": 117,
+   "hexwing:rear:hit": 58,
+   "hexwing:rear:attack": 172,
+   "gale_netter:rear:attack": 178,
+   "rift_runner:front:idle": 18,
+   "rift_runner:front:move": 81,
+   "hexwing:front:idle": 76,
+   "hexwing:front:move": 62,
+   "rift_sprites:front:idle": 33,
+   "rift_sprites:front:move": 187,
+   "hexwing:front:attack": 124,
+   "gale_netter:front:attack": 18,
+   "rift_runner:front:hit": 33,
+   "rift_sprites:front:defeat": 62,
+   "rift_sprites:front:attack": 22,
+   "rift_runner:front:attack": 26,
+   "hexwing:front:hit": 3,
+   "rift_runner:front:defeat": 32,
+   "hexwing:front:defeat": 29,
+   "gale_netter:rear:hit": 11,
+   "hexwing:rear:defeat": 35,
+   "gale_netter:rear:defeat": 27,
+   "chaos_archer:rear:idle": 8,
+   "chaos_archer:rear:move": 396
+  },
+  "marker": {
+   "ok": 1043,
+   "bad": 0,
+   "colors": {
+    "2f80ed": 661,
+    "e0393e": 382
+   }
+  },
+  "views": {
+   "own:rear": 312,
+   "opp:front": 48
+  }
+ }
+]

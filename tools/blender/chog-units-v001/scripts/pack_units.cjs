@@ -84,7 +84,7 @@ const label = (text, w, h, size = 13) =>
   Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><text x="4" y="${size + 2}" font-family="Arial" font-weight="700" font-size="${size}" fill="#ffffff" stroke="#1d1424" stroke-width="3" paint-order="stroke">${text}</text></svg>`);
 
 (async () => {
-  const manifest = { schema: 1, version: "chog-units-v001", revision: "slice4", source: "tools/blender/chog-units-v001", units: {} };
+  const manifest = { schema: 1, version: "chog-units-v001", revision: "slice4.1", source: "tools/blender/chog-units-v001", units: {} };
   const only = process.env.UNITS ? process.env.UNITS.split(",") : null;
   for (const unit of Object.keys(RULES)) {
     if (only && !only.includes(unit)) continue;

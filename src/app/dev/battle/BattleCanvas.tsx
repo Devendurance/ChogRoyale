@@ -1242,7 +1242,14 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
               e.img.setFrame(unitFrame(e.anim, { ...e.animSt, goneAt: e.gone }, { now, moving: false, view: e.view }).frame).clearTint().setAlpha(1);
               e.root.setAlpha(defeatAlpha(e.anim, el));
               if (el < e.anim.defeatMs) continue;
-            } else if (now - e.gone < 220) continue;
+            } else {
+              // Static fallback sprites: updateEnt only runs for entities still
+              // in the frame, so the death fade is applied here.
+              const gp = Math.min(1, (now - e.gone) / (reduced ? 110 : 220));
+              e.img.setAlpha(1 - gp);
+              e.root.setAlpha(1 - gp * 0.6);
+              if (now - e.gone < 220) continue;
+            }
             e.root.destroy(true);
             pool.delete(id);
           }

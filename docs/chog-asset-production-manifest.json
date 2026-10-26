@@ -1,6 +1,6 @@
 {
  "schemaVersion": 1,
- "slice": "Visual overhaul v3 slice 2, refined in slice 2.1, units in slice 3, refined in slice 3.1",
+ "slice": "Visual overhaul v3 slice 2, refined in slice 2.1, units in slice 3, refined in slice 3.1, roster in slice 4, identity and card correction in slice 4.1",
  "rules": [
   "Every pack PNG is a reference crop with game_ready=false. None of them is installed as runtime art.",
   "Canonical identity is 02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY. Stylized 3D concepts are quality and lighting references only.",
@@ -250,7 +250,7 @@
    "vfxReference": null,
    "live": {
     "battle": "unit:choglings (chog-units v001 animated sheet; troop:choglings v001 static is the fallback)",
-    "card": "chog-units/v001/choglings/card-portrait.png (v001 card:choglings is the fallback)"
+    "card": "v001 card:choglings (original 2D card art, owner decision in slice 4.1; chog-units/v001/choglings/card-portrait.png is an unused 3D render)"
    },
    "required": [
     {
@@ -289,7 +289,7 @@
    "vfxReference": null,
    "live": {
     "battle": "unit:chaos_archer (chog-units v001 animated sheet; troop:chaos_archer v001 static is the fallback)",
-    "card": "chog-units/v001/chaos_archer/card-portrait.png (v001 card:chaos_archer is the fallback)"
+    "card": "v001 card:chaos_archer (original 2D card art, owner decision in slice 4.1; chog-units/v001/chaos_archer/card-portrait.png is an unused 3D render)"
    },
    "required": [
     {
@@ -328,7 +328,7 @@
    "vfxReference": null,
    "live": {
     "battle": "unit:boulderback (chog-units v001 animated sheet; troop:boulderback v001 static is the fallback)",
-    "card": "chog-units/v001/boulderback/card-portrait.png (v001 card:boulderback is the fallback)"
+    "card": "v001 card:boulderback (original 2D card art, owner decision in slice 4.1; chog-units/v001/boulderback/card-portrait.png is an unused 3D render)"
    },
    "required": [
     {
@@ -367,7 +367,7 @@
    "vfxReference": null,
    "live": {
     "battle": "unit:frostshell (chog-units v001 animated sheet; troop:frostshell v001 static is the fallback)",
-    "card": "chog-units/v001/frostshell/card-portrait.png (v001 card:frostshell is the fallback)"
+    "card": "v001 card:frostshell (original 2D card art, owner decision in slice 4.1; chog-units/v001/frostshell/card-portrait.png is an unused 3D render)"
    },
    "required": [
     {
@@ -406,7 +406,7 @@
    "vfxReference": null,
    "live": {
     "battle": "unit:rift_runner (chog-units v001 animated sheet; troop:rift_runner v001 static is the fallback)",
-    "card": "chog-units/v001/rift_runner/card-portrait.png (v001 card:rift_runner is the fallback)"
+    "card": "v001 card:rift_runner (original 2D card art, owner decision in slice 4.1; chog-units/v001/rift_runner/card-portrait.png is an unused 3D render)"
    },
    "required": [
     {
@@ -445,7 +445,7 @@
    "vfxReference": null,
    "live": {
     "battle": "unit:sparkcaster (chog-units v001 animated sheet; troop:sparkcaster v001 static is the fallback)",
-    "card": "chog-units/v001/sparkcaster/card-portrait.png (v001 card:sparkcaster is the fallback)"
+    "card": "v001 card:sparkcaster (original 2D card art, owner decision in slice 4.1; chog-units/v001/sparkcaster/card-portrait.png is an unused 3D render)"
    },
    "required": [
     {
@@ -484,7 +484,7 @@
    "vfxReference": null,
    "live": {
     "battle": "unit:chog_guardian (chog-units v001 animated sheet; troop:chog_guardian v001 static is the fallback)",
-    "card": "chog-units/v001/chog_guardian/card-portrait.png (v001 card:chog_guardian is the fallback)"
+    "card": "v001 card:chog_guardian (original 2D card art, owner decision in slice 4.1; chog-units/v001/chog_guardian/card-portrait.png is an unused 3D render)"
    },
    "required": [
     {
@@ -523,7 +523,7 @@
    "vfxReference": null,
    "live": {
     "battle": "unit:hexwing (chog-units v001 animated sheet; troop:hexwing v001 static is the fallback)",
-    "card": "chog-units/v001/hexwing/card-portrait.png (v001 card:hexwing is the fallback)"
+    "card": "v001 card:hexwing (original 2D card art, owner decision in slice 4.1; chog-units/v001/hexwing/card-portrait.png is an unused 3D render)"
    },
    "required": [
     {
@@ -562,7 +562,7 @@
    "vfxReference": null,
    "live": {
     "battle": "unit:rift_sprites (chog-units v001 animated sheet; troop:rift_sprites v001 static is the fallback)",
-    "card": "chog-units/v001/rift_sprites/card-portrait.png (v001 card:rift_sprites is the fallback)"
+    "card": "v001 card:rift_sprites (original 2D card art, owner decision in slice 4.1; chog-units/v001/rift_sprites/card-portrait.png is an unused 3D render)"
    },
    "required": [
     {
@@ -601,7 +601,7 @@
    "vfxReference": null,
    "live": {
     "battle": "unit:gale_netter (chog-units v001 animated sheet; troop:gale_netter v001 static is the fallback)",
-    "card": "chog-units/v001/gale_netter/card-portrait.png (v001 card:gale_netter is the fallback)"
+    "card": "v001 card:gale_netter (original 2D card art, owner decision in slice 4.1; chog-units/v001/gale_netter/card-portrait.png is an unused 3D render)"
    },
    "required": [
     {
@@ -640,7 +640,7 @@
    "vfxReference": null,
    "live": {
     "battle": "unit:riftbreaker (chog-units v001 animated sheet; troop:riftbreaker v001 static is the fallback)",
-    "card": "chog-units/v001/riftbreaker/card-portrait.png (v001 card:riftbreaker is the fallback)"
+    "card": "v001 card:riftbreaker (original 2D card art, owner decision in slice 4.1; chog-units/v001/riftbreaker/card-portrait.png is an unused 3D render)"
    },
    "required": [
     {
@@ -679,7 +679,7 @@
    "vfxReference": null,
    "live": {
     "battle": "unit:ember_mauler (chog-units v001 animated sheet; troop:ember_mauler v001 static is the fallback)",
-    "card": "chog-units/v001/ember_mauler/card-portrait.png (v001 card:ember_mauler is the fallback)"
+    "card": "v001 card:ember_mauler (original 2D card art, owner decision in slice 4.1; chog-units/v001/ember_mauler/card-portrait.png is an unused 3D render)"
    },
    "required": [
     {

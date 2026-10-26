@@ -1,5 +1,10 @@
 # Project State
 
+## Visual overhaul v3, slice 4.1 (2026-10-26)
+
+- Seven troop models corrected toward their cards (Frostshell, Rift Runner, Sparkcaster, Gale Netter, Riftbreaker, Chaos Archer, Chog Guardian). Clip counts and timing unchanged. Twelve sheets 16.7 MB RGBA. Readiness doc section 15.
+- Card art: original 2D illustrations everywhere (owner decision). 3D models are battlefield units only. Static fallback troops fade on death again.
+
 ## Visual overhaul v3, slice 4 (2026-10-26)
 
 - All twelve troop cards animate from v001 sheets (front and rear views, five clips each) with new 256 card portraits and v001 fallbacks. New sources `build_roster.py` and `roster_lib.py`. The rear view of Slice 4 units mirrors the whole model (`mirror_geo`). Flying units hover. The manifest adds ruleset `hitsAir`/`air`, and `engagedFoe` counts air foes only for `hitsAir` units.

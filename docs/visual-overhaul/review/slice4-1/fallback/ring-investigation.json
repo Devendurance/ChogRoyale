@@ -1,0 +1,26 @@
+[
+ {
+  "seat": 0,
+  "ok": 4028,
+  "bad": 0,
+  "skippedDying": 160,
+  "errors": [],
+  "badWithPrev": 0,
+  "badPrevGone": 0,
+  "badRingMatchesPrev": 0,
+  "badNoPrev": 0,
+  "bads": []
+ },
+ {
+  "seat": 1,
+  "ok": 4071,
+  "bad": 0,
+  "skippedDying": 162,
+  "errors": [],
+  "badWithPrev": 0,
+  "badPrevGone": 0,
+  "badRingMatchesPrev": 0,
+  "badNoPrev": 0,
+  "bads": []
+ }
+]

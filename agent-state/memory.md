@@ -1,5 +1,8 @@
 # Memory
 
+- Slice 4.1 tools: `qa/s41/` in ChogRoyale-Assets (`splice.cjs` replaces whole Python functions from a patch file, `review.cjs`, `cards.cjs`, `compare.cjs`, `mobile.cjs`, `capture.cjs`, `ring.cjs`). `roster_lib` gained `ice_chunk`, `gem_slab`, `add_offset`, partial `lathe(arc=)` and `spike_fan(verts, smooth, thick)`. Pale ice with emission reads as cream skin, so keep armour on mid and deep ice tones. A horizontal prop seen by the near-level identity camera goes edge-on, so tilt it about its own axis.
+- Port 3000 may already run this repo's Next server (`start-server.js`). It serves dev routes and hot-reloads, so reuse it for the qa-units harness.
+
 - Slice 4 unit loop: `PREVIEW=1 build_roster.py -- <out> <unit...>` (same flags as build_units). Full renders take about 5 minutes per unit, and two Blender processes in parallel work. Props hidden behind the big spike head are a recurring trap at the high camera (Hexwing wings, Riftbreaker hammer), so move props out to the side or in front. `build_units.blade()` has no `sets`, so use the `roster_lib.blade` wrapper. `qa/s4-review.cjs`, `qa/s4-roster.cjs`, `qa/generate-s4-fixture.ts` (`AIR=1` for flyers) and `qa/capture-s4.cjs` (`AIR=1`, `FALLBACK=1`) make the review set. Fixture deploys at y=8 are rejected, so y=20 is the back row.
 - Lava glow above about 4 emission strength reads yellow, not orange. Fallback capture marker "bad" samples (16 of about 5,000 in Slice 4) are probably static sprites lingering 220 ms after removal, which the sampler doesn't filter. Unverified, and the ring colour code is unchanged.
 

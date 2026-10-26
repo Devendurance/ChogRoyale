@@ -1,3 +1,9 @@
+## Visual overhaul v3, slice 4.1 (2026-10-26)
+
+- Doing: bounded identity correction of the Slice 4 roster on `visual-overhaul/v3-slice2` after `d7fb366`. Local commit only, no push, PR, merge or deploy.
+- Done: Frostshell, Rift Runner, Sparkcaster, Gale Netter, Riftbreaker rebuilt toward their cards, Archer bow +15%, Guardian pauldrons. Seven sheets re-rendered, five byte-identical. Owner decision: original 2D card art in every card interface, 3D is battlefield-only (`portraitCandidatesForCard` returns v001 only, 3D portraits kept unused). Fallback ring mismatch root-caused (static death fade never ran) and fixed, 0 bad samples. Masters in `ChogRoyale-Assets/chog-units-v001/masters-s41`, review in `review-s41` and `docs/visual-overhaul/review/slice4-1/`.
+- Next: owner review of the corrected units. Live two-login match, phone, touch and performance still unverified.
+
 ## Visual overhaul v3, slice 4 (2026-10-26)
 
 - Doing: remaining ten troop cards on the Slice 3.1 pipeline, on `visual-overhaul/v3-slice2` after `04fffaf`. Local commits only (checkpoint `1838fbe` plus the Slice 4 commit), no push, PR, merge or deploy.

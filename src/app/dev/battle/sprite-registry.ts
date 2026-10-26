@@ -128,19 +128,13 @@ export function portraitForCard(manifest: SpriteManifest, cardId: string): strin
   return portraitUrl(rec);
 }
 
-/** Card portraits rendered from the animated 3D models (Slices 3 and 4, all
- * twelve troop cards). The v001 portrait stays second so a failed load falls
- * back to the approved art. */
-export const UNIT_CARD_PORTRAITS: Record<string, string> = Object.fromEntries(
-  ["choglings", "boulderback", "chaos_archer", "frostshell", "rift_runner", "sparkcaster", "chog_guardian", "hexwing", "rift_sprites", "gale_netter", "riftbreaker", "ember_mauler"].map(
-    (id) => [id, `/assets/chog-units/v001/${id}/card-portrait.png`]
-  )
-);
-
-/** Ordered portrait sources for an ordinary card: new art first, then v001. */
+/** Portrait sources for an ordinary card. Owner decision (Slice 4.1): every
+ * card interface keeps the original Chog Royale 2D illustration. The 3D
+ * renders in chog-units/v001/<id>/card-portrait.png stay on disk but are
+ * never card art. The 3D models are battlefield units only. */
 export function portraitCandidatesForCard(manifest: SpriteManifest, cardId: string): string[] {
   const legacy = portraitForCard(manifest, cardId);
-  return [UNIT_CARD_PORTRAITS[cardId], legacy].filter((s): s is string => !!s);
+  return legacy ? [legacy] : [];
 }
 
 /** Class-template portrait for a commander, resolved by server-verified class

@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { TICKS_PER_SECOND, TROOP_CARDS_V1, reach2 } from "@/lib/combat";
-import { UNIT_CARD_PORTRAITS, portraitCandidatesForCard, resolveEntityAsset, type SpriteManifest } from "./sprite-registry";
+import { portraitCandidatesForCard, resolveEntityAsset, type SpriteManifest } from "./sprite-registry";
 import {
   UNITS_URL,
   clipDurationMs,
@@ -101,13 +101,13 @@ describe("unit animation manifest", () => {
     }
   });
 
-  it("serves the new card portraits first and keeps the v001 portrait as fallback", () => {
+  it("keeps the original 2D illustration as the only card art for every troop", () => {
     for (const u of Object.values(manifest.units)) {
-      expect(UNIT_CARD_PORTRAITS[u.entityId]).toBe(`${UNITS_URL}/${u.portrait}`);
-      expect(portraitCandidatesForCard(kit, u.entityId)).toEqual([`${UNITS_URL}/${u.portrait}`, `/assets/chog-kit/v001/cards/derivatives/${u.entityId}/portrait.png`]);
+      const candidates = portraitCandidatesForCard(kit, u.entityId);
+      expect(candidates).toEqual([`/assets/chog-kit/v001/cards/derivatives/${u.entityId}/portrait.png`]);
+      // The 3D portrait renders stay on disk but never reach a card.
+      expect(candidates.some((s) => s.startsWith(UNITS_URL))).toBe(false);
     }
-    expect(Object.keys(UNIT_CARD_PORTRAITS).sort()).toEqual(Object.keys(manifest.units).sort());
-    // Spells and buildings keep their approved v001 card art only.
     expect(portraitCandidatesForCard(kit, "rift_sentry")).toEqual(["/assets/chog-kit/v001/cards/derivatives/rift_sentry/portrait.png"]);
   });
 
