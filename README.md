@@ -49,6 +49,28 @@ The game combines approachable free-to-play strategy with an identity-rich socia
 
 > Screenshots are captures of the deployed game at chogroyale.vercel.app, taken by the project owner. The mobile image is a phone capture with the status and browser bars cropped out.
 
+### Around the game
+
+| Commanders | Decks |
+|:---:|:---:|
+| ![Commanders screen with the five free classes and class details](docs/media/readme/07-commanders.webp) | ![Deck builder showing a saved seven-card battle deck](docs/media/readme/08-decks.webp) |
+| Five free commander classes, shown as shared class art | A saved seven-card deck with its average energy |
+
+| Progress | Friends |
+|:---:|:---:|
+| ![Progress screen with verified match record and casual leaderboard](docs/media/readme/09-progression.webp) | ![Friends screen with friend list, search and requests](docs/media/readme/10-friends.webp) |
+| Verified match record and the unranked casual leaderboard | Search players, manage requests, and message, gift or block friends |
+
+| Gifting | Commander lending |
+|:---:|:---:|
+| ![Gifting screen for sponsoring a friend's card upgrade with earned Gold](docs/media/readme/11-gifting.webp) | ![Commander lending screen for temporary battle access](docs/media/readme/12-loans.webp) |
+| Sponsor a friend's card upgrade with Gold you earned | Lend a Genesis commander for temporary in-game access |
+
+| Clans | Messages |
+|:---:|:---:|
+| ![Clans screen with roster and invitations](docs/media/readme/13-clans.webp) | ![Private messages screen with message content blurred](docs/media/readme/14-messages.webp) |
+| Clan roster, membership and invitations | Private conversations with friends (message text blurred) |
+
 ## ⚔️ How to play
 
 1. **Enter the kingdom.** Sign in with Privy, choose your username and avatar, and complete your player profile.
