@@ -52,6 +52,8 @@ import {
 import {
   UNITS_MANIFEST_URL,
   UNITS_URL,
+  anchorOffset,
+  clipsFor,
   defeatAlpha,
   engagedFoe,
   newUnitAnimState,
@@ -66,6 +68,32 @@ import {
   type UnitAnimState,
   type UnitView,
 } from "./unit-anim";
+import {
+  TEX_RADIUS,
+  VFX_COLORS,
+  VFX_MANIFEST_URL,
+  VFX_S,
+  VFX_URL,
+  abilityVfx,
+  burstAt,
+  commanderEntityFor,
+  projectileStyleFor,
+  ringAt,
+  seeded,
+  spellCastVfx,
+  spellImpactVfx,
+  statusesFromEvent,
+  vfxKey,
+  type ProjectileStyle,
+  type StatusUnit,
+  type VfxManifest,
+  type VfxSprite,
+  type VfxStatus,
+} from "./battle-vfx";
+import { VfxLayer } from "./vfx-layer";
+
+/** Commander class sheets live in the units manifest as `commander_<class>`. */
+const commanderAnimId = (cls: string) => `commander_${cls}`;
 
 // First arena manifest that loads wins: v003 pre-rendered 2.5D art, else v002.
 const loadArena = async (): Promise<{ arena: ArenaManifest; base: string } | null> => {
@@ -168,7 +196,10 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
       fetch(UNITS_MANIFEST_URL)
         .then((r) => (r.ok ? (r.json() as Promise<UnitAnimManifest>) : null))
         .catch(() => null),
-    ]).then(([Phaser, manifest, arenaLoad, unitManifest]) => {
+      fetch(VFX_MANIFEST_URL)
+        .then((r) => (r.ok ? (r.json() as Promise<VfxManifest>) : null))
+        .catch(() => null),
+    ]).then(([Phaser, manifest, arenaLoad, unitManifest, vfxManifest]) => {
       if (cancelled || !host.current) return;
       const arena = arenaLoad?.arena ?? null;
       const arenaBase = arenaLoad?.base ?? "";
@@ -203,6 +234,8 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
         anim: UnitAnimRecord | null;
         animSt: UnitAnimState;
         view: UnitView;
+        /** Last attack cycle whose impact frame spawned its effect. */
+        lastImpact: string | null;
       }
       interface FxImg {
         img: import("phaser").GameObjects.Image;
@@ -251,8 +284,21 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
       const animationSeenKeys = new Set<string>();
       let animationTick = -1;
       let animationPriming = false;
+      // Final-asset VFX: one-shot sprites, status markers that mirror the
+      // rule an event applied, first-seen ticks for pending comets, inferred
+      // projectile styles and each building's authoritative activation tick.
+      let vfx: VfxLayer | null = null;
+      const statuses = new Map<string, VfxStatus>();
+      const impactFirstTick = new Map<string, number>();
+      const projStyles = new Map<string, ProjectileStyle>();
+      const buildingActiveAt = new Map<string, number>();
 
       const clearPresentationPools = () => {
+        vfx?.clear();
+        statuses.clear();
+        impactFirstTick.clear();
+        projStyles.clear();
+        buildingActiveAt.clear();
         for (const e of pool.values()) e.root.destroy(true);
         pool.clear();
         for (const img of projPool.values()) img.destroy();
@@ -283,6 +329,10 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
           for (const u of Object.values(unitManifest?.units ?? {})) {
             this.load.spritesheet(unitTextureKey(u.entityId), `${UNITS_URL}/${u.sheet}`, { frameWidth: u.frameWidth, frameHeight: u.frameHeight });
           }
+          for (const [key, t] of Object.entries(vfxManifest?.textures ?? {})) {
+            if (t.kind === "sheet") this.load.spritesheet(vfxKey(key), `${VFX_URL}/${t.path}`, { frameWidth: t.frameWidth!, frameHeight: t.frameHeight! });
+            else this.load.image(vfxKey(key), `${VFX_URL}/${t.path}`);
+          }
           if (arena) {
             for (const l of arena.layers) this.load.image(`arena:layer:${l.id}`, `${arenaBase}/${l.path}`);
             for (const [role, r] of Object.entries(arena.mounts)) {
@@ -312,6 +362,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
           }
           this.g = this.add.graphics().setDepth(-100);
           this.og = this.add.graphics().setDepth(3000);
+          vfx = new VfxLayer(this, Phaser, vfxManifest, missing, reduced);
         }
         update() {
           const f = feed.current;
@@ -334,6 +385,17 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
           const sy = (y: number) => (seat === 0 ? 160 - y : y) * S;
           const col = (owner: number) => (owner === seat ? OWN : FOE);
           const structureCol = (owner: number) => TEAM_COLORS[structureTeamFor(owner, seat)];
+          // Board px -> arena units for this seat (effects anchored to drawn art).
+          const toArena = (px: number, py: number) => ({ x: px / S, y: seat === 0 ? 160 - py / S : py / S });
+          const project = (x: number, y: number): [number, number] => [sx(x), sy(y)];
+          // Buildings first placed in this frame (not a resumed history) play
+          // their deploy clip from their first drawn frame.
+          const freshSpawns = new Set<string>();
+          if (!animationPriming) {
+            for (const ev of frame.events as FrameEvent[]) {
+              if (ev.type === "building_spawned" && !seenEventKeys.has(combatEventKey(ev))) freshSpawns.add(String(ev.buildingId));
+            }
+          }
           const t = Math.min(1, (now - f.receivedAt) / 100);
           const prevPos = new Map<string, { x: number; y: number }>();
           for (const u of [...(prev?.troops ?? []), ...(prev?.commanders ?? [])]) prevPos.set(u.id, u);
@@ -509,10 +571,59 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                 // Until it first moves, a unit faces the far side: the viewer's
                 // troops show their backs, the opponent's their faces.
                 view: owner === seat ? "rear" : "front",
+                lastImpact: null,
               };
+              // A building placed this session rises through its deploy clip.
+              if (anim && freshSpawns.has(id)) e.animSt = { ...e.animSt, deployAt: now };
               pool.set(id, e);
             }
             return e;
+          };
+          // Effect at the frame where an animated attack lands: the Sentry's
+          // muzzle flash and crystal tracer, an arrow for instant ranged
+          // shooters (Chaos Archer, Deadeye), a star bolt for the Warden, a
+          // lure pulse for the Totem, a contact spark for melee. Units whose
+          // shots are real frame projectiles draw those instead.
+          const onAttackImpact = (e: PoolEnt, px: number, py: number, foe: Foe | null) => {
+            const a = e.anim;
+            if (!a || !vfx) return;
+            const c = clipsFor(a, e.view);
+            const idx = Number(e.img.frame.name) - c.attack.start;
+            if (idx !== (c.attack.impact ?? 0)) return;
+            const st = e.animSt;
+            const key = now - st.firedAt < 2000 ? `f${st.firedAt}` : st.engagedSince !== null ? `e${st.engagedSince}:${Math.floor((now - st.engagedSince) / a.attackPeriodMs)}` : null;
+            if (!key || key === e.lastImpact) return;
+            e.lastImpact = key;
+            const drawn = a.visibleHeight * a.displayScale;
+            const flip = e.facingX < 0;
+            const tip = anchorOffset(a, "muzzle", e.view, "attack", flip) ?? anchorOffset(a, "tip", e.view, "attack", flip);
+            const from = tip ? { dx: tip.x, dy: tip.y } : { dx: 0, dy: -drawn * 0.55 };
+            const fx0 = toArena(sx(px) + from.dx, sy(py) + from.dy);
+            if (a.entityId === "decoy_totem") {
+              vfx.spawn([ringAt(px, py, 3, VFX_COLORS.hex, 700, { scale: 0.08, alpha: 0.85, alpha1: 0, ease: "out" })], now);
+              return;
+            }
+            if (a.entityId === "chog_burrow" || a.entityId === "rift_mortar") return;
+            if (!foe) return;
+            const lift = foe.air ? 18 : 8;
+            if (a.entityId === "rift_sentry") {
+              vfx.spawn([
+                { tex: "muzzle", x: fx0.x, y: fx0.y, life: 140, scale: 0.42, scale1: 0.6, alpha: 1, alpha1: 0, rot: Math.random() * 3, tint: VFX_COLORS.rift, blend: "add", layer: "top" },
+                { tex: "streak", x: fx0.x, y: fx0.y, to: { x: foe.x, y: foe.y }, lift: 0, lift1: lift, life: 110, scale: 0.7, alpha: 1, alpha1: 0.6, aim: true, tint: VFX_COLORS.rift, blend: "add", layer: "top" },
+                burstAt(foe.x, foe.y, VFX_COLORS.rift, 0.32, 200, lift),
+              ], now);
+            } else if (a.entityId === "chaos_archer" || a.entityId === commanderAnimId("deadeye")) {
+              vfx.spawn([{ tex: "arrow", x: fx0.x, y: fx0.y, to: { x: foe.x, y: foe.y }, lift: 0, lift1: lift, arc: 6, life: 150, scale: 0.55, alpha: 1, alpha1: 1, aim: true, blend: "normal", layer: "top" }], now);
+            } else if (a.entityId === commanderAnimId("warden")) {
+              vfx.spawn([
+                { tex: "glow", x: fx0.x, y: fx0.y, to: { x: foe.x, y: foe.y }, lift: 0, lift1: lift, life: 180, scale: 0.42, alpha: 1, alpha1: 0.7, tint: VFX_COLORS.warden, blend: "add", layer: "top" },
+                { tex: "star", x: fx0.x, y: fx0.y, to: { x: foe.x, y: foe.y }, lift: 0, lift1: lift, life: 180, scale: 0.4, alpha: 1, alpha1: 0.8, spin: 9, tint: VFX_COLORS.aegis, blend: "add", layer: "top" },
+              ], now);
+            } else if (a.reach <= 3) {
+              const cx = px + (foe.x - px) * 0.6;
+              const cy = py + (foe.y - py) * 0.6;
+              vfx.spawn([{ tex: "spark", x: cx, y: cy, lift: drawn * 0.32, life: 150, scale: 0.42, scale1: 0.62, alpha: 1, alpha1: 0, rot: Math.random() * 3, tint: VFX_COLORS.spark, blend: "add", layer: "top" }], now);
+            }
           };
           const updateEnt = (
             e: PoolEnt,
@@ -558,7 +669,9 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
               if (m.foe && Math.abs(m.foe.x - px) > 0.01) e.facingX = m.foe.x < px ? -1 : 1;
               else if (m.moving && Math.abs(m.dx) > 1e-3) e.facingX = m.dx < 0 ? -1 : 1;
               if (m.heading) e.view = nextView(e.view, m.heading.x, m.heading.y);
-              e.img.setFrame(unitFrame(e.anim, { ...e.animSt, goneAt: e.gone }, { now, moving: m.moving, view: e.view }).frame);
+              const fr = unitFrame(e.anim, { ...e.animSt, goneAt: e.gone }, { now, moving: m.moving, view: e.view });
+              e.img.setFrame(fr.frame);
+              if (fr.clip === "attack") onAttackImpact(e, px, py, m.foe);
               e.img.setPosition(0, e.air ? -10 : 0).setScale(scaleX, scaleY).setFlipX(e.facingX < 0).setRotation(0);
               // A light warm flash: the sheet's own hit clip carries the reaction.
               if (e.flashUntil > now) e.img.setTint(0xffc2b8);
@@ -792,6 +905,16 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                   if (poseDef && poseDef.firingAllowed) {
                     const [wx, wy] = weaponScreen(placement.groundAnchorPixels, poseDef.weaponAnchorLocalBoardPixels, seat);
                     towerFx.push({ fx: wx, fy: wy + artOffsetY, tx: fire.x, ty: fire.y, born: now, dur: 120 });
+                    if (vfx?.has("muzzle")) {
+                      // Same anchor, target and ~120 ms window as the Graphics cue.
+                      const m0 = toArena(wx, Math.max(7, wy + artOffsetY));
+                      vfx.spawn([
+                        { tex: "muzzle", x: m0.x, y: m0.y, life: 130, scale: 0.5, scale1: 0.7, alpha: 1, alpha1: 0, rot: (fire.tick % 7) * 0.4, tint: 0xffe27a, blend: "add", layer: "top" },
+                        { tex: "glow", x: m0.x, y: m0.y, life: 160, scale: 0.8, scale1: 1.1, alpha: 0.8, alpha1: 0, tint: 0xffd36a, blend: "add", layer: "top" },
+                        { tex: "streak", x: m0.x, y: m0.y, to: { x: fire.x, y: fire.y }, life: 110, scale: 0.85, alpha: 1, alpha1: 0.5, aim: true, tint: 0xfff1b0, blend: "add", layer: "top" },
+                        burstAt(fire.x, fire.y, 0xffe9a8, 0.36, 200, 6),
+                      ], now);
+                    }
                   }
                 }
                 // HP bar from the authored mount rectangle (master px -> board px).
@@ -843,10 +966,28 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
               label(s.id, "rubble", x, y);
             }
           }
+          // Presentation-only engagement for buildings. The Rift Sentry has no
+          // public fire event, so it swings like a troop: active (past its
+          // authoritative activeAt), with an enemy ground unit inside its
+          // centre-distance range. The Totem's lure plays while an enemy unit
+          // is near. Mortar and Burrow fire on their authoritative events.
+          const unitFoes = (owner: number): Foe[] => [
+            ...frame.troops.filter((t) => t.owner !== owner).map((t) => ({ x: t.x, y: t.y, r: 0, air: t.air })),
+            ...frame.commanders.filter((c) => c.owner !== owner).map((c) => ({ x: c.x, y: c.y, r: 0 })),
+          ];
           for (const b of frame.buildings) {
             const x = sx(b.x);
             const y = sy(b.y);
             const r = ent("building", b.cardId);
+            const banim0 = unitAnimFor(unitManifest, b.cardId);
+            const banim = banim0 && banim0.kind === "building" && !missing.has(unitTextureKey(banim0.entityId)) && this.textures.exists(unitTextureKey(banim0.entityId)) ? banim0 : null;
+            let bmotion: UnitMotion | undefined;
+            if (banim) {
+              const active = frame.tick >= (buildingActiveAt.get(b.id) ?? -1);
+              const foe = active && (b.cardId === "rift_sentry" || b.cardId === "decoy_totem") ? engagedFoe(b, banim.reach, unitFoes(b.owner), 0.5, banim.hitsAir) : null;
+              const up = seat === 0 ? -1 : 1;
+              bmotion = { moving: false, dx: 0, foe, heading: foe && b.cardId === "rift_sentry" ? { x: foe.x - b.x, y: up * (foe.y - b.y) } : null };
+            }
             spriteOrFallback(
               b.id,
               r,
@@ -863,13 +1004,17 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                 og.lineStyle(2, b.cardId === "rift_sentry" ? 0xfbbf24 : b.cardId === "chog_burrow" ? 0xa78bfa : b.cardId === "rift_mortar" ? 0xf97316 : 0xd1d5db, 1).strokeRect(x - pr, y - pr, pr * 2, pr * 2);
                 hpBar(x, y - pr - 6, pr * 2, b.hp, b.maxHp);
               },
-              b.cardId === "rift_sentry" ? "SEN" : b.cardId === "chog_burrow" ? "BUR" : b.cardId === "rift_mortar" ? "MOR" : "TOT"
+              b.cardId === "rift_sentry" ? "SEN" : b.cardId === "chog_burrow" ? "BUR" : b.cardId === "rift_mortar" ? "MOR" : "TOT",
+              banim,
+              bmotion
             );
             if (b.nextSpawnAt !== undefined && b.spawnsLeft && b.spawnsLeft > 0) {
               const frac = 1 - Math.max(0, Math.min(1, (b.nextSpawnAt - frame.tick) / 50));
               const rr = ent("building", b.cardId);
-              const top = rr ? y - rr.proposedDisplaySize.visibleHeight * displayScale(rr) - 10 : y - (b.footprint + 0.5) * S - 10;
-              og.lineStyle(2, 0xa78bfa, 0.9).beginPath().arc(x, top, 4, -Math.PI / 2, -Math.PI / 2 + frac * Math.PI * 2).strokePath();
+              const top = banim
+                ? y - banim.visibleHeight * banim.displayScale - 12
+                : rr ? y - rr.proposedDisplaySize.visibleHeight * displayScale(rr) - 10 : y - (b.footprint + 0.5) * S - 10;
+              og.lineStyle(2, banim ? 0x5ff0ff : 0xa78bfa, 0.9).beginPath().arc(x, top, 4, -Math.PI / 2, -Math.PI / 2 + frac * Math.PI * 2).strokePath();
             }
           }
           // Foes per owner for presentation-only engagement (air flagged, so
@@ -927,6 +1072,22 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
           for (const c of frame.commanders) {
             const p = lerp(c.id, c.x, c.y);
             const r = manifest ? resolveCommanderAsset(manifest, c.cls) : null;
+            // Class sheet (shared by every commander of the class, never a
+            // specific NFT's likeness), with the static class art as fallback.
+            const canim0 = unitAnimFor(unitManifest, commanderAnimId(c.cls));
+            const canim = canim0 && !missing.has(unitTextureKey(canim0.entityId)) && this.textures.exists(unitTextureKey(canim0.entityId)) ? canim0 : null;
+            let cmotion: UnitMotion | undefined;
+            if (canim) {
+              const before = prevPos.get(c.id);
+              const dx = before ? c.x - before.x : 0;
+              const dy = before ? c.y - before.y : 0;
+              const moving = !!before && Math.hypot(dx, dy) > 0.01;
+              if (!foeCache.has(c.owner)) foeCache.set(c.owner, foesOf(c.owner));
+              const foe = moving ? null : engagedFoe(c, canim.reach, foeCache.get(c.owner)!, undefined, canim.hitsAir);
+              const up = seat === 0 ? -1 : 1;
+              const heading = foe ? { x: foe.x - c.x, y: up * (foe.y - c.y) } : moving ? { x: dx, y: up * dy } : null;
+              cmotion = { moving, dx, foe, heading };
+            }
             spriteOrFallback(
               c.id,
               r && !missing.has(r.stableAssetId!) ? r : null,
@@ -944,12 +1105,64 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                 og.lineStyle(3, 0xfbbf24, 1).strokeCircle(x, y, 11);
                 hpBar(x, y - 19, 24, c.hp, c.maxHp, c.shield);
               },
-              c.cls.slice(0, 2).toUpperCase()
+              c.cls.slice(0, 2).toUpperCase(),
+              canim,
+              cmotion
             );
           }
           // Impact telegraphs and in-flight shells.
           const seenImpacts = new Set<string>();
+          const vfxI = vfx && vfx.has("ring") && vfx.has("comet") ? vfx : null;
           for (const i of frame.impacts) {
+            if (!vfxI) break;
+            // Final-asset flight: progress runs from the first frame the
+            // pending impact appeared to its authoritative impactTick.
+            if (!impactFirstTick.has(i.id)) impactFirstTick.set(i.id, frame.tick);
+            const total = Math.max(1, i.impactTick - impactFirstTick.get(i.id)!);
+            const p = Math.max(0, Math.min(1, 1 - (i.impactTick - frame.tick - t) / total));
+            const radius = i.radius ?? start.catalog[i.cardId]?.radius ?? 6;
+            const mortar = i.cardId === "rift_mortar";
+            const color = mortar ? VFX_COLORS.mortar : VFX_COLORS.comet;
+            const tx = sx(i.x);
+            const ty = sy(i.y);
+            const tele = vfxI.keyedImage(`tele:${i.id}`, "ring", "ground", "add", color);
+            tele?.setPosition(tx, ty).setScale((radius * S) / TEX_RADIUS.ring).setAlpha(0.45 + 0.35 * Math.abs(Math.sin(now / 140)));
+            const shade = vfxI.keyedImage(`shade:${i.id}`, "glow", "ground", "normal", 0x1a0d26);
+            shade?.setPosition(tx, ty).setScale(0.5 + p * 1.2).setAlpha(0.15 + 0.3 * p);
+            let hx: number;
+            let hy: number;
+            let ang: number;
+            if (mortar) {
+              const src = frame.buildings
+                .filter((b) => b.cardId === "rift_mortar" && b.owner === i.owner)
+                .sort((a, b) => (a.x - i.x) ** 2 + (a.y - i.y) ** 2 - ((b.x - i.x) ** 2 + (b.y - i.y) ** 2))[0];
+              const be = src ? pool.get(src.id) : undefined;
+              const tip = be?.anim ? anchorOffset(be.anim, "muzzle", be.view, "attack", be.facingX < 0) : null;
+              const ox = src ? sx(src.x) + (tip?.x ?? 0) : tx;
+              const oy = src ? sy(src.y) + (tip?.y ?? -20) : ty - 60;
+              const arc = 46;
+              const at2 = (q: number) => [ox + (tx - ox) * q, oy + (ty - oy) * q - Math.sin(q * Math.PI) * arc] as const;
+              [hx, hy] = at2(p);
+              const [nx, ny] = at2(Math.min(1, p + 0.04));
+              ang = Math.atan2(ny - hy, nx - hx);
+              vfxI.keyedImage(`shell:${i.id}`, "glow", "top", "add", VFX_COLORS.mortar)?.setPosition(hx, hy).setScale(0.62).setAlpha(1);
+              vfxI.keyedImage(`shellcore:${i.id}`, "spark", "top", "add", VFX_COLORS.mortarCore)?.setPosition(hx, hy).setScale(0.36).setRotation(now / 90).setAlpha(1);
+              vfxI.keyedImage(`trail:${i.id}`, "streak", "top", "add", VFX_COLORS.mortar)?.setOrigin(0.95, 0.5).setPosition(hx, hy).setRotation(ang).setScale(0.75, 0.9).setAlpha(0.85);
+            } else {
+              // Comet: falls from the upper left on an accelerating line.
+              const e2 = p * p;
+              const ox = tx - 80;
+              const oy = ty - 190;
+              hx = ox + (tx - ox) * e2;
+              hy = oy + (ty - oy) * e2;
+              ang = Math.atan2(ty - oy, tx - ox);
+              vfxI.keyedImage(`trail:${i.id}`, "comet-trail", "top", "add")?.setOrigin(0.92, 0.5).setPosition(hx, hy).setRotation(ang).setScale(0.55 + 0.25 * p, 0.62).setAlpha(Math.min(1, p * 4));
+              vfxI.keyedImage(`cglow:${i.id}`, "glow", "top", "add", VFX_COLORS.comet)?.setPosition(hx, hy).setScale(1.1).setAlpha(Math.min(1, p * 4) * 0.9);
+              vfxI.keyedImage(`rock:${i.id}`, "comet", "top", "normal")?.setPosition(hx, hy).setScale(0.42).setFrame(Math.floor(now / 60) % 6).setAlpha(Math.min(1, p * 5));
+            }
+            seenImpacts.add(i.id);
+          }
+          for (const i of vfxI ? [] : frame.impacts) {
             const r = (i.radius ?? start.catalog[i.cardId]?.radius ?? 6) * S;
             og.lineStyle(2, i.cardId === "rift_mortar" ? 0xf97316 : 0xfde047, 0.9).strokeCircle(sx(i.x), sy(i.y), r);
             seenImpacts.add(i.id);
@@ -1007,9 +1220,29 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
           // Projectiles: primitive image rotated toward target when available.
           const seenProj = new Set<string>();
           const projRec = manifest ? rec("effect:projectile") : null;
+          const vfxProj = !!vfx && vfx.has("glow") && vfx.has("streak");
           for (const pr of frame.projectiles) {
             const tgt = all.get(pr.targetId);
             seenProj.add(pr.id);
+            if (vfxProj && vfx) {
+              // Element-coloured bolt with a short trail, styled by its shooter.
+              let style = projStyles.get(pr.id);
+              if (!style) {
+                style = projectileStyleFor(pr, frame.troops);
+                projStyles.set(pr.id, style);
+              }
+              const X = sx(pr.x);
+              const Y = sy(pr.y) - 10;
+              const ang = tgt ? Math.atan2(sy(tgt.y) - 10 - Y, sx(tgt.x) - X) : 0;
+              const color = style === "spark" ? VFX_COLORS.spark2 : style === "hex" ? VFX_COLORS.hex : style === "net" ? VFX_COLORS.gale : 0xfff4d6;
+              vfx.keyedImage(`ptrail:${pr.id}`, "streak", "top", "add", color)?.setOrigin(0.92, 0.5).setPosition(X, Y).setRotation(ang).setScale(0.6, 0.8).setAlpha(0.8);
+              if (style === "net") vfx.keyedImage(`pnet:${pr.id}`, "net", "top", "normal")?.setPosition(X, Y).setScale(0.42).setRotation(now / 120);
+              else {
+                vfx.keyedImage(`pglow:${pr.id}`, "glow", "top", "add", color)?.setPosition(X, Y).setScale(style === "plain" ? 0.32 : 0.46);
+                vfx.keyedImage(`pcore:${pr.id}`, "spark", "top", "add", style === "spark" ? 0xffffff : color)?.setPosition(X, Y).setScale(0.3).setRotation(now / 70);
+              }
+              continue;
+            }
             if (projRec) {
               let img = projPool.get(pr.id);
               if (!img) {
@@ -1029,6 +1262,8 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
               projPool.delete(id);
             }
           }
+          for (const id of projStyles.keys()) if (!seenProj.has(id)) projStyles.delete(id);
+          for (const id of impactFirstTick.keys()) if (!seenImpacts.has(id)) impactFirstTick.delete(id);
           // Transient event effects, collected once per authoritative event.
           const spawnFx = (prim: SpriteRecord | undefined, ax: number, ay: number, size: number, dur: number) => {
             if (!prim || missing.has(prim.stableAssetId)) return;
@@ -1088,6 +1323,12 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
               e.gone ??= now;
             }
           };
+          const vfxOn = !!vfx && vfx.has("burst");
+          const statusUnits: StatusUnit[] = [
+            ...frame.troops.map((t) => ({ id: t.id, owner: t.owner, x: t.x, y: t.y, kind: "troop" as const, cardId: t.cardId })),
+            ...frame.commanders.map((c) => ({ id: c.id, owner: c.owner, x: c.x, y: c.y, kind: "commander" as const, cardId: c.cardId })),
+          ];
+          const spellCtx = { radius: (id: string) => start.catalog[id]?.radius, reduced };
           for (const e of frame.events as FrameEvent[]) {
             const key = combatEventKey(e);
             if (seenEventKeys.has(key)) continue;
@@ -1098,6 +1339,127 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             }
             const at = (id: unknown) => all.get(String(id)) ?? prevAll.get(String(id));
             const until = frame.tick + (reduced ? 3 : 6);
+            // Animation-sheet triggers, independent of the VFX pack.
+            if (e.type === "building_spawned") buildingActiveAt.set(String(e.buildingId), Number(e.activeAt));
+            else if (e.type === "unit_spawned") {
+              const be = pool.get(String(e.buildingId));
+              if (be?.anim) be.animSt = { ...be.animSt, firedAt: now };
+            } else if (e.type === "siege_fired") {
+              const be = pool.get(String(e.buildingId));
+              const bp = at(e.buildingId);
+              if (be?.anim && bp) {
+                const up = seat === 0 ? -1 : 1;
+                be.view = nextView(be.view, Number(e.x) - bp.x, up * (Number(e.y) - bp.y));
+                if (Math.abs(Number(e.x) - bp.x) > 0.01) be.facingX = Number(e.x) < bp.x ? -1 : 1;
+                be.animSt = { ...be.animSt, firedAt: now };
+              }
+            } else if (e.type === "ability_fired" && e.trigger === "active") {
+              const self = commanderEntityFor(e, statusUnits);
+              const ce = self ? pool.get(self.id) : undefined;
+              if (ce?.anim?.clips.ability) ce.animSt = { ...ce.animSt, castAt: now };
+            }
+            if (vfxOn && vfx) {
+              // Final-asset effects. Each branch mirrors the event it presents.
+              for (const s of statusesFromEvent(e, statusUnits)) statuses.set(s.key, s);
+              const team = Number(e.player) === seat ? OWN : FOE;
+              if (e.type === "deploy") {
+                // Allegiance summon circle under every deployed entity.
+                const ids = ((e.entityIds as unknown[] | undefined) ?? []).map(String);
+                const sp: VfxSprite[] = [];
+                for (const id of ids.slice(0, 4)) {
+                  const p = at(id);
+                  if (!p) continue;
+                  const big = String(e.cardId).startsWith("cmdr:") || start.catalog[String(e.cardId)]?.kind === "building";
+                  sp.push(
+                    { tex: "summon", x: p.x, y: p.y, life: reduced ? 220 : 520, scale: big ? 0.36 : 0.24, scale1: big ? 0.46 : 0.32, alpha: 0.95, alpha1: 0, rot: 0, spin: 1.2, tint: team, blend: "add", layer: "ground", ease: "out" },
+                    { tex: "glow", x: p.x, y: p.y, life: reduced ? 160 : 300, scale: big ? 1.2 : 0.8, scale1: big ? 1.5 : 1, alpha: 0.6, alpha1: 0, tint: team, blend: "add", layer: "ground" }
+                  );
+                }
+                vfx.spawn(sp, now);
+              } else if (e.type === "spell_cast") {
+                vfx.spawn(spellCastVfx(e, spellCtx), now);
+              } else if (e.type === "spell_impact") {
+                vfx.spawn(spellImpactVfx(e, spellCtx), now);
+              } else if (e.type === "ability_fired") {
+                vfx.spawn(abilityVfx(e, statusUnits, reduced), now);
+                const self = commanderEntityFor(e, statusUnits);
+                if (self && !pool.get(self.id)?.anim) lungeTo(self.id, Number(e.x), Number(e.y));
+              } else if (e.type === "shockwave") {
+                const p = at(e.entityId);
+                if (p) {
+                  vfx.spawn([
+                    ringAt(p.x, p.y, 4, VFX_COLORS.comet, reduced ? 160 : 320, { scale: 0.1, scale1: (4 * VFX_S) / TEX_RADIUS.ring, ease: "out" }),
+                    burstAt(p.x, p.y, VFX_COLORS.comet, 0.5, 220, 4),
+                  ], now);
+                  const tgt = at(e.primaryId);
+                  if (tgt) lungeTo(e.entityId, tgt.x, tgt.y);
+                }
+              } else if (e.type === "siege_fired") {
+                // Mortar: recoil clip, muzzle flash and smoke at the barrel,
+                // the barrel view turned toward the authoritative target.
+                const be = pool.get(String(e.buildingId));
+                const bp = at(e.buildingId);
+                if (be?.anim && bp) {
+                  const tip = anchorOffset(be.anim, "muzzle", be.view, "attack", be.facingX < 0);
+                  const m0 = tip ? toArena(sx(bp.x) + tip.x, sy(bp.y) + tip.y) : bp;
+                  const rnd = seeded(String(e.impactId));
+                  vfx.spawn([
+                    { tex: "muzzle", x: m0.x, y: m0.y, delay: 50, life: 180, scale: 0.6, scale1: 0.85, alpha: 1, alpha1: 0, rot: rnd() * 3, tint: VFX_COLORS.mortar, blend: "add", layer: "top" },
+                    { tex: "glow", x: m0.x, y: m0.y, delay: 50, life: 260, scale: 1.0, scale1: 1.4, alpha: 0.9, alpha1: 0, tint: VFX_COLORS.mortarCore, blend: "add", layer: "top" },
+                    { tex: "smoke", animate: true, x: m0.x, y: m0.y, delay: 60, life: 520, lift: 0, lift1: 14, scale: 0.5, scale1: 0.8, alpha: 0.85, blend: "normal", layer: "top" },
+                  ], now);
+                } else lungeTo(e.buildingId, Number(e.x), Number(e.y));
+              } else if (e.type === "building_spawned") {
+                const rnd = seeded(String(e.buildingId));
+                vfx.spawn([
+                  ...Array.from({ length: reduced ? 0 : 3 }, (_, i) => ({ tex: "smoke", animate: true, x: Number(e.x) + (rnd() - 0.5) * 4, y: Number(e.y) + (rnd() - 0.5) * 3, delay: i * 60, life: 560, lift: 0, lift1: 10, scale: 0.55, scale1: 0.8, alpha: 0.8, blend: "normal" as const, layer: "top" as const })),
+                ], now);
+              } else if (e.type === "unit_spawned") {
+                // Burrow spawn: dirt and a small summon circle at the scrapper.
+                const bp = at(e.buildingId);
+                const owner = bp ? frame.buildings.find((b) => b.id === String(e.buildingId))?.owner : undefined;
+                vfx.spawn([
+                  { tex: "summon", x: Number(e.x), y: Number(e.y), life: reduced ? 200 : 420, scale: 0.18, scale1: 0.26, alpha: 0.9, alpha1: 0, spin: 1.5, tint: owner === undefined ? VFX_COLORS.rift : owner === seat ? OWN : FOE, blend: "add", layer: "ground", ease: "out" },
+                  { tex: "smoke", animate: true, x: Number(e.x), y: Number(e.y), life: 460, lift: 0, lift1: 8, scale: 0.42, scale1: 0.62, alpha: 0.8, blend: "normal", layer: "top" },
+                ], now);
+              } else if (e.type === "building_removed") {
+                const p = at(e.buildingId);
+                if (p) {
+                  const rnd = seeded(`${String(e.buildingId)}:gone`);
+                  const destroyed = e.reason === "destroyed";
+                  vfx.spawn([
+                    ...Array.from({ length: reduced ? 1 : destroyed ? 4 : 2 }, (_, i) => ({ tex: "smoke", animate: true, x: p.x + (rnd() - 0.5) * 4, y: p.y + (rnd() - 0.5) * 3, delay: i * 50, life: 640, lift: 2, lift1: 14, scale: destroyed ? 0.75 : 0.55, scale1: destroyed ? 1.05 : 0.8, alpha: 0.85, blend: "normal" as const, layer: "top" as const })),
+                    ...(destroyed && !reduced ? Array.from({ length: 6 }, () => { const a = rnd() * Math.PI * 2; return { tex: "debris", frame: Math.floor(rnd() * 4), x: p.x, y: p.y, to: { x: p.x + Math.cos(a) * 5, y: p.y + Math.sin(a) * 4 }, lift: 8, lift1: 0, arc: 20, life: 520, scale: 0.7, alpha: 1, alpha1: 0.3, spin: (rnd() - 0.5) * 10, blend: "normal" as const, layer: "top" as const }; }) : []),
+                  ], now);
+                }
+              } else if (e.type === "pulse_warning" || e.type === "pulse_active" || e.type === "pulse_expired") {
+                const pulseState = e.type === "pulse_warning" ? "warning" : e.type === "pulse_active" ? "active" : "expired";
+                fx.push({ kind: "pulse", x: 0, y: 0, r: 0, color: chaosFamilyColor(String(e.family)), until: frame.tick + (reduced ? 2 : pulseState === "active" ? 8 : 5), pulseState });
+              } else if (e.type === "death") {
+                // Defeat poof: a soft dust puff and a few sparkles, so small
+                // units vanish cleanly without an opaque flash.
+                const p = at(e.entityId);
+                if (p) {
+                  const rnd = seeded(String(e.entityId));
+                  const air = frame.troops.find((t) => t.id === String(e.entityId))?.air ?? prev?.troops.find((t) => t.id === String(e.entityId))?.air ?? false;
+                  vfx.spawn([
+                    { tex: "smoke", animate: true, x: p.x, y: p.y, delay: 120, life: reduced ? 220 : 520, lift: air ? 18 : 4, lift1: air ? 22 : 14, scale: 0.5, scale1: 0.75, alpha: 0.85, blend: "normal", layer: "top" },
+                    ...Array.from({ length: reduced ? 0 : 4 }, () => { const a = rnd() * Math.PI * 2; return { tex: "spark", x: p.x, y: p.y, to: { x: p.x + Math.cos(a) * 2.4, y: p.y + Math.sin(a) * 2 }, delay: 120, lift: 12, lift1: 22, life: 420, scale: 0.32, scale1: 0.1, alpha: 1, alpha1: 0, spin: 6, tint: VFX_COLORS.spark, blend: "add" as const, layer: "top" as const, ease: "out" as const }; }),
+                  ], now);
+                }
+              } else if (e.type === "structure_destroyed") {
+                const p = at(e.entityId);
+                if (p) {
+                  const rnd = seeded(String(e.entityId));
+                  vfx.spawn([
+                    burstAt(p.x, p.y, VFX_COLORS.comet, 1.3, reduced ? 200 : 420, 18),
+                    ...Array.from({ length: reduced ? 1 : 6 }, (_, i) => ({ tex: "smoke", animate: true, x: p.x + (rnd() - 0.5) * 7, y: p.y + (rnd() - 0.5) * 5, delay: i * 70, life: 820, lift: 6, lift1: 26, scale: 0.95, scale1: 1.35, alpha: 0.9, blend: "normal" as const, layer: "top" as const })),
+                    ...(reduced ? [] : Array.from({ length: 10 }, () => { const a = rnd() * Math.PI * 2; return { tex: "debris", frame: Math.floor(rnd() * 4), x: p.x, y: p.y, to: { x: p.x + Math.cos(a) * 8, y: p.y + Math.sin(a) * 6 }, lift: 20, lift1: 0, arc: 30, life: 700, scale: 0.9, alpha: 1, alpha1: 0.3, spin: (rnd() - 0.5) * 10, blend: "normal" as const, layer: "top" as const }; })),
+                  ], now);
+                }
+              }
+              continue;
+            }
             if (e.type === "deploy") {
               const p = at((e.entityIds as unknown[] | undefined)?.[0]);
               if (p) fx.push({ kind: "ring", x: p.x, y: p.y, r: 5, color: Number(e.player) === seat ? 0x22c55e : 0xf87171, until: frame.tick + (reduced ? 3 : 6) });
@@ -1201,6 +1563,73 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
               og.lineStyle(width, e.color, alpha).strokeRect(4, 4, W - 8, H - 8);
             } else og.lineStyle(2, e.color, 0.9).lineBetween(x - 5, y - 5, x + 5, y + 5).lineBetween(x - 5, y + 5, x + 5, y - 5);
           }
+          // Status markers, drawn only while the rule they mirror is active
+          // and the unit is alive. Shields also need the authoritative shield.
+          if (vfx) {
+            const shieldOf = new Map(frame.commanders.map((c) => [c.id, c.shield]));
+            for (const [key, s] of statuses) {
+              const e = pool.get(s.entityId);
+              if (frame.tick >= s.until || !e || e.gone !== null || !all.has(s.entityId)) {
+                statuses.delete(key);
+                continue;
+              }
+              const X = e.root.x;
+              const Y = e.root.y + (e.air ? -10 : 0);
+              const drawn = e.anim ? e.anim.visibleHeight * e.anim.displayScale : e.rec.proposedDisplaySize.visibleHeight * displayScale(e.rec);
+              const pulse = 0.5 + 0.5 * Math.sin(now / 180 + e.phase);
+              const feet = (tex: string, tint: number, scale: number, alpha: number) =>
+                vfx!.keyedImage(`${key}:feet`, tex, "ground", tex === "snare-bind" ? "normal" : "add", tint)?.setPosition(X, Y).setScale(scale).setAlpha(alpha);
+              const orbit = (tint: number, tex = "star") => {
+                for (let k = 0; k < 2; k++) {
+                  const ang = now / 420 + k * Math.PI + e.phase;
+                  vfx!.keyedImage(`${key}:orb${k}`, tex, "top", "add", tint)?.setPosition(X + Math.cos(ang) * drawn * 0.32, Y - drawn - 4 + Math.sin(ang) * 3).setScale(0.26).setAlpha(0.9);
+                }
+              };
+              const dome = (tint: number) => {
+                if ((shieldOf.get(s.entityId) ?? 0) <= 0) return;
+                vfx!.keyedImage(`${key}:dome`, "shield", "top", "add", tint)?.setPosition(X, Y - drawn * 0.5).setScale((drawn * 1.3) / (TEX_RADIUS.shield * 2)).setAlpha(0.45 + 0.2 * pulse);
+              };
+              const w = Math.max(18, drawn * 0.9);
+              switch (s.kind) {
+                case "rally":
+                  feet("glow", VFX_COLORS.rally, w / 40, 0.35 + 0.2 * pulse);
+                  orbit(VFX_COLORS.rally);
+                  break;
+                case "snare":
+                  feet("snare-bind", 0xffffff, (w * 1.15) / 72, 0.75 + 0.25 * pulse);
+                  break;
+                case "aegis":
+                  dome(VFX_COLORS.aegis);
+                  break;
+                case "null-shield":
+                  dome(VFX_COLORS.warden);
+                  break;
+                case "bedrock":
+                  feet("ground-ring", VFX_COLORS.bedrock, w / 120, 0.5 + 0.3 * pulse);
+                  break;
+                case "frenzy":
+                  feet("ground-ring", VFX_COLORS.frenzy, w / 110, 0.6 + 0.3 * pulse);
+                  vfx.keyedImage(`${key}:aura`, "glow", "top", "add", VFX_COLORS.frenzy)?.setPosition(X, Y - drawn * 0.45).setScale(drawn / 44).setAlpha(0.25 + 0.2 * pulse);
+                  break;
+                case "overwatch":
+                  feet("ground-ring", VFX_COLORS.overwatch, w / 120, 0.45 + 0.25 * pulse);
+                  vfx.keyedImage(`${key}:glint`, "spark", "top", "add", VFX_COLORS.overwatch)?.setPosition(X + drawn * 0.08, Y - drawn * 0.72).setScale(0.22 + 0.12 * pulse).setRotation(now / 300).setAlpha(0.9);
+                  break;
+                case "shadow":
+                  feet("glow", VFX_COLORS.shadow, w / 36, 0.35 + 0.25 * pulse);
+                  break;
+                case "pathfinder":
+                  feet("ground-ring", VFX_COLORS.pathfinder, w / 130, 0.45 + 0.25 * pulse);
+                  break;
+                case "null-slow":
+                  feet("ground-ring", VFX_COLORS.warden, w / 120, 0.45 + 0.25 * pulse);
+                  orbit(VFX_COLORS.warden);
+                  break;
+              }
+            }
+            vfx.update(now, project);
+            vfx.sweep();
+          }
           // Tower fire feedback: flash at the weapon anchor plus an instant
           // tracer to the authoritative target. Fades over ~120 ms; under
           // reduced motion both hold at constant alpha (no fade animation).
@@ -1212,6 +1641,8 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
               continue;
             }
             const a = reduced ? 0.9 : 0.9 * (1 - p);
+            // Sprite version drawn at fire time (see the tower loop).
+            if (vfx?.has("muzzle")) continue;
             // The far Core's weapon anchor can sit at the canvas edge. Keep
             // the whole flash on the board without moving the tracer target.
             const flashY = Math.max(7, e.fy);

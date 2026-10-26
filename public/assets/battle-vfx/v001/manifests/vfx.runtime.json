@@ -1,0 +1,207 @@
+{
+  "schema": 1,
+  "version": "battle-vfx-v001",
+  "source": "tools/vfx/build_vfx.cjs + tools/blender/chog-units-v001/scripts/build_vfx_props.py",
+  "textures": {
+    "glow": {
+      "path": "glow.png",
+      "kind": "image",
+      "width": 64,
+      "height": 64,
+      "blend": "add",
+      "sha256": "c16ce879cc03c90c19a369a304f2fd0d135b09d74c6edcee1d2dff95f1049f56",
+      "note": "Soft radial glow, tinted per effect."
+    },
+    "ring": {
+      "path": "ring.png",
+      "kind": "image",
+      "width": 128,
+      "height": 128,
+      "blend": "add",
+      "sha256": "78cfb7e8eb3dcd63248fe1041887cb7ae21d203104b514c9f707e6102af05169",
+      "note": "Expanding shockwave ring, tinted."
+    },
+    "ground-ring": {
+      "path": "ground-ring.png",
+      "kind": "image",
+      "width": 160,
+      "height": 100,
+      "blend": "add",
+      "sha256": "e2d2a56717792122d8607f189911ffe5ed871856302433dfa605abf5a55b67f5",
+      "note": "Decorative ground ring in perspective (never a rule boundary; use ring for radii)."
+    },
+    "spark": {
+      "path": "spark.png",
+      "kind": "image",
+      "width": 48,
+      "height": 48,
+      "blend": "add",
+      "sha256": "e427bd61433000e0fede00525d7de6179eb936960a93aa1ce79d16a056f5d179",
+      "note": "Four-point sparkle."
+    },
+    "streak": {
+      "path": "streak.png",
+      "kind": "image",
+      "width": 96,
+      "height": 24,
+      "blend": "add",
+      "sha256": "5de0f32f9712ef71b3d310b828b8d6e9ade8ea099fdd182bc09c5fe5c538be63",
+      "note": "Tracer and trail segment, head on the right."
+    },
+    "muzzle": {
+      "path": "muzzle.png",
+      "kind": "image",
+      "width": 64,
+      "height": 64,
+      "blend": "add",
+      "sha256": "3718128f4dd6381721a2ac9ff541b3659a87067878120a05a70bd25d4ec3e292",
+      "note": "Muzzle flash star."
+    },
+    "burst": {
+      "path": "burst.png",
+      "kind": "sheet",
+      "frameWidth": 96,
+      "frameHeight": 96,
+      "frames": 5,
+      "fps": 20,
+      "width": 480,
+      "height": 96,
+      "blend": "add",
+      "sha256": "91091d211e705e5377ea692ced4105e1f27347eed8854a61bef5b6f6e5518f0a",
+      "note": "Five-frame impact burst."
+    },
+    "smoke": {
+      "path": "smoke.png",
+      "kind": "sheet",
+      "frameWidth": 64,
+      "frameHeight": 64,
+      "frames": 6,
+      "fps": 14,
+      "width": 384,
+      "height": 64,
+      "blend": "normal",
+      "sha256": "da04c4176df0a05283d19684e487510557d6c3041572a29c06ecd63ecc5a1be7",
+      "note": "Six-frame dust puff for defeats and destruction."
+    },
+    "debris": {
+      "path": "debris.png",
+      "kind": "sheet",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "frames": 4,
+      "fps": 0,
+      "width": 96,
+      "height": 24,
+      "blend": "normal",
+      "sha256": "1ff8984e8ae52a882484decfa01a1e728970a62381b914c912cdbf62f8c3ef8b",
+      "note": "Four stone chips, one per frame."
+    },
+    "bolt": {
+      "path": "bolt.png",
+      "kind": "sheet",
+      "frameWidth": 96,
+      "frameHeight": 228,
+      "frames": 3,
+      "fps": 24,
+      "width": 288,
+      "height": 228,
+      "blend": "add",
+      "sha256": "ef63e268b5fc83e5a99d4459076940475faf1a945f1cc20670ec1a62e747b63e",
+      "note": "Chaos Bolt strike, three seeded variants, ground point at the bottom centre."
+    },
+    "comet-trail": {
+      "path": "comet-trail.png",
+      "kind": "image",
+      "width": 176,
+      "height": 64,
+      "blend": "add",
+      "sha256": "fc6b9131085c9351938861f1acc94448964db5c478d7e7d2176f183c88318709",
+      "note": "Chaos Comet flame trail, head on the right."
+    },
+    "snare-sigil": {
+      "path": "snare-sigil.png",
+      "kind": "image",
+      "width": 256,
+      "height": 256,
+      "blend": "normal",
+      "sha256": "328eab5e2b6cd4b3fc4940b74a60b80112612ec9394129ba5f193abb3ae4e458",
+      "note": "Rift Snare ground sigil, circular to match the rule radius (r = 116 px)."
+    },
+    "snare-bind": {
+      "path": "snare-bind.png",
+      "kind": "image",
+      "width": 72,
+      "height": 44,
+      "blend": "normal",
+      "sha256": "480bb7deeca208e68fc97a1b93eb25f825bbf46fe5ccafcdef4e75aac0bb45bc",
+      "note": "Binding ring under a snared unit while the slow lasts."
+    },
+    "shield": {
+      "path": "shield.png",
+      "kind": "image",
+      "width": 128,
+      "height": 128,
+      "blend": "add",
+      "sha256": "cf7a6f3b0c79bae1f177a02fb68f658a494db81a072ace5e18bf9382cbce0fdf",
+      "note": "Hex shield dome, tinted (Bulwark gold, Warden blue)."
+    },
+    "summon": {
+      "path": "summon.png",
+      "kind": "image",
+      "width": 160,
+      "height": 100,
+      "blend": "add",
+      "sha256": "f19750f1d3fa7bdd1d5a53a22b9de420a07574a395fcb12001baa87402db7724",
+      "note": "Deploy and spawn rune circle in board perspective, allegiance tint."
+    },
+    "arrow": {
+      "path": "arrow.png",
+      "kind": "image",
+      "width": 64,
+      "height": 16,
+      "blend": "normal",
+      "sha256": "8e918f51523e0a51e09eedfbd9f36a99a84e22bb48f7ffc3bb7077b5a9cb3bd9",
+      "note": "Violet arrow for Chaos Archer and Deadeye."
+    },
+    "net": {
+      "path": "net.png",
+      "kind": "image",
+      "width": 40,
+      "height": 40,
+      "blend": "normal",
+      "sha256": "b709f063cd58e3d462c252c439613666f25c2541b4492f56ce03e2b6505682b0",
+      "note": "Gale Netter net projectile."
+    },
+    "star": {
+      "path": "star.png",
+      "kind": "image",
+      "width": 32,
+      "height": 32,
+      "blend": "add",
+      "sha256": "9a4a7c35e421857c66df6e1385fa6aa53730ed66a6743370469702966adb2905",
+      "note": "Five-point star (Warden, Rally buff), tinted."
+    },
+    "comet": {
+      "path": "comet.png",
+      "kind": "sheet",
+      "frameWidth": 96,
+      "frameHeight": 96,
+      "frames": 6,
+      "fps": 16,
+      "width": 576,
+      "height": 96,
+      "blend": "normal",
+      "sha256": "f63957fe2ae546a4be35137052ec5993546d467132bdce16ad7d6dc2b39ce2b1",
+      "note": "Chaos Comet rock, dark violet crystal with molten orange cracks, six rotation frames."
+    },
+    "horn": {
+      "path": "horn.png",
+      "kind": "image",
+      "width": 128,
+      "height": 128,
+      "blend": "normal",
+      "sha256": "792bfbe29e5a7ed3e5a9154622aa0761946e113c755f7dba3e8b543c6ac2e0fd",
+      "note": "Rally Horn, gold and cream, three-quarter view."
+    }
+  }
+}
