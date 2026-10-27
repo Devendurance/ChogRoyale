@@ -33,12 +33,12 @@
 .chud-top { position: relative; z-index: 2; flex: none; display: flex; flex-direction: column; gap: 4px; padding: 7px 10px 6px; border: 1px solid #9981e46b; border-bottom: 2px solid #130b3c; border-radius: 16px 16px 6px 6px; background: linear-gradient(180deg, #6043a2, #322065 65%); box-shadow: inset 0 2px #ffffff29, 0 4px 0 #120b4577; }
 .chud-score { display: flex; align-items: center; gap: 8px; min-height: 36px; }
 .chud-side-tag { display: flex; align-items: center; gap: 7px; flex: 1; min-width: 0; font-size: 13px; }
-.chud-side-tag[data-side="foe"] { color: #ffabc8; }
-.chud-side-tag[data-side="you"] { color: #93efff; justify-content: flex-end; }
+.chud-side-tag[data-side="foe"] { color: #ffb4b5; justify-content: flex-end; }
+.chud-side-tag[data-side="you"] { color: #93efff; }
 .chud-player { font-weight: 700; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.chud-crown-num { flex: none; font-family: var(--font-lilita), sans-serif; font-size: 24px; line-height: 1; display: inline-flex; align-items: center; gap: 3px; min-width: 58px; height: 34px; padding: 0 8px 0 5px; border: 2px solid #120b45; border-radius: 10px; background: linear-gradient(#ff8fb0, #c2416e 60%, #8d2450); box-shadow: inset 0 2px #ffffff55, inset 0 -3px #00000030, 0 2px 0 #120b45; color: #fff; -webkit-text-stroke: 2px #120b45; paint-order: stroke fill; transform-origin: center; }
+.chud-crown-num { flex: none; font-family: var(--font-lilita), sans-serif; font-size: 24px; line-height: 1; display: inline-flex; align-items: center; gap: 3px; min-width: 58px; height: 34px; padding: 0 8px 0 5px; border: 2px solid #120b45; border-radius: 10px; background: linear-gradient(#ff9a98, #d04b56 60%, #922c40); box-shadow: inset 0 2px #ffffff55, inset 0 -3px #00000030, 0 2px 0 #120b45; color: #fff; -webkit-text-stroke: 2px #120b45; paint-order: stroke fill; transform-origin: center; }
 .chud-side-tag[data-side="you"] .chud-crown-num { padding: 0 5px 0 8px; background: linear-gradient(#8ff3ff, #2ba3c4 60%, #1b6b8f); justify-content: flex-end; }
-.chud-crown-num svg { width: 25px; height: 25px; filter: drop-shadow(0 2px #120b45); }
+.chud-crown-num .game-icon { width: 25px; height: auto; filter: drop-shadow(0 2px #120b45); }
 .chud-clock2 { font: 400 29px/1 var(--font-lilita), sans-serif; font-variant-numeric: tabular-nums; text-align: center; min-width: 82px; color: #fff6d6; -webkit-text-stroke: 2px #120b45; paint-order: stroke fill; text-shadow: 0 3px #120b45; }
 .chud-clock-mult { margin-left: 4px; vertical-align: 4px; -webkit-text-stroke: 0; text-shadow: none; }
 .chud-ot { color: #ffc83d; font-size: 14px; font-weight: 400; }
@@ -229,7 +229,7 @@
   .chud-ability { min-height: 44px; }
   .chud-hint { font-size: 9px; }
   .chud-crown-num { min-width: 50px; height: 30px; font-size: 21px; }
-  .chud-crown-num svg { width: 21px; height: 21px; }
+  .chud-crown-num .game-icon { width: 21px; height: 21px; }
   .chud-start-band { min-height: 72px; padding: 8px 22px; gap: 10px; }
   .chud-start-emblem { width: 50px; height: 50px; border-radius: 12px; }
   .chud-start-who b { font-size: 24px; }

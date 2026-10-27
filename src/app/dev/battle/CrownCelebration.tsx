@@ -27,7 +27,6 @@ export default function CrownCelebration({ frame, start, me, boardRef, mineRef, 
   const seen = useRef(new Set<string>());
   const cleanup = useRef(new Set<() => void>());
   const prime = useRef(true);
-  const copyId = useRef(0);
   const primedStart = useRef<StartMessage | null>(null);
 
   useEffect(() => {
@@ -77,23 +76,8 @@ export default function CrownCelebration({ frame, start, me, boardRef, mineRef, 
       sprite.dataset.team = cue.scorer === me ? "mine" : "theirs";
       sprite.style.left = `${origin.x}px`;
       sprite.style.top = `${origin.y}px`;
-      const icon = art.current!.firstElementChild!.cloneNode(true) as SVGElement;
-      const ids = new Map<string, string>();
-      const suffix = `-flight-${copyId.current++}`;
-      for (const definition of icon.querySelectorAll("[id]")) {
-        const old = definition.id;
-        ids.set(old, `${old}${suffix}`);
-        definition.id = `${old}${suffix}`;
-      }
-      for (const element of icon.querySelectorAll("*")) {
-        for (const attribute of ["fill", "stroke", "filter", "clip-path", "mask"]) {
-          const value = element.getAttribute(attribute);
-          if (!value) continue;
-          for (const [old, replacement] of ids) {
-            if (value === `url(#${old})`) element.setAttribute(attribute, `url(#${replacement})`);
-          }
-        }
-      }
+      // The template is the same alpha crown artwork used by the counters.
+      const icon = art.current!.firstElementChild!.cloneNode(true) as HTMLImageElement;
       sprite.appendChild(icon);
       const burst = document.createElement("i");
       burst.className = "chud-crown-burst";

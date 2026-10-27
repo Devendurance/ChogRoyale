@@ -8,7 +8,10 @@
 // avatar). No wallet address, player id or Privy identifier is rendered.
 
 import { useState } from "react";
+import "./friends.css";
 import Link from "next/link";
+import Image from "next/image";
+import { getAvatar } from "@/lib/avatars";
 import AppHud from "./AppHud";
 import AppNav from "./AppNav";
 import AppNotice from "./AppNotice";
@@ -16,6 +19,11 @@ import Icon from "./icons";
 import { dedupeNotices } from "./feedback-model";
 import { friendHandle, friendName, listChip, searchAction, searchChip } from "./friends-model";
 import type { FriendEntry, FriendsViewProps } from "./friends-types";
+
+function FriendAvatar({ avatarId }: { avatarId: string | null }) {
+  const avatar = getAvatar(avatarId);
+  return <span className="app-friend__avatar" aria-hidden="true">{avatar ? <Image src={avatar.assetUrl} width={40} height={40} alt="" unoptimized /> : <Icon name="user" size={22} />}</span>;
+}
 
 function FriendRow({
   entry,
@@ -37,9 +45,7 @@ function FriendRow({
   const [confirming, setConfirming] = useState(false);
   return (
     <li className="app-friend">
-      <span className="app-friend__avatar" aria-hidden="true">
-        <Icon name="user" size={22} />
-      </span>
+      <FriendAvatar avatarId={entry.player.avatarId} />
       <span className="app-friend__names">
         <span className="app-friend__name">{friendName({ player: entry.player })}</span>
         <span className="app-friend__handle">{friendHandle({ player: entry.player })}</span>
@@ -72,12 +78,16 @@ function FriendRow({
             type="button"
             className="app-btn app-btn--ghost"
             disabled={busy}
-            onClick={() => onRemove(entry.friendshipId)}
+            onClick={() => {
+              const name = friendName({ player: entry.player });
+              if (window.confirm(entry.status === "accepted" ? `Remove ${name} from your friends?` : `Cancel your friend request to ${name}?`)) onRemove(entry.friendshipId);
+            }}
           >
             {busy ? "Working" : entry.status === "accepted" ? "Remove" : "Cancel"}
           </button>
         )}
         {confirming ? (
+          <>
           <button
             type="button"
             className="app-btn app-btn--ghost"
@@ -89,6 +99,8 @@ function FriendRow({
           >
             {blockBusy ? "Working" : "Confirm block"}
           </button>
+          <button type="button" className="app-btn app-btn--ghost" onClick={() => setConfirming(false)}>Cancel block</button>
+          </>
         ) : (
           <button
             type="button"
@@ -216,28 +228,57 @@ export default function FriendsView({
     <>
       <AppHud player={player} onSignOut={onSignOut} />
 
-      <main className={`app-stage app-stage--wide${calm ? " app-calm" : ""}`}>
+      <main className={`app-stage app-stage--wide friends-page${calm ? " app-calm" : ""}`}>
         <div className="app-column app-column--wide">
           {noticeList.length > 0 && <div className="app-column__notices">{noticeList}</div>}
 
-          <header className="app-settings-head app-rise">
+          <header className="app-settings-head friends-head app-rise">
             <p className="app-settings-head__eyebrow">Social</p>
             <h1 className="app-settings-head__title">Friends</h1>
-            <Link className="app-btn app-btn--ghost" href="/app/messages">Open messages</Link>
+            <Link className="app-btn app-btn--ghost friends-head__messages" href="/app/messages"><Icon name="friends" size={18} />Open messages</Link>
             <p className="app-settings-head__lead">
-              Find players by username, send requests, and manage your list. Every change is confirmed by the server
-              before it shows here.
+              Find your people. Add friends, catch up, and get ready for the next battle.
             </p>
           </header>
 
-          <div className="app-settings">
-            <div className="app-settings__main">
-              <section className="app-panel app-rise" aria-labelledby="app-friends-discover-title">
+            <div className="friends-identity">
+              <section className="app-panel friends-identity__panel app-rise" aria-labelledby="app-friends-you-title">
+                <h2 className="app-profile-panel__title" id="app-friends-you-title">
+                  Playing as
+                </h2>
+                <div className="app-profile-id__names">
+                  <p className="app-profile-id__name">{displayName}</p>
+                  <p className="app-profile-id__handle">
+                    {player?.username ? `@${player.username}` : "No username yet"}
+                  </p>
+                  <div className="app-profile-id__chips">
+                    <span className="app-badge">
+                      {listsState === "unavailable" ? "List unavailable" : lists.friends.length === 1 ? "1 friend" : `${lists.friends.length} friends`}
+                    </span>
+                    {listsState !== "unavailable" && lists.incoming.length > 0 ? (
+                      <span className="app-badge">
+                        {lists.incoming.length === 1 ? "1 request" : `${lists.incoming.length} requests`}
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+                <div className="app-profile-account__actions">
+                  <button type="button" className="app-btn app-btn--ghost" onClick={onRefresh} disabled={busy}>
+                    <Icon name="refresh" size={16} />
+                    {busy ? "Refreshing" : "Refresh"}
+                  </button>
+                </div>
+              </section>
+            </div>
+
+          <div className="friends-layout">
+            <div className="friends-sections">
+              <section className="app-panel friends-discover app-rise" aria-labelledby="app-friends-discover-title">
                 <h2 className="app-profile-panel__title" id="app-friends-discover-title">
-                  Discover players
+                  Find a friend
                 </h2>
                 <form
-                  className="app-settings-form"
+                  className="app-settings-form friends-search"
                   onSubmit={(event) => {
                     event.preventDefault();
                     onSearch();
@@ -269,9 +310,9 @@ export default function FriendsView({
                   </div>
                 </form>
 
-                {searchHits === null ? null : searchState === "unavailable" ? (
+                {searchState === "unavailable" ? (
                   <p className="app-profile-note">Search is not available right now. Try again shortly.</p>
-                ) : searchHits.length === 0 ? (
+                ) : searchHits === null ? null : searchHits.length === 0 ? (
                   <p className="app-profile-note">No players match that username yet.</p>
                 ) : (
                   <ul className="app-friends-list">
@@ -283,9 +324,7 @@ export default function FriendsView({
                       const confirming = confirmBlockId === hit.player.id;
                       return (
                         <li key={hit.player.id} className="app-friend">
-                          <span className="app-friend__avatar" aria-hidden="true">
-                            <Icon name="user" size={22} />
-                          </span>
+                          <FriendAvatar avatarId={hit.player.avatarId} />
                           <span className="app-friend__names">
                             <span className="app-friend__name">{friendName({ player: hit.player })}</span>
                             <span className="app-friend__handle">{friendHandle({ player: hit.player })}</span>
@@ -305,6 +344,7 @@ export default function FriendsView({
                               </button>
                             ) : null}
                             {confirming ? (
+                              <>
                               <button
                                 type="button"
                                 className="app-btn app-btn--ghost"
@@ -316,6 +356,8 @@ export default function FriendsView({
                               >
                                 {blockBusy ? "Working" : "Confirm block"}
                               </button>
+                              <button type="button" className="app-btn app-btn--ghost" onClick={() => setConfirmBlockId(null)}>Cancel block</button>
+                              </>
                             ) : (
                               <button
                                 type="button"
@@ -411,7 +453,7 @@ export default function FriendsView({
                 )}
               </section>
 
-              <section className="app-panel app-rise" aria-labelledby="app-friends-blocked-title" style={{ animationDelay: "180ms" }}>
+              <section className="app-panel friends-blocked app-rise" aria-labelledby="app-friends-blocked-title" style={{ animationDelay: "180ms" }}>
                 <h2 className="app-profile-panel__title" id="app-friends-blocked-title">
                   Blocked players
                 </h2>
@@ -425,9 +467,7 @@ export default function FriendsView({
                       const unblockBusy = actionId === `unblock:${item.player.id}`;
                       return (
                         <li key={item.player.id} className="app-friend">
-                          <span className="app-friend__avatar" aria-hidden="true">
-                            <Icon name="user" size={22} />
-                          </span>
+                          <FriendAvatar avatarId={item.player.avatarId} />
                           <span className="app-friend__names">
                             <span className="app-friend__name">{friendName({ player: item.player })}</span>
                             <span className="app-friend__handle">{friendHandle({ player: item.player })}</span>
@@ -451,38 +491,7 @@ export default function FriendsView({
               </section>
             </div>
 
-            <div className="app-settings__side">
-              <section className="app-panel app-rise" aria-labelledby="app-friends-you-title" style={{ animationDelay: "210ms" }}>
-                <h2 className="app-profile-panel__title" id="app-friends-you-title">
-                  Playing as
-                </h2>
-                <div className="app-profile-id__names">
-                  <p className="app-profile-id__name">{displayName}</p>
-                  <p className="app-profile-id__handle">
-                    {player?.username ? `@${player.username}` : "No username yet"}
-                  </p>
-                  <div className="app-profile-id__chips">
-                    <span className="app-badge">
-                      {lists.friends.length === 1 ? "1 friend" : `${lists.friends.length} friends`}
-                    </span>
-                    {lists.incoming.length > 0 ? (
-                      <span className="app-badge">
-                        {lists.incoming.length === 1 ? "1 request" : `${lists.incoming.length} requests`}
-                      </span>
-                    ) : null}
-                  </div>
-                </div>
-                <div className="app-profile-account__actions">
-                  <button type="button" className="app-btn app-btn--ghost" onClick={onRefresh} disabled={busy}>
-                    <Icon name="refresh" size={16} />
-                    {busy ? "Refreshing" : "Refresh"}
-                  </button>
-                </div>
-                <p className="app-profile-caption">
-                  Only usernames and display names show here. Wallet and account details stay private.
-                </p>
-              </section>
-            </div>
+
           </div>
 
           <p className="app-sr" role="status" aria-live="polite">

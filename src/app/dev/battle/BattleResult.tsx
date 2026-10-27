@@ -101,9 +101,9 @@ export default function BattleResult({ start, end, abort, settlement, me, player
         <h2 id="chud-finale-title">{view.title}</h2>
         <p className="chud-finale-context" id="chud-finale-context">{view.context}</p>
         {end && <div className="chud-finale-versus">
-          <Ribbon side="foe" name={start.opponent} crowns={view.theirs} shown={tallyAt(step, view.theirs)} winner={view.winner === "theirs"} />
-          <span className="chud-finale-vs" aria-hidden="true">VS</span>
           <Ribbon side="mine" name={playerName ?? null} crowns={view.mine} shown={tallyAt(step, view.mine)} winner={view.winner === "mine"} you />
+          <span className="chud-finale-vs" aria-hidden="true">VS</span>
+          <Ribbon side="foe" name={start.opponent} crowns={view.theirs} shown={tallyAt(step, view.theirs)} winner={view.winner === "theirs"} />
         </div>}
         {view.settlement && <div className="chud-finale-details">
           <p className="chud-finale-settle" data-state={view.settlement.state} aria-live="polite"><i aria-hidden="true" />{view.settlement.text}</p>

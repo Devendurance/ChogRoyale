@@ -1,0 +1,7 @@
+.battle-room-invite { display:grid; gap:6px; min-width:0; color:#eee7ff; font:600 12px var(--font-georama),sans-serif; }
+.battle-room-invite button { min-height:44px; border:2px solid #120b45; border-radius:10px; background:#32229a; color:#fff; cursor:pointer; padding:8px 12px; display:flex; align-items:center; justify-content:center; gap:8px; }
+.battle-room-invite-code strong { font:400 clamp(19px,4vw,26px) var(--font-lilita),sans-serif; letter-spacing:.06em; }
+.battle-room-invite-actions { display:flex; flex-wrap:wrap; gap:6px; }
+.battle-room-invite button:focus-visible,.battle-room-invite input:focus-visible { outline:3px solid #ffc83d; outline-offset:3px; }
+.battle-room-invite-feedback { min-height:1.4em; max-width:290px; }
+.battle-room-invite input { width:100%; min-width:0; color:#fff; background:#1d1458; border:1px solid #8f7bff; padding:8px; }

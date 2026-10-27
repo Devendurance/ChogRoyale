@@ -1,5 +1,9 @@
 # CRITICAL RULES - MUST FOLLOW
 
+- Final polish uses player-relative identity: self left/blue in the HUD and top/blue in results, opponent right/red and bottom/red, regardless of seat or winner. Crown flights target the corresponding score ref. Use the official alpha crown at its natural 256:236 ratio, including victory, defeat and flights. Keep trophies separate.
+- Private invites contain only the current-origin `/app/play/battle?mode=private&room=` URL and a validated case-sensitive Colyseus nanoid(9). Preserve that destination through login/setup. Attempt automatic joining once after setup is verified, never auto-ready. A locked-room refusal can mean full or already started.
+- Owner authorization on 2026-10-27 covers merging approved PR #6 and pushing/opening the final polish PR. The polish PR must remain unmerged and must not be deployed to production automatically. Session subagents use GPT-6.1 Sol with low reasoning and coordinator review.
+
 
 - Auto-log meaningful rules to the project’s AGENTS.md.
 - Auto-commit and push after every meaningful checkpoint.

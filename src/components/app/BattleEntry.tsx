@@ -3,10 +3,11 @@
 import Link from "next/link";
 
 /** Idle presentation only. The existing battle session owns every action. */
-export default function BattleEntry({ mode, code, error, onCodeChange, onFind, onCreate, onJoin }: {
+export default function BattleEntry({ mode, code, error, setupReady = true, onCodeChange, onFind, onCreate, onJoin }: {
   mode: "private" | "unranked" | "ranked";
   code: string;
   error: string | null;
+  setupReady?: boolean;
   onCodeChange: (code: string) => void;
   onFind: () => void;
   onCreate: () => void;
@@ -25,19 +26,20 @@ export default function BattleEntry({ mode, code, error, onCodeChange, onFind, o
       <div className="app-play-entry-actions">
         {mode === "private" ? (
           <>
-            <button type="button" className="app-btn app-btn--battle" onClick={onCreate}>Create Private Room</button>
-            <form className="app-play-join" onSubmit={(event) => { event.preventDefault(); if (code.trim()) onJoin(); }}>
+            <button type="button" className="app-btn app-btn--battle" onClick={onCreate} disabled={!setupReady}>Create Private Room</button>
+            <form className="app-play-join" onSubmit={(event) => { event.preventDefault(); if (setupReady && code.trim()) onJoin(); }}>
               <label className="app-play-code" htmlFor="battle-room-code">
                 <span>Have a room code?</span>
                 <input id="battle-room-code" placeholder="Room code" value={code} onChange={(event) => onCodeChange(event.target.value)} autoComplete="off" spellCheck={false} />
               </label>
-              <button type="submit" className="app-btn app-btn--ghost" disabled={!code.trim()}>Join with Code</button>
+              <button type="submit" className="app-btn app-btn--ghost" disabled={!setupReady || !code.trim()}>Join with Code</button>
             </form>
           </>
         ) : mode === "unranked" ? (
-          <button type="button" className="app-btn app-btn--battle" onClick={onFind}>Find Opponent</button>
+          <button type="button" className="app-btn app-btn--battle" onClick={onFind} disabled={!setupReady}>Find Opponent</button>
         ) : <p className="app-play-battle-state">Ranked queue is unavailable in this build.</p>}
       </div>
+      {!setupReady && <p className="app-play-battle-state" role="status">Checking your player setup before opening a room.</p>}
       {error && <p className="app-play-battle-error" role="alert">{error}</p>}
     </section>
   );

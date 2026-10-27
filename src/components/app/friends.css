@@ -1,0 +1,81 @@
+/* Friends owns its layout, while the shared HUD, navigation and tokens stay shared. */
+.friends-page .app-column--wide { max-width: 1100px; gap: 18px; }
+.friends-page .friends-head { position: relative; padding-right: 180px; margin-bottom: 0; }
+.friends-page .app-settings-head__eyebrow { margin-bottom: 4px; }
+.friends-page .app-settings-head__title { margin-bottom: 8px; }
+.friends-page .app-settings-head__lead { max-width: 560px; margin-bottom: 0; }
+.friends-head__messages { position: absolute; right: 0; top: 24px; gap: 8px; }
+.friends-page .friends-identity__panel { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; padding: 16px 20px; }
+.friends-identity .app-profile-panel__title { margin: 0; font-size: 15px; }
+.friends-identity .app-profile-id__names { display: flex; flex: 1; flex-wrap: wrap; align-items: center; gap: 4px 14px; min-width: 0; }
+.friends-identity .app-profile-id__name { margin: 0; font-size: 19px; overflow-wrap: anywhere; }
+.friends-identity .app-profile-id__handle { margin: 0; overflow-wrap: anywhere; }
+.friends-identity .app-profile-id__chips { margin: 0; }
+.friends-identity .app-profile-account__actions { margin: 0; }
+.friends-sections { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+.friends-sections > .app-panel { min-width: 0; padding: 22px; }
+.friends-discover, .friends-blocked { grid-column: 1 / -1; }
+.friends-page .app-profile-panel__title { margin-bottom: 14px; }
+.friends-page .friends-identity .app-profile-panel__title { margin-bottom: 0; }
+.friends-page .friends-search { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 12px; margin-top: 0; }
+.friends-search .app-settings-save { margin: 0; padding: 0; border: 0; }
+.friends-search .app-settings-input { min-height: 48px; font-size: 16px; }
+.friends-search .app-btn { min-height: 48px; min-width: 112px; }
+.friends-page .app-profile-note { margin: 0; padding: 18px; border: 1px dashed rgba(185,162,255,.22); border-radius: 12px; background: rgba(18,11,69,.18); line-height: 1.65; }
+.friends-page .app-friends-list { gap: 10px; }
+.friends-page .app-friend { padding: 14px; gap: 10px; border-radius: 14px; }
+.friends-page .app-friend__avatar { width: 40px; height: 40px; }
+.friends-page .app-friend__names { flex-basis: 110px; }
+.friends-page .app-friend__name { font-size: 17px; line-height: 1.3; overflow-wrap: anywhere; }
+.friends-page .app-friend__handle { font-size: 12px; overflow-wrap: anywhere; letter-spacing: .02em; }
+.friends-page .app-friend__actions { flex-basis: 100%; padding-top: 4px; gap: 8px; }
+.friends-page .app-friend__actions .app-btn { min-height: 44px; padding-inline: 14px; }
+.friends-page .app-profile-caption { margin-top: 18px; }
+.friends-page .app-btn:focus-visible, .friends-page input:focus-visible { outline: 3px solid #cbbaff; outline-offset: 3px; }
+@media (max-width: 700px) {
+  .friends-page .friends-head { padding-right: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+  .friends-head .app-settings-head__eyebrow { flex-basis: 100%; }
+  .friends-head .app-settings-head__title { flex: 1; margin-bottom: 4px; }
+  .friends-head__messages { position: static; min-height: 44px; padding-inline: 12px; }
+  .friends-head .app-settings-head__lead { flex-basis: 100%; margin-top: 6px; }
+  .friends-sections { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .friends-sections > .app-panel { padding: 18px; }
+  .friends-page .friends-identity__panel { padding: 14px 16px; gap: 10px; }
+  .friends-identity .app-profile-panel__title { flex-basis: 100%; font-size: 12px; }
+  .friends-identity .app-profile-id__names { gap: 4px 10px; }
+  .friends-identity .app-profile-id__chips { flex-basis: 100%; }
+  .friends-page .friends-search { gap: 8px; }
+  .friends-search .app-btn { min-width: 82px; padding-inline: 12px; }
+  .friends-page .app-friend { padding: 12px; }
+}
+.friends-page .app-friend__avatar { overflow: hidden; }
+.friends-page .app-friend__avatar img { width: 100%; height: 100%; object-fit: cover; }
+/* Relationship actions carry the same deliberate treatment as search. */
+.friends-page .app-friend__actions .app-btn--save {
+  border-color: #6d48cc;
+  color: #fff;
+  background: linear-gradient(180deg, #7755e3, #5132b2);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 3px 0 #120b45;
+  font-family: var(--font-data);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.friends-page .app-friend__actions .app-btn--save:hover { background: linear-gradient(180deg, #8966f2, #6242c7); }
+@media (min-width: 701px) {
+  .friends-page .app-column--wide { gap: 16px; }
+  .friends-sections > .app-panel { padding: 20px; }
+}
+@media (max-width: 700px) {
+  .friends-identity .app-profile-panel__title { flex-basis: auto; }
+  .friends-identity .app-profile-id__name { font-size: 17px; }
+  .friends-identity .app-profile-id__names { flex-basis: calc(100% - 105px); }
+}
+@media (max-width: 700px) {
+  .friends-page .friends-identity__panel { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; }
+  .friends-identity .app-profile-panel__title { grid-column: 1; }
+  .friends-identity .app-profile-id__names { grid-column: 1; }
+  .friends-identity .app-profile-account__actions { grid-column: 2; grid-row: 1 / 3; }
+  .friends-identity .app-profile-account__actions .app-btn { padding-inline: 12px; min-height: 44px; }
+}

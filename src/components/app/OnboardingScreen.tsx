@@ -7,7 +7,8 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { inviteReturnPath } from "@/lib/battle-invite";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLogin, usePrivy, useWallets } from "@privy-io/react-auth";
 import AppHud from "./AppHud";
@@ -35,6 +36,7 @@ export default function OnboardingScreen() {
   const { login } = useLogin();
   const { wallets } = useWallets();
   const router = useRouter();
+  const inviteReturn = inviteReturnPath(useSearchParams().get("invite"));
   const sessionKey = user?.id ?? null;
 
   const [phase, setPhase] = useState<Phase>("booting");
@@ -199,8 +201,8 @@ export default function OnboardingScreen() {
   const complete = profile?.onboarding.complete === true;
 
   useEffect(() => {
-    if (phase === "ready" && complete) router.replace("/app");
-  }, [phase, complete, router]);
+    if (phase === "ready" && complete) router.replace(inviteReturn ?? "/app");
+  }, [phase, complete, router, inviteReturn]);
 
   const player: LobbyPlayer | null = profile ? resolvePlayer(profile) : null;
   const verifiedWallets = Array.isArray(profile?.wallets) ? profile!.wallets.filter((w) => w.verifiedAt !== null) : [];

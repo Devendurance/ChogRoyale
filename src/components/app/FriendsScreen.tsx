@@ -305,7 +305,7 @@ function FriendsShell() {
   const listsState = phase !== "ready" ? "unavailable" : !listsOk ? "unavailable" : "ready";
   const blockedState = phase !== "ready" ? "unavailable" : !blockedOk ? "unavailable" : "ready";
   const searchState =
-    searchHits === null ? "idle" : !searchOk ? "unavailable" : searchHits.length === 0 ? "empty" : "ready";
+    !searchOk ? "unavailable" : searchHits === null ? "idle" : searchHits.length === 0 ? "empty" : "ready";
 
   const status = useMemo(() => {
     if (phase !== "ready") return "";
