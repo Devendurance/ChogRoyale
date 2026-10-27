@@ -1,8 +1,8 @@
 ## Gameplay improvement V1 README bookmark (2026-10-27)
 
 - Doing: add the owner's Drive gameplay recording as a clickable README bookmark on `codex/gameplay-improvement-v1`.
-- Done: exact section heading, image bookmark and Watch gameplay video link added. Existing screenshot is labelled as a deployed-game screenshot. Drive metadata confirms shared MP4, 560,116,091 bytes. Subagent GPT-5.6 Luna/xhigh used, coordinator reviewed.
-- Validation: GitHub Markdown API renders both the clickable preview and Watch link correctly. Preview file exists and diff whitespace check passes. Documentation-only change, no app tests/build rerun.
+- Done: PR #8, https://github.com/Devendurance/ChogRoyale/pull/8. Owner rejected the reused old-game screenshot. Bookmark now uses the actual recording's Drive-generated thumbnail and opens `/preview`, with the Watch link matching. Thumbnail copied without modification. Subagent GPT-5.6 Luna/xhigh used, coordinator reviewed.
+- Validation: actual thumbnail visually inspected, source/import hashes checked, Drive preview returns HTTP 200. GitHub Markdown rendering checked. Documentation/media-only change, no app tests/build rerun.
 - Next: owner review of the documentation PR. Inline Drive video players aren't supported in GitHub README. No media reupload, sharing change or merge authorized.
 - Base main `9dd3866`, owner merged PR #7. Preserve unrelated local files. No new merge/production promotion authorized.
 

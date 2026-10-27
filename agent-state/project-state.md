@@ -2,7 +2,7 @@
 
 ## Gameplay improvement V1 README bookmark (2026-10-27)
 
-- README links a deployed-game screenshot and Watch gameplay video text to the owner's shared Drive MP4. The recording is 560,116,091 bytes, above GitHub's video attachment limits, so playback opens in Drive.
+- README uses a genuine Drive-generated thumbnail from the owner's recording and opens its `/preview` player. Local `docs/media/readme/gameplay-improvement-v1-thumbnail.jpg` is the unchanged 61,206-byte Drive JPEG. The recording is 560,116,091 bytes, so playback stays in Drive. PR #8: https://github.com/Devendurance/ChogRoyale/pull/8.
 - PR #7 was merged by the owner, main `9dd3866`. New documentation branch `codex/gameplay-improvement-v1` starts from that main. No new merge or production deployment authorized.
 
 ## Final UX polish (2026-10-27)

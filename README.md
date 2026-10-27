@@ -32,11 +32,11 @@ The game combines approachable free-to-play strategy with an identity-rich socia
 
 ## Gameplay improvement V1
 
-[![Chog Royale deployed-game screenshot, open the gameplay video in Google Drive](docs/media/readme/03-battle-desktop.webp)](https://drive.google.com/file/d/1zpOdku0kRsAukJ-goWcd8Ulb5uLc6bRe/view?usp=drive_link)
+[![Gameplay improvement V1 video thumbnail](docs/media/readme/gameplay-improvement-v1-thumbnail.jpg)](https://drive.google.com/file/d/1zpOdku0kRsAukJ-goWcd8Ulb5uLc6bRe/preview)
 
-[Watch gameplay video](https://drive.google.com/file/d/1zpOdku0kRsAukJ-goWcd8Ulb5uLc6bRe/view?usp=drive_link)
+[Watch gameplay video](https://drive.google.com/file/d/1zpOdku0kRsAukJ-goWcd8Ulb5uLc6bRe/preview)
 
-Deployed-game screenshot. Select the image or watch link to open the recording in Google Drive.
+Select the video thumbnail to watch in Google Drive.
 
 ## 📸 Inside the arena
 

@@ -7,6 +7,7 @@
 
 
 - Auto-log meaningful rules to the project’s AGENTS.md.
+- Gameplay video bookmarks use genuine thumbnails from the linked recording and open its actual player. Use the Drive `/preview` destination for Drive recordings.
 - Auto-commit and push after every meaningful checkpoint.
 - Auto-clean temporary files and build clutter.
 - Keep the repository in a recoverable state.
