@@ -1,0 +1,79 @@
+{
+  "note": "Acceptance supplements. Injected local identities/profile API. Expired and locked cases use real local Colyseus; network failure,503 setup and incomplete/complete onboarding are controlled browser fixtures. Clipboard/share use real RoomInvite in ready-room fixture. No real login, physical phone, DB or production writes.",
+  "errors": {
+    "note": "Injected local Privy/auth and profile API fixture. Expired-room request uses real local Colyseus. No production or DB writes.",
+    "checks": [
+      {
+        "test": "invalid",
+        "url": "http://127.0.0.1:3100/app/play/battle?mode=private&room=%3Cbad%3E",
+        "joins": 0,
+        "creates": 0,
+        "errors": [],
+        "alert": [
+          "This invitation has an invalid room code. Ask your friend for a new link."
+        ]
+      },
+      {
+        "test": "expired",
+        "url": "http://127.0.0.1:3100/app/play/battle?mode=private&room=ZZZZZZZZZ",
+        "joins": 1,
+        "creates": 0,
+        "errors": [],
+        "alert": [
+          "This room has expired or is no longer available. Check the code with your friend."
+        ]
+      },
+      {
+        "test": "network",
+        "url": "http://127.0.0.1:3100/app/play/battle?mode=private&room=ZZZZZZZZZ",
+        "joins": 1,
+        "creates": 0,
+        "errors": [],
+        "alert": [
+          "Couldn't join this room. Check your connection and try again."
+        ]
+      },
+      {
+        "test": "unavailable",
+        "url": "http://127.0.0.1:3100/app/play/battle?mode=private&room=ZZZZZZZZZ",
+        "joins": 0,
+        "creates": 0,
+        "errors": [],
+        "alert": [
+          "We couldn't check your player setup. Your invitation is still in this address."
+        ]
+      },
+      {
+        "test": "onboarding",
+        "url": "http://127.0.0.1:3100/app/play/battle?mode=private&room=ZZZZZZZZZ",
+        "joins": 1,
+        "creates": 0,
+        "errors": [],
+        "alert": [
+          "This room has expired or is no longer available. Check the code with your friend."
+        ]
+      }
+    ]
+  },
+  "started": {
+    "note": "Third injected identity browser joins real ongoing local match efvFyl4cv. Other players left untouched.",
+    "message": "This room is full or its battle has already started. Ask your friend for a new invitation.",
+    "joins": 1,
+    "responses": [
+      {
+        "url": "http://127.0.0.1:2568/matchmake/joinById/efvFyl4cv",
+        "status": 522,
+        "body": "{\"code\":522,\"error\":\"room \\\"efvFyl4cv\\\" is locked\"}"
+      }
+    ]
+  },
+  "shareFallback": {
+    "note": "Real RoomInvite inside presentation ready fixture, no live room.",
+    "shareCancelNoClipboardWrite": true,
+    "shareCancelNoFailureMessage": true,
+    "deniedClipboardAndLegacyCopyManualFallback": true,
+    "manualExactInvite": true,
+    "manualSelectAllOnFocus": true,
+    "code": "LOCAL4242"
+  }
+}

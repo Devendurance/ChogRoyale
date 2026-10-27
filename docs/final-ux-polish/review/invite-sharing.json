@@ -1,0 +1,23 @@
+{
+  "note": "Real Colyseus server/room/session. Injected local Privy identity and profile/loadout reads. No real sign-in, DB writes or physical phone.",
+  "checks": [
+    {
+      "copyText": true,
+      "copyIcon": true,
+      "keyboardCopy": true,
+      "copyLink": true,
+      "nativeShareMock": true,
+      "unsupportedShare": true,
+      "hostStillInSameRoom": true,
+      "code": "eTwJ2p3sS"
+    },
+    {
+      "loggedOutLoginResume": true,
+      "actualOpponent": true,
+      "autoJoinedExactlyOnce": 1,
+      "noCreate": 0,
+      "notAutoReady": true
+    }
+  ],
+  "errors": []
+}

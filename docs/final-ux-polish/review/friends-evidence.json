@@ -1,0 +1,193 @@
+{
+  "fixture": true,
+  "description": "Real /app/friends, injected QA authentication, mocked API responses only. No real account or multiplayer acceptance.",
+  "captures": [
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "label": "populated",
+      "overflow": {
+        "document": 390,
+        "viewport": 390,
+        "rows": 0
+      }
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "label": "empty",
+      "overflow": {
+        "document": 390,
+        "viewport": 390,
+        "rows": 0
+      }
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "label": "unavailable",
+      "overflow": {
+        "document": 390,
+        "viewport": 390,
+        "rows": 0
+      }
+    },
+    {
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "label": "populated",
+      "overflow": {
+        "document": 1366,
+        "viewport": 1366,
+        "rows": 0
+      }
+    },
+    {
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "label": "empty",
+      "overflow": {
+        "document": 1366,
+        "viewport": 1366,
+        "rows": 0
+      }
+    },
+    {
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "label": "unavailable",
+      "overflow": {
+        "document": 1366,
+        "viewport": 1366,
+        "rows": 0
+      }
+    }
+  ],
+  "checks": [
+    {
+      "width": 390,
+      "check": "Accept stays pending until mocked server confirms",
+      "pass": true
+    },
+    {
+      "width": 390,
+      "check": "Search/add, accept, decline, remove cancel/confirm, request cancel, block cancel/confirm, unblock",
+      "pass": true,
+      "mutations": [
+        {
+          "url": "/api/players/me/friends",
+          "method": "POST",
+          "body": {
+            "playerId": "search"
+          }
+        },
+        {
+          "url": "/api/players/me/friends/r1/accept",
+          "method": "POST",
+          "body": null
+        },
+        {
+          "url": "/api/players/me/friends/f1",
+          "method": "DELETE",
+          "body": null
+        },
+        {
+          "url": "/api/players/me/blocks",
+          "method": "POST",
+          "body": {
+            "playerId": "p-f2"
+          }
+        },
+        {
+          "url": "/api/players/me/blocks/blocked",
+          "method": "DELETE",
+          "body": null
+        },
+        {
+          "url": "/api/players/me/friends/s1",
+          "method": "DELETE",
+          "body": null
+        },
+        {
+          "url": "/api/players/me/friends/r1/decline",
+          "method": "POST",
+          "body": null
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "check": "Initial search failure visible with null search hits",
+      "pass": true
+    },
+    {
+      "width": 1366,
+      "check": "Accept stays pending until mocked server confirms",
+      "pass": true
+    },
+    {
+      "width": 1366,
+      "check": "Search/add, accept, decline, remove cancel/confirm, request cancel, block cancel/confirm, unblock",
+      "pass": true,
+      "mutations": [
+        {
+          "url": "/api/players/me/friends",
+          "method": "POST",
+          "body": {
+            "playerId": "search"
+          }
+        },
+        {
+          "url": "/api/players/me/friends/r1/accept",
+          "method": "POST",
+          "body": null
+        },
+        {
+          "url": "/api/players/me/friends/f1",
+          "method": "DELETE",
+          "body": null
+        },
+        {
+          "url": "/api/players/me/blocks",
+          "method": "POST",
+          "body": {
+            "playerId": "p-f2"
+          }
+        },
+        {
+          "url": "/api/players/me/blocks/blocked",
+          "method": "DELETE",
+          "body": null
+        },
+        {
+          "url": "/api/players/me/friends/s1",
+          "method": "DELETE",
+          "body": null
+        },
+        {
+          "url": "/api/players/me/friends/r1/decline",
+          "method": "POST",
+          "body": null
+        }
+      ]
+    },
+    {
+      "width": 1366,
+      "check": "Initial search failure visible with null search hits",
+      "pass": true
+    }
+  ],
+  "pass": true
+}

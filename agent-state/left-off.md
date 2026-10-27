@@ -1,9 +1,10 @@
-## Final UX polish (2026-10-27, active)
+## Final UX polish (2026-10-27, delivered)
 
-- Doing: final bounded Friends/invite/crown/HUD/result polish on `polish/final-ux-identity-share`. Owner approved PR #6 merge only, new polish PR must remain unmerged.
-- Done: PR #6 production READY, all 32 changed public assets hash-match. Implementation checkpoint `ee2a587` pushed. Friends actions and 36 identity/crown fixture cases pass, one real injected-auth match finished1800 ticks with matching hashes/replayIdentical and0errors. Relevant regression221/221, changed lint/typecheck pass. Same-room invite resume regression fixed, focused13/13, live reload confirmed in second match.
-- Next: finish second multiplayer match and final logged-out invite evidence, restore temporary QA config, run final checks/build, package evidence, push and open polish PR. Full lint has24pre-existing errors in unchanged files.
-- Preserve unrelated `.fast-build/STATE.md`, untracked DESIGN.md, messaging doc and demo-production/. QA data lives outside repo in `ChogRoyale-Assets/final-polish-20261027`. Temporary `src/qa-privy-polish.tsx`, qa-v2 route and next.config.ts alias must never be committed.
+- Doing: finished bounded polish on `polish/final-ux-identity-share`, PR https://github.com/Devendurance/ChogRoyale/pull/7. Owner approved PR #6 merge only. PR #7 stays unmerged, no production promotion.
+- Done: PR #6 production READY, all 32 changed public assets hash-match. Checkpoints `ee2a587`, `7db7314`. All five acceptance areas pass within documented limits. Friends actions, 36 identity/crown fixtures, copy/share/login/setup/error cases verified. Two full injected-auth matches cover opposite seats, 1,800 ticks each, matching hashes/replayIdentical and zero errors. Actual invite refresh recovered the same seat.
+- Checks: final 222/222 relevant tests, changed-file lint, standalone typecheck and production build with 65 pages pass. Full lint retains 24 existing errors and one warning in unchanged files. QA source/routes/config removed, production chunks contain no injected identities. Evidence and exact file list: `docs/final-ux-polish.md`.
+- Next: owner review of PR #7. Physical phones, real Privy/NFT/settlement and installed-app native sharing remain unverified. No further overhaul or feature slice is authorized.
+- Preserved unrelated `.fast-build/STATE.md`, untracked DESIGN.md, messaging doc and demo-production/. External full QA set: `ChogRoyale-Assets/final-polish-20261027`. Original config files restored.
 
 ## V3 release acceptance (2026-10-27)
 

@@ -1,0 +1,618 @@
+[
+ {
+  "note": "Real local BattleRoom simulation with injected Privy and mocked account reads. No settlement/NFT validation.",
+  "resumed": false,
+  "joins": 0,
+  "creates": 1,
+  "identity": [
+   {
+    "phase": "start",
+    "width": 390,
+    "height": 844,
+    "mine": {
+     "name": "Endychog",
+     "text": " 0Endychog"
+    },
+    "foe": {
+     "name": "Phantom",
+     "text": "Phantom0 "
+    },
+    "ribbons": [],
+    "overflow": false
+   },
+   {
+    "phase": "start",
+    "width": 1366,
+    "height": 768,
+    "mine": {
+     "name": "Endychog",
+     "text": " 0Endychog"
+    },
+    "foe": {
+     "name": "Phantom",
+     "text": "Phantom0 "
+    },
+    "ribbons": [],
+    "overflow": false
+   },
+   {
+    "phase": "end",
+    "width": 390,
+    "height": 844,
+    "mine": {
+     "name": "Endychog",
+     "text": " 2Endychog"
+    },
+    "foe": {
+     "name": "Phantom",
+     "text": "Phantom1 "
+    },
+    "ribbons": [
+     {
+      "side": "mine",
+      "name": "Endychog",
+      "text": "YouEndychogWinner2"
+     },
+     {
+      "side": "foe",
+      "name": "Phantom",
+      "text": "Phantom1"
+     }
+    ],
+    "overflow": false
+   },
+   {
+    "phase": "end",
+    "width": 1366,
+    "height": 768,
+    "mine": {
+     "name": "Endychog",
+     "text": " 2Endychog"
+    },
+    "foe": {
+     "name": "Phantom",
+     "text": "Phantom1 "
+    },
+    "ribbons": [
+     {
+      "side": "mine",
+      "name": "Endychog",
+      "text": "YouEndychogWinner2"
+     },
+     {
+      "side": "foe",
+      "name": "Phantom",
+      "text": "Phantom1"
+     }
+    ],
+    "overflow": false
+   }
+  ],
+  "who": "alice",
+  "seat": 1,
+  "self": "Endychog",
+  "opponent": "Phantom",
+  "commander": {
+   "kind": "free",
+   "commanderId": "free-bulwark",
+   "cardId": "cmdr:free-bulwark",
+   "class": "bulwark",
+   "variant": "free",
+   "prestige": "Free",
+   "name": "Bulwark Commander",
+   "tokenId": null,
+   "imageOriginal": null,
+   "rulesetVersion": "v1",
+   "derivationHash": "free-bulwark",
+   "basis": "free",
+   "verifiedAt": null
+  },
+  "boardReadyMs": 2646,
+  "framesReceived": 1800,
+  "lastTick": 1800,
+  "sent": 45,
+  "drags": 3,
+  "abilitiesSent": [
+   "bulwark-aegis-wall",
+   "bulwark-aegis-wall",
+   "bulwark-aegis-wall",
+   "bulwark-aegis-wall",
+   "bulwark-aegis-wall",
+   "bulwark-aegis-wall",
+   "bulwark-aegis-wall",
+   "bulwark-aegis-wall",
+   "bulwark-aegis-wall",
+   "bulwark-aegis-wall",
+   "bulwark-aegis-wall",
+   "bulwark-aegis-wall",
+   "bulwark-aegis-wall",
+   "bulwark-aegis-wall",
+   "bulwark-aegis-wall"
+  ],
+  "acksOk": 32,
+  "acksRejected": [
+   "Deployment on structure",
+   "Deployment on structure"
+  ],
+  "events": {
+   "deploy": 34,
+   "building_spawned": 9,
+   "building_removed": 9,
+   "siege_fired": 6,
+   "unit_spawned": 5,
+   "spell_cast": 18,
+   "spell_impact": 14,
+   "commander_deployed": 8,
+   "ability_fired": 16,
+   "death": 40,
+   "structure_destroyed": 3,
+   "tower_fired": 127
+  },
+  "spells": [
+   "rally_horn",
+   "rift_snare",
+   "chaos_bolt",
+   "chaos_comet"
+  ],
+  "buildings": [
+   "rift_sentry",
+   "rift_mortar",
+   "chog_burrow",
+   "decoy_totem"
+  ],
+  "abilities": [
+   "bulwark-aegis-wall",
+   "reaver-frenzy-rush"
+  ],
+  "end": {
+   "result": "win",
+   "reason": "crowns",
+   "crowns": [
+    1,
+    2
+   ],
+   "ticks": 1800,
+   "replayIdentical": true,
+   "stateHash": "0790b70a38fe5e6dca8f293557b1ff5e294f24d03c3b26e73b2c2f97745462b5",
+   "commands": 64,
+   "matchId": "2f29a4d9-c830-4009-987e-9077f3f383e1"
+  },
+  "perf": {
+   "frames": 10762,
+   "p50": 16.5,
+   "p95": 36.1,
+   "p99": 49.4,
+   "max": 801,
+   "over33ms": 752,
+   "droppedPct": 7,
+   "heapMB": 57
+  },
+  "perfQuiet": {
+   "frames": 3425,
+   "p50": 16.5,
+   "p95": 36.5,
+   "p99": 44.8,
+   "max": 519,
+   "over33ms": 257,
+   "droppedPct": 7.5,
+   "heapMB": 57
+  },
+  "census": [
+   {
+    "tick": 276,
+    "unitImgs": 6,
+    "live": 6,
+    "vfx": 7,
+    "texMB": 86.8,
+    "texUnitsMB": 33.9,
+    "texVfxMB": 1.4,
+    "texArenaMB": 34.6
+   },
+   {
+    "tick": 923,
+    "unitImgs": 2,
+    "live": 2,
+    "vfx": 0,
+    "texMB": 86.8,
+    "texUnitsMB": 33.9,
+    "texVfxMB": 1.4,
+    "texArenaMB": 34.6
+   },
+   {
+    "tick": 1036,
+    "unitImgs": 4,
+    "live": 4,
+    "vfx": 0,
+    "texMB": 86.8,
+    "texUnitsMB": 33.9,
+    "texVfxMB": 1.4,
+    "texArenaMB": 34.6
+   },
+   {
+    "tick": 1141,
+    "unitImgs": 3,
+    "live": 2,
+    "vfx": 9,
+    "texMB": 86.8,
+    "texUnitsMB": 33.9,
+    "texVfxMB": 1.4,
+    "texArenaMB": 34.6
+   },
+   {
+    "tick": 1275,
+    "unitImgs": 3,
+    "live": 3,
+    "vfx": 8,
+    "texMB": 86.8,
+    "texUnitsMB": 33.9,
+    "texVfxMB": 1.4,
+    "texArenaMB": 34.6
+   },
+   {
+    "tick": 1382,
+    "unitImgs": 5,
+    "live": 5,
+    "vfx": 5,
+    "texMB": 86.8,
+    "texUnitsMB": 33.9,
+    "texVfxMB": 1.4,
+    "texArenaMB": 34.6
+   },
+   {
+    "tick": 1496,
+    "unitImgs": 3,
+    "live": 3,
+    "vfx": 4,
+    "texMB": 86.8,
+    "texUnitsMB": 33.9,
+    "texVfxMB": 1.4,
+    "texArenaMB": 34.6
+   },
+   {
+    "tick": 1610,
+    "unitImgs": 4,
+    "live": 4,
+    "vfx": 10,
+    "texMB": 86.8,
+    "texUnitsMB": 33.9,
+    "texVfxMB": 1.4,
+    "texArenaMB": 34.6
+   },
+   {
+    "tick": 1721,
+    "unitImgs": 6,
+    "live": 6,
+    "vfx": 7,
+    "texMB": 86.8,
+    "texUnitsMB": 33.9,
+    "texVfxMB": 1.4,
+    "texArenaMB": 34.6
+   }
+  ],
+  "errors": [],
+  "failed": []
+ },
+ {
+  "note": "Real local BattleRoom simulation with injected Privy and mocked account reads. No settlement/NFT validation.",
+  "resumed": true,
+  "initialInviteJoins": 1,
+  "joins": 2,
+  "creates": 0,
+  "identity": [
+   {
+    "phase": "start",
+    "width": 390,
+    "height": 844,
+    "mine": {
+     "name": "Phantom",
+     "text": " 0Phantom"
+    },
+    "foe": {
+     "name": "Endychog",
+     "text": "Endychog0 "
+    },
+    "ribbons": [],
+    "overflow": false
+   },
+   {
+    "phase": "start",
+    "width": 1366,
+    "height": 768,
+    "mine": {
+     "name": "Phantom",
+     "text": " 0Phantom"
+    },
+    "foe": {
+     "name": "Endychog",
+     "text": "Endychog0 "
+    },
+    "ribbons": [],
+    "overflow": false
+   },
+   {
+    "phase": "resumed",
+    "width": 390,
+    "height": 844,
+    "mine": {
+     "name": "Phantom",
+     "text": " 0Phantom"
+    },
+    "foe": {
+     "name": "Endychog",
+     "text": "Endychog0 "
+    },
+    "ribbons": [],
+    "overflow": false
+   },
+   {
+    "phase": "resumed",
+    "width": 1366,
+    "height": 768,
+    "mine": {
+     "name": "Phantom",
+     "text": " 0Phantom"
+    },
+    "foe": {
+     "name": "Endychog",
+     "text": "Endychog0 "
+    },
+    "ribbons": [],
+    "overflow": false
+   },
+   {
+    "phase": "end",
+    "width": 390,
+    "height": 844,
+    "mine": {
+     "name": "Phantom",
+     "text": " 1Phantom"
+    },
+    "foe": {
+     "name": "Endychog",
+     "text": "Endychog2 "
+    },
+    "ribbons": [
+     {
+      "side": "mine",
+      "name": "Phantom",
+      "text": "YouPhantom1"
+     },
+     {
+      "side": "foe",
+      "name": "Endychog",
+      "text": "EndychogWinner2"
+     }
+    ],
+    "overflow": false
+   },
+   {
+    "phase": "end",
+    "width": 1366,
+    "height": 768,
+    "mine": {
+     "name": "Phantom",
+     "text": " 1Phantom"
+    },
+    "foe": {
+     "name": "Endychog",
+     "text": "Endychog2 "
+    },
+    "ribbons": [
+     {
+      "side": "mine",
+      "name": "Phantom",
+      "text": "YouPhantom1"
+     },
+     {
+      "side": "foe",
+      "name": "Endychog",
+      "text": "EndychogWinner2"
+     }
+    ],
+    "overflow": false
+   }
+  ],
+  "who": "bob",
+  "seat": 0,
+  "self": "Phantom",
+  "opponent": "Endychog",
+  "commander": {
+   "kind": "free",
+   "commanderId": "free-reaver",
+   "cardId": "cmdr:free-reaver",
+   "class": "reaver",
+   "variant": "free",
+   "prestige": "Free",
+   "name": "Reaver Commander",
+   "tokenId": null,
+   "imageOriginal": null,
+   "rulesetVersion": "v1",
+   "derivationHash": "free-reaver",
+   "basis": "free",
+   "verifiedAt": null
+  },
+  "boardReadyMs": 2646,
+  "framesReceived": 1789,
+  "lastTick": 1800,
+  "sent": 30,
+  "drags": 3,
+  "abilitiesSent": [
+   "reaver-frenzy-rush",
+   "reaver-frenzy-rush",
+   "reaver-frenzy-rush",
+   "reaver-frenzy-rush"
+  ],
+  "acksOk": 28,
+  "acksRejected": [
+   "Deployment on structure",
+   "Deployment on structure"
+  ],
+  "events": {
+   "deploy": 34,
+   "building_spawned": 9,
+   "building_removed": 9,
+   "siege_fired": 6,
+   "unit_spawned": 5,
+   "spell_cast": 18,
+   "spell_impact": 14,
+   "commander_deployed": 8,
+   "ability_fired": 16,
+   "death": 40,
+   "structure_destroyed": 3,
+   "tower_fired": 127
+  },
+  "spells": [
+   "rally_horn",
+   "rift_snare",
+   "chaos_bolt",
+   "chaos_comet"
+  ],
+  "buildings": [
+   "rift_sentry",
+   "rift_mortar",
+   "chog_burrow",
+   "decoy_totem"
+  ],
+  "abilities": [
+   "bulwark-aegis-wall",
+   "reaver-frenzy-rush"
+  ],
+  "end": {
+   "result": "loss",
+   "reason": "crowns",
+   "crowns": [
+    1,
+    2
+   ],
+   "ticks": 1800,
+   "replayIdentical": true,
+   "stateHash": "0790b70a38fe5e6dca8f293557b1ff5e294f24d03c3b26e73b2c2f97745462b5",
+   "commands": 64,
+   "matchId": "2f29a4d9-c830-4009-987e-9077f3f383e1"
+  },
+  "perf": {
+   "frames": 10673,
+   "p50": 16.6,
+   "p95": 30.6,
+   "p99": 48,
+   "max": 1017,
+   "over33ms": 342,
+   "droppedPct": 3.2,
+   "heapMB": 54
+  },
+  "perfQuiet": {
+   "frames": 3440,
+   "p50": 16.6,
+   "p95": 31.5,
+   "p99": 42.6,
+   "max": 443,
+   "over33ms": 113,
+   "droppedPct": 3.3,
+   "heapMB": 54
+  },
+  "census": [
+   {
+    "tick": 276,
+    "unitImgs": 6,
+    "live": 6,
+    "vfx": 7,
+    "texMB": 86.8,
+    "texUnitsMB": 33.9,
+    "texVfxMB": 1.4,
+    "texArenaMB": 34.6
+   },
+   {
+    "tick": 905,
+    "unitImgs": 2,
+    "live": 2,
+    "vfx": 0,
+    "texMB": 86.8,
+    "texUnitsMB": 33.9,
+    "texVfxMB": 1.4,
+    "texArenaMB": 34.6
+   },
+   {
+    "tick": 1013,
+    "unitImgs": 2,
+    "live": 2,
+    "vfx": 2,
+    "texMB": 86.8,
+    "texUnitsMB": 33.9,
+    "texVfxMB": 1.4,
+    "texArenaMB": 34.6
+   },
+   {
+    "tick": 1117,
+    "unitImgs": 3,
+    "live": 3,
+    "vfx": 0,
+    "texMB": 86.8,
+    "texUnitsMB": 33.9,
+    "texVfxMB": 1.4,
+    "texArenaMB": 34.6
+   },
+   {
+    "tick": 1234,
+    "unitImgs": 2,
+    "live": 2,
+    "vfx": 0,
+    "texMB": 86.8,
+    "texUnitsMB": 33.9,
+    "texVfxMB": 1.4,
+    "texArenaMB": 34.6
+   },
+   {
+    "tick": 1338,
+    "unitImgs": 4,
+    "live": 4,
+    "vfx": 0,
+    "texMB": 86.8,
+    "texUnitsMB": 33.9,
+    "texVfxMB": 1.4,
+    "texArenaMB": 34.6
+   },
+   {
+    "tick": 1449,
+    "unitImgs": 4,
+    "live": 4,
+    "vfx": 9,
+    "texMB": 86.8,
+    "texUnitsMB": 33.9,
+    "texVfxMB": 1.4,
+    "texArenaMB": 34.6
+   },
+   {
+    "tick": 1564,
+    "unitImgs": 4,
+    "live": 4,
+    "vfx": 0,
+    "texMB": 86.8,
+    "texUnitsMB": 33.9,
+    "texVfxMB": 1.4,
+    "texArenaMB": 34.6
+   },
+   {
+    "tick": 1672,
+    "unitImgs": 6,
+    "live": 6,
+    "vfx": 19,
+    "texMB": 86.8,
+    "texUnitsMB": 33.9,
+    "texVfxMB": 1.4,
+    "texArenaMB": 34.6
+   },
+   {
+    "tick": 1779,
+    "unitImgs": 8,
+    "live": 8,
+    "vfx": 10,
+    "texMB": 86.8,
+    "texUnitsMB": 33.9,
+    "texVfxMB": 1.4,
+    "texArenaMB": 34.6
+   }
+  ],
+  "errors": [],
+  "failed": []
+ }
+]
