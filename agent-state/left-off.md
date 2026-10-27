@@ -1,3 +1,10 @@
+## Final audio overhaul (2026-10-27, active)
+
+- Doing: complete sound production/integration on `codex/final-audio-overhaul` from main `6907259`. No merge/production deployment authorized.
+- Done: repository/audio/settings inspected, latest UX confirmed merged. Both exact tracks found in Downloads/Telegram Desktop. ElevenLabs key presence confirmed without exposure. Workers implementing core/shared mixer, asset production and UI/settings.
+- Next: review worker contracts/edits, verify ElevenLabs rights or documented fallback, audio measurements and browser transition/action tests, full checks/build, checkpoint/push/open PR.
+- Preserve `.fast-build/STATE.md`, DESIGN.md, demo-production/, messaging doc and untracked `docs/CHOG_ROYALE_V2_FULL_IMPROVEMENT_BUILD_PLAN.md`. External audio work in `ChogRoyale-Assets/audio-overhaul-20261027`.
+
 ## Gameplay improvement V1 README bookmark (2026-10-27)
 
 - Doing: add the owner's Drive gameplay recording as a clickable README bookmark on `codex/gameplay-improvement-v1`.

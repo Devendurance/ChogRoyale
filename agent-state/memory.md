@@ -1,5 +1,7 @@
 # Memory
 
+- Audio overhaul: supplied music masters are in Downloads/Telegram Desktop, exact Freesound filenames 677436 MP3 and 520710 WAV. Only the first is CC0. The second stays development-only under CC BY-NC 4.0, absent separate permission. Production byte exclusion matters as well as playback gating.
+
 - README gameplay bookmarks use a thumbnail from the linked recording, not an older game screenshot. Drive videos open via `/preview`; keep the genuine thumbnail locally for reliable GitHub rendering.
 
 - Live QA: Colyseus server frames decode as byte 13 then msgpackr `unpackMultiple` ([type, payload]). Ability buttons render twice (tray and side panel), so locate with `:visible`. Playwright `waitForFunction(fn, arg, options)` takes options third. Playwright's ffmpeg can't decode its VP9 recordings, so use the WinGet ffmpeg on PATH. A heavily loaded laptop slows the server tick, so give live matches a deadline well past 180 s. Two live clients plus video on this laptop measure the harness, so use the single-client A/B for asset cost.

@@ -1,5 +1,11 @@
 # Project State
 
+## Final audio overhaul (2026-10-27, active)
+
+- Branch `codex/final-audio-overhaul` from main `6907259`, PRs #6/#7/#8 merged. Scope is persistent music/mixing, original UI SFX, settings and battle transitions, with existing battle audio preserved. No merge/deploy authorized.
+- Both owner soundtrack files found in `C:/Users/USER/Downloads/Telegram Desktop`. Lobby track CC0, battle track CC BY-NC 4.0 development-only. ELEVENLABS_API_KEY is present, entitlement check pending, never expose its value.
+- Three GPT-5.6 Luna/xhigh workers own core/battle integration, asset production and UI/settings wiring. Coordinator reviews and runs acceptance.
+
 ## Gameplay improvement V1 README bookmark (2026-10-27)
 
 - README uses a genuine Drive-generated thumbnail from the owner's recording and opens its `/preview` player. Local `docs/media/readme/gameplay-improvement-v1-thumbnail.jpg` is the unchanged 61,206-byte Drive JPEG. The recording is 560,116,091 bytes, so playback stays in Drive. PR #8: https://github.com/Devendurance/ChogRoyale/pull/8.

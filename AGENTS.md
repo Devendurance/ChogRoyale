@@ -1,5 +1,9 @@
 # CRITICAL RULES - MUST FOLLOW
 
+- The final audio overhaul uses one persistent app-level mixer and preserves the existing authoritative battle cue engine/deduplication. Shared audio ownership must survive app navigation and battle resets without closing the app context. Explicit mute and zero-volume choices survive preference migration and reconnects.
+- Supplied Spooky Halloween is the CC0 lobby track, credited as "Misterbates - Spooky Halloween". Village Game Theme Loop is CC BY-NC 4.0 and authorized for development use only under the current license. Keep its bytes out of public assets and production tracing until separate permission clears production use. Preserve its source and attribution in the manifest/credits.
+- Audio generation reads ELEVENLABS_API_KEY only in local production scripts. Verify configured commercial rights before generation, package files once and never call the generation API from browser interactions. Success/reward cues require confirmed server outcomes.
+
 - Final polish uses player-relative identity: self left/blue in the HUD and top/blue in results, opponent right/red and bottom/red, regardless of seat or winner. Crown flights target the corresponding score ref. Use the official alpha crown at its natural 256:236 ratio, including victory, defeat and flights. Keep trophies separate.
 - Private invites contain only the current-origin `/app/play/battle?mode=private&room=` URL and a validated case-sensitive Colyseus nanoid(9). Preserve that destination through login/setup. Attempt automatic joining once after setup is verified, never auto-ready. A locked-room refusal can mean full or already started.
 - An active invite URL must recover its matching saved seat on refresh. Prioritize saved resume credentials only when their room matches the invite, never resume a different room or add recovery credentials to the URL. Mark automatic attempt refs inside the scheduled task so Strict Mode cleanup cannot consume an attempt.
