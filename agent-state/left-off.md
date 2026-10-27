@@ -1,3 +1,10 @@
+## Final UX polish (2026-10-27, active)
+
+- Doing: final bounded Friends/invite/crown/HUD/result polish on `polish/final-ux-identity-share`. Owner approved PR #6 merge only, new polish PR must remain unmerged.
+- Done: PR #6 production READY, all 32 changed public assets hash-match. Implementation checkpoint `ee2a587` pushed. Friends actions and 36 identity/crown fixture cases pass, one real injected-auth match finished1800 ticks with matching hashes/replayIdentical and0errors. Relevant regression221/221, changed lint/typecheck pass. Same-room invite resume regression fixed, focused13/13, live reload confirmed in second match.
+- Next: finish second multiplayer match and final logged-out invite evidence, restore temporary QA config, run final checks/build, package evidence, push and open polish PR. Full lint has24pre-existing errors in unchanged files.
+- Preserve unrelated `.fast-build/STATE.md`, untracked DESIGN.md, messaging doc and demo-production/. QA data lives outside repo in `ChogRoyale-Assets/final-polish-20261027`. Temporary `src/qa-privy-polish.tsx`, qa-v2 route and next.config.ts alias must never be committed.
+
 ## V3 release acceptance (2026-10-27)
 
 - Doing: release QA on PR #6 (`visual-overhaul/v3-final-assets`). Main (branding PR #5, 48a0eaf) merged in as 6329e08, no force-push. Never merge or deploy without owner approval (main auto-deploys).
@@ -226,10 +233,3 @@ Last updated: 2026-10-24
 - Scoped change: `getPlayerStats` ranked breakdown, dev progress Ranked row, new ranked-bucket test. Verification: progression 10/10, stats route 3/3, progress-model 29/29, typecheck, lint (1 pre-existing warning), build green. Live pool read-only: 1969 resolved, 0 invalid.
 - Local commit: pending (scoped: progression.ts, progression.test.ts, dev progress page, agent-state). `.fast-build/STATE.md`, `DESIGN.md`, `docs/Chog Royale messaging.md` untouched. No PROD activation, no migrations 0010-0014, no push, no deploy.
 - Next: owner review, including the still-gated live NFT-holder acceptance match. Do not start P4.
-## Final UX polish (2026-10-27, active)
-
-- Doing: final bounded Friends/invite/crown/HUD/result polish on `polish/final-ux-identity-share`. Owner approved PR #6 merge only, new polish PR must remain unmerged.
-- Done: PR #6 merged `e985247a89396eec2dd69c8bc65b7a0b87c7596a`, production READY with new assets loading. All five feature edits reviewed. Focused tests and scoped lint pass. Friends real-route fixture QA passes all actions at both requested sizes.
-- Next: complete invite real-server lifecycle checks, both-player identity/crown fixture captures and injected-auth multiplayer, full checks/build, remove temporary QA source/config, push and open polish PR.
-- Preserve unrelated `.fast-build/STATE.md`, untracked DESIGN.md, messaging doc and demo-production/. QA data lives outside repo in `ChogRoyale-Assets/final-polish-20261027`. Temporary `src/qa-privy-polish.tsx`, qa-v2 route and next.config.ts alias must never be committed.
-

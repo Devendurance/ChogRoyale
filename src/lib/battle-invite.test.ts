@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { battleInvitePath, battleInviteUrl, copyInviteText, inviteReturnPath, roomJoinError, validRoomCode } from "./battle-invite";
+import { battleInvitePath, battleInviteUrl, copyInviteText, hasMatchingInviteResume, inviteReturnPath, roomJoinError, validRoomCode } from "./battle-invite";
 
 describe("private battle invitations", () => {
   it("preserves the generated case-sensitive nanoid alphabet", () => {
@@ -52,5 +52,15 @@ describe("invitation clipboard", () => {
     vi.stubGlobal("document", { activeElement: null, createElement: () => input, body: { appendChild: vi.fn() }, execCommand: () => false });
     expect(await copyInviteText("room-link")).toBe(false);
     expect(input.remove).toHaveBeenCalledOnce();
+  });
+});
+
+describe("invitation recovery precedence", () => {
+  it("recovers only the same room with stored seat credentials", () => {
+    expect(hasMatchingInviteResume("aB_12-xY9", {roomId:"aB_12-xY9",resumeToken:"test-only-resume"})).toBe(true);
+    expect(hasMatchingInviteResume("aB_12-xY9", {roomId:"other1234",resumeToken:"test-only-resume"})).toBe(false);
+    expect(hasMatchingInviteResume("aB_12-xY9", {roomId:"aB_12-xY9",resumeToken:""})).toBe(false);
+    expect(hasMatchingInviteResume("aB_12-xY9", null)).toBe(false);
+    expect(battleInvitePath("aB_12-xY9")).not.toContain("resume");
   });
 });

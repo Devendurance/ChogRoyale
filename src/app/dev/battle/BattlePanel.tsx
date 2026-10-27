@@ -3,7 +3,7 @@
 // B3.1 dev battle surface. Real Privy login, authoritative Colyseus server,
 // Phaser view. Gated to development unless explicitly enabled.
 
-import { roomJoinError, validRoomCode } from "@/lib/battle-invite";
+import { hasMatchingInviteResume, roomJoinError, validRoomCode } from "@/lib/battle-invite";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { usePrivy, useLogin } from "@privy-io/react-auth";
 import { Client, type Room } from "@colyseus/sdk";
@@ -330,6 +330,9 @@ export function BattlePanel({
   const inviteTried = useRef(false);
   useEffect(() => {
     if (!publicMode || !initialRoom || !setupReady || !ready || !authenticated || stage !== "idle" || inviteTried.current) return;
+    try {
+      if (hasMatchingInviteResume(initialRoom, JSON.parse(sessionStorage.getItem(RESUME_KEY) ?? "null"))) return;
+    } catch { /* Without stored recovery, join the invitation normally. */ }
     // Mark inside the task so Strict Mode's cancelled first effect doesn't consume it.
     const timer = setTimeout(() => {
       if (inviteTried.current) return;
@@ -454,7 +457,7 @@ export function BattlePanel({
   // After a refresh, offer the stored seat one automatic resume attempt.
   const autoResumeTried = useRef(false);
   useEffect(() => {
-    if (initialRoom || invalidInvite || !ready || !authenticated || stage !== "idle" || autoResumeTried.current) return;
+    if (invalidInvite || !setupReady || !ready || !authenticated || stage !== "idle" || autoResumeTried.current) return;
     let stored: { roomId: string; resumeToken: string; graceMs: number } | null = null;
     try {
       stored = JSON.parse(sessionStorage.getItem(RESUME_KEY) ?? "null");
@@ -462,16 +465,18 @@ export function BattlePanel({
       stored = null;
     }
     if (!stored?.roomId || !stored.resumeToken) return;
-    autoResumeTried.current = true;
+    if (initialRoom && !hasMatchingInviteResume(initialRoom, stored)) return;
     const info = stored;
     const t = setTimeout(() => {
+      if (autoResumeTried.current) return;
+      autoResumeTried.current = true;
       resumeInfo.current = info;
       resumeDeadline.current = Date.now() + info.graceMs;
       setResumeDeadlineAt(resumeDeadline.current);
       setStage("reconnecting");
     }, 0);
     return () => clearTimeout(t);
-  }, [ready, authenticated, stage, initialRoom, invalidInvite]);
+  }, [ready, authenticated, stage, initialRoom, invalidInvite, setupReady]);
 
   useEffect(() => {
     if (!notice) return;

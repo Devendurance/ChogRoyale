@@ -1,6 +1,6 @@
 .chud-crown-layer{position:fixed;inset:0;pointer-events:none;z-index:65;overflow:hidden}
 .chud-crown-template{display:none}
-.chud-crown-flight{position:absolute;width:70px;height:70px;pointer-events:none;filter:drop-shadow(0 0 12px #ffc748aa);will-change:transform,opacity}
+.chud-crown-flight{position:absolute;display:grid;place-items:center;width:70px;height:70px;pointer-events:none;filter:drop-shadow(0 0 12px #ffc748aa);will-change:transform,opacity}
 .chud-crown-flight[data-team=theirs]{filter:drop-shadow(0 0 12px #ea7b78aa)}
 .chud-crown-flight>.game-icon{width:100%;height:auto}
 .chud-crown-burst{position:absolute;inset:-14px;border-radius:50%;border:3px solid #ffe2a0;box-shadow:0 0 20px #ffc64c88;animation:chud-crown-ring .5s ease-out both}

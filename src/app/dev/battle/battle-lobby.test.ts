@@ -19,9 +19,9 @@ const mine: NonNullable<LobbyMessage["mine"]> = {
   cards: catalog.map((card) => card.id),
   commander: { kind: "nft", commanderId: "private-commander-id", cardId: "private-card-id", class: "reaver", variant: "base", prestige: "standard", name: "Genesis Commander", tokenId: "9191919", imageOriginal: "ipfs://private-original", rulesetVersion: "test", derivationHash: "private-derivation-hash", basis: "direct-owner", verifiedAt: null },
 };
-function render(override: Partial<LobbyMessage> = {}) {
+function render(override: Partial<LobbyMessage> = {}, roomCode = "AbC_12-x9") {
   return renderToStaticMarkup(React.createElement(BattleLobby, {
-    lobby: { ...lobby, ...override }, roomCode: "ROOM42", now: 100_000,
+    lobby: { ...lobby, ...override }, roomCode, now: 100_000,
     getAccessToken: async () => null, onConfirm: () => {}, onEdit: () => {},
   }));
 }
@@ -39,9 +39,19 @@ describe("production battle ready room", () => {
   it("keeps readiness separate from the advisory selection and labels the private room", () => {
     const html = render();
     expect(html).toContain("Private battle");
-    expect(html).toContain("ROOM42");
+    expect(html).toContain("AbC_12-x9");
+    expect(html).toContain('aria-label="Copy room code AbC_12-x9"');
+    expect(html).toContain("Share Invite");
+    expect(html).toContain("Copy Invite Link");
     expect(html).toContain("Not ready");
     expect(html).not.toContain("You&#x27;re Ready");
+  });
+  it("hides invite controls when the supplied room id is invalid", () => {
+    const html = render({}, "ROOM42");
+    expect(html).not.toContain('aria-label="Copy room code');
+    expect(html).not.toContain("Share Invite");
+    expect(html).not.toContain("Copy Invite Link");
+    expect(html).toContain("Ready for Battle");
   });
   it("preserves all seven portraits after server confirmation without exposing identity evidence", () => {
     const html = render({ mine });
@@ -67,7 +77,9 @@ describe("production battle ready room", () => {
     const html = render({ match: { opponent: "ChogTwo", deadlineAt: 112_000, mode: "matchmaking" } });
     expect(html).toContain("12s to ready up");
     expect(html).toContain("Opponent found");
-    expect(html).not.toContain("ROOM42");
+    expect(html).not.toContain("AbC_12-x9");
+    expect(html).not.toContain("Share Invite");
+    expect(html).not.toContain("Copy Invite Link");
     expect(html).not.toContain("Share your room code");
   });
   it("disables readiness for an incomplete deck and preserves empty slots", () => {

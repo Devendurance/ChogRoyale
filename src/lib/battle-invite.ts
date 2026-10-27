@@ -51,3 +51,10 @@ export async function copyInviteText(value: string): Promise<boolean> {
   if (previous instanceof HTMLElement) previous.focus({ preventScroll: true });
   return copied;
 }
+
+/** A refresh may recover this invitation's existing seat, never another room. */
+export function hasMatchingInviteResume(inviteRoom: string, stored: unknown): boolean {
+  if (!stored || typeof stored !== "object") return false;
+  const candidate = stored as { roomId?: unknown; resumeToken?: unknown };
+  return candidate.roomId === inviteRoom && typeof candidate.resumeToken === "string" && candidate.resumeToken.length > 0;
+}
