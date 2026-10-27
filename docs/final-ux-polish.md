@@ -75,11 +75,13 @@ Both outcomes and draw captures for both players are included in the same folder
 
 Real local ready-room, HUD and result captures are in [local-multiplayer](final-ux-polish/review/local-multiplayer):
 
+The initial host snapshots preceded arena texture loading, so the selected live HUD images use later battle frames. The desktop Endychog HUD link is explicitly a presentation fixture. Live captures retain the local Next.js development toast; it is outside the production UI. All requested sizes/player perspectives are covered by the clean fixture set above.
+
 | Surface | Mobile | Desktop |
 | --- | --- | --- |
 | Private host ready room | [390x844 viewport, full page capture](final-ux-polish/review/local-multiplayer/host-ready-390x844.png) | [1366x768 viewport, full page capture](final-ux-polish/review/local-multiplayer/host-ready-1366x768.png) |
 | Joined room before ready-up | [390x844 viewport, full page capture](final-ux-polish/review/local-multiplayer/joined-not-ready-390x844.png) | [1366x768 viewport, full page capture](final-ux-polish/review/local-multiplayer/joined-not-ready-1366x768.png) |
-| Endychog HUD, seat 1 | [390x844](final-ux-polish/review/local-multiplayer/alice-start-seat1-390x844.png) | [1366x768](final-ux-polish/review/local-multiplayer/alice-start-seat1-1366x768.png) |
-| Phantom HUD, seat 0 | [390x844](final-ux-polish/review/local-multiplayer/bob-start-seat0-390x844.png) | [1366x768](final-ux-polish/review/local-multiplayer/bob-start-seat0-1366x768.png) |
+| Endychog HUD, seat 1 | [Live tick 1141, 390x844](final-ux-polish/review/local-multiplayer/alice-active-t1141-390x844.png) | [1366x768 presentation fixture](final-ux-polish/review/fixtures/1366x768-endy-endySeat1-active.png) |
+| Phantom HUD, seat 0 | [Live tick 1117, 390x844](final-ux-polish/review/local-multiplayer/bob-active-t1117-390x844.png) | [Live resumed seat, 1366x768](final-ux-polish/review/local-multiplayer/bob-resumed-seat0-1366x768.png) |
 | Endychog victory | [390x844](final-ux-polish/review/local-multiplayer/alice-end-seat1-390x844.png) | [1366x768](final-ux-polish/review/local-multiplayer/alice-end-seat1-1366x768.png) |
 | Phantom defeat | [390x844](final-ux-polish/review/local-multiplayer/bob-end-seat0-390x844.png) | [1366x768](final-ux-polish/review/local-multiplayer/bob-end-seat0-1366x768.png) |

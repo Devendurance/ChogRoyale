@@ -31,14 +31,13 @@ docs/final-ux-polish/review/friends-evidence.json
 docs/final-ux-polish/review/identity-fixtures.json
 docs/final-ux-polish/review/invite-errors.json
 docs/final-ux-polish/review/invite-sharing.json
+docs/final-ux-polish/review/local-multiplayer/alice-active-t1141-390x844.png
 docs/final-ux-polish/review/local-multiplayer/alice-end-seat1-1366x768.png
 docs/final-ux-polish/review/local-multiplayer/alice-end-seat1-390x844.png
-docs/final-ux-polish/review/local-multiplayer/alice-start-seat1-1366x768.png
-docs/final-ux-polish/review/local-multiplayer/alice-start-seat1-390x844.png
+docs/final-ux-polish/review/local-multiplayer/bob-active-t1117-390x844.png
 docs/final-ux-polish/review/local-multiplayer/bob-end-seat0-1366x768.png
 docs/final-ux-polish/review/local-multiplayer/bob-end-seat0-390x844.png
-docs/final-ux-polish/review/local-multiplayer/bob-start-seat0-1366x768.png
-docs/final-ux-polish/review/local-multiplayer/bob-start-seat0-390x844.png
+docs/final-ux-polish/review/local-multiplayer/bob-resumed-seat0-1366x768.png
 docs/final-ux-polish/review/local-multiplayer/host-ready-1366x768.png
 docs/final-ux-polish/review/local-multiplayer/host-ready-390x844.png
 docs/final-ux-polish/review/local-multiplayer/joined-not-ready-1366x768.png
