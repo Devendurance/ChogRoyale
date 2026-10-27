@@ -43,6 +43,26 @@ const RULES = {
   gale_netter: { attackIntervalTicks: 10, range: 16, hitsAir: true, air: false, targetBoardHeight: 46, trim: true },
   riftbreaker: { attackIntervalTicks: 11, range: 2, hitsAir: false, air: false, targetBoardHeight: 54, trim: true },
   ember_mauler: { attackIntervalTicks: 12, range: 2, hitsAir: false, air: false, targetBoardHeight: 54, trim: true },
+  // Final assets. Buildings (BUILDING_CARDS_V1) swap `move` for a one-shot
+  // `deploy` clip and fire on authoritative events or presentation engagement
+  // (Sentry). The Totem and Burrow render one view. No card portraits: the
+  // original 2D card art stays the card art. unit-anim.test.ts checks these
+  // timings against the live ruleset and commander combat profile.
+  rift_sentry: { kind: "building", attackIntervalTicks: 8, range: 16, hitsAir: false, air: false, targetBoardHeight: 58, trim: true, clips: ["idle", "deploy", "attack", "hit", "defeat"], portrait: false },
+  decoy_totem: { kind: "building", attackIntervalTicks: 16, range: 20, hitsAir: false, air: false, targetBoardHeight: 62, trim: true, clips: ["idle", "deploy", "attack", "hit", "defeat"], views: ["front"], portrait: false },
+  chog_burrow: { kind: "building", attackIntervalTicks: 50, range: 0, hitsAir: false, air: false, targetBoardHeight: 46, trim: true, clips: ["idle", "deploy", "attack", "hit", "defeat"], views: ["front"], portrait: false },
+  // Acceptance pass: `down` repacks the three sheets that were drawn 1.1x to
+  // 1.2x upscaled (soft) at about 1:1 from the same 2x masters.
+  rift_mortar: { kind: "building", attackIntervalTicks: 40, range: 50, hitsAir: false, air: false, targetBoardHeight: 56, trim: true, down: 1.714, clips: ["idle", "deploy", "attack", "hit", "defeat"], portrait: false },
+  // Commander class sheets (COMMANDER_COMBAT_PROFILE_V1), shared by every
+  // commander of the class. The ability clip plays on an active ability_fired.
+  commander_bulwark: { kind: "commander", attackIntervalTicks: 12, range: 2, hitsAir: false, air: false, targetBoardHeight: 54, trim: true, clips: ["idle", "move", "attack", "hit", "defeat", "ability"], portrait: false },
+  commander_reaver: { kind: "commander", attackIntervalTicks: 11, range: 2, hitsAir: false, air: false, targetBoardHeight: 52, trim: true, down: 1.81, clips: ["idle", "move", "attack", "hit", "defeat", "ability"], portrait: false },
+  commander_deadeye: { kind: "commander", attackIntervalTicks: 13, range: 16, hitsAir: true, air: false, targetBoardHeight: 52, trim: true, clips: ["idle", "move", "attack", "hit", "defeat", "ability"], portrait: false },
+  commander_scout: { kind: "commander", attackIntervalTicks: 7, range: 3, hitsAir: false, air: false, targetBoardHeight: 50, trim: true, down: 1.68, clips: ["idle", "move", "attack", "hit", "defeat", "ability"], portrait: false },
+  commander_warden: { kind: "commander", attackIntervalTicks: 12, range: 8, hitsAir: false, air: false, targetBoardHeight: 58, trim: true, clips: ["idle", "move", "attack", "hit", "defeat", "ability"], portrait: false },
+  // Spawned by the Chog Burrow (SPAWNED_TROOPS_V1), never a card.
+  burrow_scrapper: { kind: "spawned", attackIntervalTicks: 8, range: 2, hitsAir: false, air: false, targetBoardHeight: 38, trim: true, portrait: false },
 };
 const MARGIN = 6;
 const even = (n, up) => (up ? Math.ceil(n / 2) * 2 : Math.floor(n / 2) * 2);
@@ -84,19 +104,25 @@ const label = (text, w, h, size = 13) =>
   Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><text x="4" y="${size + 2}" font-family="Arial" font-weight="700" font-size="${size}" fill="#ffffff" stroke="#1d1424" stroke-width="3" paint-order="stroke">${text}</text></svg>`);
 
 (async () => {
-  const manifest = { schema: 1, version: "chog-units-v001", revision: "slice4.1", source: "tools/blender/chog-units-v001", units: {} };
+  // MERGE=1 keeps every entry already in <public_out_dir>'s manifest and only
+  // replaces the units packed in this run, so approved sheets aren't repacked.
+  const manifestPath = path.join(outDir, "manifests/units.runtime.json");
+  const prior = process.env.MERGE && fs.existsSync(manifestPath) ? JSON.parse(fs.readFileSync(manifestPath, "utf8")) : null;
+  const manifest = { schema: 1, version: "chog-units-v001", revision: prior ? "final" : "slice4.1", source: "tools/blender/chog-units-v001", units: { ...(prior?.units ?? {}) } };
   const only = process.env.UNITS ? process.env.UNITS.split(",") : null;
   for (const unit of Object.keys(RULES)) {
     if (only && !only.includes(unit)) continue;
     const rec = JSON.parse(fs.readFileSync(path.join(mastersDir, unit, "record.json"), "utf8"));
     const rules = RULES[unit];
+    const clipOrder = rules.clips ?? CLIP_ORDER;
+    const unitViews = rules.views ?? VIEWS;
     const views = {};
     const frames = [];
-    for (const view of VIEWS) {
+    for (const view of unitViews) {
       const vc = rec.views?.[view];
       if (!vc) throw new Error(`${unit}: missing ${view} view`);
       views[view] = {};
-      for (const clip of CLIP_ORDER) {
+      for (const clip of clipOrder) {
         const c = vc[clip];
         if (!c) throw new Error(`${unit}: missing ${view} clip ${clip}`);
         if (view !== "front" && c.files.length !== views.front[clip].count) throw new Error(`${unit}: ${view} ${clip} frame count differs from front`);
@@ -133,8 +159,13 @@ const label = (text, w, h, size = 13) =>
     const mp = [rec.pivot[0] - crop.left, rec.pivot[1] - crop.top];
     if (mw % DOWN || mh % DOWN || mp[0] % DOWN || mp[1] % DOWN) throw new Error(`${unit}: cell and pivot must divide by ${DOWN}`);
     if (mp[0] <= 0 || mp[0] >= mw || mp[1] <= 0 || mp[1] >= mh) throw new Error(`${unit}: pivot falls outside the crop`);
-    const [cw, ch] = [mw / DOWN, mh / DOWN];
-    const pivot = [mp[0] / DOWN, mp[1] / DOWN];
+    // `down` packs a sheet that was drawn upscaled closer to 1 sheet px per
+    // board px, straight from the 2x masters. The cell rounds to whole px and
+    // the pivot rounds to 0.1 px.
+    const dn = rules.down ?? DOWN;
+    const [cw, ch] = [Math.round(mw / dn), Math.round(mh / dn)];
+    const [kx, ky] = [cw / mw, ch / mh];
+    const pivot = [Math.round(mp[0] * kx * 10) / 10, Math.round(mp[1] * ky * 10) / 10];
     let idleTop = ch;
     for (const fr of frames) {
       fr.master = rules.trim ? await sharp(fr.file).extract(crop).png().toBuffer() : fr.file;
@@ -148,13 +179,19 @@ const label = (text, w, h, size = 13) =>
       .toBuffer();
     const sheetRel = `${unit}/sheet.png`;
     write(path.join(outDir, sheetRel), sheet);
-    const portrait = await sharp(path.join(mastersDir, unit, "card-portrait@4x.png")).resize(256, 256, { kernel: "lanczos3" }).png({ compressionLevel: 9 }).toBuffer();
+    const portrait = rules.portrait === false ? null : await sharp(path.join(mastersDir, unit, "card-portrait@4x.png")).resize(256, 256, { kernel: "lanczos3" }).png({ compressionLevel: 9 }).toBuffer();
     const portraitRel = `${unit}/card-portrait.png`;
-    write(path.join(outDir, portraitRel), portrait);
-    const visibleHeight = pivot[1] - idleTop;
+    if (portrait) write(path.join(outDir, portraitRel), portrait);
+    const visibleHeight = Math.round(pivot[1] - idleTop);
     const displayScale = Math.round((rules.targetBoardHeight / visibleHeight) * 1000) / 1000;
     const defeat = clips.defeat;
+    // Anchors (muzzle, weapon tip) in sheet px of the packed cell.
+    const anchors = rec.anchors
+      ? Object.fromEntries(Object.keys(rec.anchors[unitViews[0]] ?? {}).map((nm) => [nm, Object.fromEntries(unitViews.map((view) => [view,
+          Object.fromEntries(Object.entries(rec.anchors[view]?.[nm] ?? {}).map(([clip, [ax, ay]]) => [clip, [Math.round((ax - crop.left) * kx * 10) / 10, Math.round((ay - crop.top) * ky * 10) / 10]]))]))]))
+      : null;
     manifest.units[unit] = {
+      ...(rules.kind ? { kind: rules.kind } : {}),
       entityId: unit,
       sheet: sheetRel,
       sha256: sha(sheet),
@@ -170,43 +207,42 @@ const label = (text, w, h, size = 13) =>
       displayScale,
       facing: "right",
       clips,
-      rearClips: views.rear,
+      ...(views.rear ? { rearClips: views.rear } : {}),
       attackPeriodMs: rules.attackIntervalTicks * 100,
       reach: rules.range,
       hitsAir: rules.hitsAir,
       air: rules.air,
       defeatMs: Math.round((defeat.count / defeat.fps) * 1000),
-      portrait: portraitRel,
-      portraitSha256: sha(portrait),
-      camera: { tiltDeg: rec.tiltDeg, yawDeg: rec.yawDeg, rearYawDeg: 180 - rec.yawDeg, pxPerUnit: rec.pxPerUnit / DOWN },
+      ...(portrait ? { portrait: portraitRel, portraitSha256: sha(portrait) } : {}),
+      ...(anchors ? { anchors } : {}),
+      camera: { tiltDeg: rec.tiltDeg, yawDeg: rec.yawDeg, rearYawDeg: 180 - rec.yawDeg, pxPerUnit: rules.down ? Math.round(rec.pxPerUnit * kx * 1000) / 1000 : rec.pxPerUnit / DOWN },
     };
     console.log(unit, `${frames.length} frames`, `${COLUMNS * cw}x${rows * ch}`, `${(sheet.length / 1024).toFixed(1)} KB`, `visible ${visibleHeight}px`, `scale ${displayScale}`);
 
     if (reviewDir) {
       // Contact sheet: one row per view and clip on arena grass, drawn from
       // the 2x masters, with frame labels and the shared ground pivot tick.
-      const k = DOWN;
-      const maxCount = Math.max(...CLIP_ORDER.map((c) => clips[c].count));
-      const W = 110 + maxCount * cw * k;
-      const rowsList = VIEWS.flatMap((view) => CLIP_ORDER.map((clip) => [view, clip]));
-      const H = rowsList.length * ch * k;
+      const maxCount = Math.max(...clipOrder.map((c) => clips[c].count));
+      const W = 110 + maxCount * mw;
+      const rowsList = unitViews.flatMap((view) => clipOrder.map((clip) => [view, clip]));
+      const H = rowsList.length * mh;
       const comp = [];
       for (const [ri, [view, clip]] of rowsList.entries()) {
         const vc = views[view];
-        comp.push({ input: label(`${view} ${clip}`, 110, 22, 13), left: 0, top: ri * ch * k + 8 });
-        comp.push({ input: label(`${vc[clip].fps}fps`, 110, 22, 12), left: 0, top: ri * ch * k + 28 });
+        comp.push({ input: label(`${view} ${clip}`, 110, 22, 13), left: 0, top: ri * mh + 8 });
+        comp.push({ input: label(`${vc[clip].fps}fps`, 110, 22, 12), left: 0, top: ri * mh + 28 });
         for (let i = 0; i < vc[clip].count; i++) {
           const fr = frames[vc[clip].start + i];
-          comp.push({ input: fr.master, left: 110 + i * cw * k, top: ri * ch * k });
-          comp.push({ input: label(String(i) + (vc[clip].impact === i ? " hit" : ""), 60, 20, 12), left: 110 + i * cw * k, top: ri * ch * k });
-          comp.push({ input: { create: { width: 9, height: 2, channels: 4, background: "#ff3355" } }, left: 110 + i * cw * k + mp[0] - 4, top: ri * ch * k + mp[1] });
+          comp.push({ input: fr.master, left: 110 + i * mw, top: ri * mh });
+          comp.push({ input: label(String(i) + (vc[clip].impact === i ? " hit" : ""), 60, 20, 12), left: 110 + i * mw, top: ri * mh });
+          comp.push({ input: { create: { width: 9, height: 2, channels: 4, background: "#ff3355" } }, left: 110 + i * mw + mp[0] - 4, top: ri * mh + mp[1] });
         }
       }
       await sharp({ create: { width: W, height: H, channels: 4, background: "#6f9f55" } }).composite(comp).png().toFile(path.join(reviewDir, `${unit}-contact-sheet.png`));
     }
   }
-  write(path.join(outDir, "manifests/units.runtime.json"), Buffer.from(JSON.stringify(manifest, null, 2) + "\n"));
-  console.log("wrote", path.join(outDir, "manifests/units.runtime.json"));
+  write(manifestPath, Buffer.from(JSON.stringify(manifest, null, 2) + "\n"));
+  console.log("wrote", manifestPath);
 })().catch((e) => {
   console.error(e);
   process.exit(1);

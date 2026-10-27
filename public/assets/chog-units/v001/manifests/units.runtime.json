@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "version": "chog-units-v001",
-  "revision": "slice4.1",
+  "revision": "final",
   "source": "tools/blender/chog-units-v001",
   "units": {
     "choglings": {
@@ -1214,6 +1214,1134 @@
         "yawDeg": 24.000000000000004,
         "rearYawDeg": 156,
         "pxPerUnit": 10.8
+      }
+    },
+    "rift_sentry": {
+      "kind": "building",
+      "entityId": "rift_sentry",
+      "sheet": "rift_sentry/sheet.png",
+      "sha256": "c30f0d055e258475626d27094dda84f67edb78cd589a6646b6803d76c0644a55",
+      "width": 672,
+      "height": 800,
+      "frameWidth": 84,
+      "frameHeight": 100,
+      "columns": 8,
+      "frameCount": 64,
+      "pivot": [
+        43,
+        61
+      ],
+      "pivotNormalized": [
+        0.5119047619047619,
+        0.61
+      ],
+      "visibleHeight": 57,
+      "displayScale": 1.018,
+      "facing": "right",
+      "clips": {
+        "idle": {
+          "start": 0,
+          "count": 6,
+          "fps": 6,
+          "loop": true
+        },
+        "deploy": {
+          "start": 6,
+          "count": 8,
+          "fps": 12,
+          "loop": false
+        },
+        "attack": {
+          "start": 14,
+          "count": 6,
+          "fps": 14,
+          "loop": false,
+          "impact": 1
+        },
+        "hit": {
+          "start": 20,
+          "count": 3,
+          "fps": 12,
+          "loop": false
+        },
+        "defeat": {
+          "start": 23,
+          "count": 9,
+          "fps": 12,
+          "loop": false
+        }
+      },
+      "rearClips": {
+        "idle": {
+          "start": 32,
+          "count": 6,
+          "fps": 6,
+          "loop": true
+        },
+        "deploy": {
+          "start": 38,
+          "count": 8,
+          "fps": 12,
+          "loop": false
+        },
+        "attack": {
+          "start": 46,
+          "count": 6,
+          "fps": 14,
+          "loop": false,
+          "impact": 1
+        },
+        "hit": {
+          "start": 52,
+          "count": 3,
+          "fps": 12,
+          "loop": false
+        },
+        "defeat": {
+          "start": 55,
+          "count": 9,
+          "fps": 12,
+          "loop": false
+        }
+      },
+      "attackPeriodMs": 800,
+      "reach": 16,
+      "hitsAir": false,
+      "air": false,
+      "defeatMs": 750,
+      "anchors": {
+        "muzzle": {
+          "front": {
+            "idle": [
+              67.9,
+              43.8
+            ],
+            "attack": [
+              62.5,
+              47.2
+            ]
+          },
+          "rear": {
+            "idle": [
+              67.9,
+              31.7
+            ],
+            "attack": [
+              62.5,
+              38.4
+            ]
+          }
+        }
+      },
+      "camera": {
+        "tiltDeg": 52,
+        "yawDeg": 24.000000000000004,
+        "rearYawDeg": 156,
+        "pxPerUnit": 13.5
+      }
+    },
+    "decoy_totem": {
+      "kind": "building",
+      "entityId": "decoy_totem",
+      "sheet": "decoy_totem/sheet.png",
+      "sha256": "441b52d466242eb39c8047f335d53e1c9be0dd41e9d9169e8b430fe902b2ad7a",
+      "width": 616,
+      "height": 408,
+      "frameWidth": 77,
+      "frameHeight": 102,
+      "columns": 8,
+      "frameCount": 32,
+      "pivot": [
+        39,
+        67
+      ],
+      "pivotNormalized": [
+        0.5064935064935064,
+        0.6568627450980392
+      ],
+      "visibleHeight": 64,
+      "displayScale": 0.969,
+      "facing": "right",
+      "clips": {
+        "idle": {
+          "start": 0,
+          "count": 6,
+          "fps": 6,
+          "loop": true
+        },
+        "deploy": {
+          "start": 6,
+          "count": 8,
+          "fps": 12,
+          "loop": false
+        },
+        "attack": {
+          "start": 14,
+          "count": 6,
+          "fps": 10,
+          "loop": false,
+          "impact": 1
+        },
+        "hit": {
+          "start": 20,
+          "count": 3,
+          "fps": 12,
+          "loop": false
+        },
+        "defeat": {
+          "start": 23,
+          "count": 9,
+          "fps": 12,
+          "loop": false
+        }
+      },
+      "attackPeriodMs": 1600,
+      "reach": 20,
+      "hitsAir": false,
+      "air": false,
+      "defeatMs": 750,
+      "camera": {
+        "tiltDeg": 52,
+        "yawDeg": 24.000000000000004,
+        "rearYawDeg": 156,
+        "pxPerUnit": 13
+      }
+    },
+    "chog_burrow": {
+      "kind": "building",
+      "entityId": "chog_burrow",
+      "sheet": "chog_burrow/sheet.png",
+      "sha256": "6d006622b27086e4db39b6b80e253fb2886f15a5dea24fb37f4574cfd78a21c0",
+      "width": 864,
+      "height": 475,
+      "frameWidth": 108,
+      "frameHeight": 95,
+      "columns": 8,
+      "frameCount": 33,
+      "pivot": [
+        56,
+        55
+      ],
+      "pivotNormalized": [
+        0.5185185185185185,
+        0.5789473684210527
+      ],
+      "visibleHeight": 43,
+      "displayScale": 1.07,
+      "facing": "right",
+      "clips": {
+        "idle": {
+          "start": 0,
+          "count": 6,
+          "fps": 6,
+          "loop": true
+        },
+        "deploy": {
+          "start": 6,
+          "count": 8,
+          "fps": 12,
+          "loop": false
+        },
+        "attack": {
+          "start": 14,
+          "count": 7,
+          "fps": 12,
+          "loop": false,
+          "impact": 2
+        },
+        "hit": {
+          "start": 21,
+          "count": 3,
+          "fps": 12,
+          "loop": false
+        },
+        "defeat": {
+          "start": 24,
+          "count": 9,
+          "fps": 12,
+          "loop": false
+        }
+      },
+      "attackPeriodMs": 5000,
+      "reach": 0,
+      "hitsAir": false,
+      "air": false,
+      "defeatMs": 750,
+      "anchors": {
+        "mouth": {
+          "front": {
+            "idle": [
+              68.6,
+              64.4
+            ],
+            "attack": [
+              69.6,
+              64.9
+            ]
+          }
+        }
+      },
+      "camera": {
+        "tiltDeg": 52,
+        "yawDeg": 24.000000000000004,
+        "rearYawDeg": 156,
+        "pxPerUnit": 14
+      }
+    },
+    "rift_mortar": {
+      "kind": "building",
+      "entityId": "rift_mortar",
+      "sheet": "rift_mortar/sheet.png",
+      "sha256": "3236029f58ea7a9fca898963eae80e80f0d0d742d4541f14cd19cb6059062ba9",
+      "width": 904,
+      "height": 999,
+      "frameWidth": 113,
+      "frameHeight": 111,
+      "columns": 8,
+      "frameCount": 66,
+      "pivot": [
+        55.9,
+        60.8
+      ],
+      "pivotNormalized": [
+        0.4946902654867257,
+        0.5477477477477477
+      ],
+      "visibleHeight": 56,
+      "displayScale": 1,
+      "facing": "right",
+      "clips": {
+        "idle": {
+          "start": 0,
+          "count": 6,
+          "fps": 6,
+          "loop": true
+        },
+        "deploy": {
+          "start": 6,
+          "count": 8,
+          "fps": 12,
+          "loop": false
+        },
+        "attack": {
+          "start": 14,
+          "count": 7,
+          "fps": 14,
+          "loop": false,
+          "impact": 1
+        },
+        "hit": {
+          "start": 21,
+          "count": 3,
+          "fps": 12,
+          "loop": false
+        },
+        "defeat": {
+          "start": 24,
+          "count": 9,
+          "fps": 12,
+          "loop": false
+        }
+      },
+      "rearClips": {
+        "idle": {
+          "start": 33,
+          "count": 6,
+          "fps": 6,
+          "loop": true
+        },
+        "deploy": {
+          "start": 39,
+          "count": 8,
+          "fps": 12,
+          "loop": false
+        },
+        "attack": {
+          "start": 47,
+          "count": 7,
+          "fps": 14,
+          "loop": false,
+          "impact": 1
+        },
+        "hit": {
+          "start": 54,
+          "count": 3,
+          "fps": 12,
+          "loop": false
+        },
+        "defeat": {
+          "start": 57,
+          "count": 9,
+          "fps": 12,
+          "loop": false
+        }
+      },
+      "attackPeriodMs": 4000,
+      "reach": 50,
+      "hitsAir": false,
+      "air": false,
+      "defeatMs": 750,
+      "anchors": {
+        "muzzle": {
+          "front": {
+            "idle": [
+              79.4,
+              21.1
+            ],
+            "attack": [
+              74,
+              26.3
+            ]
+          },
+          "rear": {
+            "idle": [
+              79.4,
+              20.2
+            ],
+            "attack": [
+              74,
+              29.8
+            ]
+          }
+        }
+      },
+      "camera": {
+        "tiltDeg": 52,
+        "yawDeg": 24.000000000000004,
+        "rearYawDeg": 156,
+        "pxPerUnit": 17.474
+      }
+    },
+    "commander_scout": {
+      "kind": "commander",
+      "entityId": "commander_scout",
+      "sheet": "commander_scout/sheet.png",
+      "sha256": "183774420306f99e7677f258732d0fbe71484a000bdd893d25d5b811af23ac6b",
+      "width": 688,
+      "height": 738,
+      "frameWidth": 86,
+      "frameHeight": 82,
+      "columns": 8,
+      "frameCount": 68,
+      "pivot": [
+        41.8,
+        60.6
+      ],
+      "pivotNormalized": [
+        0.48604651162790696,
+        0.7390243902439024
+      ],
+      "visibleHeight": 51,
+      "displayScale": 0.98,
+      "facing": "right",
+      "clips": {
+        "idle": {
+          "start": 0,
+          "count": 6,
+          "fps": 8,
+          "loop": true
+        },
+        "move": {
+          "start": 6,
+          "count": 8,
+          "fps": 15,
+          "loop": true
+        },
+        "attack": {
+          "start": 14,
+          "count": 5,
+          "fps": 16,
+          "loop": false,
+          "impact": 2
+        },
+        "hit": {
+          "start": 19,
+          "count": 3,
+          "fps": 14,
+          "loop": false
+        },
+        "defeat": {
+          "start": 22,
+          "count": 7,
+          "fps": 12,
+          "loop": false
+        },
+        "ability": {
+          "start": 29,
+          "count": 5,
+          "fps": 14,
+          "loop": false
+        }
+      },
+      "rearClips": {
+        "idle": {
+          "start": 34,
+          "count": 6,
+          "fps": 8,
+          "loop": true
+        },
+        "move": {
+          "start": 40,
+          "count": 8,
+          "fps": 15,
+          "loop": true
+        },
+        "attack": {
+          "start": 48,
+          "count": 5,
+          "fps": 16,
+          "loop": false,
+          "impact": 2
+        },
+        "hit": {
+          "start": 53,
+          "count": 3,
+          "fps": 14,
+          "loop": false
+        },
+        "defeat": {
+          "start": 56,
+          "count": 7,
+          "fps": 12,
+          "loop": false
+        },
+        "ability": {
+          "start": 63,
+          "count": 5,
+          "fps": 14,
+          "loop": false
+        }
+      },
+      "attackPeriodMs": 700,
+      "reach": 3,
+      "hitsAir": false,
+      "air": false,
+      "defeatMs": 583,
+      "camera": {
+        "tiltDeg": 52,
+        "yawDeg": 24.000000000000004,
+        "rearYawDeg": 156,
+        "pxPerUnit": 11.944
+      }
+    },
+    "commander_bulwark": {
+      "kind": "commander",
+      "entityId": "commander_bulwark",
+      "sheet": "commander_bulwark/sheet.png",
+      "sha256": "adb9d9a06183c961d4ef15faeaa06dbccf0f2d63274ea2fce345c9e6498ef6aa",
+      "width": 520,
+      "height": 810,
+      "frameWidth": 65,
+      "frameHeight": 81,
+      "columns": 8,
+      "frameCount": 76,
+      "pivot": [
+        36,
+        60
+      ],
+      "pivotNormalized": [
+        0.5538461538461539,
+        0.7407407407407407
+      ],
+      "visibleHeight": 54,
+      "displayScale": 1,
+      "facing": "right",
+      "clips": {
+        "idle": {
+          "start": 0,
+          "count": 6,
+          "fps": 6,
+          "loop": true
+        },
+        "move": {
+          "start": 6,
+          "count": 8,
+          "fps": 9,
+          "loop": true
+        },
+        "attack": {
+          "start": 14,
+          "count": 6,
+          "fps": 12,
+          "loop": false,
+          "impact": 3
+        },
+        "hit": {
+          "start": 20,
+          "count": 4,
+          "fps": 12,
+          "loop": false
+        },
+        "defeat": {
+          "start": 24,
+          "count": 7,
+          "fps": 11,
+          "loop": false
+        },
+        "ability": {
+          "start": 31,
+          "count": 7,
+          "fps": 10,
+          "loop": false
+        }
+      },
+      "rearClips": {
+        "idle": {
+          "start": 38,
+          "count": 6,
+          "fps": 6,
+          "loop": true
+        },
+        "move": {
+          "start": 44,
+          "count": 8,
+          "fps": 9,
+          "loop": true
+        },
+        "attack": {
+          "start": 52,
+          "count": 6,
+          "fps": 12,
+          "loop": false,
+          "impact": 3
+        },
+        "hit": {
+          "start": 58,
+          "count": 4,
+          "fps": 12,
+          "loop": false
+        },
+        "defeat": {
+          "start": 62,
+          "count": 7,
+          "fps": 11,
+          "loop": false
+        },
+        "ability": {
+          "start": 69,
+          "count": 7,
+          "fps": 10,
+          "loop": false
+        }
+      },
+      "attackPeriodMs": 1200,
+      "reach": 2,
+      "hitsAir": false,
+      "air": false,
+      "defeatMs": 636,
+      "camera": {
+        "tiltDeg": 52,
+        "yawDeg": 24.000000000000004,
+        "rearYawDeg": 156,
+        "pxPerUnit": 10
+      }
+    },
+    "commander_reaver": {
+      "kind": "commander",
+      "entityId": "commander_reaver",
+      "sheet": "commander_reaver/sheet.png",
+      "sha256": "171e12ec2bc0ee27c0a3a42edaa0c64b6838f6d0dc99924e7afc8c4757acce6b",
+      "width": 640,
+      "height": 702,
+      "frameWidth": 80,
+      "frameHeight": 78,
+      "columns": 8,
+      "frameCount": 72,
+      "pivot": [
+        43.3,
+        58.2
+      ],
+      "pivotNormalized": [
+        0.54125,
+        0.7461538461538462
+      ],
+      "visibleHeight": 52,
+      "displayScale": 1,
+      "facing": "right",
+      "clips": {
+        "idle": {
+          "start": 0,
+          "count": 6,
+          "fps": 8,
+          "loop": true
+        },
+        "move": {
+          "start": 6,
+          "count": 8,
+          "fps": 13,
+          "loop": true
+        },
+        "attack": {
+          "start": 14,
+          "count": 6,
+          "fps": 14,
+          "loop": false,
+          "impact": 3
+        },
+        "hit": {
+          "start": 20,
+          "count": 3,
+          "fps": 14,
+          "loop": false
+        },
+        "defeat": {
+          "start": 23,
+          "count": 7,
+          "fps": 12,
+          "loop": false
+        },
+        "ability": {
+          "start": 30,
+          "count": 6,
+          "fps": 12,
+          "loop": false
+        }
+      },
+      "rearClips": {
+        "idle": {
+          "start": 36,
+          "count": 6,
+          "fps": 8,
+          "loop": true
+        },
+        "move": {
+          "start": 42,
+          "count": 8,
+          "fps": 13,
+          "loop": true
+        },
+        "attack": {
+          "start": 50,
+          "count": 6,
+          "fps": 14,
+          "loop": false,
+          "impact": 3
+        },
+        "hit": {
+          "start": 56,
+          "count": 3,
+          "fps": 14,
+          "loop": false
+        },
+        "defeat": {
+          "start": 59,
+          "count": 7,
+          "fps": 12,
+          "loop": false
+        },
+        "ability": {
+          "start": 66,
+          "count": 6,
+          "fps": 12,
+          "loop": false
+        }
+      },
+      "attackPeriodMs": 1100,
+      "reach": 2,
+      "hitsAir": false,
+      "air": false,
+      "defeatMs": 583,
+      "anchors": {
+        "tip": {
+          "front": {
+            "idle": [
+              61.8,
+              33.7
+            ],
+            "attack": [
+              61.9,
+              62
+            ]
+          },
+          "rear": {
+            "idle": [
+              61.8,
+              33.5
+            ],
+            "attack": [
+              61.9,
+              42.8
+            ]
+          }
+        }
+      },
+      "camera": {
+        "tiltDeg": 52,
+        "yawDeg": 24.000000000000004,
+        "rearYawDeg": 156,
+        "pxPerUnit": 11.111
+      }
+    },
+    "commander_deadeye": {
+      "kind": "commander",
+      "entityId": "commander_deadeye",
+      "sheet": "commander_deadeye/sheet.png",
+      "sha256": "812bc61d36044101a909b9e425ff632ddc3f6f91361e7a407dc830dbab562e28",
+      "width": 536,
+      "height": 740,
+      "frameWidth": 67,
+      "frameHeight": 74,
+      "columns": 8,
+      "frameCount": 78,
+      "pivot": [
+        40,
+        54
+      ],
+      "pivotNormalized": [
+        0.5970149253731343,
+        0.7297297297297297
+      ],
+      "visibleHeight": 49,
+      "displayScale": 1.061,
+      "facing": "right",
+      "clips": {
+        "idle": {
+          "start": 0,
+          "count": 6,
+          "fps": 8,
+          "loop": true
+        },
+        "move": {
+          "start": 6,
+          "count": 8,
+          "fps": 12,
+          "loop": true
+        },
+        "attack": {
+          "start": 14,
+          "count": 7,
+          "fps": 12,
+          "loop": false,
+          "impact": 3
+        },
+        "hit": {
+          "start": 21,
+          "count": 3,
+          "fps": 14,
+          "loop": false
+        },
+        "defeat": {
+          "start": 24,
+          "count": 7,
+          "fps": 12,
+          "loop": false
+        },
+        "ability": {
+          "start": 31,
+          "count": 8,
+          "fps": 14,
+          "loop": false
+        }
+      },
+      "rearClips": {
+        "idle": {
+          "start": 39,
+          "count": 6,
+          "fps": 8,
+          "loop": true
+        },
+        "move": {
+          "start": 45,
+          "count": 8,
+          "fps": 12,
+          "loop": true
+        },
+        "attack": {
+          "start": 53,
+          "count": 7,
+          "fps": 12,
+          "loop": false,
+          "impact": 3
+        },
+        "hit": {
+          "start": 60,
+          "count": 3,
+          "fps": 14,
+          "loop": false
+        },
+        "defeat": {
+          "start": 63,
+          "count": 7,
+          "fps": 12,
+          "loop": false
+        },
+        "ability": {
+          "start": 70,
+          "count": 8,
+          "fps": 14,
+          "loop": false
+        }
+      },
+      "attackPeriodMs": 1300,
+      "reach": 16,
+      "hitsAir": true,
+      "air": false,
+      "defeatMs": 583,
+      "anchors": {
+        "tip": {
+          "front": {
+            "idle": [
+              59.8,
+              43.1
+            ],
+            "attack": [
+              56.1,
+              39.7
+            ]
+          },
+          "rear": {
+            "idle": [
+              59.8,
+              36.6
+            ],
+            "attack": [
+              56.1,
+              35.3
+            ]
+          }
+        }
+      },
+      "camera": {
+        "tiltDeg": 52,
+        "yawDeg": 24.000000000000004,
+        "rearYawDeg": 156,
+        "pxPerUnit": 10
+      }
+    },
+    "commander_warden": {
+      "kind": "commander",
+      "entityId": "commander_warden",
+      "sheet": "commander_warden/sheet.png",
+      "sha256": "25bd0e003b9793ef7547db3722d915e9872e0c412906a1b10db10bbe7dd992cb",
+      "width": 536,
+      "height": 738,
+      "frameWidth": 67,
+      "frameHeight": 82,
+      "columns": 8,
+      "frameCount": 72,
+      "pivot": [
+        38,
+        62
+      ],
+      "pivotNormalized": [
+        0.5671641791044776,
+        0.7560975609756098
+      ],
+      "visibleHeight": 56,
+      "displayScale": 1.036,
+      "facing": "right",
+      "clips": {
+        "idle": {
+          "start": 0,
+          "count": 6,
+          "fps": 7,
+          "loop": true
+        },
+        "move": {
+          "start": 6,
+          "count": 8,
+          "fps": 10,
+          "loop": true
+        },
+        "attack": {
+          "start": 14,
+          "count": 6,
+          "fps": 12,
+          "loop": false,
+          "impact": 3
+        },
+        "hit": {
+          "start": 20,
+          "count": 3,
+          "fps": 12,
+          "loop": false
+        },
+        "defeat": {
+          "start": 23,
+          "count": 7,
+          "fps": 11,
+          "loop": false
+        },
+        "ability": {
+          "start": 30,
+          "count": 6,
+          "fps": 10,
+          "loop": false
+        }
+      },
+      "rearClips": {
+        "idle": {
+          "start": 36,
+          "count": 6,
+          "fps": 7,
+          "loop": true
+        },
+        "move": {
+          "start": 42,
+          "count": 8,
+          "fps": 10,
+          "loop": true
+        },
+        "attack": {
+          "start": 50,
+          "count": 6,
+          "fps": 12,
+          "loop": false,
+          "impact": 3
+        },
+        "hit": {
+          "start": 56,
+          "count": 3,
+          "fps": 12,
+          "loop": false
+        },
+        "defeat": {
+          "start": 59,
+          "count": 7,
+          "fps": 11,
+          "loop": false
+        },
+        "ability": {
+          "start": 66,
+          "count": 6,
+          "fps": 10,
+          "loop": false
+        }
+      },
+      "attackPeriodMs": 1200,
+      "reach": 8,
+      "hitsAir": false,
+      "air": false,
+      "defeatMs": 636,
+      "anchors": {
+        "tip": {
+          "front": {
+            "idle": [
+              51.6,
+              46.5
+            ],
+            "attack": [
+              54.1,
+              44.5
+            ]
+          },
+          "rear": {
+            "idle": [
+              51.6,
+              42.8
+            ],
+            "attack": [
+              54.1,
+              40.4
+            ]
+          }
+        }
+      },
+      "camera": {
+        "tiltDeg": 52,
+        "yawDeg": 24.000000000000004,
+        "rearYawDeg": 156,
+        "pxPerUnit": 10
+      }
+    },
+    "burrow_scrapper": {
+      "kind": "spawned",
+      "entityId": "burrow_scrapper",
+      "sheet": "burrow_scrapper/sheet.png",
+      "sha256": "74508873ee14aaa740f736e2a4664e54082611968311431a06bbec193f3f1f8c",
+      "width": 480,
+      "height": 480,
+      "frameWidth": 60,
+      "frameHeight": 60,
+      "columns": 8,
+      "frameCount": 60,
+      "pivot": [
+        33,
+        44
+      ],
+      "pivotNormalized": [
+        0.55,
+        0.7333333333333333
+      ],
+      "visibleHeight": 39,
+      "displayScale": 0.974,
+      "facing": "right",
+      "clips": {
+        "idle": {
+          "start": 0,
+          "count": 6,
+          "fps": 8,
+          "loop": true
+        },
+        "move": {
+          "start": 6,
+          "count": 8,
+          "fps": 14,
+          "loop": true
+        },
+        "attack": {
+          "start": 14,
+          "count": 6,
+          "fps": 14,
+          "loop": false,
+          "impact": 3
+        },
+        "hit": {
+          "start": 20,
+          "count": 3,
+          "fps": 14,
+          "loop": false
+        },
+        "defeat": {
+          "start": 23,
+          "count": 7,
+          "fps": 13,
+          "loop": false
+        }
+      },
+      "rearClips": {
+        "idle": {
+          "start": 30,
+          "count": 6,
+          "fps": 8,
+          "loop": true
+        },
+        "move": {
+          "start": 36,
+          "count": 8,
+          "fps": 14,
+          "loop": true
+        },
+        "attack": {
+          "start": 44,
+          "count": 6,
+          "fps": 14,
+          "loop": false,
+          "impact": 3
+        },
+        "hit": {
+          "start": 50,
+          "count": 3,
+          "fps": 14,
+          "loop": false
+        },
+        "defeat": {
+          "start": 53,
+          "count": 7,
+          "fps": 13,
+          "loop": false
+        }
+      },
+      "attackPeriodMs": 800,
+      "reach": 2,
+      "hitsAir": false,
+      "air": false,
+      "defeatMs": 538,
+      "camera": {
+        "tiltDeg": 52,
+        "yawDeg": 24.000000000000004,
+        "rearYawDeg": 156,
+        "pxPerUnit": 8
       }
     }
   }

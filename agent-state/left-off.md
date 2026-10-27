@@ -1,3 +1,17 @@
+## V3 release acceptance (2026-10-27)
+
+- Doing: release QA on PR #6 (`visual-overhaul/v3-final-assets`). Main (branding PR #5, 48a0eaf) merged in as 6329e08, no force-push. Never merge or deploy without owner approval (main auto-deploys).
+- Done: Snare rim contrast, Totem plinth re-render, Scout/Reaver/Mortar repacked 1:1 (packer `down`), Sentry fire replica `stepSentry` with real-engine parity test. Five live two-client matches on the injected-auth real battle server (both seats, dev route on prod build, player route on dev build): identical state hashes, replayIdentical, 0 errors, 0 failed loads. Single-client A/B shows no per-frame cost from V3. Readiness doc section 17, evidence in `docs/visual-overhaul/review/acceptance/`.
+- Next: owner art review and merge decision. Physical phone/touch, iOS Safari, Android, installed PWA, real Privy sign-in with NFT commanders in a live match are still unverified.
+- Known: `card-xp.test.ts` and `legacy.test.ts` fail against the shared TEST database (data residue, server code identical to main). Live harness in `ChogRoyale-Assets/final-assets/live/` (live-match.cjs, live-battle-server.ts, perf-ab.cjs).
+
+## Final 3D asset production (2026-10-26)
+
+- Doing: buildings, spells, commanders, Burrow Scrapper and shared VFX on branch `visual-overhaul/v3-final-assets` (from main b3c0d7e, no upstream). Branding PR #5 still open. Draft PR only, never merge (main auto-deploys).
+- Done: all 14 remaining assets plus `burrow_scrapper` animated and wired, battle VFX pack, 153/153 battle tests, three fixtures covering every building, spell and all ten abilities, both-seat and fallback captures with 0 errors. Readiness doc section 16, asset manifest, review in `docs/visual-overhaul/review/final/`.
+- Work dirs: `ChogRoyale-Assets/final-assets/{masters,preview,review,qa}`. Fixture `qa/generate-final-fixture.ts` (run from the repo with `npx tsx --tsconfig tsconfig.json`), captures `qa/capture-final.cjs`, `qa/probe-clips.cjs`. The qa-units harness page is temporary and never committed.
+- Next: owner art review. Live two-player match, phone/touch and real-device performance unverified.
+
 ## Main merge + official branding (2026-10-26)
 
 - Doing: consolidate V3 on main and install the official logo pack v1 on branch `brand/official-logo`. PR only, no merge.

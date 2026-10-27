@@ -688,6 +688,17 @@ def apply_chips(rig, p):
         o.location = (sx * (0.9 + math.cos(a) * (0.8 + 0.35 * up)), -1.5 + math.sin(a) * (0.5 + 0.2 * up), 0.2 + 0.45 * up * (1 + (i % 3) * 0.3))
 
 
+def record_anchors(rig, cam, record, view, clip, i, cd):
+    """Final assets: project named anchor empties (muzzle, weapon tip) into
+    the cell at idle frame 0 and at the attack impact frame, so effects can
+    start where the art shows the weapon. Units without anchors skip this."""
+    if not rig.get("anchors") or not ((clip == "idle" and i == 0) or (clip == "attack" and i == (cd.get("impact") or 0))):
+        return
+    for nm, e in rig["anchors"].items():
+        px, py = C.project(cam, e.matrix_world.translation)
+        record.setdefault("anchors", {}).setdefault(view, {}).setdefault(nm, {})[clip] = [round(px, 2), round(py, 2)]
+
+
 def build_unit(name, spec):
     C.reset_scene()
     C._mats.clear()
@@ -731,6 +742,7 @@ def build_unit(name, spec):
                 for i, fr in enumerate(cd["frames"]):
                     pose(rig, fr)
                     apply_chips(rig, fr)
+                    record_anchors(rig, cam, record, view, clip, i, cd)
                     sub = "frames" if view == "front" else os.path.join("frames", view)
                     path = os.path.join(out_dir, sub, f"{clip}_{i:02d}.png")
                     os.makedirs(os.path.dirname(path), exist_ok=True)

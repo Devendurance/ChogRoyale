@@ -1,5 +1,8 @@
 # Memory
 
+- Live QA: Colyseus server frames decode as byte 13 then msgpackr `unpackMultiple` ([type, payload]). Ability buttons render twice (tray and side panel), so locate with `:visible`. Playwright `waitForFunction(fn, arg, options)` takes options third. Playwright's ffmpeg can't decode its VP9 recordings, so use the WinGet ffmpeg on PATH. A heavily loaded laptop slows the server tick, so give live matches a deadline well past 180 s. Two live clients plus video on this laptop measure the harness, so use the single-client A/B for asset cost.
+
+- Final assets: `build_final.py` (buildings, imports `final_chars.py`) renders with `NOCARD=1`, and Totem/Burrow with `VIEWS=front`. Three Blender processes in parallel work. Session fixtures must read acks from `tick()` because `submit()` only queues. The playback harness keeps `seenEventKeys` across replays, so census passes after shots miss events; use a fresh page (`qa/probe-clips.cjs`). Phaser here is 4.2.1.
 - Merging to main auto-deploys production on Vercel (PR #3 merge put the V3 unit manifest live). Main is not branch-protected. Playwright incognito contexts always report the `in-incognito` installability error, so check PWA installability with `launchPersistentContext`.
 
 - Slice 4.1 tools: `qa/s41/` in ChogRoyale-Assets (`splice.cjs` replaces whole Python functions from a patch file, `review.cjs`, `cards.cjs`, `compare.cjs`, `mobile.cjs`, `capture.cjs`, `ring.cjs`). `roster_lib` gained `ice_chunk`, `gem_slab`, `add_offset`, partial `lathe(arc=)` and `spike_fan(verts, smooth, thick)`. Pale ice with emission reads as cream skin, so keep armour on mid and deep ice tones. A horizontal prop seen by the near-level identity camera goes edge-on, so tilt it about its own axis.

@@ -1,5 +1,13 @@
 # Project State
 
+## V3 release acceptance (2026-10-27)
+
+- Rift Sentry presentation replays the server fire rule (`stepSentry` in `unit-anim.ts`) and shows a shot only on an observed HP or shield drop. Packer per-unit `down` repacks upscaled sheets from 2x masters. Live match textures total 86.8 MB (units 33.9, arena 34.6, VFX 1.4). Commander lazy-load deliberately not done (8.3 MB, opponent class unknown until deploy).
+
+## Final 3D assets (2026-10-26, branch visual-overhaul/v3-final-assets)
+
+- Buildings, five commander classes (`commander_<class>`) and `burrow_scrapper` animate from the `chog-units/v001` manifest (22 sheets, 31.9 MB RGBA) with v001 static fallbacks. Battle VFX pack in `public/assets/battle-vfx/v001` with pure planners in `battle-vfx.ts` and `vfx-layer.ts`. Readiness doc section 16.
+
 ## Official branding v1 (2026-10-26)
 
 - Logo pack v1 installed from `public/assets/brand/v1` (stacked opening, horizontal header, crown footer). Installable app identity via `src/app/manifest.ts`, `favicon.ico`, `icon.png`, `apple-icon.png` and `public/icons`. Main includes V3 (PR #3) and LICENSE (PR #4).

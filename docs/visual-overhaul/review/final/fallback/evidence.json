@@ -1,0 +1,62 @@
+[
+ {
+  "seat": 0,
+  "viewport": [
+   390,
+   844
+  ],
+  "errors": [],
+  "failed": [],
+  "perf": {
+   "frames": 4961,
+   "p50": 16.5,
+   "p95": 34.7,
+   "p99": 47.7,
+   "max": 868
+  },
+  "census": {
+   "clips": {
+    "commander:warden:static": 1076,
+    "building:rift_sentry:static": 2058,
+    "building:rift_mortar:static": 1642,
+    "building:decoy_totem:static": 1085,
+    "building:chog_burrow:static": 1424,
+    "spawned:burrow_scrapper:static": 1367,
+    "commander:deadeye:static": 937
+   },
+   "vfx": {},
+   "peakImages": 44,
+   "peakVfx": 0
+  }
+ },
+ {
+  "seat": 1,
+  "viewport": [
+   390,
+   844
+  ],
+  "errors": [],
+  "failed": [],
+  "perf": {
+   "frames": 4926,
+   "p50": 16.5,
+   "p95": 35.7,
+   "p99": 48.5,
+   "max": 125
+  },
+  "census": {
+   "clips": {
+    "building:rift_sentry:static": 2082,
+    "commander:warden:static": 961,
+    "building:rift_mortar:static": 1691,
+    "building:decoy_totem:static": 1116,
+    "building:chog_burrow:static": 1481,
+    "spawned:burrow_scrapper:static": 1423,
+    "commander:deadeye:static": 839
+   },
+   "vfx": {},
+   "peakImages": 44,
+   "peakVfx": 0
+  }
+ }
+]
