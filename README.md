@@ -30,6 +30,14 @@ The twist? **Real Chog Genesis NFTs influence the match itself.** An indexed Gen
 
 The game combines approachable free-to-play strategy with an identity-rich social layer: friends, direct messages, clans, progression, commander lending, and Gold-based upgrade sponsorship.
 
+## Gameplay improvement V1
+
+[![Chog Royale deployed-game screenshot, open the gameplay video in Google Drive](docs/media/readme/03-battle-desktop.webp)](https://drive.google.com/file/d/1zpOdku0kRsAukJ-goWcd8Ulb5uLc6bRe/view?usp=drive_link)
+
+[Watch gameplay video](https://drive.google.com/file/d/1zpOdku0kRsAukJ-goWcd8Ulb5uLc6bRe/view?usp=drive_link)
+
+Deployed-game screenshot. Select the image or watch link to open the recording in Google Drive.
+
 ## 📸 Inside the arena
 
 ### The world opens here

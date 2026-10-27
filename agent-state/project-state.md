@@ -1,5 +1,10 @@
 # Project State
 
+## Gameplay improvement V1 README bookmark (2026-10-27)
+
+- README links a deployed-game screenshot and Watch gameplay video text to the owner's shared Drive MP4. The recording is 560,116,091 bytes, above GitHub's video attachment limits, so playback opens in Drive.
+- PR #7 was merged by the owner, main `9dd3866`. New documentation branch `codex/gameplay-improvement-v1` starts from that main. No new merge or production deployment authorized.
+
 ## Final UX polish (2026-10-27)
 
 - Approved PR #6 merged at `e985247a89396eec2dd69c8bc65b7a0b87c7596a`. Vercel production `dpl_16rc2SKp9n7ASUdjossrCRhPJkUN` READY, alias chogroyale.vercel.app. New manifests and sampled sheets return 200.
