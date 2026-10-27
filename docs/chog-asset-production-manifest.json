@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "slice": "Visual overhaul v3 slice 2, refined in slice 2.1, units in slice 3, refined in slice 3.1, roster in slice 4, identity and card correction in slice 4.1, final assets (buildings, spells, commanders, Burrow Scrapper, shared VFX)",
+  "slice": "Visual overhaul v3 slice 2, refined in slice 2.1, units in slice 3, refined in slice 3.1, roster in slice 4, identity and card correction in slice 4.1, final assets (buildings, spells, commanders, Burrow Scrapper, shared VFX), release acceptance pass (Snare contrast, Totem plinth, 1:1 Scout/Reaver/Mortar sheets, Sentry fire replica)",
   "rules": [
     "Every pack PNG is a reference crop with game_ready=false. None of them is installed as runtime art.",
     "Canonical identity is 02_CARDS/01_CANONICAL_ORIGINAL_IDENTITY. Stylized 3D concepts are quality and lighting references only.",
@@ -741,7 +741,8 @@
         }
       ],
       "priority": "final milestone done, owner review",
-      "note": "Only the states the building exposes. Rift Sentry and Rift Mortar fire; Decoy Totem and Chog Burrow do not attack."
+      "note": "Only the states the building exposes. Rift Sentry and Rift Mortar fire; Decoy Totem and Chog Burrow do not attack.",
+      "acceptance": "Acceptance pass: the attack clip, muzzle flash and tracer now play only on shots replicated from the server fire rule (stepSentry: activeAt, 8-tick cadence, centre range 16, ground only, target lock) and confirmed by the target's HP or shield drop that tick. Never drawn for a shot the server did not land."
     },
     {
       "id": 14,
@@ -778,7 +779,8 @@
         }
       ],
       "priority": "final milestone done, owner review",
-      "note": "Only the states the building exposes. Rift Sentry and Rift Mortar fire; Decoy Totem and Chog Burrow do not attack."
+      "note": "Only the states the building exposes. Rift Sentry and Rift Mortar fire; Decoy Totem and Chog Burrow do not attack.",
+      "acceptance": "Acceptance pass: re-rendered with a broad two-tier stone plinth, wooden stump and larger cyan crystals so it reads as a planted structure at 1x (all five clips, front view)."
     },
     {
       "id": 15,
@@ -852,7 +854,8 @@
         }
       ],
       "priority": "final milestone done, owner review",
-      "note": "Only the states the building exposes. Rift Sentry and Rift Mortar fire; Decoy Totem and Chog Burrow do not attack."
+      "note": "Only the states the building exposes. Rift Sentry and Rift Mortar fire; Decoy Totem and Chog Burrow do not attack.",
+      "acceptance": "Acceptance pass: repacked at about 1:1 from the same 2x masters (pack_units.cjs down 1.714, display scale 1.0, was 1.167). No re-render."
     },
     {
       "id": 17,
@@ -964,7 +967,8 @@
         }
       ],
       "priority": "final milestone done, owner review",
-      "note": "Only the phases the spell mechanic has."
+      "note": "Only the phases the spell mechanic has.",
+      "acceptance": "Acceptance pass: sigil gained a dark violet rim band and a thicker cyan rule line at the exact 7-unit radius, and holds 1.2 s (was 0.95 s) so the affected area reads on bright grass."
     },
     {
       "id": 21,
@@ -1046,7 +1050,8 @@
         }
       ],
       "priority": "final milestone done, owner review",
-      "note": "Commander class art is shared by every NFT of the class and must stay labelled class art. NFT-specific features need the token art, not this pack."
+      "note": "Commander class art is shared by every NFT of the class and must stay labelled class art. NFT-specific features need the token art, not this pack.",
+      "acceptance": "Acceptance pass: commander_reaver repacked at about 1:1 from the same 2x masters (pack_units.cjs down 1.81 (display scale 1.0, was 1.106)). No re-render."
     },
     {
       "id": 23,
@@ -1128,7 +1133,8 @@
         }
       ],
       "priority": "final milestone done, owner review",
-      "note": "Commander class art is shared by every NFT of the class and must stay labelled class art. NFT-specific features need the token art, not this pack."
+      "note": "Commander class art is shared by every NFT of the class and must stay labelled class art. NFT-specific features need the token art, not this pack.",
+      "acceptance": "Acceptance pass: commander_scout repacked at about 1:1 from the same 2x masters (pack_units.cjs down 1.68 (display scale 0.98, was 1.19)). No re-render."
     },
     {
       "id": 25,

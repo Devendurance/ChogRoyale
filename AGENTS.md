@@ -257,6 +257,9 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Set each unit's render px so the packed `displayScale` lands near 1.0, and use packer `trim` instead of tight hand-sized cells.
 - Owner decision (Slice 4.1): every card interface (battle hand, loadout, deck builder, collection, commander cards) uses the original Chog Royale 2D illustrations. The 3D models are for deployed battlefield units and their animations only. `portraitCandidatesForCard()` returns only the v001 card derivative. Keep the generated 3D `card-portrait.png` files on disk, but never route them to a card.
 - A static fallback troop's death fade runs in the removal loop, because `updateEnt()` only runs for entities still in the frame. Fixture ring samplers must skip faded sprites, or a dead troop gets matched to the killer standing on its spot.
+- The Rift Sentry has no public fire event. Its recoil, muzzle flash and tracer come only from `stepSentry` (a replica of the server fire rule from public frames), and only when the target visibly lost HP or shield that tick. Never drive it from engagement alone, and keep the real-engine parity test passing.
+- When a sheet is drawn upscaled (`displayScale` well above 1), repack it from its 2x masters with the packer's per-unit `down` factor instead of re-rendering. Units without `down` must still pack byte-identically.
+- Live two-client acceptance uses an injected-auth copy of the real battle server plus an env-gated Privy stub alias in a temporary `next.config.ts`, kept outside the repo in `ChogRoyale-Assets/final-assets/live`. Never commit the stub or config change. Editing `next.config.ts` kills a running `next dev`. Building into another `distDir` rewrites `tsconfig.json` includes, so revert them and restart the dev server so `.next/dev/types` drops temporary routes. Production builds hide `window.__battleGame`, so in-engine census needs a dev build.
 
 ## BRAND
 
