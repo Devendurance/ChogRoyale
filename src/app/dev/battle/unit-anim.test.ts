@@ -2,7 +2,8 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { BUILDING_CARDS_V1, COMMANDER_COMBAT_PROFILE_V1, SPAWNED_TROOPS_V1, TICKS_PER_SECOND, TROOP_CARDS_V1, reach2 } from "@/lib/combat";
+import { BUILDING_CARDS_V1, COMMANDER_COMBAT_PROFILE_V1, SPAWNED_TROOPS_V1, TICKS_PER_SECOND, TROOP_CARDS_V1, initMatch, reach2, stepMatch, type CombatState } from "@/lib/combat";
+import { deckWith, scenarioConfig } from "@/lib/arena-scenarios";
 import { portraitCandidatesForCard, portraitForCommanderClass, resolveCommanderAsset, resolveEntityAsset, type SpriteManifest } from "./sprite-registry";
 import {
   UNITS_URL,
@@ -14,9 +15,13 @@ import {
   newUnitAnimState,
   nextView,
   reachSq,
+  sentryTrack,
+  stepSentry,
   unitAnimFor,
   unitFrame,
   updateEngagement,
+  type SentryFighter,
+  type SentryTrack,
   type UnitAnimManifest,
   type UnitAnimRecord,
   type UnitClipName,
@@ -306,5 +311,78 @@ describe("unit animation state", () => {
     expect(unitAnimFor(manifest, "commander_paragon")).toBeNull();
     expect(unitAnimFor(null, "choglings")).toBeNull();
     expect(unitAnimFor(manifest, "choglings")?.entityId).toBe("choglings");
+  });
+});
+
+describe("Rift Sentry fire replica", () => {
+  const SENTRY = BUILDING_CARDS_V1.rift_sentry!;
+  const rule = { range: SENTRY.range, interval: SENTRY.attackIntervalTicks };
+  const b = { owner: 0, x: 50, y: 40 };
+  const f = (id: string, x: number, y: number, hp = 100, o: Partial<SentryFighter> = {}): SentryFighter => ({ id, owner: 1, x, y, hp, maxHp: 100, shield: 0, air: false, ...o });
+
+  it("matches the manifest timing to the live ruleset", () => {
+    const rec = manifest.units.rift_sentry!;
+    expect(rec.reach).toBe(SENTRY.range);
+    expect(Math.round(rec.attackPeriodMs / 100)).toBe(SENTRY.attackIntervalTicks);
+  });
+
+  it("waits for activeAt, then fires at most once per interval at the nearest landed target", () => {
+    let t = sentryTrack(20);
+    expect(stepSentry(t, b, rule, 19, [f("a", 50, 50)], [f("a", 50, 50, 84)]).shot).toBeNull();
+    t = stepSentry(t, b, rule, 19, [f("a", 50, 50)], [f("a", 50, 50, 84)]).track;
+    const s = stepSentry(t, b, rule, 20, [f("a", 50, 50), f("b", 50, 45)], [f("a", 50, 50, 84), f("b", 50, 45, 84)]);
+    expect(s.shot?.id).toBe("b");
+    expect(s.track.nextShot).toBe(20 + SENTRY.attackIntervalTicks);
+    expect(stepSentry(s.track, b, rule, 21, [f("b", 50, 45, 84)], [f("b", 50, 45, 60)]).shot).toBeNull();
+  });
+
+  it("keeps its lock, skips air, out-of-range and friendly fighters, and needs a visible hit", () => {
+    const t = { ...sentryTrack(0), targetId: "far", lastTick: 9 };
+    const prev = [f("far", 50, 55), f("near", 50, 42)];
+    expect(stepSentry(t, b, rule, 10, prev, [f("far", 50, 55, 84), f("near", 50, 42, 84)]).shot?.id).toBe("far");
+    const out = [f("air", 50, 41, 100, { air: true }), f("own", 50, 41, 100, { owner: 0 }), f("edge", 50, 56.01)];
+    expect(stepSentry(sentryTrack(0), b, rule, 10, out, out.map((x) => ({ ...x, hp: 50 }))).shot).toBeNull();
+    const noHit = stepSentry(sentryTrack(0), b, rule, 10, [f("a", 50, 50)], [f("a", 50, 50)]);
+    expect(noHit.shot).toBeNull();
+    expect(noHit.track.nextShot).toBe(10 + SENTRY.attackIntervalTicks);
+    expect(stepSentry(sentryTrack(0), b, rule, 10, [f("a", 50, 50, 100, { shield: 30 })], [f("a", 50, 50, 100, { shield: 14 })]).shot?.id).toBe("a");
+    expect(stepSentry(sentryTrack(0), b, rule, 10, [f("a", 50, 50, 10)], []).shot?.id).toBe("a");
+    expect(stepSentry({ ...sentryTrack(0), lastTick: 7 }, b, rule, 10, [f("a", 50, 50)], [f("a", 50, 50, 84)]).shot).toBeNull();
+  });
+
+  it("lands every replicated shot on the tick and target the real engine fires", () => {
+    const s = initMatch(scenarioConfig(deckWith("rift_sentry"), deckWith("boulderback", "choglings")));
+    const cmds = [
+      { seq: 1, player: 0 as const, tick: 1, cardId: "rift_sentry", x: 40, y: 70 },
+      { seq: 2, player: 1 as const, tick: 2, cardId: "boulderback", x: 30, y: 100 },
+      { seq: 3, player: 1 as const, tick: 40, cardId: "choglings", x: 50, y: 100 },
+    ];
+    const pub = (st: CombatState): SentryFighter[] =>
+      [...st.troops, ...st.commanders].filter((u) => u.hp > 0).map((u) => ({ id: u.id, owner: u.owner, x: u.x, y: u.y, hp: u.hp, maxHp: u.maxHp, shield: u.shieldHp, air: u.moveType === "air" }));
+    let prev: SentryFighter[] = [];
+    let track: SentryTrack | null = null;
+    let real = 0;
+    let shown = 0;
+    for (let i = 0; i < 400 && s.phase !== "final"; i++) {
+      const before = s.buildings[0] ? { cd: s.buildings[0].cooldownUntil } : null;
+      stepMatch(s, cmds.filter((c) => c.tick === s.tick + 1));
+      const sb = s.buildings.find((x) => x.cardId === "rift_sentry");
+      const cur = pub(s);
+      if (sb) {
+        track ??= sentryTrack(sb.cooldownUntil);
+        const fired = before !== null && sb.cooldownUntil !== before.cd;
+        const step = stepSentry(track, sb, rule, s.tick, prev, cur);
+        track = step.track;
+        if (fired) real += 1;
+        if (step.shot) {
+          shown += 1;
+          expect(fired).toBe(true);
+          expect(step.shot.id).toBe(sb.targetId);
+        }
+      }
+      prev = cur;
+    }
+    expect(real).toBeGreaterThan(5);
+    expect(shown).toBe(real);
   });
 });

@@ -51,13 +51,15 @@ const RULES = {
   rift_sentry: { kind: "building", attackIntervalTicks: 8, range: 16, hitsAir: false, air: false, targetBoardHeight: 58, trim: true, clips: ["idle", "deploy", "attack", "hit", "defeat"], portrait: false },
   decoy_totem: { kind: "building", attackIntervalTicks: 16, range: 20, hitsAir: false, air: false, targetBoardHeight: 62, trim: true, clips: ["idle", "deploy", "attack", "hit", "defeat"], views: ["front"], portrait: false },
   chog_burrow: { kind: "building", attackIntervalTicks: 50, range: 0, hitsAir: false, air: false, targetBoardHeight: 46, trim: true, clips: ["idle", "deploy", "attack", "hit", "defeat"], views: ["front"], portrait: false },
-  rift_mortar: { kind: "building", attackIntervalTicks: 40, range: 50, hitsAir: false, air: false, targetBoardHeight: 56, trim: true, clips: ["idle", "deploy", "attack", "hit", "defeat"], portrait: false },
+  // Acceptance pass: `down` repacks the three sheets that were drawn 1.1x to
+  // 1.2x upscaled (soft) at about 1:1 from the same 2x masters.
+  rift_mortar: { kind: "building", attackIntervalTicks: 40, range: 50, hitsAir: false, air: false, targetBoardHeight: 56, trim: true, down: 1.714, clips: ["idle", "deploy", "attack", "hit", "defeat"], portrait: false },
   // Commander class sheets (COMMANDER_COMBAT_PROFILE_V1), shared by every
   // commander of the class. The ability clip plays on an active ability_fired.
   commander_bulwark: { kind: "commander", attackIntervalTicks: 12, range: 2, hitsAir: false, air: false, targetBoardHeight: 54, trim: true, clips: ["idle", "move", "attack", "hit", "defeat", "ability"], portrait: false },
-  commander_reaver: { kind: "commander", attackIntervalTicks: 11, range: 2, hitsAir: false, air: false, targetBoardHeight: 52, trim: true, clips: ["idle", "move", "attack", "hit", "defeat", "ability"], portrait: false },
+  commander_reaver: { kind: "commander", attackIntervalTicks: 11, range: 2, hitsAir: false, air: false, targetBoardHeight: 52, trim: true, down: 1.81, clips: ["idle", "move", "attack", "hit", "defeat", "ability"], portrait: false },
   commander_deadeye: { kind: "commander", attackIntervalTicks: 13, range: 16, hitsAir: true, air: false, targetBoardHeight: 52, trim: true, clips: ["idle", "move", "attack", "hit", "defeat", "ability"], portrait: false },
-  commander_scout: { kind: "commander", attackIntervalTicks: 7, range: 3, hitsAir: false, air: false, targetBoardHeight: 50, trim: true, clips: ["idle", "move", "attack", "hit", "defeat", "ability"], portrait: false },
+  commander_scout: { kind: "commander", attackIntervalTicks: 7, range: 3, hitsAir: false, air: false, targetBoardHeight: 50, trim: true, down: 1.68, clips: ["idle", "move", "attack", "hit", "defeat", "ability"], portrait: false },
   commander_warden: { kind: "commander", attackIntervalTicks: 12, range: 8, hitsAir: false, air: false, targetBoardHeight: 58, trim: true, clips: ["idle", "move", "attack", "hit", "defeat", "ability"], portrait: false },
   // Spawned by the Chog Burrow (SPAWNED_TROOPS_V1), never a card.
   burrow_scrapper: { kind: "spawned", attackIntervalTicks: 8, range: 2, hitsAir: false, air: false, targetBoardHeight: 38, trim: true, portrait: false },
@@ -157,8 +159,13 @@ const label = (text, w, h, size = 13) =>
     const mp = [rec.pivot[0] - crop.left, rec.pivot[1] - crop.top];
     if (mw % DOWN || mh % DOWN || mp[0] % DOWN || mp[1] % DOWN) throw new Error(`${unit}: cell and pivot must divide by ${DOWN}`);
     if (mp[0] <= 0 || mp[0] >= mw || mp[1] <= 0 || mp[1] >= mh) throw new Error(`${unit}: pivot falls outside the crop`);
-    const [cw, ch] = [mw / DOWN, mh / DOWN];
-    const pivot = [mp[0] / DOWN, mp[1] / DOWN];
+    // `down` packs a sheet that was drawn upscaled closer to 1 sheet px per
+    // board px, straight from the 2x masters. The cell rounds to whole px and
+    // the pivot rounds to 0.1 px.
+    const dn = rules.down ?? DOWN;
+    const [cw, ch] = [Math.round(mw / dn), Math.round(mh / dn)];
+    const [kx, ky] = [cw / mw, ch / mh];
+    const pivot = [Math.round(mp[0] * kx * 10) / 10, Math.round(mp[1] * ky * 10) / 10];
     let idleTop = ch;
     for (const fr of frames) {
       fr.master = rules.trim ? await sharp(fr.file).extract(crop).png().toBuffer() : fr.file;
@@ -175,13 +182,13 @@ const label = (text, w, h, size = 13) =>
     const portrait = rules.portrait === false ? null : await sharp(path.join(mastersDir, unit, "card-portrait@4x.png")).resize(256, 256, { kernel: "lanczos3" }).png({ compressionLevel: 9 }).toBuffer();
     const portraitRel = `${unit}/card-portrait.png`;
     if (portrait) write(path.join(outDir, portraitRel), portrait);
-    const visibleHeight = pivot[1] - idleTop;
+    const visibleHeight = Math.round(pivot[1] - idleTop);
     const displayScale = Math.round((rules.targetBoardHeight / visibleHeight) * 1000) / 1000;
     const defeat = clips.defeat;
     // Anchors (muzzle, weapon tip) in sheet px of the packed cell.
     const anchors = rec.anchors
       ? Object.fromEntries(Object.keys(rec.anchors[unitViews[0]] ?? {}).map((nm) => [nm, Object.fromEntries(unitViews.map((view) => [view,
-          Object.fromEntries(Object.entries(rec.anchors[view]?.[nm] ?? {}).map(([clip, [ax, ay]]) => [clip, [Math.round(((ax - crop.left) / DOWN) * 10) / 10, Math.round(((ay - crop.top) / DOWN) * 10) / 10]]))]))]))
+          Object.fromEntries(Object.entries(rec.anchors[view]?.[nm] ?? {}).map(([clip, [ax, ay]]) => [clip, [Math.round((ax - crop.left) * kx * 10) / 10, Math.round((ay - crop.top) * ky * 10) / 10]]))]))]))
       : null;
     manifest.units[unit] = {
       ...(rules.kind ? { kind: rules.kind } : {}),
@@ -208,28 +215,27 @@ const label = (text, w, h, size = 13) =>
       defeatMs: Math.round((defeat.count / defeat.fps) * 1000),
       ...(portrait ? { portrait: portraitRel, portraitSha256: sha(portrait) } : {}),
       ...(anchors ? { anchors } : {}),
-      camera: { tiltDeg: rec.tiltDeg, yawDeg: rec.yawDeg, rearYawDeg: 180 - rec.yawDeg, pxPerUnit: rec.pxPerUnit / DOWN },
+      camera: { tiltDeg: rec.tiltDeg, yawDeg: rec.yawDeg, rearYawDeg: 180 - rec.yawDeg, pxPerUnit: rules.down ? Math.round(rec.pxPerUnit * kx * 1000) / 1000 : rec.pxPerUnit / DOWN },
     };
     console.log(unit, `${frames.length} frames`, `${COLUMNS * cw}x${rows * ch}`, `${(sheet.length / 1024).toFixed(1)} KB`, `visible ${visibleHeight}px`, `scale ${displayScale}`);
 
     if (reviewDir) {
       // Contact sheet: one row per view and clip on arena grass, drawn from
       // the 2x masters, with frame labels and the shared ground pivot tick.
-      const k = DOWN;
       const maxCount = Math.max(...clipOrder.map((c) => clips[c].count));
-      const W = 110 + maxCount * cw * k;
+      const W = 110 + maxCount * mw;
       const rowsList = unitViews.flatMap((view) => clipOrder.map((clip) => [view, clip]));
-      const H = rowsList.length * ch * k;
+      const H = rowsList.length * mh;
       const comp = [];
       for (const [ri, [view, clip]] of rowsList.entries()) {
         const vc = views[view];
-        comp.push({ input: label(`${view} ${clip}`, 110, 22, 13), left: 0, top: ri * ch * k + 8 });
-        comp.push({ input: label(`${vc[clip].fps}fps`, 110, 22, 12), left: 0, top: ri * ch * k + 28 });
+        comp.push({ input: label(`${view} ${clip}`, 110, 22, 13), left: 0, top: ri * mh + 8 });
+        comp.push({ input: label(`${vc[clip].fps}fps`, 110, 22, 12), left: 0, top: ri * mh + 28 });
         for (let i = 0; i < vc[clip].count; i++) {
           const fr = frames[vc[clip].start + i];
-          comp.push({ input: fr.master, left: 110 + i * cw * k, top: ri * ch * k });
-          comp.push({ input: label(String(i) + (vc[clip].impact === i ? " hit" : ""), 60, 20, 12), left: 110 + i * cw * k, top: ri * ch * k });
-          comp.push({ input: { create: { width: 9, height: 2, channels: 4, background: "#ff3355" } }, left: 110 + i * cw * k + mp[0] - 4, top: ri * ch * k + mp[1] });
+          comp.push({ input: fr.master, left: 110 + i * mw, top: ri * mh });
+          comp.push({ input: label(String(i) + (vc[clip].impact === i ? " hit" : ""), 60, 20, 12), left: 110 + i * mw, top: ri * mh });
+          comp.push({ input: { create: { width: 9, height: 2, channels: 4, background: "#ff3355" } }, left: 110 + i * mw + mp[0] - 4, top: ri * mh + mp[1] });
         }
       }
       await sharp({ create: { width: W, height: H, channels: 4, background: "#6f9f55" } }).composite(comp).png().toFile(path.join(reviewDir, `${unit}-contact-sheet.png`));

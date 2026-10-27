@@ -229,3 +229,68 @@ export function engagedFoe(u: { x: number; y: number }, reach: number, foes: Foe
   }
   return best;
 }
+
+/** A public troop or commander as the Sentry replica sees it. */
+export interface SentryFighter {
+  id: string;
+  owner: number;
+  x: number;
+  y: number;
+  hp: number;
+  maxHp: number;
+  shield: number;
+  air: boolean;
+}
+
+export interface SentryTrack {
+  /** First tick the Sentry may fire (activeAt, then shot tick + interval). */
+  nextShot: number;
+  targetId: string | null;
+  lastTick: number;
+}
+
+export const sentryTrack = (activeAt: number): SentryTrack => ({ nextShot: activeAt, targetId: null, lastTick: -1 });
+
+/**
+ * Presentation replica of the server's Rift Sentry fire rule (combat.ts v8),
+ * from public frame data only: no shot before activeAt, then at most one shot
+ * every `interval` ticks, keeping the locked target while it stays a living
+ * enemy ground fighter within centre distance `range`, else the nearest one,
+ * ties by id. The frame carries no Sentry event, so a replicated shot is
+ * shown only when its target visibly lost HP or shield that tick (or died),
+ * and a replica that drifts can only miss a shot, never draw one the server
+ * did not land. Call once per authoritative frame. `prev` is the previous
+ * frame's fighters, which still hold any fighter killed this tick.
+ */
+export function stepSentry(
+  st: SentryTrack,
+  b: { owner: number; x: number; y: number },
+  rule: { range: number; interval: number },
+  tick: number,
+  prev: SentryFighter[],
+  cur: SentryFighter[]
+): { track: SentryTrack; shot: SentryFighter | null } {
+  if (tick <= st.lastTick) return { track: st, shot: null };
+  const next = { ...st, lastTick: tick };
+  if (tick < st.nextShot) return { track: next, shot: null };
+  const now = new Map(cur.map((f) => [f.id, f]));
+  const before = new Map(prev.map((f) => [f.id, f]));
+  const cands = [...cur, ...prev.filter((f) => !now.has(f.id))];
+  const r2 = rule.range * rule.range;
+  const d2 = (f: SentryFighter) => (f.x - b.x) ** 2 + (f.y - b.y) ** 2;
+  const valid = (f: SentryFighter) => f.owner !== b.owner && !f.air && d2(f) <= r2;
+  let target = st.targetId ? cands.find((f) => f.id === st.targetId && valid(f)) ?? null : null;
+  if (!target) {
+    for (const f of cands) {
+      if (!valid(f)) continue;
+      if (!target || d2(f) < d2(target) || (d2(f) === d2(target) && f.id < target.id)) target = f;
+    }
+  }
+  if (!target) return { track: { ...next, targetId: null }, shot: null };
+  const was = before.get(target.id);
+  const after = now.get(target.id);
+  // After a skipped frame the HP delta spans more than this tick, so it can't confirm a shot.
+  const gap = st.lastTick >= 0 && tick > st.lastTick + 1;
+  const landed = !gap && (!after || after.hp < (was?.hp ?? after.maxHp) || (was !== undefined && after.shield < was.shield));
+  return { track: { ...next, nextShot: tick + rule.interval, targetId: target.id }, shot: landed ? (after ?? target) : null };
+}

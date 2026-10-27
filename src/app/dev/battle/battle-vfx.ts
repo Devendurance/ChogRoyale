@@ -287,7 +287,7 @@ export function spellCastVfx(e: FrameEvent, ctx: SpellCtx): VfxSprite[] {
   if (id === "rift_snare") {
     const s = (r * VFX_S) / TEX_RADIUS["snare-sigil"];
     return [
-      { tex: "snare-sigil", x, y, life: 950 * k, scale: s * 0.82, scale1: s, alpha: 1, alpha1: 0, fadeIn: 0.1, fadeAt: 0.55, rot: 0, spin: 0.4, blend: "normal", layer: "ground", ease: "out" },
+      { tex: "snare-sigil", x, y, life: 1200 * k, scale: s * 0.9, scale1: s, alpha: 1, alpha1: 0, fadeIn: 0.08, fadeAt: 0.62, rot: 0, spin: 0.3, blend: "normal", layer: "ground", ease: "out" },
       ringAt(x, y, r, VFX_COLORS.snareCyan, 500 * k, { alpha: 1, alpha1: 0 }),
       glowAt(x, y, VFX_COLORS.snare, 1.4, 320 * k, 0, "ground"),
       ...(ctx.reduced ? [] : sparks(rnd, x, y, 8, r, VFX_COLORS.snareCyan, 420, 3)),

@@ -142,12 +142,18 @@ const snareSigil = () => {
     const [x, y] = P((i / 8) * Math.PI * 2 + Math.PI / 8, 1.0);
     return `<polygon points="${f2(x)},${f2(y - 13)} ${f2(x + 5.5)},${f2(y - 2)} ${f2(x)},${f2(y + 5)} ${f2(x - 5.5)},${f2(y - 2)}" fill="url(#gem)" stroke="#0d4a74" stroke-width="1.3"/><polygon points="${f2(x)},${f2(y - 13)} ${f2(x + 5.5)},${f2(y - 2)} ${f2(x)},${f2(y - 3)}" fill="#e8fdff" opacity="0.85"/>`;
   }).join("");
+  // Acceptance pass: a dark violet rim band straddles the rule radius and the
+  // fill deepens toward the edge, so the cyan boundary line keeps its
+  // contrast on bright grass. The boundary line itself stays at r = 116.
   return svg(W, H,
-    `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="#7a2fe0" opacity="0.16"/>` +
-    `<g fill="none" stroke="#b04dff" stroke-width="7" opacity="0.5" filter="url(#b)">${spokes}${webs}<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}"/></g>` +
+    `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="url(#fill)"/>` +
+    `<g fill="none" stroke="#b04dff" stroke-width="7" opacity="0.5" filter="url(#b)">${spokes}${webs}</g>` +
     `<g fill="none" stroke="#e7a8ff" stroke-width="2.2" stroke-linejoin="round">${spokes}${webs}</g>` +
-    `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="none" stroke="#5ff0ff" stroke-width="3"/>${gems}`,
-    blur("b", 4) + `<linearGradient id="gem" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9ff7ff"/><stop offset="1" stop-color="#1ea9e0"/></linearGradient>`);
+    `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="none" stroke="#24094a" stroke-width="15" opacity="0.82"/>` +
+    `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="none" stroke="#5ff0ff" stroke-width="6"/>` +
+    `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="none" stroke="#e8fdff" stroke-width="1.6"/>${gems}`,
+    blur("b", 4) + `<linearGradient id="gem" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9ff7ff"/><stop offset="1" stop-color="#1ea9e0"/></linearGradient>` +
+    `<radialGradient id="fill"><stop offset="0" stop-color="#7a2fe0" stop-opacity="0.12"/><stop offset="0.8" stop-color="#5a1cb8" stop-opacity="0.22"/><stop offset="1" stop-color="#3a0f86" stop-opacity="0.4"/></radialGradient>`);
 };
 
 const snareBind = () => svg(72, 44,

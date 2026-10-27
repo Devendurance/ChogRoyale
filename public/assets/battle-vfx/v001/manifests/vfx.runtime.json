@@ -124,7 +124,7 @@
       "width": 256,
       "height": 256,
       "blend": "normal",
-      "sha256": "328eab5e2b6cd4b3fc4940b74a60b80112612ec9394129ba5f193abb3ae4e458",
+      "sha256": "42b1d18585ac5c03daef14b510fd0c1ef22ab202fc407e304afb31a6cb9b6f3b",
       "note": "Rift Snare ground sigil, circular to match the rule radius (r = 116 px)."
     },
     "snare-bind": {

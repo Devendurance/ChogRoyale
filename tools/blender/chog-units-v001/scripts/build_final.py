@@ -270,10 +270,15 @@ def decoy_totem():
     rnd = random.Random(1414)
     body = (0, 0, 0.4)
     stones = (B["stoneA"], B["stoneB"], B["stoneC"])
-    stone_ring(rig, "base", rnd, 7, 0.86, 0.2, (0.7, 0.55, 0.42), stones, body)
-    for (x, y, dx, L, rad, m) in ((-0.62, -0.78, -0.4, 0.62, 0.2, B["cyan"]), (0.66, -0.74, 0.45, 0.66, 0.21, B["cyan"]), (0.02, -0.98, 0.0, 0.5, 0.17, B["cyanDeep"]),
-                                  (-0.95, 0.15, -0.7, 0.5, 0.17, B["cyanDeep"]), (0.95, 0.2, 0.7, 0.5, 0.17, B["cyanDeep"])):
-        crystal(rig, "base", (x, y, 0.12), (dx, y * 0.4, 1.0), L, rad, m, ol=0.04, twist=rnd.uniform(0, 1), shatter=body)
+    # Acceptance pass: a broad two-tier stone plinth around a wooden stump, so
+    # the Totem reads as a planted structure at 1x instead of a standing troop.
+    stone_ring(rig, "base", rnd, 10, 1.3, 0.2, (0.92, 0.7, 0.5), stones, body)
+    stone_ring(rig, "base", rnd, 8, 0.86, 0.62, (0.7, 0.56, 0.44), stones, body)
+    part(rig, "base", "cyl", (0, 0, 0.5), (0.95, 0.95, 0.95), B["woodDeep"], ol=0.04, vertices=20, bev=0.04)
+    part(rig, "base", "cyl", (0, 0, 0.98), (0.78, 0.78, 0.08), B["woodLight"], ol=0.03, vertices=20, bev=0.03)
+    for (x, y, dx, L, rad, m) in ((-0.82, -1.08, -0.45, 0.95, 0.27, B["cyan"]), (0.88, -1.02, 0.5, 1.0, 0.28, B["cyan"]), (0.04, -1.36, 0.0, 0.72, 0.22, B["cyanDeep"]),
+                                  (-1.38, 0.1, -0.7, 0.72, 0.22, B["cyanDeep"]), (1.38, 0.18, 0.7, 0.72, 0.22, B["cyanDeep"])):
+        crystal(rig, "base", (x, y, 0.14), (dx, y * 0.4, 1.0), L, rad, m, ol=0.04, twist=rnd.uniform(0, 1), shatter=body)
     # Carved pole and tabard.
     part(rig, "body", "cyl", (0, 0, 1.1), (0.42, 0.42, 1.7), B["wood"], ol=0.045, vertices=18, bev=0.04)
     for z in (0.5, 0.75):

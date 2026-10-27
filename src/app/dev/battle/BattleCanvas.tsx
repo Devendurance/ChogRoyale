@@ -58,11 +58,15 @@ import {
   engagedFoe,
   newUnitAnimState,
   nextView,
+  sentryTrack,
+  stepSentry,
   unitAnimFor,
   unitFrame,
   unitTextureKey,
   updateEngagement,
   type Foe,
+  type SentryFighter,
+  type SentryTrack,
   type UnitAnimManifest,
   type UnitAnimRecord,
   type UnitAnimState,
@@ -159,6 +163,9 @@ interface UnitMotion {
   /** Screen-space heading for the visual view: toward the foe when engaged,
    * else the motion delta, else null to keep the last view. */
   heading: { x: number; y: number } | null;
+  /** The attack clip plays only from firedAt (Rift Sentry replica), so a foe
+   * in reach never starts the engagement loop. */
+  eventFired?: boolean;
 }
 
 const hashPhase = (id: string) => {
@@ -292,6 +299,8 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
       const impactFirstTick = new Map<string, number>();
       const projStyles = new Map<string, ProjectileStyle>();
       const buildingActiveAt = new Map<string, number>();
+      const sentryTracks = new Map<string, SentryTrack>();
+      const sentryShots = new Map<string, Foe>();
 
       const clearPresentationPools = () => {
         vfx?.clear();
@@ -299,6 +308,8 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
         impactFirstTick.clear();
         projStyles.clear();
         buildingActiveAt.clear();
+        sentryTracks.clear();
+        sentryShots.clear();
         for (const e of pool.values()) e.root.destroy(true);
         pool.clear();
         for (const img of projPool.values()) img.destroy();
@@ -665,7 +676,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
               // Pre-rendered sheet: the frames carry bob, stride, swing, hit
               // and defeat, so the procedural offsets below are skipped.
               const m = motion ?? { moving, foe: null, dx: px - e.lastX, heading: null };
-              e.animSt = updateEngagement(e.animSt, !m.moving && m.foe !== null, now);
+              e.animSt = updateEngagement(e.animSt, !m.moving && m.foe !== null && !m.eventFired, now);
               if (m.foe && Math.abs(m.foe.x - px) > 0.01) e.facingX = m.foe.x < px ? -1 : 1;
               else if (m.moving && Math.abs(m.dx) > 1e-3) e.facingX = m.dx < 0 ? -1 : 1;
               if (m.heading) e.view = nextView(e.view, m.heading.x, m.heading.y);
@@ -967,14 +978,17 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             }
           }
           // Presentation-only engagement for buildings. The Rift Sentry has no
-          // public fire event, so it swings like a troop: active (past its
-          // authoritative activeAt), with an enemy ground unit inside its
-          // centre-distance range. The Totem's lure plays while an enemy unit
-          // is near. Mortar and Burrow fire on their authoritative events.
+          // public fire event, so stepSentry replays its server fire rule from
+          // the public frames and shows a shot only when the target visibly
+          // took the damage that tick. The Totem's lure plays while an enemy
+          // unit is near. Mortar and Burrow fire on their authoritative events.
           const unitFoes = (owner: number): Foe[] => [
             ...frame.troops.filter((t) => t.owner !== owner).map((t) => ({ x: t.x, y: t.y, r: 0, air: t.air })),
             ...frame.commanders.filter((c) => c.owner !== owner).map((c) => ({ x: c.x, y: c.y, r: 0 })),
           ];
+          const fightersOf = (fr: BattleFrame | null): SentryFighter[] =>
+            fr ? [...fr.troops, ...fr.commanders].map((u) => ({ id: u.id, owner: u.owner, x: u.x, y: u.y, hp: u.hp, maxHp: u.maxHp, shield: u.shield ?? 0, air: !!u.air })) : [];
+          let sentryFighters: [SentryFighter[], SentryFighter[]] | null = null;
           for (const b of frame.buildings) {
             const x = sx(b.x);
             const y = sy(b.y);
@@ -983,10 +997,30 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             const banim = banim0 && banim0.kind === "building" && !missing.has(unitTextureKey(banim0.entityId)) && this.textures.exists(unitTextureKey(banim0.entityId)) ? banim0 : null;
             let bmotion: UnitMotion | undefined;
             if (banim) {
-              const active = frame.tick >= (buildingActiveAt.get(b.id) ?? -1);
-              const foe = active && (b.cardId === "rift_sentry" || b.cardId === "decoy_totem") ? engagedFoe(b, banim.reach, unitFoes(b.owner), 0.5, banim.hitsAir) : null;
               const up = seat === 0 ? -1 : 1;
-              bmotion = { moving: false, dx: 0, foe, heading: foe && b.cardId === "rift_sentry" ? { x: foe.x - b.x, y: up * (foe.y - b.y) } : null };
+              if (b.cardId === "rift_sentry") {
+                const act = buildingActiveAt.get(b.id);
+                const known = prev?.buildings.some((o) => o.id === b.id);
+                const track = sentryTracks.get(b.id) ?? (act !== undefined || known ? sentryTrack(act ?? frame.tick) : null);
+                if (track) {
+                  sentryFighters ??= [fightersOf(prev), fightersOf(frame)];
+                  const step = stepSentry(track, b, { range: banim.reach, interval: Math.round(banim.attackPeriodMs / 100) }, frame.tick, ...sentryFighters);
+                  sentryTracks.set(b.id, step.track);
+                  const be = pool.get(b.id);
+                  if (step.shot && be?.anim && !animationPriming) {
+                    be.animSt = { ...be.animSt, firedAt: now };
+                    sentryShots.set(b.id, { x: step.shot.x, y: step.shot.y, r: 0, air: step.shot.air });
+                  }
+                }
+                const be = pool.get(b.id);
+                const shot = sentryShots.get(b.id);
+                const foe = shot && be && now - be.animSt.firedAt < 600 ? shot : null;
+                bmotion = { moving: false, dx: 0, foe, heading: foe ? { x: foe.x - b.x, y: up * (foe.y - b.y) } : null, eventFired: true };
+              } else {
+                const active = frame.tick >= (buildingActiveAt.get(b.id) ?? -1);
+                const foe = active && b.cardId === "decoy_totem" ? engagedFoe(b, banim.reach, unitFoes(b.owner), 0.5, banim.hitsAir) : null;
+                bmotion = { moving: false, dx: 0, foe, heading: null };
+              }
             }
             spriteOrFallback(
               b.id,
