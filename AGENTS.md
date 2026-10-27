@@ -3,10 +3,11 @@
 - Final polish uses player-relative identity: self left/blue in the HUD and top/blue in results, opponent right/red and bottom/red, regardless of seat or winner. Crown flights target the corresponding score ref. Use the official alpha crown at its natural 256:236 ratio, including victory, defeat and flights. Keep trophies separate.
 - Private invites contain only the current-origin `/app/play/battle?mode=private&room=` URL and a validated case-sensitive Colyseus nanoid(9). Preserve that destination through login/setup. Attempt automatic joining once after setup is verified, never auto-ready. A locked-room refusal can mean full or already started.
 - An active invite URL must recover its matching saved seat on refresh. Prioritize saved resume credentials only when their room matches the invite, never resume a different room or add recovery credentials to the URL. Mark automatic attempt refs inside the scheduled task so Strict Mode cleanup cannot consume an attempt.
-- Owner authorization on 2026-10-27 covers merging approved PR #6 and pushing/opening the final polish PR. The polish PR must remain unmerged and must not be deployed to production automatically. Session subagents use GPT-6.1 Sol with low reasoning and coordinator review.
+- Owner authorization on 2026-10-27 covered merging approved PR #6 and pushing/opening the final polish PR. PR #7 was subsequently merged by the owner. New merges and production promotions still need separate owner approval. Current session subagents use GPT-5.6 Luna with extra-high reasoning and coordinator review, per the owner's latest preference.
 
 
 - Auto-log meaningful rules to the project’s AGENTS.md.
+- Gameplay video bookmarks use genuine thumbnails from the linked recording and open its actual player. Use the Drive `/preview` destination for Drive recordings.
 - Auto-commit and push after every meaningful checkpoint.
 - Auto-clean temporary files and build clutter.
 - Keep the repository in a recoverable state.
@@ -220,7 +221,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## BATTLEFIELD PRESENTATION
 
-- Use GPT-6.1 Sol at low or medium reasoning for delegated project work unless the owner changes that preference.
+- Use GPT-5.6 Luna with extra-high reasoning for delegated project work under the owner's current preference. The coordinator reviews the work.
 - Keep contextual card guidance outside layout flow so selection and deselection never resize the arena during a gesture. Card labels wrap at word boundaries, and unaffordable portraits must remain recognizable.
 - Audio readiness requires a running Web Audio context, positive volume, an unmuted preference and a visible page. A saved preference alone cannot justify "Sound On". Ordinary melee has no public attack-release event, so use observed authoritative HP loss for its impact feedback.
 - Keep battle shell styles scoped to `.chud` and `chud-` classes. Desktop hand placement must not reduce the board's height, and compact landscape rules must stay below the desktop breakpoint.

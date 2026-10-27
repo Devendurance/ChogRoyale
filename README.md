@@ -30,6 +30,14 @@ The twist? **Real Chog Genesis NFTs influence the match itself.** An indexed Gen
 
 The game combines approachable free-to-play strategy with an identity-rich social layer: friends, direct messages, clans, progression, commander lending, and Gold-based upgrade sponsorship.
 
+## Gameplay improvement V1
+
+[![Gameplay improvement V1 video thumbnail](docs/media/readme/gameplay-improvement-v1-thumbnail.jpg)](https://drive.google.com/file/d/1zpOdku0kRsAukJ-goWcd8Ulb5uLc6bRe/preview)
+
+[Watch gameplay video](https://drive.google.com/file/d/1zpOdku0kRsAukJ-goWcd8Ulb5uLc6bRe/preview)
+
+Select the video thumbnail to watch in Google Drive.
+
 ## 📸 Inside the arena
 
 ### The world opens here

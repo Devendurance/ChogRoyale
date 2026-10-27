@@ -1,5 +1,7 @@
 # Memory
 
+- README gameplay bookmarks use a thumbnail from the linked recording, not an older game screenshot. Drive videos open via `/preview`; keep the genuine thumbnail locally for reliable GitHub rendering.
+
 - Live QA: Colyseus server frames decode as byte 13 then msgpackr `unpackMultiple` ([type, payload]). Ability buttons render twice (tray and side panel), so locate with `:visible`. Playwright `waitForFunction(fn, arg, options)` takes options third. Playwright's ffmpeg can't decode its VP9 recordings, so use the WinGet ffmpeg on PATH. A heavily loaded laptop slows the server tick, so give live matches a deadline well past 180 s. Two live clients plus video on this laptop measure the harness, so use the single-client A/B for asset cost.
 
 - Final assets: `build_final.py` (buildings, imports `final_chars.py`) renders with `NOCARD=1`, and Totem/Burrow with `VIEWS=front`. Three Blender processes in parallel work. Session fixtures must read acks from `tick()` because `submit()` only queues. The playback harness keeps `seenEventKeys` across replays, so census passes after shots miss events; use a fresh page (`qa/probe-clips.cjs`). Phaser here is 4.2.1.
@@ -91,7 +93,7 @@
 
 - P6c sponsorship: `gift_sponsorships` receipt table (migration 0022, TEST only) plus single-statement atomic `sponsorUpgrade` reusing the `gold-upgrade:` advisory-lock namespace in least-then-greatest order. Sponsor debits land in `gold_spend_ledger` under the shared idempotency key; recipient advances one purchased level with earned XP intact. TEST caps 1 recipient/day, 3 sender/week, 1 pair-card/week, enforced in-SQL.
 
-- Delegated project agents use GPT-6.1 Sol at low or medium reasoning per the owner's 2026-10-23 instruction.
+- Current delegated project agents use GPT-5.6 Luna with extra-high reasoning, with coordinator review, per the owner's latest 2026-10-27 instruction.
 
 Durable facts, conventions, and gotchas that should survive across sessions.
 
