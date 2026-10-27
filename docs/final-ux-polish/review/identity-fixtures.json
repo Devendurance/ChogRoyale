@@ -1,0 +1,6354 @@
+{
+  "note": "Presentation fixtures with local engine snapshots. No auth, server acceptance or settlement verification. Finale outcomes/crowns are overridden in the fixture for win/loss/draw presentation coverage. Long-name extras use reduced motion. Real authentication, server outcomes and physical-device audio remain outside this evidence.",
+  "checks": [
+    {
+      "name": "390x844-endy-endySeat0-active",
+      "query": "view=active&who=endy&endySeat=0",
+      "mine": {
+        "name": "Endychog",
+        "box": {
+          "x": 14,
+          "y": 11,
+          "w": 142,
+          "h": 30
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(143, 243, 255), rgb(43, 163, 196) 60%, rgb(27, 107, 143))",
+        "counter": {
+          "x": 14,
+          "y": 11,
+          "w": 50,
+          "h": 30
+        }
+      },
+      "foe": {
+        "name": "phantom",
+        "box": {
+          "x": 234,
+          "y": 11,
+          "w": 142,
+          "h": 30
+        },
+        "score": "0",
+        "background": "linear-gradient(rgb(255, 154, 152), rgb(208, 75, 86) 60%, rgb(146, 44, 64))",
+        "counter": {
+          "x": 321.578125,
+          "y": 11,
+          "w": 54.421875,
+          "h": 30
+        }
+      },
+      "ribbons": [],
+      "crowns": [
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 24.46875,
+            "y": 16.3125,
+            "w": 21,
+            "h": 19.359375
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 345,
+            "y": 16.3125,
+            "w": 21,
+            "h": 19.359375
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 6.496875762939453,
+            "y": 312.296875,
+            "w": 46,
+            "h": 42.40625
+          }
+        }
+      ],
+      "flights": [
+        {
+          "kind": "flight",
+          "team": "mine",
+          "source": "/assets/brand/v1/chog-royale-crown.webp",
+          "origin": [
+            121,
+            241.328
+          ],
+          "end": "translate(calc(-50% - 82px), calc(-50% - 215.328px)) scale(0.5)"
+        },
+        {
+          "kind": "land",
+          "team": "mine",
+          "x": 39,
+          "y": 45
+        }
+      ],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "name": "390x844-endy-endySeat0-win",
+      "query": "view=final&who=endy&endySeat=0&result=win",
+      "mine": {
+        "name": "Endychog",
+        "box": {
+          "x": 14,
+          "y": 11,
+          "w": 137.015625,
+          "h": 30
+        },
+        "score": "3",
+        "background": "linear-gradient(rgb(143, 243, 255), rgb(43, 163, 196) 60%, rgb(27, 107, 143))",
+        "counter": {
+          "x": 14,
+          "y": 11,
+          "w": 52.09375,
+          "h": 30
+        }
+      },
+      "foe": {
+        "name": "phantom",
+        "box": {
+          "x": 238.96875,
+          "y": 11,
+          "w": 137.03125,
+          "h": 30
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(255, 154, 152), rgb(208, 75, 86) 60%, rgb(146, 44, 64))",
+        "counter": {
+          "x": 326,
+          "y": 11,
+          "w": 50,
+          "h": 30
+        }
+      },
+      "ribbons": [
+        {
+          "side": "mine",
+          "box": {
+            "x": 18,
+            "y": 351.5625,
+            "w": 354,
+            "h": 106.59375
+          },
+          "name": "Endychog",
+          "background": "linear-gradient(rgb(69, 178, 207), rgb(27, 107, 143))",
+          "crowns": "3 crowns",
+          "winner": "true"
+        },
+        {
+          "side": "foe",
+          "box": {
+            "x": 18,
+            "y": 466.15625,
+            "w": 354,
+            "h": 106.59375
+          },
+          "name": "phantom",
+          "background": "linear-gradient(rgb(212, 92, 105), rgb(146, 44, 64))",
+          "crowns": "1 crown",
+          "winner": "false"
+        }
+      ],
+      "crowns": [
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 24,
+            "y": 16.3125,
+            "w": 21,
+            "h": 19.359375
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 344.53125,
+            "y": 16.3125,
+            "w": 21,
+            "h": 19.359375
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 139,
+            "y": 159.484375,
+            "w": 112,
+            "h": 103.25
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 105,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 155,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 205,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 105,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 155,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 205,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        }
+      ],
+      "flights": [],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "name": "390x844-endy-endySeat0-loss",
+      "query": "view=final&who=endy&endySeat=0&result=loss",
+      "mine": {
+        "name": "Endychog",
+        "box": {
+          "x": 14,
+          "y": 11,
+          "w": 137.015625,
+          "h": 30
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(143, 243, 255), rgb(43, 163, 196) 60%, rgb(27, 107, 143))",
+        "counter": {
+          "x": 14,
+          "y": 11,
+          "w": 50,
+          "h": 30
+        }
+      },
+      "foe": {
+        "name": "phantom",
+        "box": {
+          "x": 238.96875,
+          "y": 11,
+          "w": 137.03125,
+          "h": 30
+        },
+        "score": "3",
+        "background": "linear-gradient(rgb(255, 154, 152), rgb(208, 75, 86) 60%, rgb(146, 44, 64))",
+        "counter": {
+          "x": 323.90625,
+          "y": 11,
+          "w": 52.09375,
+          "h": 30
+        }
+      },
+      "ribbons": [
+        {
+          "side": "mine",
+          "box": {
+            "x": 18,
+            "y": 351.5625,
+            "w": 354,
+            "h": 106.59375
+          },
+          "name": "Endychog",
+          "background": "linear-gradient(rgb(69, 178, 207), rgb(27, 107, 143))",
+          "crowns": "1 crown",
+          "winner": "false"
+        },
+        {
+          "side": "foe",
+          "box": {
+            "x": 18,
+            "y": 466.15625,
+            "w": 354,
+            "h": 106.59375
+          },
+          "name": "phantom",
+          "background": "linear-gradient(rgb(212, 92, 105), rgb(146, 44, 64))",
+          "crowns": "3 crowns",
+          "winner": "true"
+        }
+      ],
+      "crowns": [
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 24.46875,
+            "y": 16.3125,
+            "w": 21,
+            "h": 19.359375
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 345,
+            "y": 16.3125,
+            "w": 21,
+            "h": 19.359375
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 139,
+            "y": 159.484375,
+            "w": 112,
+            "h": 103.25
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 105,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 155,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 205,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 105,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 155,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 205,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        }
+      ],
+      "flights": [],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "name": "390x844-endy-endySeat0-draw",
+      "query": "view=final&who=endy&endySeat=0&result=draw",
+      "mine": {
+        "name": "Endychog",
+        "box": {
+          "x": 14,
+          "y": 11,
+          "w": 137.015625,
+          "h": 30
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(143, 243, 255), rgb(43, 163, 196) 60%, rgb(27, 107, 143))",
+        "counter": {
+          "x": 14,
+          "y": 11,
+          "w": 50,
+          "h": 30
+        }
+      },
+      "foe": {
+        "name": "phantom",
+        "box": {
+          "x": 238.96875,
+          "y": 11,
+          "w": 137.03125,
+          "h": 30
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(255, 154, 152), rgb(208, 75, 86) 60%, rgb(146, 44, 64))",
+        "counter": {
+          "x": 326,
+          "y": 11,
+          "w": 50,
+          "h": 30
+        }
+      },
+      "ribbons": [
+        {
+          "side": "mine",
+          "box": {
+            "x": 18,
+            "y": 351.5625,
+            "w": 354,
+            "h": 106.59375
+          },
+          "name": "Endychog",
+          "background": "linear-gradient(rgb(69, 178, 207), rgb(27, 107, 143))",
+          "crowns": "1 crown",
+          "winner": "false"
+        },
+        {
+          "side": "foe",
+          "box": {
+            "x": 18,
+            "y": 466.15625,
+            "w": 354,
+            "h": 106.59375
+          },
+          "name": "phantom",
+          "background": "linear-gradient(rgb(212, 92, 105), rgb(146, 44, 64))",
+          "crowns": "1 crown",
+          "winner": "false"
+        }
+      ],
+      "crowns": [
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 24.46875,
+            "y": 16.3125,
+            "w": 21,
+            "h": 19.359375
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 344.53125,
+            "y": 16.3125,
+            "w": 21,
+            "h": 19.359375
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 139,
+            "y": 159.484375,
+            "w": 112,
+            "h": 103.25
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 105,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 155,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 205,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 105,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 155,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 205,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        }
+      ],
+      "flights": [],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "name": "390x844-endy-endySeat1-active",
+      "query": "view=active&who=endy&endySeat=1",
+      "mine": {
+        "name": "Endychog",
+        "box": {
+          "x": 14,
+          "y": 11,
+          "w": 142,
+          "h": 30
+        },
+        "score": "0",
+        "background": "linear-gradient(rgb(143, 243, 255), rgb(43, 163, 196) 60%, rgb(27, 107, 143))",
+        "counter": {
+          "x": 14,
+          "y": 11,
+          "w": 54.421875,
+          "h": 30
+        }
+      },
+      "foe": {
+        "name": "phantom",
+        "box": {
+          "x": 234,
+          "y": 11,
+          "w": 142,
+          "h": 30
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(255, 154, 152), rgb(208, 75, 86) 60%, rgb(146, 44, 64))",
+        "counter": {
+          "x": 326,
+          "y": 11,
+          "w": 50,
+          "h": 30
+        }
+      },
+      "ribbons": [],
+      "crowns": [
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 24,
+            "y": 16.3125,
+            "w": 21,
+            "h": 19.359375
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 344.53125,
+            "y": 16.3125,
+            "w": 21,
+            "h": 19.359375
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 6.496875762939453,
+            "y": 312.296875,
+            "w": 46,
+            "h": 42.40625
+          }
+        }
+      ],
+      "flights": [
+        {
+          "kind": "flight",
+          "team": "theirs",
+          "source": "/assets/brand/v1/chog-royale-crown.webp",
+          "origin": [
+            121,
+            537.328
+          ],
+          "end": "translate(calc(-50% + 230px), calc(-50% - 511.328px)) scale(0.5)"
+        },
+        {
+          "kind": "land",
+          "team": "theirs",
+          "x": 351,
+          "y": 45
+        }
+      ],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "name": "390x844-endy-endySeat1-win",
+      "query": "view=final&who=endy&endySeat=1&result=win",
+      "mine": {
+        "name": "Endychog",
+        "box": {
+          "x": 14,
+          "y": 11,
+          "w": 137.015625,
+          "h": 30
+        },
+        "score": "3",
+        "background": "linear-gradient(rgb(143, 243, 255), rgb(43, 163, 196) 60%, rgb(27, 107, 143))",
+        "counter": {
+          "x": 14,
+          "y": 11,
+          "w": 52.09375,
+          "h": 30
+        }
+      },
+      "foe": {
+        "name": "phantom",
+        "box": {
+          "x": 238.96875,
+          "y": 11,
+          "w": 137.03125,
+          "h": 30
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(255, 154, 152), rgb(208, 75, 86) 60%, rgb(146, 44, 64))",
+        "counter": {
+          "x": 326,
+          "y": 11,
+          "w": 50,
+          "h": 30
+        }
+      },
+      "ribbons": [
+        {
+          "side": "mine",
+          "box": {
+            "x": 18,
+            "y": 351.5625,
+            "w": 354,
+            "h": 106.59375
+          },
+          "name": "Endychog",
+          "background": "linear-gradient(rgb(69, 178, 207), rgb(27, 107, 143))",
+          "crowns": "3 crowns",
+          "winner": "true"
+        },
+        {
+          "side": "foe",
+          "box": {
+            "x": 18,
+            "y": 466.15625,
+            "w": 354,
+            "h": 106.59375
+          },
+          "name": "phantom",
+          "background": "linear-gradient(rgb(212, 92, 105), rgb(146, 44, 64))",
+          "crowns": "1 crown",
+          "winner": "false"
+        }
+      ],
+      "crowns": [
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 24,
+            "y": 16.3125,
+            "w": 21,
+            "h": 19.359375
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 344.53125,
+            "y": 16.3125,
+            "w": 21,
+            "h": 19.359375
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 139,
+            "y": 159.484375,
+            "w": 112,
+            "h": 103.25
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 105,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 155,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 205,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 105,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 155,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 205,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        }
+      ],
+      "flights": [],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "name": "390x844-endy-endySeat1-loss",
+      "query": "view=final&who=endy&endySeat=1&result=loss",
+      "mine": {
+        "name": "Endychog",
+        "box": {
+          "x": 14,
+          "y": 11,
+          "w": 137.015625,
+          "h": 30
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(143, 243, 255), rgb(43, 163, 196) 60%, rgb(27, 107, 143))",
+        "counter": {
+          "x": 14,
+          "y": 11,
+          "w": 50,
+          "h": 30
+        }
+      },
+      "foe": {
+        "name": "phantom",
+        "box": {
+          "x": 238.96875,
+          "y": 11,
+          "w": 137.03125,
+          "h": 30
+        },
+        "score": "3",
+        "background": "linear-gradient(rgb(255, 154, 152), rgb(208, 75, 86) 60%, rgb(146, 44, 64))",
+        "counter": {
+          "x": 323.90625,
+          "y": 11,
+          "w": 52.09375,
+          "h": 30
+        }
+      },
+      "ribbons": [
+        {
+          "side": "mine",
+          "box": {
+            "x": 18,
+            "y": 351.5625,
+            "w": 354,
+            "h": 106.59375
+          },
+          "name": "Endychog",
+          "background": "linear-gradient(rgb(69, 178, 207), rgb(27, 107, 143))",
+          "crowns": "1 crown",
+          "winner": "false"
+        },
+        {
+          "side": "foe",
+          "box": {
+            "x": 18,
+            "y": 466.15625,
+            "w": 354,
+            "h": 106.59375
+          },
+          "name": "phantom",
+          "background": "linear-gradient(rgb(212, 92, 105), rgb(146, 44, 64))",
+          "crowns": "3 crowns",
+          "winner": "true"
+        }
+      ],
+      "crowns": [
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 24.46875,
+            "y": 16.3125,
+            "w": 21,
+            "h": 19.359375
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 345,
+            "y": 16.3125,
+            "w": 21,
+            "h": 19.359375
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 139,
+            "y": 159.484375,
+            "w": 112,
+            "h": 103.25
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 105,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 155,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 205,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 105,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 155,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 205,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        }
+      ],
+      "flights": [],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "name": "390x844-endy-endySeat1-draw",
+      "query": "view=final&who=endy&endySeat=1&result=draw",
+      "mine": {
+        "name": "Endychog",
+        "box": {
+          "x": 14,
+          "y": 11,
+          "w": 137.015625,
+          "h": 30
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(143, 243, 255), rgb(43, 163, 196) 60%, rgb(27, 107, 143))",
+        "counter": {
+          "x": 14,
+          "y": 11,
+          "w": 50,
+          "h": 30
+        }
+      },
+      "foe": {
+        "name": "phantom",
+        "box": {
+          "x": 238.96875,
+          "y": 11,
+          "w": 137.03125,
+          "h": 30
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(255, 154, 152), rgb(208, 75, 86) 60%, rgb(146, 44, 64))",
+        "counter": {
+          "x": 326,
+          "y": 11,
+          "w": 50,
+          "h": 30
+        }
+      },
+      "ribbons": [
+        {
+          "side": "mine",
+          "box": {
+            "x": 18,
+            "y": 351.5625,
+            "w": 354,
+            "h": 106.59375
+          },
+          "name": "Endychog",
+          "background": "linear-gradient(rgb(69, 178, 207), rgb(27, 107, 143))",
+          "crowns": "1 crown",
+          "winner": "false"
+        },
+        {
+          "side": "foe",
+          "box": {
+            "x": 18,
+            "y": 466.15625,
+            "w": 354,
+            "h": 106.59375
+          },
+          "name": "phantom",
+          "background": "linear-gradient(rgb(212, 92, 105), rgb(146, 44, 64))",
+          "crowns": "1 crown",
+          "winner": "false"
+        }
+      ],
+      "crowns": [
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 24.46875,
+            "y": 16.3125,
+            "w": 21,
+            "h": 19.359375
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 344.53125,
+            "y": 16.3125,
+            "w": 21,
+            "h": 19.359375
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 139,
+            "y": 159.484375,
+            "w": 112,
+            "h": 103.25
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 105,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 155,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 205,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 105,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 155,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 205,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        }
+      ],
+      "flights": [],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "name": "390x844-phantom-endySeat0-active",
+      "query": "view=active&who=phantom&endySeat=0",
+      "mine": {
+        "name": "phantom",
+        "box": {
+          "x": 14,
+          "y": 11,
+          "w": 142,
+          "h": 30
+        },
+        "score": "0",
+        "background": "linear-gradient(rgb(143, 243, 255), rgb(43, 163, 196) 60%, rgb(27, 107, 143))",
+        "counter": {
+          "x": 14,
+          "y": 11,
+          "w": 54.421875,
+          "h": 30
+        }
+      },
+      "foe": {
+        "name": "Endychog",
+        "box": {
+          "x": 234,
+          "y": 11,
+          "w": 142,
+          "h": 30
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(255, 154, 152), rgb(208, 75, 86) 60%, rgb(146, 44, 64))",
+        "counter": {
+          "x": 326,
+          "y": 11,
+          "w": 50,
+          "h": 30
+        }
+      },
+      "ribbons": [],
+      "crowns": [
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 24,
+            "y": 16.3125,
+            "w": 21,
+            "h": 19.359375
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 344.53125,
+            "y": 16.3125,
+            "w": 21,
+            "h": 19.359375
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 6.496875762939453,
+            "y": 312.296875,
+            "w": 46,
+            "h": 42.40625
+          }
+        }
+      ],
+      "flights": [
+        {
+          "kind": "flight",
+          "team": "theirs",
+          "source": "/assets/brand/v1/chog-royale-crown.webp",
+          "origin": [
+            121,
+            537.328
+          ],
+          "end": "translate(calc(-50% + 230px), calc(-50% - 511.328px)) scale(0.5)"
+        },
+        {
+          "kind": "land",
+          "team": "theirs",
+          "x": 351,
+          "y": 45
+        }
+      ],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "name": "390x844-phantom-endySeat0-win",
+      "query": "view=final&who=phantom&endySeat=0&result=win",
+      "mine": {
+        "name": "phantom",
+        "box": {
+          "x": 14,
+          "y": 11,
+          "w": 137.015625,
+          "h": 30
+        },
+        "score": "3",
+        "background": "linear-gradient(rgb(143, 243, 255), rgb(43, 163, 196) 60%, rgb(27, 107, 143))",
+        "counter": {
+          "x": 14,
+          "y": 11,
+          "w": 52.09375,
+          "h": 30
+        }
+      },
+      "foe": {
+        "name": "Endychog",
+        "box": {
+          "x": 238.96875,
+          "y": 11,
+          "w": 137.03125,
+          "h": 30
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(255, 154, 152), rgb(208, 75, 86) 60%, rgb(146, 44, 64))",
+        "counter": {
+          "x": 326,
+          "y": 11,
+          "w": 50,
+          "h": 30
+        }
+      },
+      "ribbons": [
+        {
+          "side": "mine",
+          "box": {
+            "x": 18,
+            "y": 351.5625,
+            "w": 354,
+            "h": 106.59375
+          },
+          "name": "phantom",
+          "background": "linear-gradient(rgb(69, 178, 207), rgb(27, 107, 143))",
+          "crowns": "3 crowns",
+          "winner": "true"
+        },
+        {
+          "side": "foe",
+          "box": {
+            "x": 18,
+            "y": 466.15625,
+            "w": 354,
+            "h": 106.59375
+          },
+          "name": "Endychog",
+          "background": "linear-gradient(rgb(212, 92, 105), rgb(146, 44, 64))",
+          "crowns": "1 crown",
+          "winner": "false"
+        }
+      ],
+      "crowns": [
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 24,
+            "y": 16.3125,
+            "w": 21,
+            "h": 19.359375
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 344.53125,
+            "y": 16.3125,
+            "w": 21,
+            "h": 19.359375
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 139,
+            "y": 159.484375,
+            "w": 112,
+            "h": 103.25
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 105,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 155,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 205,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 105,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 155,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 205,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        }
+      ],
+      "flights": [],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "name": "390x844-phantom-endySeat0-loss",
+      "query": "view=final&who=phantom&endySeat=0&result=loss",
+      "mine": {
+        "name": "phantom",
+        "box": {
+          "x": 14,
+          "y": 11,
+          "w": 137.015625,
+          "h": 30
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(143, 243, 255), rgb(43, 163, 196) 60%, rgb(27, 107, 143))",
+        "counter": {
+          "x": 14,
+          "y": 11,
+          "w": 50,
+          "h": 30
+        }
+      },
+      "foe": {
+        "name": "Endychog",
+        "box": {
+          "x": 238.96875,
+          "y": 11,
+          "w": 137.03125,
+          "h": 30
+        },
+        "score": "3",
+        "background": "linear-gradient(rgb(255, 154, 152), rgb(208, 75, 86) 60%, rgb(146, 44, 64))",
+        "counter": {
+          "x": 323.90625,
+          "y": 11,
+          "w": 52.09375,
+          "h": 30
+        }
+      },
+      "ribbons": [
+        {
+          "side": "mine",
+          "box": {
+            "x": 18,
+            "y": 351.5625,
+            "w": 354,
+            "h": 106.59375
+          },
+          "name": "phantom",
+          "background": "linear-gradient(rgb(69, 178, 207), rgb(27, 107, 143))",
+          "crowns": "1 crown",
+          "winner": "false"
+        },
+        {
+          "side": "foe",
+          "box": {
+            "x": 18,
+            "y": 466.15625,
+            "w": 354,
+            "h": 106.59375
+          },
+          "name": "Endychog",
+          "background": "linear-gradient(rgb(212, 92, 105), rgb(146, 44, 64))",
+          "crowns": "3 crowns",
+          "winner": "true"
+        }
+      ],
+      "crowns": [
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 24.46875,
+            "y": 16.3125,
+            "w": 21,
+            "h": 19.359375
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 345,
+            "y": 16.3125,
+            "w": 21,
+            "h": 19.359375
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 139,
+            "y": 159.484375,
+            "w": 112,
+            "h": 103.25
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 105,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 155,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 205,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 105,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 155,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 205,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        }
+      ],
+      "flights": [],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "name": "390x844-phantom-endySeat0-draw",
+      "query": "view=final&who=phantom&endySeat=0&result=draw",
+      "mine": {
+        "name": "phantom",
+        "box": {
+          "x": 14,
+          "y": 11,
+          "w": 137.015625,
+          "h": 30
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(143, 243, 255), rgb(43, 163, 196) 60%, rgb(27, 107, 143))",
+        "counter": {
+          "x": 14,
+          "y": 11,
+          "w": 50,
+          "h": 30
+        }
+      },
+      "foe": {
+        "name": "Endychog",
+        "box": {
+          "x": 238.96875,
+          "y": 11,
+          "w": 137.03125,
+          "h": 30
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(255, 154, 152), rgb(208, 75, 86) 60%, rgb(146, 44, 64))",
+        "counter": {
+          "x": 326,
+          "y": 11,
+          "w": 50,
+          "h": 30
+        }
+      },
+      "ribbons": [
+        {
+          "side": "mine",
+          "box": {
+            "x": 18,
+            "y": 351.5625,
+            "w": 354,
+            "h": 106.59375
+          },
+          "name": "phantom",
+          "background": "linear-gradient(rgb(69, 178, 207), rgb(27, 107, 143))",
+          "crowns": "1 crown",
+          "winner": "false"
+        },
+        {
+          "side": "foe",
+          "box": {
+            "x": 18,
+            "y": 466.15625,
+            "w": 354,
+            "h": 106.59375
+          },
+          "name": "Endychog",
+          "background": "linear-gradient(rgb(212, 92, 105), rgb(146, 44, 64))",
+          "crowns": "1 crown",
+          "winner": "false"
+        }
+      ],
+      "crowns": [
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 24.46875,
+            "y": 16.3125,
+            "w": 21,
+            "h": 19.359375
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 344.53125,
+            "y": 16.3125,
+            "w": 21,
+            "h": 19.359375
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 139,
+            "y": 159.484375,
+            "w": 112,
+            "h": 103.25
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 105,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 155,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 205,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 105,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 155,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 205,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        }
+      ],
+      "flights": [],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "name": "390x844-phantom-endySeat1-active",
+      "query": "view=active&who=phantom&endySeat=1",
+      "mine": {
+        "name": "phantom",
+        "box": {
+          "x": 14,
+          "y": 11,
+          "w": 142,
+          "h": 30
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(143, 243, 255), rgb(43, 163, 196) 60%, rgb(27, 107, 143))",
+        "counter": {
+          "x": 14,
+          "y": 11,
+          "w": 50,
+          "h": 30
+        }
+      },
+      "foe": {
+        "name": "Endychog",
+        "box": {
+          "x": 234,
+          "y": 11,
+          "w": 142,
+          "h": 30
+        },
+        "score": "0",
+        "background": "linear-gradient(rgb(255, 154, 152), rgb(208, 75, 86) 60%, rgb(146, 44, 64))",
+        "counter": {
+          "x": 321.578125,
+          "y": 11,
+          "w": 54.421875,
+          "h": 30
+        }
+      },
+      "ribbons": [],
+      "crowns": [
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 24.46875,
+            "y": 16.3125,
+            "w": 21,
+            "h": 19.359375
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 345,
+            "y": 16.3125,
+            "w": 21,
+            "h": 19.359375
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 6.496875762939453,
+            "y": 312.296875,
+            "w": 46,
+            "h": 42.40625
+          }
+        }
+      ],
+      "flights": [
+        {
+          "kind": "flight",
+          "team": "mine",
+          "source": "/assets/brand/v1/chog-royale-crown.webp",
+          "origin": [
+            121,
+            241.328
+          ],
+          "end": "translate(calc(-50% - 82px), calc(-50% - 215.328px)) scale(0.5)"
+        },
+        {
+          "kind": "land",
+          "team": "mine",
+          "x": 39,
+          "y": 45
+        }
+      ],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "name": "390x844-phantom-endySeat1-win",
+      "query": "view=final&who=phantom&endySeat=1&result=win",
+      "mine": {
+        "name": "phantom",
+        "box": {
+          "x": 14,
+          "y": 11,
+          "w": 137.015625,
+          "h": 30
+        },
+        "score": "3",
+        "background": "linear-gradient(rgb(143, 243, 255), rgb(43, 163, 196) 60%, rgb(27, 107, 143))",
+        "counter": {
+          "x": 14,
+          "y": 11,
+          "w": 52.09375,
+          "h": 30
+        }
+      },
+      "foe": {
+        "name": "Endychog",
+        "box": {
+          "x": 238.96875,
+          "y": 11,
+          "w": 137.03125,
+          "h": 30
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(255, 154, 152), rgb(208, 75, 86) 60%, rgb(146, 44, 64))",
+        "counter": {
+          "x": 326,
+          "y": 11,
+          "w": 50,
+          "h": 30
+        }
+      },
+      "ribbons": [
+        {
+          "side": "mine",
+          "box": {
+            "x": 18,
+            "y": 351.5625,
+            "w": 354,
+            "h": 106.59375
+          },
+          "name": "phantom",
+          "background": "linear-gradient(rgb(69, 178, 207), rgb(27, 107, 143))",
+          "crowns": "3 crowns",
+          "winner": "true"
+        },
+        {
+          "side": "foe",
+          "box": {
+            "x": 18,
+            "y": 466.15625,
+            "w": 354,
+            "h": 106.59375
+          },
+          "name": "Endychog",
+          "background": "linear-gradient(rgb(212, 92, 105), rgb(146, 44, 64))",
+          "crowns": "1 crown",
+          "winner": "false"
+        }
+      ],
+      "crowns": [
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 24,
+            "y": 16.3125,
+            "w": 21,
+            "h": 19.359375
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 344.53125,
+            "y": 16.3125,
+            "w": 21,
+            "h": 19.359375
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 139,
+            "y": 159.484375,
+            "w": 112,
+            "h": 103.25
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 105,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 155,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 205,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 105,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 155,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 205,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        }
+      ],
+      "flights": [],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "name": "390x844-phantom-endySeat1-loss",
+      "query": "view=final&who=phantom&endySeat=1&result=loss",
+      "mine": {
+        "name": "phantom",
+        "box": {
+          "x": 14,
+          "y": 11,
+          "w": 137.015625,
+          "h": 30
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(143, 243, 255), rgb(43, 163, 196) 60%, rgb(27, 107, 143))",
+        "counter": {
+          "x": 14,
+          "y": 11,
+          "w": 50,
+          "h": 30
+        }
+      },
+      "foe": {
+        "name": "Endychog",
+        "box": {
+          "x": 238.96875,
+          "y": 11,
+          "w": 137.03125,
+          "h": 30
+        },
+        "score": "3",
+        "background": "linear-gradient(rgb(255, 154, 152), rgb(208, 75, 86) 60%, rgb(146, 44, 64))",
+        "counter": {
+          "x": 323.90625,
+          "y": 11,
+          "w": 52.09375,
+          "h": 30
+        }
+      },
+      "ribbons": [
+        {
+          "side": "mine",
+          "box": {
+            "x": 18,
+            "y": 351.5625,
+            "w": 354,
+            "h": 106.59375
+          },
+          "name": "phantom",
+          "background": "linear-gradient(rgb(69, 178, 207), rgb(27, 107, 143))",
+          "crowns": "1 crown",
+          "winner": "false"
+        },
+        {
+          "side": "foe",
+          "box": {
+            "x": 18,
+            "y": 466.15625,
+            "w": 354,
+            "h": 106.59375
+          },
+          "name": "Endychog",
+          "background": "linear-gradient(rgb(212, 92, 105), rgb(146, 44, 64))",
+          "crowns": "3 crowns",
+          "winner": "true"
+        }
+      ],
+      "crowns": [
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 24.46875,
+            "y": 16.3125,
+            "w": 21,
+            "h": 19.359375
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 345,
+            "y": 16.3125,
+            "w": 21,
+            "h": 19.359375
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 139,
+            "y": 159.484375,
+            "w": 112,
+            "h": 103.25
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 105,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 155,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 205,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 105,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 155,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 205,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        }
+      ],
+      "flights": [],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "name": "390x844-phantom-endySeat1-draw",
+      "query": "view=final&who=phantom&endySeat=1&result=draw",
+      "mine": {
+        "name": "phantom",
+        "box": {
+          "x": 14,
+          "y": 11,
+          "w": 137.015625,
+          "h": 30
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(143, 243, 255), rgb(43, 163, 196) 60%, rgb(27, 107, 143))",
+        "counter": {
+          "x": 14,
+          "y": 11,
+          "w": 50,
+          "h": 30
+        }
+      },
+      "foe": {
+        "name": "Endychog",
+        "box": {
+          "x": 238.96875,
+          "y": 11,
+          "w": 137.03125,
+          "h": 30
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(255, 154, 152), rgb(208, 75, 86) 60%, rgb(146, 44, 64))",
+        "counter": {
+          "x": 326,
+          "y": 11,
+          "w": 50,
+          "h": 30
+        }
+      },
+      "ribbons": [
+        {
+          "side": "mine",
+          "box": {
+            "x": 18,
+            "y": 351.5625,
+            "w": 354,
+            "h": 106.59375
+          },
+          "name": "phantom",
+          "background": "linear-gradient(rgb(69, 178, 207), rgb(27, 107, 143))",
+          "crowns": "1 crown",
+          "winner": "false"
+        },
+        {
+          "side": "foe",
+          "box": {
+            "x": 18,
+            "y": 466.15625,
+            "w": 354,
+            "h": 106.59375
+          },
+          "name": "Endychog",
+          "background": "linear-gradient(rgb(212, 92, 105), rgb(146, 44, 64))",
+          "crowns": "1 crown",
+          "winner": "false"
+        }
+      ],
+      "crowns": [
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 24.46875,
+            "y": 16.3125,
+            "w": 21,
+            "h": 19.359375
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 344.53125,
+            "y": 16.3125,
+            "w": 21,
+            "h": 19.359375
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 139,
+            "y": 159.484375,
+            "w": 112,
+            "h": 103.25
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 105,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 155,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 205,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 105,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 155,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 205,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        }
+      ],
+      "flights": [],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "name": "1366x768-endy-endySeat0-active",
+      "query": "view=active&who=endy&endySeat=0",
+      "mine": {
+        "name": "Endychog",
+        "box": {
+          "x": 472.0625,
+          "y": 25,
+          "w": 163.9375,
+          "h": 34
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(143, 243, 255), rgb(43, 163, 196) 60%, rgb(27, 107, 143))",
+        "counter": {
+          "x": 472.0625,
+          "y": 25,
+          "w": 54.75,
+          "h": 34
+        }
+      },
+      "foe": {
+        "name": "phantom",
+        "box": {
+          "x": 730,
+          "y": 25,
+          "w": 163.9375,
+          "h": 34
+        },
+        "score": "0",
+        "background": "linear-gradient(rgb(255, 154, 152), rgb(208, 75, 86) 60%, rgb(146, 44, 64))",
+        "counter": {
+          "x": 833.59375,
+          "y": 25,
+          "w": 60.34375,
+          "h": 34
+        }
+      },
+      "ribbons": [],
+      "crowns": [
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 482.0625,
+            "y": 30.46875,
+            "w": 25,
+            "h": 23.046875
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 858.9375,
+            "y": 30.46875,
+            "w": 25,
+            "h": 23.046875
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 324.08001708984375,
+            "y": 266.796875,
+            "w": 46,
+            "h": 42.40625
+          }
+        }
+      ],
+      "flights": [
+        {
+          "kind": "flight",
+          "team": "mine",
+          "source": "/assets/brand/v1/chog-royale-crown.webp",
+          "origin": [
+            616.438,
+            303.375
+          ],
+          "end": "translate(calc(-50% - 117px), calc(-50% - 261.375px)) scale(0.5)"
+        },
+        {
+          "kind": "land",
+          "team": "mine",
+          "x": 499.438,
+          "y": 63
+        }
+      ],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "name": "1366x768-endy-endySeat0-win",
+      "query": "view=final&who=endy&endySeat=0&result=win",
+      "mine": {
+        "name": "Endychog",
+        "box": {
+          "x": 472.0625,
+          "y": 25,
+          "w": 163.296875,
+          "h": 34
+        },
+        "score": "3",
+        "background": "linear-gradient(rgb(143, 243, 255), rgb(43, 163, 196) 60%, rgb(27, 107, 143))",
+        "counter": {
+          "x": 472.0625,
+          "y": 25,
+          "w": 57.6875,
+          "h": 34
+        }
+      },
+      "foe": {
+        "name": "phantom",
+        "box": {
+          "x": 730.625,
+          "y": 25,
+          "w": 163.3125,
+          "h": 34
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(255, 154, 152), rgb(208, 75, 86) 60%, rgb(146, 44, 64))",
+        "counter": {
+          "x": 839.1875,
+          "y": 25,
+          "w": 54.75,
+          "h": 34
+        }
+      },
+      "ribbons": [
+        {
+          "side": "mine",
+          "box": {
+            "x": 423,
+            "y": 328.328125,
+            "w": 520,
+            "h": 110.1875
+          },
+          "name": "Endychog",
+          "background": "linear-gradient(rgb(69, 178, 207), rgb(27, 107, 143))",
+          "crowns": "3 crowns",
+          "winner": "true"
+        },
+        {
+          "side": "foe",
+          "box": {
+            "x": 423,
+            "y": 446.515625,
+            "w": 520,
+            "h": 110.1875
+          },
+          "name": "phantom",
+          "background": "linear-gradient(rgb(212, 92, 105), rgb(146, 44, 64))",
+          "crowns": "1 crown",
+          "winner": "false"
+        }
+      ],
+      "crowns": [
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 482.0625,
+            "y": 30.46875,
+            "w": 25,
+            "h": 23.046875
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 858.9375,
+            "y": 30.46875,
+            "w": 25,
+            "h": 23.046875
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 627,
+            "y": 99.53125,
+            "w": 112,
+            "h": 103.25
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 584,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 640,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 696,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 584,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 640,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 696,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        }
+      ],
+      "flights": [],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "name": "1366x768-endy-endySeat0-loss",
+      "query": "view=final&who=endy&endySeat=0&result=loss",
+      "mine": {
+        "name": "Endychog",
+        "box": {
+          "x": 472.0625,
+          "y": 25,
+          "w": 163.296875,
+          "h": 34
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(143, 243, 255), rgb(43, 163, 196) 60%, rgb(27, 107, 143))",
+        "counter": {
+          "x": 472.0625,
+          "y": 25,
+          "w": 54.75,
+          "h": 34
+        }
+      },
+      "foe": {
+        "name": "phantom",
+        "box": {
+          "x": 730.625,
+          "y": 25,
+          "w": 163.3125,
+          "h": 34
+        },
+        "score": "3",
+        "background": "linear-gradient(rgb(255, 154, 152), rgb(208, 75, 86) 60%, rgb(146, 44, 64))",
+        "counter": {
+          "x": 836.25,
+          "y": 25,
+          "w": 57.6875,
+          "h": 34
+        }
+      },
+      "ribbons": [
+        {
+          "side": "mine",
+          "box": {
+            "x": 423,
+            "y": 328.328125,
+            "w": 520,
+            "h": 110.1875
+          },
+          "name": "Endychog",
+          "background": "linear-gradient(rgb(69, 178, 207), rgb(27, 107, 143))",
+          "crowns": "1 crown",
+          "winner": "false"
+        },
+        {
+          "side": "foe",
+          "box": {
+            "x": 423,
+            "y": 446.515625,
+            "w": 520,
+            "h": 110.1875
+          },
+          "name": "phantom",
+          "background": "linear-gradient(rgb(212, 92, 105), rgb(146, 44, 64))",
+          "crowns": "3 crowns",
+          "winner": "true"
+        }
+      ],
+      "crowns": [
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 482.0625,
+            "y": 30.46875,
+            "w": 25,
+            "h": 23.046875
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 858.9375,
+            "y": 30.46875,
+            "w": 25,
+            "h": 23.046875
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 627,
+            "y": 99.53125,
+            "w": 112,
+            "h": 103.25
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 584,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 640,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 696,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 584,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 640,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 696,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        }
+      ],
+      "flights": [],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "name": "1366x768-endy-endySeat0-draw",
+      "query": "view=final&who=endy&endySeat=0&result=draw",
+      "mine": {
+        "name": "Endychog",
+        "box": {
+          "x": 472.0625,
+          "y": 25,
+          "w": 163.296875,
+          "h": 34
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(143, 243, 255), rgb(43, 163, 196) 60%, rgb(27, 107, 143))",
+        "counter": {
+          "x": 472.0625,
+          "y": 25,
+          "w": 54.75,
+          "h": 34
+        }
+      },
+      "foe": {
+        "name": "phantom",
+        "box": {
+          "x": 730.625,
+          "y": 25,
+          "w": 163.3125,
+          "h": 34
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(255, 154, 152), rgb(208, 75, 86) 60%, rgb(146, 44, 64))",
+        "counter": {
+          "x": 839.1875,
+          "y": 25,
+          "w": 54.75,
+          "h": 34
+        }
+      },
+      "ribbons": [
+        {
+          "side": "mine",
+          "box": {
+            "x": 423,
+            "y": 328.328125,
+            "w": 520,
+            "h": 110.1875
+          },
+          "name": "Endychog",
+          "background": "linear-gradient(rgb(69, 178, 207), rgb(27, 107, 143))",
+          "crowns": "1 crown",
+          "winner": "false"
+        },
+        {
+          "side": "foe",
+          "box": {
+            "x": 423,
+            "y": 446.515625,
+            "w": 520,
+            "h": 110.1875
+          },
+          "name": "phantom",
+          "background": "linear-gradient(rgb(212, 92, 105), rgb(146, 44, 64))",
+          "crowns": "1 crown",
+          "winner": "false"
+        }
+      ],
+      "crowns": [
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 482.0625,
+            "y": 30.46875,
+            "w": 25,
+            "h": 23.046875
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 858.9375,
+            "y": 30.46875,
+            "w": 25,
+            "h": 23.046875
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 627,
+            "y": 99.53125,
+            "w": 112,
+            "h": 103.25
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 584,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 640,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 696,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 584,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 640,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 696,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        }
+      ],
+      "flights": [],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "name": "1366x768-endy-endySeat1-active",
+      "query": "view=active&who=endy&endySeat=1",
+      "mine": {
+        "name": "Endychog",
+        "box": {
+          "x": 472.0625,
+          "y": 25,
+          "w": 163.9375,
+          "h": 34
+        },
+        "score": "0",
+        "background": "linear-gradient(rgb(143, 243, 255), rgb(43, 163, 196) 60%, rgb(27, 107, 143))",
+        "counter": {
+          "x": 472.0625,
+          "y": 25,
+          "w": 60.34375,
+          "h": 34
+        }
+      },
+      "foe": {
+        "name": "phantom",
+        "box": {
+          "x": 730,
+          "y": 25,
+          "w": 163.9375,
+          "h": 34
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(255, 154, 152), rgb(208, 75, 86) 60%, rgb(146, 44, 64))",
+        "counter": {
+          "x": 839.1875,
+          "y": 25,
+          "w": 54.75,
+          "h": 34
+        }
+      },
+      "ribbons": [],
+      "crowns": [
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 482.0625,
+            "y": 30.46875,
+            "w": 25,
+            "h": 23.046875
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 858.9375,
+            "y": 30.46875,
+            "w": 25,
+            "h": 23.046875
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 324.08001708984375,
+            "y": 266.796875,
+            "w": 46,
+            "h": 42.40625
+          }
+        }
+      ],
+      "flights": [
+        {
+          "kind": "flight",
+          "team": "theirs",
+          "source": "/assets/brand/v1/chog-royale-crown.webp",
+          "origin": [
+            616.438,
+            569.625
+          ],
+          "end": "translate(calc(-50% + 250.125px), calc(-50% - 527.625px)) scale(0.5)"
+        },
+        {
+          "kind": "land",
+          "team": "theirs",
+          "x": 866.562,
+          "y": 63
+        }
+      ],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "name": "1366x768-endy-endySeat1-win",
+      "query": "view=final&who=endy&endySeat=1&result=win",
+      "mine": {
+        "name": "Endychog",
+        "box": {
+          "x": 472.0625,
+          "y": 25,
+          "w": 163.296875,
+          "h": 34
+        },
+        "score": "3",
+        "background": "linear-gradient(rgb(143, 243, 255), rgb(43, 163, 196) 60%, rgb(27, 107, 143))",
+        "counter": {
+          "x": 472.0625,
+          "y": 25,
+          "w": 57.6875,
+          "h": 34
+        }
+      },
+      "foe": {
+        "name": "phantom",
+        "box": {
+          "x": 730.625,
+          "y": 25,
+          "w": 163.3125,
+          "h": 34
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(255, 154, 152), rgb(208, 75, 86) 60%, rgb(146, 44, 64))",
+        "counter": {
+          "x": 839.1875,
+          "y": 25,
+          "w": 54.75,
+          "h": 34
+        }
+      },
+      "ribbons": [
+        {
+          "side": "mine",
+          "box": {
+            "x": 423,
+            "y": 328.328125,
+            "w": 520,
+            "h": 110.1875
+          },
+          "name": "Endychog",
+          "background": "linear-gradient(rgb(69, 178, 207), rgb(27, 107, 143))",
+          "crowns": "3 crowns",
+          "winner": "true"
+        },
+        {
+          "side": "foe",
+          "box": {
+            "x": 423,
+            "y": 446.515625,
+            "w": 520,
+            "h": 110.1875
+          },
+          "name": "phantom",
+          "background": "linear-gradient(rgb(212, 92, 105), rgb(146, 44, 64))",
+          "crowns": "1 crown",
+          "winner": "false"
+        }
+      ],
+      "crowns": [
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 482.0625,
+            "y": 30.46875,
+            "w": 25,
+            "h": 23.046875
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 858.9375,
+            "y": 30.46875,
+            "w": 25,
+            "h": 23.046875
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 627,
+            "y": 99.53125,
+            "w": 112,
+            "h": 103.25
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 584,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 640,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 696,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 584,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 640,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 696,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        }
+      ],
+      "flights": [],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "name": "1366x768-endy-endySeat1-loss",
+      "query": "view=final&who=endy&endySeat=1&result=loss",
+      "mine": {
+        "name": "Endychog",
+        "box": {
+          "x": 472.0625,
+          "y": 25,
+          "w": 163.296875,
+          "h": 34
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(143, 243, 255), rgb(43, 163, 196) 60%, rgb(27, 107, 143))",
+        "counter": {
+          "x": 472.0625,
+          "y": 25,
+          "w": 54.75,
+          "h": 34
+        }
+      },
+      "foe": {
+        "name": "phantom",
+        "box": {
+          "x": 730.625,
+          "y": 25,
+          "w": 163.3125,
+          "h": 34
+        },
+        "score": "3",
+        "background": "linear-gradient(rgb(255, 154, 152), rgb(208, 75, 86) 60%, rgb(146, 44, 64))",
+        "counter": {
+          "x": 836.25,
+          "y": 25,
+          "w": 57.6875,
+          "h": 34
+        }
+      },
+      "ribbons": [
+        {
+          "side": "mine",
+          "box": {
+            "x": 423,
+            "y": 328.328125,
+            "w": 520,
+            "h": 110.1875
+          },
+          "name": "Endychog",
+          "background": "linear-gradient(rgb(69, 178, 207), rgb(27, 107, 143))",
+          "crowns": "1 crown",
+          "winner": "false"
+        },
+        {
+          "side": "foe",
+          "box": {
+            "x": 423,
+            "y": 446.515625,
+            "w": 520,
+            "h": 110.1875
+          },
+          "name": "phantom",
+          "background": "linear-gradient(rgb(212, 92, 105), rgb(146, 44, 64))",
+          "crowns": "3 crowns",
+          "winner": "true"
+        }
+      ],
+      "crowns": [
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 482.0625,
+            "y": 30.46875,
+            "w": 25,
+            "h": 23.046875
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 858.9375,
+            "y": 30.46875,
+            "w": 25,
+            "h": 23.046875
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 627,
+            "y": 99.53125,
+            "w": 112,
+            "h": 103.25
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 584,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 640,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 696,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 584,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 640,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 696,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        }
+      ],
+      "flights": [],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "name": "1366x768-endy-endySeat1-draw",
+      "query": "view=final&who=endy&endySeat=1&result=draw",
+      "mine": {
+        "name": "Endychog",
+        "box": {
+          "x": 472.0625,
+          "y": 25,
+          "w": 163.296875,
+          "h": 34
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(143, 243, 255), rgb(43, 163, 196) 60%, rgb(27, 107, 143))",
+        "counter": {
+          "x": 472.0625,
+          "y": 25,
+          "w": 54.75,
+          "h": 34
+        }
+      },
+      "foe": {
+        "name": "phantom",
+        "box": {
+          "x": 730.625,
+          "y": 25,
+          "w": 163.3125,
+          "h": 34
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(255, 154, 152), rgb(208, 75, 86) 60%, rgb(146, 44, 64))",
+        "counter": {
+          "x": 839.1875,
+          "y": 25,
+          "w": 54.75,
+          "h": 34
+        }
+      },
+      "ribbons": [
+        {
+          "side": "mine",
+          "box": {
+            "x": 423,
+            "y": 328.328125,
+            "w": 520,
+            "h": 110.1875
+          },
+          "name": "Endychog",
+          "background": "linear-gradient(rgb(69, 178, 207), rgb(27, 107, 143))",
+          "crowns": "1 crown",
+          "winner": "false"
+        },
+        {
+          "side": "foe",
+          "box": {
+            "x": 423,
+            "y": 446.515625,
+            "w": 520,
+            "h": 110.1875
+          },
+          "name": "phantom",
+          "background": "linear-gradient(rgb(212, 92, 105), rgb(146, 44, 64))",
+          "crowns": "1 crown",
+          "winner": "false"
+        }
+      ],
+      "crowns": [
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 482.0625,
+            "y": 30.46875,
+            "w": 25,
+            "h": 23.046875
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 858.9375,
+            "y": 30.46875,
+            "w": 25,
+            "h": 23.046875
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 627,
+            "y": 99.53125,
+            "w": 112,
+            "h": 103.25
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 584,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 640,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 696,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 584,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 640,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 696,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        }
+      ],
+      "flights": [],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "name": "1366x768-phantom-endySeat0-active",
+      "query": "view=active&who=phantom&endySeat=0",
+      "mine": {
+        "name": "phantom",
+        "box": {
+          "x": 472.0625,
+          "y": 25,
+          "w": 163.9375,
+          "h": 34
+        },
+        "score": "0",
+        "background": "linear-gradient(rgb(143, 243, 255), rgb(43, 163, 196) 60%, rgb(27, 107, 143))",
+        "counter": {
+          "x": 472.0625,
+          "y": 25,
+          "w": 60.34375,
+          "h": 34
+        }
+      },
+      "foe": {
+        "name": "Endychog",
+        "box": {
+          "x": 730,
+          "y": 25,
+          "w": 163.9375,
+          "h": 34
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(255, 154, 152), rgb(208, 75, 86) 60%, rgb(146, 44, 64))",
+        "counter": {
+          "x": 839.1875,
+          "y": 25,
+          "w": 54.75,
+          "h": 34
+        }
+      },
+      "ribbons": [],
+      "crowns": [
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 482.0625,
+            "y": 30.46875,
+            "w": 25,
+            "h": 23.046875
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 858.9375,
+            "y": 30.46875,
+            "w": 25,
+            "h": 23.046875
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 324.08001708984375,
+            "y": 266.796875,
+            "w": 46,
+            "h": 42.40625
+          }
+        }
+      ],
+      "flights": [
+        {
+          "kind": "flight",
+          "team": "theirs",
+          "source": "/assets/brand/v1/chog-royale-crown.webp",
+          "origin": [
+            616.438,
+            569.625
+          ],
+          "end": "translate(calc(-50% + 250.125px), calc(-50% - 527.625px)) scale(0.5)"
+        },
+        {
+          "kind": "land",
+          "team": "theirs",
+          "x": 866.562,
+          "y": 63
+        }
+      ],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "name": "1366x768-phantom-endySeat0-win",
+      "query": "view=final&who=phantom&endySeat=0&result=win",
+      "mine": {
+        "name": "phantom",
+        "box": {
+          "x": 472.0625,
+          "y": 25,
+          "w": 163.296875,
+          "h": 34
+        },
+        "score": "3",
+        "background": "linear-gradient(rgb(143, 243, 255), rgb(43, 163, 196) 60%, rgb(27, 107, 143))",
+        "counter": {
+          "x": 472.0625,
+          "y": 25,
+          "w": 57.6875,
+          "h": 34
+        }
+      },
+      "foe": {
+        "name": "Endychog",
+        "box": {
+          "x": 730.625,
+          "y": 25,
+          "w": 163.3125,
+          "h": 34
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(255, 154, 152), rgb(208, 75, 86) 60%, rgb(146, 44, 64))",
+        "counter": {
+          "x": 839.1875,
+          "y": 25,
+          "w": 54.75,
+          "h": 34
+        }
+      },
+      "ribbons": [
+        {
+          "side": "mine",
+          "box": {
+            "x": 423,
+            "y": 328.328125,
+            "w": 520,
+            "h": 110.1875
+          },
+          "name": "phantom",
+          "background": "linear-gradient(rgb(69, 178, 207), rgb(27, 107, 143))",
+          "crowns": "3 crowns",
+          "winner": "true"
+        },
+        {
+          "side": "foe",
+          "box": {
+            "x": 423,
+            "y": 446.515625,
+            "w": 520,
+            "h": 110.1875
+          },
+          "name": "Endychog",
+          "background": "linear-gradient(rgb(212, 92, 105), rgb(146, 44, 64))",
+          "crowns": "1 crown",
+          "winner": "false"
+        }
+      ],
+      "crowns": [
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 482.0625,
+            "y": 30.46875,
+            "w": 25,
+            "h": 23.046875
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 858.9375,
+            "y": 30.46875,
+            "w": 25,
+            "h": 23.046875
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 627,
+            "y": 99.53125,
+            "w": 112,
+            "h": 103.25
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 584,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 640,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 696,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 584,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 640,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 696,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        }
+      ],
+      "flights": [],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "name": "1366x768-phantom-endySeat0-loss",
+      "query": "view=final&who=phantom&endySeat=0&result=loss",
+      "mine": {
+        "name": "phantom",
+        "box": {
+          "x": 472.0625,
+          "y": 25,
+          "w": 163.296875,
+          "h": 34
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(143, 243, 255), rgb(43, 163, 196) 60%, rgb(27, 107, 143))",
+        "counter": {
+          "x": 472.0625,
+          "y": 25,
+          "w": 54.75,
+          "h": 34
+        }
+      },
+      "foe": {
+        "name": "Endychog",
+        "box": {
+          "x": 730.625,
+          "y": 25,
+          "w": 163.3125,
+          "h": 34
+        },
+        "score": "3",
+        "background": "linear-gradient(rgb(255, 154, 152), rgb(208, 75, 86) 60%, rgb(146, 44, 64))",
+        "counter": {
+          "x": 836.25,
+          "y": 25,
+          "w": 57.6875,
+          "h": 34
+        }
+      },
+      "ribbons": [
+        {
+          "side": "mine",
+          "box": {
+            "x": 423,
+            "y": 328.328125,
+            "w": 520,
+            "h": 110.1875
+          },
+          "name": "phantom",
+          "background": "linear-gradient(rgb(69, 178, 207), rgb(27, 107, 143))",
+          "crowns": "1 crown",
+          "winner": "false"
+        },
+        {
+          "side": "foe",
+          "box": {
+            "x": 423,
+            "y": 446.515625,
+            "w": 520,
+            "h": 110.1875
+          },
+          "name": "Endychog",
+          "background": "linear-gradient(rgb(212, 92, 105), rgb(146, 44, 64))",
+          "crowns": "3 crowns",
+          "winner": "true"
+        }
+      ],
+      "crowns": [
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 482.0625,
+            "y": 30.46875,
+            "w": 25,
+            "h": 23.046875
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 858.9375,
+            "y": 30.46875,
+            "w": 25,
+            "h": 23.046875
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 627,
+            "y": 99.53125,
+            "w": 112,
+            "h": 103.25
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 584,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 640,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 696,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 584,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 640,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 696,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        }
+      ],
+      "flights": [],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "name": "1366x768-phantom-endySeat0-draw",
+      "query": "view=final&who=phantom&endySeat=0&result=draw",
+      "mine": {
+        "name": "phantom",
+        "box": {
+          "x": 472.0625,
+          "y": 25,
+          "w": 163.296875,
+          "h": 34
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(143, 243, 255), rgb(43, 163, 196) 60%, rgb(27, 107, 143))",
+        "counter": {
+          "x": 472.0625,
+          "y": 25,
+          "w": 54.75,
+          "h": 34
+        }
+      },
+      "foe": {
+        "name": "Endychog",
+        "box": {
+          "x": 730.625,
+          "y": 25,
+          "w": 163.3125,
+          "h": 34
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(255, 154, 152), rgb(208, 75, 86) 60%, rgb(146, 44, 64))",
+        "counter": {
+          "x": 839.1875,
+          "y": 25,
+          "w": 54.75,
+          "h": 34
+        }
+      },
+      "ribbons": [
+        {
+          "side": "mine",
+          "box": {
+            "x": 423,
+            "y": 328.328125,
+            "w": 520,
+            "h": 110.1875
+          },
+          "name": "phantom",
+          "background": "linear-gradient(rgb(69, 178, 207), rgb(27, 107, 143))",
+          "crowns": "1 crown",
+          "winner": "false"
+        },
+        {
+          "side": "foe",
+          "box": {
+            "x": 423,
+            "y": 446.515625,
+            "w": 520,
+            "h": 110.1875
+          },
+          "name": "Endychog",
+          "background": "linear-gradient(rgb(212, 92, 105), rgb(146, 44, 64))",
+          "crowns": "1 crown",
+          "winner": "false"
+        }
+      ],
+      "crowns": [
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 482.0625,
+            "y": 30.46875,
+            "w": 25,
+            "h": 23.046875
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 858.9375,
+            "y": 30.46875,
+            "w": 25,
+            "h": 23.046875
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 627,
+            "y": 99.53125,
+            "w": 112,
+            "h": 103.25
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 584,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 640,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 696,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 584,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 640,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 696,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        }
+      ],
+      "flights": [],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "name": "1366x768-phantom-endySeat1-active",
+      "query": "view=active&who=phantom&endySeat=1",
+      "mine": {
+        "name": "phantom",
+        "box": {
+          "x": 472.0625,
+          "y": 25,
+          "w": 163.9375,
+          "h": 34
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(143, 243, 255), rgb(43, 163, 196) 60%, rgb(27, 107, 143))",
+        "counter": {
+          "x": 472.0625,
+          "y": 25,
+          "w": 54.75,
+          "h": 34
+        }
+      },
+      "foe": {
+        "name": "Endychog",
+        "box": {
+          "x": 730,
+          "y": 25,
+          "w": 163.9375,
+          "h": 34
+        },
+        "score": "0",
+        "background": "linear-gradient(rgb(255, 154, 152), rgb(208, 75, 86) 60%, rgb(146, 44, 64))",
+        "counter": {
+          "x": 833.59375,
+          "y": 25,
+          "w": 60.34375,
+          "h": 34
+        }
+      },
+      "ribbons": [],
+      "crowns": [
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 482.0625,
+            "y": 30.46875,
+            "w": 25,
+            "h": 23.046875
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 858.9375,
+            "y": 30.46875,
+            "w": 25,
+            "h": 23.046875
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 324.08001708984375,
+            "y": 266.796875,
+            "w": 46,
+            "h": 42.40625
+          }
+        }
+      ],
+      "flights": [
+        {
+          "kind": "flight",
+          "team": "mine",
+          "source": "/assets/brand/v1/chog-royale-crown.webp",
+          "origin": [
+            616.438,
+            303.375
+          ],
+          "end": "translate(calc(-50% - 117px), calc(-50% - 261.375px)) scale(0.5)"
+        },
+        {
+          "kind": "land",
+          "team": "mine",
+          "x": 499.438,
+          "y": 63
+        }
+      ],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "name": "1366x768-phantom-endySeat1-win",
+      "query": "view=final&who=phantom&endySeat=1&result=win",
+      "mine": {
+        "name": "phantom",
+        "box": {
+          "x": 472.0625,
+          "y": 25,
+          "w": 163.296875,
+          "h": 34
+        },
+        "score": "3",
+        "background": "linear-gradient(rgb(143, 243, 255), rgb(43, 163, 196) 60%, rgb(27, 107, 143))",
+        "counter": {
+          "x": 472.0625,
+          "y": 25,
+          "w": 57.6875,
+          "h": 34
+        }
+      },
+      "foe": {
+        "name": "Endychog",
+        "box": {
+          "x": 730.625,
+          "y": 25,
+          "w": 163.3125,
+          "h": 34
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(255, 154, 152), rgb(208, 75, 86) 60%, rgb(146, 44, 64))",
+        "counter": {
+          "x": 839.1875,
+          "y": 25,
+          "w": 54.75,
+          "h": 34
+        }
+      },
+      "ribbons": [
+        {
+          "side": "mine",
+          "box": {
+            "x": 423,
+            "y": 328.328125,
+            "w": 520,
+            "h": 110.1875
+          },
+          "name": "phantom",
+          "background": "linear-gradient(rgb(69, 178, 207), rgb(27, 107, 143))",
+          "crowns": "3 crowns",
+          "winner": "true"
+        },
+        {
+          "side": "foe",
+          "box": {
+            "x": 423,
+            "y": 446.515625,
+            "w": 520,
+            "h": 110.1875
+          },
+          "name": "Endychog",
+          "background": "linear-gradient(rgb(212, 92, 105), rgb(146, 44, 64))",
+          "crowns": "1 crown",
+          "winner": "false"
+        }
+      ],
+      "crowns": [
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 482.0625,
+            "y": 30.46875,
+            "w": 25,
+            "h": 23.046875
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 858.9375,
+            "y": 30.46875,
+            "w": 25,
+            "h": 23.046875
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 627,
+            "y": 99.53125,
+            "w": 112,
+            "h": 103.25
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 584,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 640,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 696,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 584,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 640,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 696,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        }
+      ],
+      "flights": [],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "name": "1366x768-phantom-endySeat1-loss",
+      "query": "view=final&who=phantom&endySeat=1&result=loss",
+      "mine": {
+        "name": "phantom",
+        "box": {
+          "x": 472.0625,
+          "y": 25,
+          "w": 163.296875,
+          "h": 34
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(143, 243, 255), rgb(43, 163, 196) 60%, rgb(27, 107, 143))",
+        "counter": {
+          "x": 472.0625,
+          "y": 25,
+          "w": 54.75,
+          "h": 34
+        }
+      },
+      "foe": {
+        "name": "Endychog",
+        "box": {
+          "x": 730.625,
+          "y": 25,
+          "w": 163.3125,
+          "h": 34
+        },
+        "score": "3",
+        "background": "linear-gradient(rgb(255, 154, 152), rgb(208, 75, 86) 60%, rgb(146, 44, 64))",
+        "counter": {
+          "x": 836.25,
+          "y": 25,
+          "w": 57.6875,
+          "h": 34
+        }
+      },
+      "ribbons": [
+        {
+          "side": "mine",
+          "box": {
+            "x": 423,
+            "y": 328.328125,
+            "w": 520,
+            "h": 110.1875
+          },
+          "name": "phantom",
+          "background": "linear-gradient(rgb(69, 178, 207), rgb(27, 107, 143))",
+          "crowns": "1 crown",
+          "winner": "false"
+        },
+        {
+          "side": "foe",
+          "box": {
+            "x": 423,
+            "y": 446.515625,
+            "w": 520,
+            "h": 110.1875
+          },
+          "name": "Endychog",
+          "background": "linear-gradient(rgb(212, 92, 105), rgb(146, 44, 64))",
+          "crowns": "3 crowns",
+          "winner": "true"
+        }
+      ],
+      "crowns": [
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 482.0625,
+            "y": 30.46875,
+            "w": 25,
+            "h": 23.046875
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 858.9375,
+            "y": 30.46875,
+            "w": 25,
+            "h": 23.046875
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 627,
+            "y": 99.53125,
+            "w": 112,
+            "h": 103.25
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 584,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 640,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 696,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 584,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 640,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 696,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        }
+      ],
+      "flights": [],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "name": "1366x768-phantom-endySeat1-draw",
+      "query": "view=final&who=phantom&endySeat=1&result=draw",
+      "mine": {
+        "name": "phantom",
+        "box": {
+          "x": 472.0625,
+          "y": 25,
+          "w": 163.296875,
+          "h": 34
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(143, 243, 255), rgb(43, 163, 196) 60%, rgb(27, 107, 143))",
+        "counter": {
+          "x": 472.0625,
+          "y": 25,
+          "w": 54.75,
+          "h": 34
+        }
+      },
+      "foe": {
+        "name": "Endychog",
+        "box": {
+          "x": 730.625,
+          "y": 25,
+          "w": 163.3125,
+          "h": 34
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(255, 154, 152), rgb(208, 75, 86) 60%, rgb(146, 44, 64))",
+        "counter": {
+          "x": 839.1875,
+          "y": 25,
+          "w": 54.75,
+          "h": 34
+        }
+      },
+      "ribbons": [
+        {
+          "side": "mine",
+          "box": {
+            "x": 423,
+            "y": 328.328125,
+            "w": 520,
+            "h": 110.1875
+          },
+          "name": "phantom",
+          "background": "linear-gradient(rgb(69, 178, 207), rgb(27, 107, 143))",
+          "crowns": "1 crown",
+          "winner": "false"
+        },
+        {
+          "side": "foe",
+          "box": {
+            "x": 423,
+            "y": 446.515625,
+            "w": 520,
+            "h": 110.1875
+          },
+          "name": "Endychog",
+          "background": "linear-gradient(rgb(212, 92, 105), rgb(146, 44, 64))",
+          "crowns": "1 crown",
+          "winner": "false"
+        }
+      ],
+      "crowns": [
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 482.0625,
+            "y": 30.46875,
+            "w": 25,
+            "h": 23.046875
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 858.9375,
+            "y": 30.46875,
+            "w": 25,
+            "h": 23.046875
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 627,
+            "y": 99.53125,
+            "w": 112,
+            "h": 103.25
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 584,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 640,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 696,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 584,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 640,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 696,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        }
+      ],
+      "flights": [],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "name": "390x844-endy-endySeat1-active-long-reduced",
+      "query": "view=active&who=endy&endySeat=1&long=1",
+      "mine": {
+        "name": "LocalCommanderWithAnExtremelyLongName",
+        "box": {
+          "x": 14,
+          "y": 11,
+          "w": 142,
+          "h": 30
+        },
+        "score": "0",
+        "background": "linear-gradient(rgb(143, 243, 255), rgb(43, 163, 196) 60%, rgb(27, 107, 143))",
+        "counter": {
+          "x": 14,
+          "y": 11,
+          "w": 54.421875,
+          "h": 30
+        }
+      },
+      "foe": {
+        "name": "OpponentCommanderWithAnotherVeryLongName",
+        "box": {
+          "x": 234,
+          "y": 11,
+          "w": 142,
+          "h": 30
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(255, 154, 152), rgb(208, 75, 86) 60%, rgb(146, 44, 64))",
+        "counter": {
+          "x": 326,
+          "y": 11,
+          "w": 50,
+          "h": 30
+        }
+      },
+      "ribbons": [],
+      "crowns": [
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 24,
+            "y": 16.3125,
+            "w": 21,
+            "h": 19.359375
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 344.53125,
+            "y": 16.3125,
+            "w": 21,
+            "h": 19.359375
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        }
+      ],
+      "flights": [
+        {
+          "kind": "flight",
+          "team": "theirs",
+          "source": "/assets/brand/v1/chog-royale-crown.webp",
+          "origin": [
+            121,
+            537.328
+          ]
+        }
+      ],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "name": "390x844-endy-endySeat1-loss-long-reduced",
+      "query": "view=final&who=endy&endySeat=1&result=loss&long=1",
+      "mine": {
+        "name": "LocalCommanderWithAnExtremelyLongName",
+        "box": {
+          "x": 14,
+          "y": 11,
+          "w": 137.015625,
+          "h": 30
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(143, 243, 255), rgb(43, 163, 196) 60%, rgb(27, 107, 143))",
+        "counter": {
+          "x": 14,
+          "y": 11,
+          "w": 50,
+          "h": 30
+        }
+      },
+      "foe": {
+        "name": "OpponentCommanderWithAnotherVeryLongName",
+        "box": {
+          "x": 238.96875,
+          "y": 11,
+          "w": 137.03125,
+          "h": 30
+        },
+        "score": "3",
+        "background": "linear-gradient(rgb(255, 154, 152), rgb(208, 75, 86) 60%, rgb(146, 44, 64))",
+        "counter": {
+          "x": 323.90625,
+          "y": 11,
+          "w": 52.09375,
+          "h": 30
+        }
+      },
+      "ribbons": [
+        {
+          "side": "mine",
+          "box": {
+            "x": 18,
+            "y": 351.5625,
+            "w": 525.03125,
+            "h": 106.59375
+          },
+          "name": "LocalCommanderWithAnExtremelyLongName",
+          "background": "linear-gradient(rgb(69, 178, 207), rgb(27, 107, 143))",
+          "crowns": "1 crown",
+          "winner": "false"
+        },
+        {
+          "side": "foe",
+          "box": {
+            "x": 18,
+            "y": 466.15625,
+            "w": 525.03125,
+            "h": 106.59375
+          },
+          "name": "OpponentCommanderWithAnotherVeryLongName",
+          "background": "linear-gradient(rgb(212, 92, 105), rgb(146, 44, 64))",
+          "crowns": "3 crowns",
+          "winner": "true"
+        }
+      ],
+      "crowns": [
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 24.46875,
+            "y": 16.3125,
+            "w": 21,
+            "h": 19.359375
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 345,
+            "y": 16.3125,
+            "w": 21,
+            "h": 19.359375
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 139,
+            "y": 159.484375,
+            "w": 112,
+            "h": 103.25
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 190.515625,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 240.515625,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 290.515625,
+            "y": 397.640625,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 190.515625,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 240.515625,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 290.515625,
+            "y": 512.234375,
+            "w": 38,
+            "h": 35.03125
+          }
+        }
+      ],
+      "flights": [],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "name": "1366x768-endy-endySeat1-active-long-reduced",
+      "query": "view=active&who=endy&endySeat=1&long=1",
+      "mine": {
+        "name": "LocalCommanderWithAnExtremelyLongName",
+        "box": {
+          "x": 472.0625,
+          "y": 25,
+          "w": 163.9375,
+          "h": 34
+        },
+        "score": "0",
+        "background": "linear-gradient(rgb(143, 243, 255), rgb(43, 163, 196) 60%, rgb(27, 107, 143))",
+        "counter": {
+          "x": 472.0625,
+          "y": 25,
+          "w": 60.34375,
+          "h": 34
+        }
+      },
+      "foe": {
+        "name": "OpponentCommanderWithAnotherVeryLongName",
+        "box": {
+          "x": 730,
+          "y": 25,
+          "w": 163.9375,
+          "h": 34
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(255, 154, 152), rgb(208, 75, 86) 60%, rgb(146, 44, 64))",
+        "counter": {
+          "x": 839.1875,
+          "y": 25,
+          "w": 54.75,
+          "h": 34
+        }
+      },
+      "ribbons": [],
+      "crowns": [
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 482.0625,
+            "y": 30.46875,
+            "w": 25,
+            "h": 23.046875
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 858.9375,
+            "y": 30.46875,
+            "w": 25,
+            "h": 23.046875
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        }
+      ],
+      "flights": [
+        {
+          "kind": "flight",
+          "team": "theirs",
+          "source": "/assets/brand/v1/chog-royale-crown.webp",
+          "origin": [
+            616.438,
+            569.625
+          ]
+        }
+      ],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "name": "1366x768-endy-endySeat1-loss-long-reduced",
+      "query": "view=final&who=endy&endySeat=1&result=loss&long=1",
+      "mine": {
+        "name": "LocalCommanderWithAnExtremelyLongName",
+        "box": {
+          "x": 472.0625,
+          "y": 25,
+          "w": 163.296875,
+          "h": 34
+        },
+        "score": "1",
+        "background": "linear-gradient(rgb(143, 243, 255), rgb(43, 163, 196) 60%, rgb(27, 107, 143))",
+        "counter": {
+          "x": 472.0625,
+          "y": 25,
+          "w": 54.75,
+          "h": 34
+        }
+      },
+      "foe": {
+        "name": "OpponentCommanderWithAnotherVeryLongName",
+        "box": {
+          "x": 730.625,
+          "y": 25,
+          "w": 163.3125,
+          "h": 34
+        },
+        "score": "3",
+        "background": "linear-gradient(rgb(255, 154, 152), rgb(208, 75, 86) 60%, rgb(146, 44, 64))",
+        "counter": {
+          "x": 836.25,
+          "y": 25,
+          "w": 57.6875,
+          "h": 34
+        }
+      },
+      "ribbons": [
+        {
+          "side": "mine",
+          "box": {
+            "x": 423,
+            "y": 328.328125,
+            "w": 619,
+            "h": 110.1875
+          },
+          "name": "LocalCommanderWithAnExtremelyLongName",
+          "background": "linear-gradient(rgb(69, 178, 207), rgb(27, 107, 143))",
+          "crowns": "1 crown",
+          "winner": "false"
+        },
+        {
+          "side": "foe",
+          "box": {
+            "x": 423,
+            "y": 446.515625,
+            "w": 619,
+            "h": 110.1875
+          },
+          "name": "OpponentCommanderWithAnotherVeryLongName",
+          "background": "linear-gradient(rgb(212, 92, 105), rgb(146, 44, 64))",
+          "crowns": "3 crowns",
+          "winner": "true"
+        }
+      ],
+      "crowns": [
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 482.0625,
+            "y": 30.46875,
+            "w": 25,
+            "h": 23.046875
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 858.9375,
+            "y": 30.46875,
+            "w": 25,
+            "h": 23.046875
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 627,
+            "y": 99.53125,
+            "w": 112,
+            "h": 103.25
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 633.5,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 689.5,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 745.5,
+            "y": 375.234375,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 633.5,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 689.5,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        },
+        {
+          "src": "/assets/brand/v1/chog-royale-crown.webp",
+          "natural": [
+            256,
+            236
+          ],
+          "box": {
+            "x": 745.5,
+            "y": 493.421875,
+            "w": 44,
+            "h": 40.5625
+          }
+        }
+      ],
+      "flights": [],
+      "overflow": false,
+      "errors": []
+    }
+  ],
+  "summary": {
+    "passed": 36,
+    "standard": 32,
+    "longReduced": 4,
+    "midFlightScreenshots": 4,
+    "flightLandings": "both local-left and opponent-right verified against actual counter bounds"
+  }
+}

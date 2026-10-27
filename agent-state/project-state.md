@@ -1,5 +1,12 @@
 # Project State
 
+## Final UX polish (2026-10-27)
+
+- Approved PR #6 merged at `e985247a89396eec2dd69c8bc65b7a0b87c7596a`. Vercel production `dpl_16rc2SKp9n7ASUdjossrCRhPJkUN` READY, alias chogroyale.vercel.app. New manifests and sampled sheets return 200.
+- Branch `polish/final-ux-identity-share` from updated main: scoped Friends composition, copy/native-share invites and automatic authenticated room join with setup return, official crown images, self-left HUD and self-top results.
+- Delivered PR https://github.com/Devendurance/ChogRoyale/pull/7. Final 222 tests, changed lint/typecheck/build pass. Both real injected-auth seat permutations and invite refresh verified, plus 36 presentation cases. Acceptance/screenshots/file list in `docs/final-ux-polish.md`. Real-device/Privy/NFT/settlement acceptance remains unverified, full lint has 24 inherited errors.
+- Server/gameplay/account/economy/NFT behavior unchanged. New polish PR is delivery only, no merge or production activation.
+
 ## V3 release acceptance (2026-10-27)
 
 - Rift Sentry presentation replays the server fire rule (`stepSentry` in `unit-anim.ts`) and shows a shot only on an observed HP or shield drop. Packer per-unit `down` repacks upscaled sheets from 2x masters. Live match textures total 86.8 MB (units 33.9, arena 34.6, VFX 1.4). Commander lazy-load deliberately not done (8.3 MB, opponent class unknown until deploy).

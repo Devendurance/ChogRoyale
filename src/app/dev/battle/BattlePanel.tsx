@@ -3,6 +3,7 @@
 // B3.1 dev battle surface. Real Privy login, authoritative Colyseus server,
 // Phaser view. Gated to development unless explicitly enabled.
 
+import { hasMatchingInviteResume, roomJoinError, validRoomCode } from "@/lib/battle-invite";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { usePrivy, useLogin } from "@privy-io/react-auth";
 import { Client, type Room } from "@colyseus/sdk";
@@ -53,17 +54,23 @@ const RESUME_KEY = "b3.resume";
 export function BattlePanel({
   publicMode = false,
   initialMode = "unranked",
+  initialRoom = null,
+  invalidInvite = false,
+  setupReady = true,
 }: {
   /** Public app routes reuse this panel without the development diagnostics. */
   publicMode?: boolean;
+  initialRoom?: string | null;
+  invalidInvite?: boolean;
+  setupReady?: boolean;
   /** The hub can send the player here with an intended queue or room flow. */
   initialMode?: "unranked" | "ranked" | "private";
 }) {
   const { ready, authenticated, getAccessToken, logout } = usePrivy();
   const { login } = useLogin();
   const [stage, setStage] = useState<Stage>("idle");
-  const [error, setError] = useState<string | null>(null);
-  const [code, setCode] = useState("");
+  const [error, setError] = useState<string | null>(invalidInvite ? "This invitation has an invalid room code. Ask your friend for a new link." : null);
+  const [code, setCode] = useState(initialRoom ?? "");
   const [room, setRoom] = useState<Room | null>(null);
   const [lobby, setLobby] = useState<LobbyMessage | null>(null);
   const [start, setStart] = useState<StartMessage | null>(null);
@@ -290,8 +297,16 @@ export function BattlePanel({
     };
   }, [end?.matchId, getAccessToken, settlement, start?.mode]);
 
+  const connecting = useRef(false);
   const connect = useCallback(
-    async (mode: "create" | "join") => {
+    async (mode: "create" | "join", inviteCode?: string) => {
+      const joinCode = inviteCode ?? code;
+      if (mode === "join" && !validRoomCode(joinCode)) {
+        setError("Enter the complete 9-character room code. Codes are case-sensitive.");
+        return;
+      }
+      if (connecting.current) return;
+      connecting.current = true;
       setError(null);
       setStage("connecting");
       try {
@@ -299,16 +314,33 @@ export function BattlePanel({
         if (!token) throw new Error("No Privy access token. Log in first.");
         // Token goes only in the matchmaking request header, never the URL.
         const client = new Client(SERVER, { headers: { authorization: `Bearer ${token}` } });
-        const r = mode === "create" ? await client.create(BATTLE_ROOM) : await client.joinById(code.trim());
+        const r = mode === "create" ? await client.create(BATTLE_ROOM) : await client.joinById(joinCode.trim());
         attachRoom(r);
         setStage("lobby");
       } catch (e) {
-        setError(e instanceof Error ? e.message : String(e));
+        setError(mode === "join" ? roomJoinError(e) : "Couldn't create a room. Check your connection and try again.");
         setStage("idle");
+      } finally {
+        connecting.current = false;
       }
     },
     [code, getAccessToken, attachRoom]
   );
+
+  const inviteTried = useRef(false);
+  useEffect(() => {
+    if (!publicMode || !initialRoom || !setupReady || !ready || !authenticated || stage !== "idle" || inviteTried.current) return;
+    try {
+      if (hasMatchingInviteResume(initialRoom, JSON.parse(sessionStorage.getItem(RESUME_KEY) ?? "null"))) return;
+    } catch { /* Without stored recovery, join the invitation normally. */ }
+    // Mark inside the task so Strict Mode's cancelled first effect doesn't consume it.
+    const timer = setTimeout(() => {
+      if (inviteTried.current) return;
+      inviteTried.current = true;
+      void connect("join", initialRoom);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [publicMode, initialRoom, setupReady, ready, authenticated, stage, connect]);
 
   /** Join one queue. The room name is the server-side mode authority: the
    * ranked room only ever pairs ranked tickets, and the client label below
@@ -425,7 +457,7 @@ export function BattlePanel({
   // After a refresh, offer the stored seat one automatic resume attempt.
   const autoResumeTried = useRef(false);
   useEffect(() => {
-    if (!ready || !authenticated || stage !== "idle" || autoResumeTried.current) return;
+    if (invalidInvite || !setupReady || !ready || !authenticated || stage !== "idle" || autoResumeTried.current) return;
     let stored: { roomId: string; resumeToken: string; graceMs: number } | null = null;
     try {
       stored = JSON.parse(sessionStorage.getItem(RESUME_KEY) ?? "null");
@@ -433,16 +465,18 @@ export function BattlePanel({
       stored = null;
     }
     if (!stored?.roomId || !stored.resumeToken) return;
-    autoResumeTried.current = true;
+    if (initialRoom && !hasMatchingInviteResume(initialRoom, stored)) return;
     const info = stored;
     const t = setTimeout(() => {
+      if (autoResumeTried.current) return;
+      autoResumeTried.current = true;
       resumeInfo.current = info;
       resumeDeadline.current = Date.now() + info.graceMs;
       setResumeDeadlineAt(resumeDeadline.current);
       setStage("reconnecting");
     }, 0);
     return () => clearTimeout(t);
-  }, [ready, authenticated, stage]);
+  }, [ready, authenticated, stage, initialRoom, invalidInvite, setupReady]);
 
   useEffect(() => {
     if (!notice) return;
@@ -594,7 +628,7 @@ export function BattlePanel({
       </div>}
 
       {publicMode && stage === "idle" && (
-        <BattleEntry mode={initialMode} code={code} error={error} onCodeChange={setCode}
+        <BattleEntry mode={initialMode} code={code} error={error} setupReady={setupReady} onCodeChange={setCode}
           onFind={() => { unlockAudio(); void findMatch(initialMode === "ranked" ? "ranked" : "unranked"); }}
           onCreate={() => { unlockAudio(); void connect("create"); }} onJoin={() => { unlockAudio(); void connect("join"); }} />
       )}

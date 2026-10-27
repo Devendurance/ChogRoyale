@@ -9,7 +9,7 @@
 .chud-finale-content{position:relative;width:min(100%,520px);margin:auto 0;padding:14px 0 6px}
 .chud-finale-kicker{margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:#e9dcf4;animation:chud-finale-in .35s calc(var(--fd) + .1s) both}
 
-/* Emblem: victory pops in under rotating rays, defeat drops and cracks. */
+/* Emblem: victory pops in under rotating rays, defeat settles with a muted glow. */
 .chud-finale-emblem{position:relative;isolation:isolate;height:112px;display:grid;place-items:center;filter:drop-shadow(0 0 28px #ffd26455);animation:chud-finale-pop .55s calc(var(--fd) + .2s) both}
 .chud-finale-emblem>.game-icon{position:relative;z-index:1}
 .chud-finale[data-result=win] .chud-finale-emblem:before{content:"";position:absolute;z-index:0;width:300px;height:300px;pointer-events:none;background:repeating-conic-gradient(from 8deg,#ffd57552 0deg 9deg,transparent 9deg 30deg);mask-image:radial-gradient(circle,#0008 10%,#000 25%,transparent 65%);animation:chud-finale-rays 16s linear infinite}
@@ -25,10 +25,10 @@
 .chud-finale[data-result=abort] h2{font-size:clamp(34px,6.5vw,52px);color:#eadcf6}
 .chud-finale-context{margin:0 0 20px;color:#ece0f6;font-size:13px;font-weight:600;letter-spacing:.02em;animation:chud-finale-in .4s calc(var(--fd) + .5s) both}
 
-/* Ribbons: opponent on top, you below, matching the board. The winner's
+/* Ribbons: you on top in blue, opponent below in red. The winner's
    ribbon carries a badge and a warm rim. The loser's ribbon steps back. */
 .chud-finale-versus{display:grid;justify-items:center;filter:drop-shadow(0 8px 0 #160c2d88)}
-.chud-finale-ribbon{position:relative;width:100%;padding:12px 28px 14px;border:2px solid #2a153f;border-top:3px solid #ffccdc;clip-path:polygon(0 0,100% 0,97% 50%,100% 100%,0 100%,3% 50%);background:linear-gradient(#c45282,#8d2450);box-shadow:inset 0 3px 0 #ffffff2e,inset 0 -5px 0 #0000002b;animation:chud-finale-ribbon-foe .45s cubic-bezier(.16,1,.3,1) calc(var(--fd) + .45s) both}
+.chud-finale-ribbon{position:relative;width:100%;padding:12px 28px 14px;border:2px solid #2a153f;border-top:3px solid #ffbdc6;clip-path:polygon(0 0,100% 0,97% 50%,100% 100%,0 100%,3% 50%);background:linear-gradient(#d45c69,#922c40);box-shadow:inset 0 3px 0 #ffffff2e,inset 0 -5px 0 #0000002b;animation:chud-finale-ribbon-foe .45s cubic-bezier(.16,1,.3,1) calc(var(--fd) + .45s) both}
 .chud-finale-ribbon--mine{border-top-color:#c3fbff;background:linear-gradient(#45b2cf,#1b6b8f);animation-name:chud-finale-ribbon-mine;animation-delay:calc(var(--fd) + .55s)}
 .chud-finale-ribbon[data-winner=true]{border-top-color:#fff0a8;box-shadow:inset 0 3px 0 #ffffff4a,inset 0 -5px 0 #0000002b,inset 0 0 0 3px #ffd76866}
 .chud-finale[data-result=win] .chud-finale-ribbon--foe,.chud-finale[data-result=loss] .chud-finale-ribbon--mine{filter:saturate(.62) brightness(.82)}

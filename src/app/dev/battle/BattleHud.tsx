@@ -422,21 +422,21 @@ export default function BattleHud(props: BattleHudProps) {
       <div className="chud-col">
         <header className="chud-top">
           <div className="chud-score">
-            <span className="chud-side-tag" data-side="foe">
-              <span className="chud-crown-num" ref={theirsScoreRef}>
-                <GameIcon kind="crown" size={25} /> {score.theirs}
+            <span className="chud-side-tag" data-side="you">
+              <span className="chud-crown-num" ref={mineScoreRef}>
+                <GameIcon kind="crown" size={25} /> {score.mine}
               </span>
-              <span className="chud-player">{start.opponent}</span>
+              <span className="chud-player">{props.playerName ?? "You"}</span>
             </span>
             <span className="chud-clock2">
               {tv.badge && <b className="chud-ot">{tv.badge} </b>}
               {tv.text}
               {tv.mult > 1 && <span className="chud-mult chud-clock-mult">{tv.mult}x</span>}
             </span>
-            <span className="chud-side-tag" data-side="you">
-              <span className="chud-player">{props.playerName ?? "You"}</span>
-              <span className="chud-crown-num" ref={mineScoreRef}>
-                {score.mine} <GameIcon kind="crown" size={25} />
+            <span className="chud-side-tag" data-side="foe">
+              <span className="chud-player">{start.opponent}</span>
+              <span className="chud-crown-num" ref={theirsScoreRef}>
+                {score.theirs} <GameIcon kind="crown" size={25} />
               </span>
             </span>
             {props.showDevDiagnostics !== false && (

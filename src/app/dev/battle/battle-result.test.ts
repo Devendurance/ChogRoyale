@@ -35,6 +35,17 @@ describe("finale view model", () => {
 });
 
 describe("battle finale render", () => {
+  it("keeps self above the opponent for both seats and every outcome with official crown art", () => {
+    for (const me of [0, 1]) for (const result of ["win", "loss", "draw"] as const) {
+      const html = render({ me, end: end({ result, crowns: [3, 1] }) });
+      expect(html.indexOf("chud-finale-ribbon--mine")).toBeLessThan(html.indexOf("chud-finale-ribbon--foe"));
+      const mine = html.slice(html.indexOf("chud-finale-ribbon--mine"), html.indexOf("chud-finale-vs"));
+      expect(mine).toContain("MyChog");
+      expect(mine).toContain(`aria-label="${me === 0 ? "3 crowns" : "1 crown"}"`);
+      expect(html).toContain('src="/assets/brand/v1/chog-royale-crown.webp"');
+      expect(html).not.toContain("game-icon-glint");
+    }
+  });
   it("labels the local player, badges the winner and keeps evidence out of the markup", () => {
     const html = render();
     expect(html).toContain("Victory");

@@ -1,0 +1,197 @@
+{
+  "merge": "e985247a89396eec2dd69c8bc65b7a0b87c7596a",
+  "checks": [
+    {
+      "path": "public/assets/battle-vfx/v001/burst.png",
+      "status": 200,
+      "bytes": 11253,
+      "hashMatches": true
+    },
+    {
+      "path": "public/assets/battle-vfx/v001/arrow.png",
+      "status": 200,
+      "bytes": 756,
+      "hashMatches": true
+    },
+    {
+      "path": "public/assets/battle-vfx/v001/comet-trail.png",
+      "status": 200,
+      "bytes": 15793,
+      "hashMatches": true
+    },
+    {
+      "path": "public/assets/battle-vfx/v001/bolt.png",
+      "status": 200,
+      "bytes": 86391,
+      "hashMatches": true
+    },
+    {
+      "path": "public/assets/battle-vfx/v001/comet.png",
+      "status": 200,
+      "bytes": 43059,
+      "hashMatches": true
+    },
+    {
+      "path": "public/assets/battle-vfx/v001/debris.png",
+      "status": 200,
+      "bytes": 2539,
+      "hashMatches": true
+    },
+    {
+      "path": "public/assets/battle-vfx/v001/glow.png",
+      "status": 200,
+      "bytes": 2063,
+      "hashMatches": true
+    },
+    {
+      "path": "public/assets/battle-vfx/v001/ground-ring.png",
+      "status": 200,
+      "bytes": 7093,
+      "hashMatches": true
+    },
+    {
+      "path": "public/assets/battle-vfx/v001/horn.png",
+      "status": 200,
+      "bytes": 10680,
+      "hashMatches": true
+    },
+    {
+      "path": "public/assets/battle-vfx/v001/manifests/vfx.runtime.json",
+      "status": 200,
+      "bytes": 6303,
+      "hashMatches": true
+    },
+    {
+      "path": "public/assets/battle-vfx/v001/net.png",
+      "status": 200,
+      "bytes": 1392,
+      "hashMatches": true
+    },
+    {
+      "path": "public/assets/battle-vfx/v001/smoke.png",
+      "status": 200,
+      "bytes": 17863,
+      "hashMatches": true
+    },
+    {
+      "path": "public/assets/battle-vfx/v001/shield.png",
+      "status": 200,
+      "bytes": 13219,
+      "hashMatches": true
+    },
+    {
+      "path": "public/assets/battle-vfx/v001/muzzle.png",
+      "status": 200,
+      "bytes": 1975,
+      "hashMatches": true
+    },
+    {
+      "path": "public/assets/battle-vfx/v001/ring.png",
+      "status": 200,
+      "bytes": 7563,
+      "hashMatches": true
+    },
+    {
+      "path": "public/assets/battle-vfx/v001/spark.png",
+      "status": 200,
+      "bytes": 998,
+      "hashMatches": true
+    },
+    {
+      "path": "public/assets/battle-vfx/v001/star.png",
+      "status": 200,
+      "bytes": 500,
+      "hashMatches": true
+    },
+    {
+      "path": "public/assets/battle-vfx/v001/snare-bind.png",
+      "status": 200,
+      "bytes": 5243,
+      "hashMatches": true
+    },
+    {
+      "path": "public/assets/battle-vfx/v001/snare-sigil.png",
+      "status": 200,
+      "bytes": 93181,
+      "hashMatches": true
+    },
+    {
+      "path": "public/assets/battle-vfx/v001/streak.png",
+      "status": 200,
+      "bytes": 1314,
+      "hashMatches": true
+    },
+    {
+      "path": "public/assets/battle-vfx/v001/summon.png",
+      "status": 200,
+      "bytes": 9042,
+      "hashMatches": true
+    },
+    {
+      "path": "public/assets/chog-units/v001/commander_bulwark/sheet.png",
+      "status": 200,
+      "bytes": 340638,
+      "hashMatches": true
+    },
+    {
+      "path": "public/assets/chog-units/v001/burrow_scrapper/sheet.png",
+      "status": 200,
+      "bytes": 166527,
+      "hashMatches": true
+    },
+    {
+      "path": "public/assets/chog-units/v001/commander_deadeye/sheet.png",
+      "status": 200,
+      "bytes": 340740,
+      "hashMatches": true
+    },
+    {
+      "path": "public/assets/chog-units/v001/chog_burrow/sheet.png",
+      "status": 200,
+      "bytes": 258605,
+      "hashMatches": true
+    },
+    {
+      "path": "public/assets/chog-units/v001/manifests/units.runtime.json",
+      "status": 200,
+      "bytes": 50191,
+      "hashMatches": true
+    },
+    {
+      "path": "public/assets/chog-units/v001/commander_warden/sheet.png",
+      "status": 200,
+      "bytes": 316211,
+      "hashMatches": true
+    },
+    {
+      "path": "public/assets/chog-units/v001/decoy_totem/sheet.png",
+      "status": 200,
+      "bytes": 305289,
+      "hashMatches": true
+    },
+    {
+      "path": "public/assets/chog-units/v001/commander_scout/sheet.png",
+      "status": 200,
+      "bytes": 298313,
+      "hashMatches": true
+    },
+    {
+      "path": "public/assets/chog-units/v001/commander_reaver/sheet.png",
+      "status": 200,
+      "bytes": 361203,
+      "hashMatches": true
+    },
+    {
+      "path": "public/assets/chog-units/v001/rift_sentry/sheet.png",
+      "status": 200,
+      "bytes": 512733,
+      "hashMatches": true
+    },
+    {
+      "path": "public/assets/chog-units/v001/rift_mortar/sheet.png",
+      "status": 200,
+      "bytes": 699612,
+      "hashMatches": true
+    }
+  ]
+}

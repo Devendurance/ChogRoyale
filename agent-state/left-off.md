@@ -1,3 +1,12 @@
+## Final UX polish (2026-10-27, delivered)
+
+- Doing: finished bounded polish on `polish/final-ux-identity-share`, PR https://github.com/Devendurance/ChogRoyale/pull/7. Owner approved PR #6 merge only. PR #7 stays unmerged, no production promotion.
+- Done: PR #6 production READY, all 32 changed public assets hash-match. Checkpoints `ee2a587`, `7db7314`. All five acceptance areas pass within documented limits. Friends actions, 36 identity/crown fixtures, copy/share/login/setup/error cases verified. Two full injected-auth matches cover opposite seats, 1,800 ticks each, matching hashes/replayIdentical and zero errors. Actual invite refresh recovered the same seat.
+- Checks: final 222/222 relevant tests, changed-file lint, standalone typecheck and production build with 65 pages pass. Full lint retains 24 existing errors and one warning in unchanged files. QA source/routes/config removed, production chunks contain no injected identities. Evidence and exact file list: `docs/final-ux-polish.md`.
+- Final screenshot review replaced pre-texture startup captures with later live mobile frames and the verified resumed desktop frame. The clean fixture set covers every requested perspective/size. Local dev toasts are labelled in the report.
+- Next: owner review of PR #7. Physical phones, real Privy/NFT/settlement and installed-app native sharing remain unverified. No further overhaul or feature slice is authorized.
+- Preserved unrelated `.fast-build/STATE.md`, untracked DESIGN.md, messaging doc and demo-production/. External full QA set: `ChogRoyale-Assets/final-polish-20261027`. Original config files restored.
+
 ## V3 release acceptance (2026-10-27)
 
 - Doing: release QA on PR #6 (`visual-overhaul/v3-final-assets`). Main (branding PR #5, 48a0eaf) merged in as 6329e08, no force-push. Never merge or deploy without owner approval (main auto-deploys).

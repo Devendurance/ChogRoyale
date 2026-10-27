@@ -7,16 +7,16 @@ import { useEffect, useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { usePathname, useRouter } from "next/navigation";
 
-export type OnboardingGateState = "loading" | "complete" | "incomplete";
+export type OnboardingGateState = "loading" | "complete" | "incomplete" | "unavailable";
 
-export function useOnboardingRedirect(state: OnboardingGateState): void {
+export function useOnboardingRedirect(state: OnboardingGateState, inviteReturn: string | null = null): void {
   const router = useRouter();
   const pathname = usePathname();
   useEffect(() => {
     if (state !== "incomplete") return;
     if (pathname === "/app/onboarding") return;
-    router.replace("/app/onboarding");
-  }, [state, pathname, router]);
+    router.replace(inviteReturn ? `/app/onboarding?invite=${encodeURIComponent(inviteReturn)}` : "/app/onboarding");
+  }, [state, pathname, router, inviteReturn]);
 }
 
 /**
@@ -26,30 +26,31 @@ export function useOnboardingRedirect(state: OnboardingGateState): void {
  */
 export function useMyOnboardingState(): OnboardingGateState {
   const { ready, authenticated, getAccessToken, user } = usePrivy();
-  const [state, setState] = useState<OnboardingGateState>("loading");
+  const sessionKey = ready && authenticated ? user?.id ?? null : null;
+  const [result, setResult] = useState<{ sessionKey: string; state: OnboardingGateState } | null>(null);
   useEffect(() => {
     if (!ready || !authenticated || !user) {
-      setState("loading");
       return;
     }
     let cancelled = false;
     void (async () => {
-      const token = await getAccessToken();
-      if (!token || cancelled) return;
       try {
+        const token = await getAccessToken();
+        if (cancelled) return;
+        if (!token) { setResult({ sessionKey: user.id, state: "unavailable" }); return; }
         const res = await fetch("/api/players/me", { headers: { authorization: `Bearer ${token}` } });
         const body = (await res.json()) as {
           success: boolean;
           data?: { player: { onboarding?: { complete?: boolean } } };
         };
-        if (!cancelled) setState(body.success && body.data ? (body.data.player.onboarding?.complete === true ? "complete" : "incomplete") : "loading");
+        if (!cancelled) setResult({ sessionKey: user.id, state: res.status === 404 ? "incomplete" : body.success && body.data?.player ? (body.data.player.onboarding?.complete === true ? "complete" : "incomplete") : "unavailable" });
       } catch {
-        if (!cancelled) setState("loading");
+        if (!cancelled) setResult({ sessionKey: user.id, state: "unavailable" });
       }
     })();
     return () => {
       cancelled = true;
     };
   }, [ready, authenticated, user, getAccessToken]);
-  return state;
+  return sessionKey && result?.sessionKey === sessionKey ? result.state : "loading";
 }
