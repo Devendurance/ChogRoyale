@@ -4,10 +4,12 @@ import {
   lobbyWaitingForMessage,
   completeQueueHandoff,
   createQueueHandoffGate,
+  parseGoldBalanceResponse,
   queueFallbackRemainingSeconds,
   readResume,
   resumeKeyForOrigin,
   resumeOriginForStart,
+  validateBotGoldMessage,
   validateMatchFoundMessage,
 } from "./BattlePanel";
 
@@ -101,6 +103,20 @@ describe("BattlePanel queue handoff", () => {
     const gate = createQueueHandoffGate();
     expect(gate.claim()).toBe(true);
     expect(gate.claim()).toBe(false);
+  });
+
+  it("validates fallback Gold envelopes and rejects forged or unsafe values", () => {
+    const valid = { matchId: "match-1", source: "unranked-fallback", eligibility: "eligible", policyVersion: 1, amount: 20, status: "confirmed", rewardedToday: 1, dailyCap: 5 };
+    expect(validateBotGoldMessage(valid)).toMatchObject({ ok: true, message: valid });
+    expect(validateBotGoldMessage({ ...valid, source: "practice" })).toMatchObject({ ok: false });
+    expect(validateBotGoldMessage({ ...valid, amount: 10, status: "pending" })).toMatchObject({ ok: false });
+    expect(validateBotGoldMessage({ ...valid, rewardedToday: 6 })).toMatchObject({ ok: false });
+  });
+
+  it("reads only a server-confirmed Gold balance envelope", () => {
+    expect(parseGoldBalanceResponse({ success: true, data: { gold: { balance: 20 } } })).toBe(20);
+    expect(parseGoldBalanceResponse({ success: true, data: { gold: { balance: -1 } } })).toBeNull();
+    expect(parseGoldBalanceResponse({ success: false, data: { gold: { balance: 20 } } })).toBeNull();
   });
 
   it("disposes a reservation that resolves after cancellation", async () => {

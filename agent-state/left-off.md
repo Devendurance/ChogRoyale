@@ -1,3 +1,9 @@
+# V2.1h Unranked AI Gold UI (2026-10-28, current)
+
+- Doing: finish review and delivery of `codex/v2.1h-unranked-ai-gold-ui`, based on `v2.1g-bot-gold` `95899c5`.
+- Done: Bot Gold validation/reducer, BattlePanel late-message lifecycle and balance refresh, BattleHud/BattleResult reward states, focused tests, scoped lint, typecheck and production build.
+- Next: inspect staged diff, preserve unrelated `.fast-build/STATE.md`, `DESIGN.md`, `demo-production/`, and docs files, commit/push/open PR. Do not apply migrations, deploy the battle server, enable the reward flag, merge or promote without owner approval.
+
 ## V2.1g Unranked AI Bot Gold (2026-10-28, branch v2.1g-bot-gold 312c226, pushed, TEST migration only, flag OFF)
 
 - Doing: shipped versioned fallback Gold backend slice, STOP after backend, no PROD migration/activation, no Card XP/Player XP/Chog Pass/Ranked/towers/$CHOG.

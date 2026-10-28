@@ -6,6 +6,9 @@
 
 # Memory
 
+- V2.1h bot Gold is a separate server receipt. Accept it only for `source: "unranked-fallback"` with the ended room's exact `matchId`. Apply monotonic precedence so a later confirmed receipt can replace pending/refused state, but lower-priority or duplicate messages cannot overwrite it. Solo Practice and human PvP ignore this channel.
+- Refresh `/api/players/me/gold` only after a confirmed receipt and never add the amount to stale local balance. A missing or failed balance read must leave the confirmed reward honest without inventing a balance. The deployed reward flag and migrations remain OFF and owner-gated.
+
 - P0 queue handoff invariant: set the handoff marker before `consumeSeatReservation`, attach the returned room before awaiting `queue.leave()`, and keep queue `onLeave` from advancing the generation during an accepted handoff. `lobby_sync` is an authenticated waiting-phase snapshot request only.
 
 - Battle music uses Track B `/assets/audio/v001/music/battle-loop.mp3` in production, while Track A remains the lobby and ready-room loop. Keep result track identity through mute/visibility source stops, resume a previously unlocked suspended context once on a genuine visibility return, and never create overlapping sources. New shared AudioContexts must clear old cue-clock throttle timestamps.

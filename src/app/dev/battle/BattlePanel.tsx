@@ -16,6 +16,7 @@ import {
   PRACTICE_DIFFICULTIES,
   type AckMessage,
   type BattleFrame,
+  type BotGoldMessage,
   type CommanderChoice,
   type EndMessage,
   type LobbyMessage,
@@ -50,6 +51,8 @@ import {
   type BattleAudioPreferences,
 } from "./battle-audio";
 import { battleServerUrl, isPublicBattleAvailable } from "@/components/app/battle-availability";
+import { reduceBotGoldMessage, validateBotGoldMessage } from "./bot-gold-model";
+export { validateBotGoldMessage } from "./bot-gold-model";
 const APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID ?? "";
 const SERVER = battleServerUrl() ?? "http://127.0.0.1:2567";
 const DEV_ENABLED = process.env.NODE_ENV !== "production" || process.env.NEXT_PUBLIC_ENABLE_DEV_BATTLE === "1";
@@ -69,6 +72,14 @@ const PRACTICE_RESUME_KEY = "b3.practice.resume";
 const UNRANKED_FALLBACK_RESUME_KEY = "b3.unranked-fallback.resume";
 export type ResumeOrigin = "practice" | "unranked-fallback" | "pvp";
 type ResumeInfo = { mode: MatchMode; origin: ResumeOrigin; roomId: string; resumeToken: string; graceMs: number };
+type BotGoldContext = {
+  roomId: string;
+  origin: ResumeOrigin;
+  start: StartMessage;
+  end: EndMessage | null;
+  receipt: BotGoldMessage | null;
+  balanceRefreshStarted: boolean;
+};
 
 /** The server's Practice room is also used by an Unranked AI fallback. The
  * entry origin, rather than the room mode alone, decides which resume slot is
@@ -123,6 +134,13 @@ export function resumeOriginForStart(start: Pick<StartMessage, "mode" | "practic
     return null;
   }
   return requested === "pvp" && !start.practiceOpponent ? "pvp" : null;
+}
+
+/** Read the existing authenticated Gold route without inferring a balance. */
+export function parseGoldBalanceResponse(value: unknown): number | null {
+  if (!isRecord(value) || value.success !== true || !isRecord(value.data) || !isRecord(value.data.gold)) return null;
+  const balance = value.data.gold.balance;
+  return typeof balance === "number" && Number.isInteger(balance) && balance >= 0 ? balance : null;
 }
 
 type MatchFoundValidation = { ok: true; message: MatchFoundMessage; origin: ResumeOrigin } | { ok: false; reason: string };
@@ -222,6 +240,9 @@ export function BattlePanel({
   const [acks, setAcks] = useState<Array<AckMessage & { label: string }>>([]);
   const [end, setEnd] = useState<EndMessage | null>(null);
   const [settlement, setSettlement] = useState<SettlementMessage | null>(null);
+  const [botGold, setBotGold] = useState<BotGoldMessage | null>(null);
+  const [goldBalance, setGoldBalance] = useState<number | null>(null);
+  const [goldBalanceStatus, setGoldBalanceStatus] = useState<"idle" | "loading" | "ready" | "unavailable">("idle");
   const [rankedAward, setRankedAward] = useState<RankedAwardView | null>(null);
   const [rankedAwardStatus, setRankedAwardStatus] = useState<RankedAwardStatus>("idle");
   const [abort, setAbort] = useState<string | null>(null);
@@ -238,6 +259,8 @@ export function BattlePanel({
   const [now, setNow] = useState(0);
   /** Latest {roomId, resumeToken} for the active seat; cleared on end/abort/leave. */
   const resumeInfo = useRef<ResumeInfo | null>(null);
+  /** Room/match provenance survives React callback closures and late reward frames. */
+  const botGoldContext = useRef<BotGoldContext | null>(null);
   const resumeDeadline = useRef(0);
   const [resumeDeadlineAt, setResumeDeadlineAt] = useState(0);
   /** Bump to cancel any in-flight reconnect loop. */
@@ -269,6 +292,36 @@ export function BattlePanel({
   const setAudioPhase = useCallback((phase: BattlePhase) => {
     appAudioController?.setBattlePhase(phase);
   }, [appAudioController]);
+
+  const clearBotGoldState = useCallback(() => {
+    botGoldContext.current = null;
+    setBotGold(null);
+    setGoldBalance(null);
+    setGoldBalanceStatus("idle");
+  }, []);
+
+  const refreshGoldBalance = useCallback(async (roomId: string, matchId: string) => {
+    const context = botGoldContext.current;
+    if (!context || context.roomId !== roomId || context.end?.matchId !== matchId) return;
+    setGoldBalanceStatus("loading");
+    try {
+      const token = await getAccessToken();
+      if (!token) throw new Error("No authenticated session");
+      const response = await fetch("/api/players/me/gold", { headers: { authorization: `Bearer ${token}` } });
+      const body = await response.json() as unknown;
+      const balance = response.ok ? parseGoldBalanceResponse(body) : null;
+      const latest = botGoldContext.current;
+      if (!latest || latest.roomId !== roomId || latest.end?.matchId !== matchId) return;
+      if (balance === null) throw new Error("Gold balance unavailable");
+      setGoldBalance(balance);
+      setGoldBalanceStatus("ready");
+    } catch {
+      const latest = botGoldContext.current;
+      if (!latest || latest.roomId !== roomId || latest.end?.matchId !== matchId) return;
+      setGoldBalance(null);
+      setGoldBalanceStatus("unavailable");
+    }
+  }, [getAccessToken]);
 
   const unlockAudio = useCallback(() => {
     void audio.unlock();
@@ -419,6 +472,8 @@ export function BattlePanel({
         return;
       }
       if (m.mode === "practice") adoptPracticeDifficulty(m.practiceOpponent?.difficulty);
+      clearBotGoldState();
+      botGoldContext.current = { roomId: r.roomId, origin: authoritativeOrigin, start: m, end: null, receipt: null, balanceRefreshStarted: false };
       feed.current = { start: m, frame: null, prev: null, receivedAt: performance.now(), selected: null, ghost: null };
       audioSeen.current.clear();
       audioResultSeen.current = null;
@@ -458,7 +513,33 @@ export function BattlePanel({
       if (cue) for (const next of takeUnseenBattleAudioCues([cue], audioSeen.current)) audio.play(next.cue);
       setAcks((xs) => [{ ...a, label }, ...xs].slice(0, 5));
     });
+    const publishBotGold = (context: BotGoldContext) => {
+      const endMessage = context.end;
+      const receipt = context.receipt;
+      if (!endMessage || !receipt || endMessage.practice?.source !== "unranked-fallback" || !endMessage.matchId) return;
+      const validated = validateBotGoldMessage(receipt, endMessage.matchId);
+      if (!validated.ok) return;
+      setBotGold(validated.message);
+      if (validated.message.status === "confirmed" && !context.balanceRefreshStarted) {
+        context.balanceRefreshStarted = true;
+        void refreshGoldBalance(r.roomId, endMessage.matchId);
+      }
+    };
+    const applyBotGold = (raw: unknown) => {
+      const context = botGoldContext.current;
+      if (!context || context.roomId !== r.roomId || context.origin !== "unranked-fallback" || context.start.practiceOpponent?.source !== "unranked-fallback") return;
+      const expectedMatchId = context.end?.matchId;
+      const merged = reduceBotGoldMessage(context.receipt, raw, expectedMatchId);
+      if (!merged.accepted) return;
+      context.receipt = merged.receipt;
+      publishBotGold(context);
+    };
     r.onMessage("end", (e: EndMessage) => {
+      const context = botGoldContext.current;
+      if (context?.roomId === r.roomId) {
+        context.end = e;
+        publishBotGold(context);
+      }
       const resumeOrigin = resumeInfo.current?.origin ?? resumeOriginForEntryMode(initialMode);
       resumeInfo.current = null;
       clearResume(resumeOrigin);
@@ -471,9 +552,14 @@ export function BattlePanel({
       setAudioPhase("result");
       setStage("ended");
     });
+    r.onMessage("bot_gold", (raw: unknown) => {
+      const parsed = validateBotGoldMessage(raw);
+      if (parsed.ok) applyBotGold(parsed.message);
+    });
     r.onMessage("settlement", (m: SettlementMessage) => setSettlement(m));
     r.onMessage("aborted", (a: { reason: string }) => {
       clearLobbyHydration();
+      clearBotGoldState();
       const resumeOrigin = resumeInfo.current?.origin ?? resumeOriginForEntryMode(initialMode);
       resumeInfo.current = null;
       clearResume(resumeOrigin);
@@ -514,7 +600,7 @@ export function BattlePanel({
       });
     });
     setRoom(r);
-  }, [adoptPracticeDifficulty, audio, initialMode, setAudioPhase]);
+  }, [adoptPracticeDifficulty, audio, clearBotGoldState, initialMode, refreshGoldBalance, setAudioPhase]);
 
   // Ranked awards are read back only after the server confirms settlement.
   // This bounded read never infers a trophy delta from the battle result.
@@ -578,6 +664,7 @@ export function BattlePanel({
       if (connecting.current) return;
       connecting.current = true;
       setError(null);
+      clearBotGoldState();
       setStage("connecting");
       try {
         if (mode === "practice" && requestedPracticeDifficulty && PRACTICE_DIFFICULTIES.includes(requestedPracticeDifficulty)) {
@@ -609,7 +696,7 @@ export function BattlePanel({
         connecting.current = false;
       }
     },
-    [appAudioController, attachRoom, code, getAccessToken]
+    [appAudioController, attachRoom, clearBotGoldState, code, getAccessToken]
   );
 
   const inviteTried = useRef(false);
@@ -631,6 +718,7 @@ export function BattlePanel({
    * never decides settlement. Ranked stays hub-gated until trophies land. */
   const findMatch = useCallback(async (queue: "unranked" | "ranked" = "unranked") => {
     const gen = ++queueGen.current;
+    clearBotGoldState();
     setError(null);
     setStage("searching");
     setQueueStatus(null);
@@ -714,19 +802,21 @@ export function BattlePanel({
       setError(e instanceof Error ? e.message : String(e));
       setStage("idle");
     }
-  }, [getAccessToken, attachRoom, appAudioController]);
+  }, [getAccessToken, attachRoom, appAudioController, clearBotGoldState]);
 
   const cancelSearch = useCallback(() => {
     queueGen.current += 1;
+    clearBotGoldState();
     setQueueStatus(null);
     setQueueRoom(null);
     setStage("idle");
     void queueRoom?.leave().catch(() => {});
-  }, [queueRoom]);
+  }, [clearBotGoldState, queueRoom]);
 
   const reset = useCallback(() => {
     reconnectGen.current += 1;
     queueGen.current += 1;
+    clearBotGoldState();
     const resumeOrigin = resumeInfo.current?.origin ?? resumeOriginForEntryMode(initialMode);
     resumeInfo.current = null;
     clearResume(resumeOrigin);
@@ -751,7 +841,7 @@ export function BattlePanel({
     audioResultSeen.current = null;
     audioPriming.current = false;
     setStage("idle");
-  }, [audio, initialMode, room, queueRoom, setAudioPhase]);
+  }, [audio, clearBotGoldState, initialMode, room, queueRoom, setAudioPhase]);
 
   const battleAgainPending = useRef(false);
   const battleAgain = useCallback(() => {
@@ -986,7 +1076,7 @@ export function BattlePanel({
   const me = identity?.selfSeat ?? 0;
 
   return (
-    <div className={publicMode ? "app-play-battle-shell" : undefined} data-mode={publicMode ? initialMode : undefined} data-stage={publicMode ? stage : undefined}>
+    <div className={publicMode ? "app-play-battle-shell" : undefined} data-mode={publicMode ? initialMode : undefined} data-stage={publicMode ? stage : undefined} data-bot-gold-status={botGold?.status ?? "none"} data-gold-balance-status={goldBalanceStatus} data-gold-balance={goldBalance === null ? undefined : goldBalance}>
       {!publicMode && <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", fontSize: 13 }}>
         <span>stage: {stage}</span>
         {room && <span>room code: <b>{room.roomId}</b></span>}
@@ -1085,6 +1175,9 @@ export function BattlePanel({
           end={end}
           abort={abort}
           settlement={settlement}
+          botGold={botGold}
+          goldBalance={goldBalance}
+          goldBalanceStatus={goldBalanceStatus}
           rankedAward={rankedAward}
           rankedAwardStatus={rankedAwardStatus}
           presence={presence}

@@ -1,7 +1,7 @@
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import type { EndMessage, StartMessage } from "@/lib/battle-protocol";
+import type { BotGoldMessage, EndMessage, StartMessage } from "@/lib/battle-protocol";
 import BattleResult from "./BattleResult";
 import { finaleView, opponentNameFor, practiceDifficultyLabel, settlementView, tallyAt, UNRANKED_FALLBACK_NO_REWARDS } from "./battle-result-model";
 
@@ -19,6 +19,17 @@ const fallbackStart = {
   ...practiceStart,
   practiceOpponent: { ...practiceStart.practiceOpponent!, source: "unranked-fallback" },
 } as StartMessage;
+const botGold = (over: Partial<BotGoldMessage> = {}): BotGoldMessage => ({
+  matchId: "private-match-id",
+  source: "unranked-fallback",
+  eligibility: "eligible",
+  policyVersion: 1,
+  amount: 20,
+  status: "confirmed",
+  rewardedToday: 1,
+  dailyCap: 5,
+  ...over,
+});
 const render = (props: Partial<React.ComponentProps<typeof BattleResult>> = {}) =>
   renderToStaticMarkup(React.createElement(BattleResult, { start, end: end(), abort: null, settlement: null, me: 0, playerName: "MyChog", ...props }));
 const renderPractice = (props: Partial<React.ComponentProps<typeof BattleResult>> = {}) =>
@@ -146,7 +157,7 @@ describe("battle finale render", () => {
   it("renders fallback provenance and only offers Find Opponent Again through the existing callback", () => {
     const withoutCallback = renderFallback();
     expect(withoutCallback).toContain("Unranked · AI Opponent");
-    expect(withoutCallback).toContain(UNRANKED_FALLBACK_NO_REWARDS);
+    expect(withoutCallback).toContain("No AI Gold reward confirmed.");
     expect(withoutCallback).toContain("AI Opponent · Medium difficulty");
     expect(withoutCallback).not.toContain("Result recording is unavailable");
     expect(withoutCallback).not.toContain("Find Opponent Again");
@@ -154,6 +165,52 @@ describe("battle finale render", () => {
     const withCallback = renderFallback({ onAgain: () => {} });
     expect(withCallback).toContain(">Find Opponent Again <");
     expect(withCallback).toContain(">Back to Battle Hall <");
+  });
+  it("renders only a server-confirmed fallback Gold reward and balance", () => {
+    const html = renderFallback({ botGold: botGold(), goldBalance: 120 });
+    expect(html).toContain("Gold earned");
+    expect(html).toContain("+20 Gold earned");
+    expect(html).toContain("Daily AI rewards: 1 / 5");
+    expect(html).toContain("Gold balance: 120");
+    expect(html).toContain('data-state="confirmed"');
+  });
+  it("marks duplicate confirmed Gold without presenting a second payout", () => {
+    const html = renderFallback({ botGold: botGold({ eligibility: "duplicate", amount: 10, rewardedToday: 4 }) });
+    expect(html).toContain("+10 Gold earned");
+    expect(html).toContain("Already recorded for this battle.");
+    expect(html).toContain("Daily AI rewards: 4 / 5");
+  });
+  it("keeps pending fallback Gold separate from a confirmed amount", () => {
+    const html = renderFallback({ botGold: botGold({ status: "pending", eligibility: "eligible", amount: 0 }) });
+    expect(html).toContain("Gold reward verification pending");
+    expect(html).toContain("Check your Gold balance later.");
+    expect(html).not.toContain("+20 Gold earned");
+    expect(html).toContain('data-state="pending"');
+  });
+  it.each([
+    ["capped", "capped", "No Gold awarded for this battle.", "capped"],
+    ["short-match", "refused", "AI Gold requires at least 60 seconds of combat.", "short-match"],
+    ["too-few-deploys", "refused", "Deploy at least 3 ordinary cards during the battle to qualify.", "too-few-deploys"],
+    ["replay-mismatch", "refused", "No Gold awarded.", "replay-mismatch"],
+  ] as const)("renders the authoritative fallback refusal state: %s", (eligibility, status, copy, state) => {
+    const html = renderFallback({ botGold: botGold({ eligibility, status, amount: 0 }) });
+    expect(html).toContain(copy);
+    expect(html).toContain(`data-state="${state}"`);
+    expect(html).not.toContain("Gold earned");
+  });
+  it("keeps no-message fallback, Practice, and PvP reward presentation safe", () => {
+    const fallback = renderFallback();
+    expect(fallback).toContain("No AI Gold reward confirmed.");
+    expect(fallback).toContain('data-state="no-rewards"');
+
+    const practice = renderPractice({ botGold: botGold() });
+    expect(practice).toContain("No rewards or progression are awarded in Practice.");
+    expect(practice).not.toContain("Gold earned");
+
+    const pvp = render({ botGold: botGold(), goldBalance: 120 });
+    expect(pvp).toContain("Waiting for result confirmation");
+    expect(pvp).not.toContain("Gold earned");
+    expect(pvp).not.toContain("Balance 120");
   });
   it.each([
     ["medium", "Medium"],
