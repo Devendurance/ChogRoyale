@@ -163,7 +163,10 @@ export async function sponsorUpgrade(sponsorId: string, req: SponsorshipRequest)
     ),
     chk as (
       select
-        (select coalesce(sum(amount), 0) from gold_earn_ledger where player_id = ${sponsorId}::uuid)
+        ((select coalesce(sum(amount), 0) from gold_earn_ledger where player_id = ${sponsorId}::uuid)
+          + case when to_regclass('public.bot_gold_awards') is not null
+            then (select coalesce(sum(amount), 0) from bot_gold_awards where player_id = ${sponsorId}::uuid)
+            else 0 end)
         - (select coalesce(sum(cost), 0) from gold_spend_ledger where player_id = ${sponsorId}::uuid) as balance,
         (select purchased_level from card_xp_progress where player_id = ${req.recipientId}::uuid and card_id = ${req.cardId}) as cur_level,
         (select xp from card_xp_progress where player_id = ${req.recipientId}::uuid and card_id = ${req.cardId}) as cur_xp,

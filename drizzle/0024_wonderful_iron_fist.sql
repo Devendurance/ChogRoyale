@@ -1,0 +1,2 @@
+ALTER TABLE "bot_matches" DROP CONSTRAINT "bot_matches_source_check";--> statement-breakpoint
+ALTER TABLE "bot_matches" ADD CONSTRAINT "bot_matches_source_check" CHECK ("bot_matches"."source" in ('practice','unranked-fallback'));

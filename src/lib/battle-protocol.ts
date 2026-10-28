@@ -313,6 +313,22 @@ export interface EndMessage {
   practice?: { opponentKind: "bot"; noReward: true; source?: "practice" | "unranked-fallback" };
 }
 
+/** Server-authoritative Unranked fallback Gold outcome, sent after `end` when evaluated.
+ * The frontend must never guess rewards from victory or defeat alone. Solo
+ * Practice never receives this message and always earns zero. */
+export interface BotGoldMessage {
+  matchId: string | null;
+  source: "unranked-fallback";
+  eligibility: "eligible" | "practice-earns-zero" | "short-match" | "too-few-deploys" | "replay-mismatch" | "duplicate" | "capped";
+  policyVersion: number;
+  /** Confirmed spendable Gold. Zero unless status is confirmed. */
+  amount: number;
+  status: "confirmed" | "pending" | "refused" | "capped";
+  /** Bot matches rewarded to this player today (UTC), including this one when confirmed. */
+  rewardedToday: number;
+  dailyCap: number;
+}
+
 /** Durable settlement status, sent after `end` once the service reports back. */
 export interface SettlementMessage {
   matchId: string | null;
