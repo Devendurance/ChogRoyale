@@ -1,3 +1,11 @@
+## V2.1g Bot Gold Production Activation (2026-10-28, owner-authorized rollout, no repo code change)
+
+- Did: verified PR #16 merged (4c82a91, Vercel success), verified preflight fix in main, created Neon restore branch pre-v21g-bot-gold-20261028, applied ONLY 0023+0024 to PROD via db:migrate (journal 23 to 25), verified tables/constraints/indexes, deployed tree already matched reviewed main so no redeploy, confirmed flag ON in env and running process, verified no live matches before each step.
+- Live: service active, single instance, NRestarts=0, local + public /healthz ok, log reads bot gold ENABLED (20/10/15, 5 per UTC day), fallback still enabled, ranked closed, settlement unchanged.
+- Verified: pre-migration baseline 14 players, 16 matches, 450/200 Gold identical post-migration; exactly one legitimate bot award (medium win, replay-identical, 73 human deploys, 3000 ticks) independently replay-verified; zero orphans, zero fake participants, zero pending rows; winner balance agreement confirmed (120 PvP + 20 bot - 100 spent).
+- Rollback: delete UNRANKED_BOT_GOLD_REWARDS_ENABLED from battle.env (backup battle.env.pre-v21g-bot-gold-20261028) + restart with no live matches; leave migrations in place (empty-capable additive tables); restore branch available for disaster only.
+- Next: owner acceptance with a real Privy sign-in (human-first, 20s fallback, 60s plus 3 deploys, real result, Gold balance agrees, Find Opponent Again, separate Practice check).
+
 ## V2.1g/h Bot Gold LIVE in Production (2026-10-28, owner-authorized rollout, no repo code change)
 
 - Did: verified PR #16 merged (4c82a91), created Neon restore branch pre-v21g-bot-gold-20261028 (br-odd-hall-b5u8e1e2), applied 0023+0024 to PROD only (journal 23 to 25), deployed merged main tree to endy-vps, set UNRANKED_BOT_GOLD_REWARDS_ENABLED=1, restarted with zero live matches.
