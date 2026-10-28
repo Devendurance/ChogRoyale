@@ -1,3 +1,11 @@
+## V2.1f Unranked AI Fallback Activation (2026-10-28, no code change, flag-only production rollout)
+
+- Doing: enabled the merged V2.1e fallback on endy-vps, STOP after activation, no bot rewards/XP/Ranked/towers/$CHOG.
+- Done: verified origin/main at 4409cd9 holds V2.1e+V2.1f, deployed battle code matches main exactly, set UNRANKED_AI_FALLBACK_ENABLED=1 in battle.env (backup battle.env.pre-v21f-20261028, 600), controlled restart with zero live matches to interrupt.
+- Verified: service active, single instance, NRestarts=0, local + public /healthz ok, startup log reads unranked ai fallback: ENABLED (20s human-first, medium/hard only), ranked closed, settlement unchanged, tunnel unchanged.
+- Rollback: delete the one added env line (or restore the backup) and restart; previous state was flag-absent OFF.
+- Next: human acceptance needs a real Privy sign-in: human-first pairing, 20s fallback assignment, AI-labeled battle, no-reward result, Find Opponent Again, separate Practice check. Not faked.
+
 ## V2.1e Unranked AI Fallback (2026-10-28, branch v2.1e-unranked-fallback 1096734, pushed, deployed scoped to endy-vps with flag OFF)
 
 - Doing: shipped human-first Unranked queue with server-owned 20s bot assignment, STOP after backend, no UI/fallback-activation/Ranked/XP.
