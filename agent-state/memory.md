@@ -263,3 +263,8 @@ Durable facts, conventions, and gotchas that should survive across sessions.
 - Never render a provider-level sound-enable prompt merely because `needsUnlock` is true after refresh. Autoplay recovery belongs to real pointer or keyboard gestures, with the accessible manual control kept in `AudioSettings`.
 - A real gesture passes `fromGesture: true` to the shared controller. Only an autoplay-origin pending resume may be replaced. Repeated callers from the same gesture must reuse the gesture-origin promise to avoid closing and recreating contexts repeatedly.
 - Clear stale unlock promises whenever the context graph is cleared, including delayed shutdown, so Strict Mode remounts and later gestures cannot inherit a dead promise.
+
+## Practice difficulty rules
+
+- V2.1d uses the existing `PracticeDifficulty` and `PRACTICE_DIFFICULTIES` contract. The client sends the selected value when creating `battle_practice`, but the server-owned lobby/start descriptor is the display authority.
+- Keep `AI Opponent` fixed in Practice. Preserve the selected difficulty through reconnect and Battle Again, which must create a fresh room. Practice never shows rewards, XP, Gold, or trophies.

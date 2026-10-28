@@ -3218,6 +3218,20 @@
 .app-play-entry-actions { display: grid; justify-items: start; gap: 20px; }
 .app-play-practice-entry { display: grid; gap: 12px; width: 100%; }
 .app-play-practice-entry .app-play-battle-state { display: grid; gap: 4px; text-align: left; }
+.app-play-difficulty { display: grid; gap: 10px; width: 100%; margin: 0; padding: 0; border: 0; }
+.app-play-difficulty legend { padding: 0; color: #fff1c8; font: 400 22px/1 var(--font-game); letter-spacing: .01em; }
+.app-play-difficulty__options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.app-play-difficulty__choice { position: relative; display: block; min-width: 0; cursor: pointer; }
+.app-play-difficulty__input { position: absolute; width: 1px; height: 1px; margin: -1px; opacity: 0; }
+.app-play-difficulty__card { display: grid; align-content: start; gap: 8px; min-height: 126px; padding: 14px 12px; border: 2px solid #735db9; border-radius: 14px; background: linear-gradient(160deg, #38258b, #211451); box-shadow: inset 0 2px #ffffff1e, 0 4px 0 #120b45aa; transition: border-color 120ms var(--app-ease-out), background-color 120ms var(--app-ease-out), transform 120ms var(--app-ease-out), box-shadow 120ms var(--app-ease-out); }
+.app-play-difficulty__choice:hover .app-play-difficulty__card { border-color: #b9a2ff; transform: translateY(-1px); }
+.app-play-difficulty__input:focus-visible + .app-play-difficulty__card { outline: 2px solid #fff1c8; outline-offset: 3px; }
+.app-play-difficulty__choice[data-selected="true"] .app-play-difficulty__card { border-color: #ffc83d; background: linear-gradient(160deg, #6042ab, #29175e); box-shadow: inset 0 2px #ffffff2e, 0 0 0 2px #ffc83d55, 0 5px 0 #120b45aa; }
+.app-play-difficulty__label { color: #fff; font: 400 23px/1 var(--font-game); text-shadow: 0 3px #1a0d45; }
+.app-play-difficulty__tagline { color: #fff0ae; font: 700 11px/1.25 var(--font-data); letter-spacing: .04em; }
+.app-play-difficulty__description { color: var(--app-ink-85); font: 500 12px/1.4 var(--font-site); }
+.app-play-difficulty__selected { color: #fff0ae; font: 700 10px/1.2 var(--font-data); letter-spacing: .1em; text-transform: uppercase; }
+.app-play-difficulty__note { margin: 0; color: var(--app-ink-65); font: 500 11px/1.4 var(--font-data); }
 .app-play-entry-actions > .app-btn--battle { min-height: 52px; max-width: 100%; padding: 10px 20px; font-size: 23px; }
 .app-play-join { display: flex; align-items: end; flex-wrap: wrap; gap: 10px; width: 100%; padding-top: 16px; border-top: 1px solid rgba(185,162,255,.25); }
 .app-play-join .app-play-code { display: grid; gap: 6px; color: var(--app-ink-65); font: 600 11px/1.4 var(--font-data); }
@@ -3241,6 +3255,9 @@
   .app-play-battle-actions { align-items: flex-start; }
   .app-play-code { min-width: 0; }
   .app-play-code input { width: 100%; }
+  .app-play-difficulty__options { grid-template-columns: 1fr; }
+  .app-play-difficulty__card { min-height: 0; grid-template-columns: 1fr auto; align-items: center; }
+  .app-play-difficulty__description { grid-column: 1 / -1; }
 }
 
 @media (prefers-reduced-motion: reduce) {

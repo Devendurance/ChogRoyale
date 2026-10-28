@@ -292,3 +292,9 @@ Last updated: 2026-10-24
 - Done: source audit, external master preservation, ElevenLabs Free-tier check, 16 canonical UI MP3 fallback cues, cyclic production Track A, dev-only crossfaded Track B, credits/manifest/quality docs, pure `audio-assets.ts` exports, dev route, tracing exclusion and focused asset tests.
 - Verification: focused asset tests 2/2, scoped lint and typecheck pass. Production build reaches a pre-existing concurrent `GiftsScreen.tsx` parse error after the audio route config was corrected. Full build needs the coordinator's UI changes settled.
 - Next: coordinator wires `UI_AUDIO_ASSETS` if static UI files are desired, re-runs the full build, and reviews the audio evidence. No commit or push was made.
+## V2.1d Practice difficulty selector (2026-10-28)
+
+- Doing: finish delivery from `codex/v2.1d-practice-difficulties`, based on V2.1c `8385910`.
+- Done: accessible three-choice selector, typed `battle_practice` create options, server-authoritative difficulty display in lobby/HUD/result, reconnect and Battle Again retention, no-reward preservation.
+- Verified: focused UI/identity/result 49/49, Practice server 23/23, typecheck, scoped ESLint, production build. No authenticated owner Privy matches run.
+- Next: review explicit diff, commit/push, create and merge PR to `main` through GitHub, then confirm Vercel Production READY and smoke public routes.

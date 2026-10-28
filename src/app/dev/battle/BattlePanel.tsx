@@ -13,6 +13,7 @@ import {
   BATTLE_QUEUE_ROOM,
   BATTLE_RANKED_QUEUE_ROOM,
   BATTLE_ROOM,
+  PRACTICE_DIFFICULTIES,
   type AckMessage,
   type BattleFrame,
   type CommanderChoice,
@@ -21,6 +22,7 @@ import {
   type MatchFoundMessage,
   type MatchMode,
   type PresenceMessage,
+  type PracticeDifficulty,
   type QueueStatusMessage,
   type SettlementMessage,
   type StartMessage,
@@ -119,6 +121,8 @@ export function BattlePanel({
   const [selected, setSelected] = useState<string | null>(null);
   const [dragging, setDragging] = useState<string | null>(null);
   const [hint, setHint] = useState<string | null>(null);
+  const [selectedPracticeDifficulty, setSelectedPracticeDifficulty] = useState<PracticeDifficulty>("medium");
+  const selectedPracticeDifficultyRef = useRef<PracticeDifficulty>("medium");
   const feed = useRef<CanvasFeed | null>(null);
   const [queueRoom, setQueueRoom] = useState<Room | null>(null);
   const [queueStatus, setQueueStatus] = useState<QueueStatusMessage | null>(null);
@@ -195,6 +199,15 @@ export function BattlePanel({
     [audioPreferences, updateAudio]
   );
 
+  // The room is authoritative after creation. Reconnects receive the same
+  // practice opponent descriptor in lobby/start, so the picker and Battle
+  // Again continue to use the server-confirmed difficulty.
+  const adoptPracticeDifficulty = useCallback((difficulty: PracticeDifficulty | undefined) => {
+    if (!difficulty || !PRACTICE_DIFFICULTIES.includes(difficulty)) return;
+    selectedPracticeDifficultyRef.current = difficulty;
+    setSelectedPracticeDifficulty(difficulty);
+  }, []);
+
   useEffect(() => {
     if (!appAudio) audio.setPreferences(audioPreferences);
   }, [appAudio, audio, audioPreferences]);
@@ -229,11 +242,13 @@ export function BattlePanel({
   const attachRoom = useCallback((r: Room) => {
     r.reconnection.enabled = false;
     r.onMessage("lobby", (m: LobbyMessage) => {
+      if (m.practice) adoptPracticeDifficulty(m.practice.opponent.difficulty);
       setLobby(m);
       setAudioPhase("lobby");
       setStage((s) => (s === "connecting" || s === "searching" ? "lobby" : s));
     });
     r.onMessage("start", (m: StartMessage) => {
+      if (m.mode === "practice") adoptPracticeDifficulty(m.practiceOpponent?.difficulty);
       feed.current = { start: m, frame: null, prev: null, receivedAt: performance.now(), selected: null, ghost: null };
       audioSeen.current.clear();
       audioResultSeen.current = null;
@@ -314,7 +329,7 @@ export function BattlePanel({
       });
     });
     setRoom(r);
-  }, [audio, initialMode, setAudioPhase]);
+  }, [adoptPracticeDifficulty, audio, initialMode, setAudioPhase]);
 
   // Ranked awards are read back only after the server confirms settlement.
   // This bounded read never infers a trophy delta from the battle result.
@@ -369,7 +384,7 @@ export function BattlePanel({
 
   const connecting = useRef(false);
   const connect = useCallback(
-    async (mode: "create" | "join" | "practice", inviteCode?: string) => {
+    async (mode: "create" | "join" | "practice", inviteCode?: string, requestedPracticeDifficulty?: PracticeDifficulty) => {
       const joinCode = inviteCode ?? code;
       if (mode === "join" && !validRoomCode(joinCode)) {
         setError("Enter the complete 9-character room code. Codes are case-sensitive.");
@@ -380,13 +395,19 @@ export function BattlePanel({
       setError(null);
       setStage("connecting");
       try {
+        if (mode === "practice" && requestedPracticeDifficulty && PRACTICE_DIFFICULTIES.includes(requestedPracticeDifficulty)) {
+          selectedPracticeDifficultyRef.current = requestedPracticeDifficulty;
+          setSelectedPracticeDifficulty(requestedPracticeDifficulty);
+        }
         const token = await getAccessToken();
         if (!token) throw new Error("No Privy access token. Log in first.");
         // Token goes only in the matchmaking request header, never the URL.
         const client = new Client(SERVER, { headers: { authorization: `Bearer ${token}` } });
         const r = mode === "join"
           ? await client.joinById(joinCode.trim())
-          : await client.create(mode === "practice" ? battleRoomForMode("practice") : BATTLE_ROOM);
+          : mode === "practice"
+            ? await client.create(BATTLE_PRACTICE_ROOM, { difficulty: requestedPracticeDifficulty ?? selectedPracticeDifficultyRef.current })
+            : await client.create(BATTLE_ROOM);
         attachRoom(r);
         if (mode === "create") appAudioController?.playUi("invite");
         if (mode === "practice") appAudioController?.playUi("ready");
@@ -402,7 +423,7 @@ export function BattlePanel({
         connecting.current = false;
       }
     },
-    [code, getAccessToken, attachRoom, appAudioController]
+    [appAudioController, attachRoom, code, getAccessToken]
   );
 
   const inviteTried = useRef(false);
@@ -718,9 +739,9 @@ export function BattlePanel({
       </div>}
 
       {publicMode && stage === "idle" && (
-        <BattleEntry mode={initialMode} code={code} error={error} setupReady={setupReady} onCodeChange={setCode}
+        <BattleEntry mode={initialMode} code={code} error={error} setupReady={setupReady} practiceDifficulty={selectedPracticeDifficulty} onCodeChange={setCode}
           onFind={() => { unlockAudio(); void findMatch(initialMode === "ranked" ? "ranked" : "unranked"); }}
-          onStartPractice={() => { unlockAudio(); void connect("practice"); }}
+          onStartPractice={(difficulty) => { unlockAudio(); void connect("practice", undefined, difficulty); }}
           onCreate={() => { unlockAudio(); void connect("create"); }} onJoin={() => { unlockAudio(); void connect("join"); }} />
       )}
 
@@ -767,7 +788,7 @@ export function BattlePanel({
         <section className={publicMode ? "app-play-battle-controls" : undefined} style={publicMode ? undefined : { display: "grid", gap: 6 }}>
           <div>Connection lost, reconnecting… {Math.max(0, Math.ceil((resumeDeadlineAt - now) / 1000))}s left</div>
           <div>
-            <button className={publicMode ? "app-btn app-btn--ghost" : undefined} onClick={reset}>Give up</button>
+            <button className={publicMode ? "app-btn app-btn--ghost" : undefined} onClick={() => reset()}>Give up</button>
           </div>
         </section>
       )}
@@ -829,7 +850,7 @@ export function BattlePanel({
       {stage === "failed" && <div className={publicMode ? "app-play-battle-state" : undefined}>Could not restore the match.</div>}
       {(stage === "closed" || stage === "failed") && (
         <div>
-          <button className={publicMode ? "app-btn app-btn--ghost" : undefined} onClick={reset}>Back to lobby</button>
+          <button className={publicMode ? "app-btn app-btn--ghost" : undefined} onClick={() => reset()}>Back to lobby</button>
         </div>
       )}
     </div>

@@ -43,6 +43,29 @@ describe("production battle ready room", () => {
     expect(html).not.toContain("Share Invite");
   });
 
+  it.each([
+    ["medium", "Medium"],
+    ["hard", "Hard"],
+    ["ultimate", "Ultimate"],
+  ] as const)("shows the server-selected %s difficulty", (difficulty, label) => {
+    const html = render({
+      players: [{ username: "ChogOne", ready: false }],
+      practice: { opponent: { kind: "bot", botId: `practice-${difficulty}-v1`, difficulty, displayName: "AI Opponent" } },
+      match: { opponent: "AI Opponent", deadlineAt: 112_000, mode: "practice" },
+    });
+    expect(html).toContain(`${label} difficulty · no rewards`);
+    expect(html).toContain("AI Opponent");
+  });
+
+  it("does not invent Medium when the practice opponent descriptor is absent", () => {
+    const html = render({
+      players: [{ username: "ChogOne", ready: false }],
+      match: { opponent: "AI Opponent", deadlineAt: 112_000, mode: "practice" },
+    });
+    expect(html).toContain("Practice · no rewards");
+    expect(html).not.toContain("Medium difficulty");
+  });
+
   it("stages seven ordinary portraits and one distinct commander with a real ready action", () => {
     const html = render();
     expect(html.match(/class="lp-card"/g)).toHaveLength(7);

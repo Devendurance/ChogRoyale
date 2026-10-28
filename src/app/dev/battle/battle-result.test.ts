@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import type { EndMessage, StartMessage } from "@/lib/battle-protocol";
 import BattleResult from "./BattleResult";
-import { finaleView, opponentNameFor, settlementView, tallyAt } from "./battle-result-model";
+import { finaleView, opponentNameFor, practiceDifficultyLabel, settlementView, tallyAt } from "./battle-result-model";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: () => {} }) }));
 
@@ -45,6 +45,12 @@ describe("finale view model", () => {
     expect(view).toMatchObject({ practice: true, result: "win", title: "Victory", kicker: "Practice complete · AI Opponent", settlement: null, noRewards: "No rewards or progression are awarded in Practice." });
     expect(opponentNameFor(practiceStart)).toBe("AI Opponent");
     expect(opponentNameFor({ ...practiceStart, practiceOpponent: undefined })).toBe("AI Opponent");
+  });
+  it("formats only server-supported practice difficulties", () => {
+    expect(practiceDifficultyLabel("medium")).toBe("Medium");
+    expect(practiceDifficultyLabel("hard")).toBe("Hard");
+    expect(practiceDifficultyLabel("ultimate")).toBe("Ultimate");
+    expect(practiceDifficultyLabel(undefined)).toBeNull();
   });
   it.each([
     ["win", "Victory"],
@@ -105,5 +111,23 @@ describe("battle finale render", () => {
     expect(html).not.toContain("Result recording is unavailable");
     expect(html).toContain(">Battle Again <");
     expect(html).toContain(">Back to Battle Hall <");
+  });
+  it.each([
+    ["medium", "Medium"],
+    ["hard", "Hard"],
+    ["ultimate", "Ultimate"],
+  ] as const)("renders the authoritative %s difficulty in the result", (difficulty, label) => {
+    const html = renderPractice({
+      start: { ...practiceStart, practiceOpponent: { ...practiceStart.practiceOpponent!, difficulty } },
+    });
+    expect(html).toContain(`AI Opponent · ${label} difficulty`);
+    expect(html).toContain(`data-difficulty="${difficulty}"`);
+  });
+  it("keeps the AI label and no-reward state when difficulty is missing", () => {
+    const html = renderPractice({ start: { ...practiceStart, practiceOpponent: undefined } });
+    expect(html).toContain("AI Opponent");
+    expect(html).toContain("No rewards or progression are awarded in Practice.");
+    expect(html).toContain('data-difficulty="unknown"');
+    expect(html).not.toContain("Medium difficulty");
   });
 });
