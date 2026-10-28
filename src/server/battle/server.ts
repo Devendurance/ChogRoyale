@@ -23,7 +23,7 @@ export async function startBattleServer(
   QueueRoom.deps = deps;
   PracticeRoom.deps = deps;
   // One coordinator per process; every QueueRoom instance shares it.
-  const coordinator = new MatchCoordinator({ maxWaitMs: deps.queueMaxWaitMs });
+  const coordinator = new MatchCoordinator({ maxWaitMs: deps.queueMaxWaitMs, fallback: deps.unrankedFallback });
   BattleRoom.coordinator = coordinator;
   QueueRoom.coordinator = coordinator;
   RankedQueueRoom.coordinator = coordinator;

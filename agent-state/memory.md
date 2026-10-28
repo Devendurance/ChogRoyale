@@ -268,3 +268,9 @@ Durable facts, conventions, and gotchas that should survive across sessions.
 
 - V2.1d uses the existing `PracticeDifficulty` and `PRACTICE_DIFFICULTIES` contract. The client sends the selected value when creating `battle_practice`, but the server-owned lobby/start descriptor is the display authority.
 - Keep `AI Opponent` fixed in Practice. Preserve the selected difficulty through reconnect and Battle Again, which must create a fresh room. Practice never shows rewards, XP, Gold, or trophies.
+# V2.1f review notes (2026-10-28)
+
+- `match_found.fallback` is optional. Display no AI countdown unless the server sends `queue_status.fallback.scheduledInMs`; anchor the countdown to that message's `since` value.
+- Fallback reservations are consumed with `client.consumeSeatReservation(reservation)`. Never call `client.create("battle_practice")` from the Unranked queue path.
+- The Practice room is shared by solo Practice and Unranked fallback. Use authoritative `practiceOpponent.source` and distinct resume storage to avoid cross-mode recovery.
+- Human Unranked retains settlement. Fallback uses `end.practice.noReward` and source-specific result copy and must re-enter the human-first Unranked queue for Find Opponent Again.

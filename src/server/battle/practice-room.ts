@@ -83,6 +83,10 @@ export class PracticeRoom extends Room {
   private session!: BattleSession;
   /** Immutable difficulty profile, resolved once at room creation. */
   private difficulty: PracticeDifficulty = "medium";
+  /** Solo practice vs server-assigned Unranked fallback. Never client-chosen. */
+  private origin: "practice" | "unranked-fallback" = "practice";
+  /** The lone human a fallback room is reserved for. Null for solo practice. */
+  private fallbackPlayerId: string | null = null;
   private opponent: PracticeOpponent = practiceOpponentFor("medium");
   private botPlayerId: string = practiceBotPlayerId("medium");
   private humanClient: PracticeClient | null = null;
@@ -97,12 +101,26 @@ export class PracticeRoom extends Room {
     return authenticateSeat(token, PracticeRoom.deps);
   }
 
-  onCreate(options?: { difficulty?: unknown }) {
-    // Server-owned difficulty: omitted means Medium (existing clients),
-    // anything else must be an exact supported value or creation fails.
-    this.difficulty = resolvePracticeDifficulty(options?.difficulty);
-    this.opponent = practiceOpponentFor(this.difficulty);
-    this.botPlayerId = practiceBotPlayerId(this.difficulty);
+  onCreate(options?: { difficulty?: unknown; fallbackKey?: unknown }) {
+    if (typeof options?.fallbackKey === "string" && options.fallbackKey.length > 0) {
+      // Server-assigned Unranked fallback: the key is a single-use coordinator
+      // mint. A forged, consumed, or missing key fails creation. Client
+      // difficulty options are ignored on this path.
+      const fb = PracticeRoom.coordinator?.claimFallback(options.fallbackKey);
+      if (!fb) throw new ServerError(403, "Unknown or expired fallback");
+      this.origin = "unranked-fallback";
+      this.fallbackPlayerId = fb.playerId;
+      this.difficulty = fb.difficulty;
+      this.opponent = { ...practiceOpponentFor(fb.difficulty), source: "unranked-fallback" };
+      this.botPlayerId = practiceBotPlayerId(fb.difficulty);
+      if (!PracticeRoom.coordinator?.registerFallbackRoom(this.roomId)) throw new ServerError(503, "AI opponents at capacity");
+    } else {
+      // Server-owned difficulty: omitted means Medium (existing clients),
+      // anything else must be an exact supported value or creation fails.
+      this.difficulty = resolvePracticeDifficulty(options?.difficulty);
+      this.opponent = { ...practiceOpponentFor(this.difficulty), source: "practice" };
+      this.botPlayerId = practiceBotPlayerId(this.difficulty);
+    }
     this.session = new BattleSession(PracticeRoom.deps.rng as SessionRandom | undefined);
     this.session.mode = "practice";
     this.session.slots[1] = { playerId: this.botPlayerId, username: PRACTICE_BOT_DISPLAY_NAME };
@@ -125,8 +143,11 @@ export class PracticeRoom extends Room {
 
   onJoin(client: PracticeClient, options?: { resume?: unknown }) {
     const playerId = client.auth.playerId;
-    this.humanClient = client;
     if (playerId.startsWith("bot:")) throw new ServerError(403, "Bot seats are server-owned");
+    if (this.origin === "unranked-fallback" && playerId !== this.fallbackPlayerId) {
+      throw new ServerError(403, "Not the reserved player for this match");
+    }
+    this.humanClient = client;
     if (this.session.phase === "finished" || this.session.phase === "aborted") {
       throw new ServerError(409, "Practice is over");
     }
@@ -272,7 +293,7 @@ export class PracticeRoom extends Room {
     for (const ack of out.acks[humanSeat]) client.send("ack", ack);
     client.send("frame", out.frames[humanSeat]);
     if (out.end) {
-      const end = { ...out.end[humanSeat], matchId: this.matchId, practice: { opponentKind: "bot" as const, noReward: true as const } };
+      const end = { ...out.end[humanSeat], matchId: this.matchId, practice: { opponentKind: "bot" as const, noReward: true as const, source: this.origin } };
       client.send("end", end);
       client.send("settlement", { matchId: this.matchId, status: "disabled" });
       this.setSimulationInterval();
@@ -360,6 +381,7 @@ export class PracticeRoom extends Room {
   }
 
   onDispose() {
+    if (this.origin === "unranked-fallback") PracticeRoom.coordinator?.releaseFallbackRoom(this.roomId);
     this.releaseHuman();
   }
 }

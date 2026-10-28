@@ -137,6 +137,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - The dev battle alpha writes nothing to the database. Settlement, legacy and leaderboard updates belong to later B3 slices.
 - Practice UI uses the server-owned `battle_practice` room and `practice` mode, keeps the bot identity as `AI Opponent`, and must not resume or settle a PvP room as Practice.
 - Practice difficulty selection is a client request only. Send it to `battle_practice`, then display and retain the server-confirmed opponent difficulty through reconnects, results, and fresh Battle Again rooms.
+- Unranked AI fallback keeps the public route intent as Unranked while the server room reports `practice`; use `practiceOpponent.source === "unranked-fallback"` and a separate resume slot to preserve that origin through reconnects and results.
+- Matchmaking fallback UI is opt-in to the server's advertised `queue_status.fallback`; never invent a countdown or bot assignment when that field is absent, and keep `UNRANKED_AI_FALLBACK_ENABLED` unchanged until owner activation.
 
 ## BATTLEFIELD PRESENTATION
 

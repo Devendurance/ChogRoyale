@@ -59,26 +59,85 @@ type RankedAwardStatus = "idle" | "checking" | "awarded" | "unavailable" | "time
 export type BattleEntryMode = "unranked" | "ranked" | "private" | "practice";
 const RESUME_KEY = "b3.resume";
 const PRACTICE_RESUME_KEY = "b3.practice.resume";
-type ResumeInfo = { mode: MatchMode; roomId: string; resumeToken: string; graceMs: number };
+const UNRANKED_FALLBACK_RESUME_KEY = "b3.unranked-fallback.resume";
+export type ResumeOrigin = "practice" | "unranked-fallback" | "pvp";
+type ResumeInfo = { mode: MatchMode; origin: ResumeOrigin; roomId: string; resumeToken: string; graceMs: number };
 
-const resumeKeyForMode = (mode: BattleEntryMode | MatchMode) => mode === "practice" ? PRACTICE_RESUME_KEY : RESUME_KEY;
-const readResume = (mode: BattleEntryMode): ResumeInfo | null => {
+/** The server's Practice room is also used by an Unranked AI fallback. The
+ * entry origin, rather than the room mode alone, decides which resume slot is
+ * safe to read and write. */
+export const resumeOriginForEntryMode = (mode: BattleEntryMode): ResumeOrigin => mode === "practice" ? "practice" : "pvp";
+export const resumeKeyForOrigin = (origin: ResumeOrigin) => origin === "practice" ? PRACTICE_RESUME_KEY : origin === "unranked-fallback" ? UNRANKED_FALLBACK_RESUME_KEY : RESUME_KEY;
+
+const inferredResumeOrigin = (mode: MatchMode): ResumeOrigin => mode === "practice" ? "practice" : "pvp";
+const storedResumeOrigin = (value: Partial<ResumeInfo>): ResumeOrigin | null => {
+  if (value.origin === "practice" || value.origin === "unranked-fallback" || value.origin === "pvp") return value.origin;
+  return value.mode ? inferredResumeOrigin(value.mode) : null;
+};
+
+export const readResume = (mode: BattleEntryMode): ResumeInfo | null => {
   try {
-    const value = JSON.parse(sessionStorage.getItem(resumeKeyForMode(mode)) ?? "null") as Partial<ResumeInfo> | null;
-    if (!value?.roomId || !value.resumeToken) return null;
-    if (value.mode && value.mode !== mode && !(mode === "unranked" && value.mode === "matchmaking")) return null;
-    const storedMode = value.mode === "matchmaking" ? "matchmaking" : mode === "unranked" ? "matchmaking" : mode;
-    return { mode: storedMode, roomId: value.roomId, resumeToken: value.resumeToken, graceMs: typeof value.graceMs === "number" ? value.graceMs : 30_000 };
+    const origins: ResumeOrigin[] = mode === "practice" ? ["practice"] : mode === "unranked" ? ["unranked-fallback", "pvp"] : ["pvp"];
+    for (const expectedOrigin of origins) {
+      const value = JSON.parse(sessionStorage.getItem(resumeKeyForOrigin(expectedOrigin)) ?? "null") as Partial<ResumeInfo> | null;
+      if (!value?.roomId || !value.resumeToken) continue;
+      const origin = storedResumeOrigin(value);
+      if (origin !== expectedOrigin) continue;
+      if (value.mode !== "practice" && value.mode !== "matchmaking" && value.mode !== "ranked" && value.mode !== "private") continue;
+      if (origin === "practice" && value.mode !== "practice") continue;
+      if (origin === "unranked-fallback" && value.mode !== "practice") continue;
+      if (origin === "pvp" && value.mode !== (mode === "unranked" ? "matchmaking" : mode)) continue;
+      return { mode: value.mode, origin, roomId: value.roomId, resumeToken: value.resumeToken, graceMs: typeof value.graceMs === "number" ? value.graceMs : 30_000 };
+    }
+    return null;
   } catch {
     return null;
   }
 };
 const writeResume = (info: ResumeInfo) => {
-  try { sessionStorage.setItem(resumeKeyForMode(info.mode), JSON.stringify(info)); } catch { /* session storage is optional */ }
+  try { sessionStorage.setItem(resumeKeyForOrigin(info.origin), JSON.stringify(info)); } catch { /* session storage is optional */ }
 };
-const clearResume = (mode: BattleEntryMode | MatchMode) => {
-  try { sessionStorage.removeItem(resumeKeyForMode(mode)); } catch { /* session storage is optional */ }
+const clearResume = (origin: ResumeOrigin) => {
+  try { sessionStorage.removeItem(resumeKeyForOrigin(origin)); } catch { /* session storage is optional */ }
 };
+
+export function queueFallbackRemainingSeconds(status: QueueStatusMessage | null | undefined, at: number): number | null {
+  const scheduled = status?.fallback?.scheduledInMs;
+  const since = status?.since;
+  if (typeof scheduled !== "number" || !Number.isFinite(scheduled) || scheduled < 0 || typeof since !== "number" || !Number.isFinite(since)) return null;
+  return Math.max(0, Math.ceil((since + scheduled - at) / 1000));
+}
+
+export function resumeOriginForStart(start: Pick<StartMessage, "mode" | "practiceOpponent">, requested: ResumeOrigin): ResumeOrigin | null {
+  const source = start.practiceOpponent?.source;
+  if (start.mode === "practice") {
+    if (source === "unranked-fallback") return requested === "unranked-fallback" ? "unranked-fallback" : null;
+    if (source === "practice") return requested === "practice" ? "practice" : null;
+    return null;
+  }
+  return requested === "pvp" && !start.practiceOpponent ? "pvp" : null;
+}
+
+type MatchFoundValidation = { ok: true; message: MatchFoundMessage; origin: ResumeOrigin } | { ok: false; reason: string };
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null;
+
+/** Validate the queue handoff before consuming its one-shot seat capability. */
+export function validateMatchFoundMessage(value: unknown, queue: "unranked" | "ranked"): MatchFoundValidation {
+  if (!isRecord(value) || value.mode !== queue || typeof value.opponent !== "string" || !value.opponent) return { ok: false, reason: "The matchmaking service returned an invalid match." };
+  const reservation = value.reservation;
+  if (!isRecord(reservation) || typeof reservation.name !== "string" || typeof reservation.sessionId !== "string" || typeof reservation.roomId !== "string" || !reservation.name || !reservation.sessionId || !reservation.roomId) {
+    return { ok: false, reason: "The matchmaking service returned an invalid seat." };
+  }
+  const fallback = value.fallback;
+  if (fallback === undefined) {
+    if (value.opponent === "AI Opponent") return { ok: false, reason: "The matchmaking service returned an invalid AI handoff." };
+    return { ok: true, message: value as unknown as MatchFoundMessage, origin: "pvp" };
+  }
+  if (queue !== "unranked" || !isRecord(fallback) || fallback.source !== "unranked-fallback" || value.opponent !== "AI Opponent" || (fallback.difficulty !== "medium" && fallback.difficulty !== "hard") || fallback.botId !== `practice-${fallback.difficulty}-v1`) {
+    return { ok: false, reason: "The matchmaking service returned an invalid AI handoff." };
+  }
+  return { ok: true, message: value as unknown as MatchFoundMessage, origin: "unranked-fallback" };
+}
 
 /** The room name is the server-side mode authority. Practice never joins PvP. */
 export function battleRoomForMode(mode: BattleEntryMode): typeof BATTLE_ROOM | typeof BATTLE_PRACTICE_ROOM {
@@ -135,6 +194,8 @@ export function BattlePanel({
   const [resumeDeadlineAt, setResumeDeadlineAt] = useState(0);
   /** Bump to cancel any in-flight reconnect loop. */
   const reconnectGen = useRef(0);
+  /** Bump to cancel a queue join or handoff that is still awaiting the SDK. */
+  const queueGen = useRef(0);
   const cidN = useRef(0);
   const mapRef = useRef<BoardMapper | null>(null);
   const gesture = useRef<Gesture | null>(null);
@@ -239,15 +300,51 @@ export function BattlePanel({
   // One handler set shared by room-code create/join, matched reservations
   // and resume re-joins. SDK auto-reconnect is disabled: our resume flow owns
   // recovery, and the built-in retry would delay onLeave past the grace window.
-  const attachRoom = useCallback((r: Room) => {
+  const attachRoom = useCallback((r: Room, origin: ResumeOrigin = resumeOriginForEntryMode(initialMode)) => {
     r.reconnection.enabled = false;
+    let originRejected = false;
+    const rejectOrigin = (reason: string) => {
+      if (originRejected) return;
+      originRejected = true;
+      setError(reason);
+      setStage("failed");
+      void r.leave().catch(() => {});
+    };
     r.onMessage("lobby", (m: LobbyMessage) => {
+      const serverSource = m.practice?.opponent.source;
+      if (origin === "unranked-fallback" && serverSource !== "unranked-fallback") {
+        rejectOrigin("The AI handoff could not be verified. Search again.");
+        return;
+      }
+      if (origin === "practice" && serverSource !== "practice") {
+        rejectOrigin("The Practice opponent could not be verified. Try again.");
+        return;
+      }
+      if (origin === "pvp" && serverSource === "unranked-fallback") {
+        rejectOrigin("The matchmaking handoff could not be verified. Search again.");
+        return;
+      }
       if (m.practice) adoptPracticeDifficulty(m.practice.opponent.difficulty);
       setLobby(m);
       setAudioPhase("lobby");
       setStage((s) => (s === "connecting" || s === "searching" ? "lobby" : s));
     });
     r.onMessage("start", (m: StartMessage) => {
+      const serverSource = m.practiceOpponent?.source;
+      const authoritativeOrigin = resumeOriginForStart(m, origin);
+      if (!authoritativeOrigin) {
+        const reason = origin === "unranked-fallback"
+          ? "The AI handoff could not be verified. Search again."
+          : origin === "practice"
+            ? "The Practice opponent could not be verified. Try again."
+            : "The matchmaking handoff could not be verified. Search again.";
+        rejectOrigin(reason);
+        return;
+      }
+      if (origin === "pvp" && (serverSource === "unranked-fallback" || serverSource === "practice")) {
+        rejectOrigin("The matchmaking handoff could not be verified. Search again.");
+        return;
+      }
       if (m.mode === "practice") adoptPracticeDifficulty(m.practiceOpponent?.difficulty);
       feed.current = { start: m, frame: null, prev: null, receivedAt: performance.now(), selected: null, ghost: null };
       audioSeen.current.clear();
@@ -258,7 +355,7 @@ export function BattlePanel({
       setSelected(null);
       setDragging(null);
       gesture.current = null;
-      resumeInfo.current = { mode: m.mode, roomId: r.roomId, resumeToken: m.resumeToken, graceMs: m.reconnectGraceMs };
+      resumeInfo.current = { mode: m.mode, origin: authoritativeOrigin, roomId: r.roomId, resumeToken: m.resumeToken, graceMs: m.reconnectGraceMs };
       writeResume(resumeInfo.current);
       if (m.resumed) setNotice("Match restored");
       setPresence(null);
@@ -289,9 +386,9 @@ export function BattlePanel({
       setAcks((xs) => [{ ...a, label }, ...xs].slice(0, 5));
     });
     r.onMessage("end", (e: EndMessage) => {
-      const mode = resumeInfo.current?.mode ?? initialMode;
+      const resumeOrigin = resumeInfo.current?.origin ?? resumeOriginForEntryMode(initialMode);
       resumeInfo.current = null;
-      clearResume(mode);
+      clearResume(resumeOrigin);
       const cue = cueForResult(e.result);
       if (audioResultSeen.current !== cue.key) {
         audioResultSeen.current = cue.key;
@@ -303,9 +400,9 @@ export function BattlePanel({
     });
     r.onMessage("settlement", (m: SettlementMessage) => setSettlement(m));
     r.onMessage("aborted", (a: { reason: string }) => {
-      const mode = resumeInfo.current?.mode ?? initialMode;
+      const resumeOrigin = resumeInfo.current?.origin ?? resumeOriginForEntryMode(initialMode);
       resumeInfo.current = null;
-      clearResume(mode);
+      clearResume(resumeOrigin);
       setAbort(a.reason);
       setAudioPhase("lobby");
       setStage("aborted");
@@ -314,6 +411,7 @@ export function BattlePanel({
     r.onMessage("error", (e: { reason: string }) => setError(e.reason));
     r.onLeave((code: number) => {
       setStage((s) => {
+        if (originRejected) return "failed";
         // Unconsented drop during a live match: try to resume the seat.
         if (s === "active" && code !== 4000 && resumeInfo.current) {
           resumeDeadline.current = Date.now() + resumeInfo.current.graceMs;
@@ -321,9 +419,9 @@ export function BattlePanel({
           setAudioPhase("reconnecting");
           return "reconnecting";
         }
-        const mode = resumeInfo.current?.mode ?? initialMode;
+        const resumeOrigin = resumeInfo.current?.origin ?? resumeOriginForEntryMode(initialMode);
         resumeInfo.current = null;
-        clearResume(mode);
+        clearResume(resumeOrigin);
         setAudioPhase(s === "ended" ? "result" : "lobby");
         return s === "ended" || s === "aborted" ? s : "closed";
       });
@@ -408,10 +506,11 @@ export function BattlePanel({
           : mode === "practice"
             ? await client.create(BATTLE_PRACTICE_ROOM, { difficulty: requestedPracticeDifficulty ?? selectedPracticeDifficultyRef.current })
             : await client.create(BATTLE_ROOM);
-        attachRoom(r);
+        const origin: ResumeOrigin = mode === "practice" ? "practice" : "pvp";
+        attachRoom(r, origin);
         if (mode === "create") appAudioController?.playUi("invite");
         if (mode === "practice") appAudioController?.playUi("ready");
-        setStage("lobby");
+        setStage((current) => current === "connecting" ? "lobby" : current);
       } catch (e) {
         setError(mode === "join"
           ? roomJoinError(e)
@@ -444,6 +543,7 @@ export function BattlePanel({
    * ranked room only ever pairs ranked tickets, and the client label below
    * never decides settlement. Ranked stays hub-gated until trophies land. */
   const findMatch = useCallback(async (queue: "unranked" | "ranked" = "unranked") => {
+    const gen = ++queueGen.current;
     setError(null);
     setStage("searching");
     setQueueStatus(null);
@@ -452,38 +552,98 @@ export function BattlePanel({
       if (!token) throw new Error("No Privy access token. Log in first.");
       const client = new Client(SERVER, { headers: { authorization: `Bearer ${token}` } });
       const q = await client.joinOrCreate(queue === "ranked" ? BATTLE_RANKED_QUEUE_ROOM : BATTLE_QUEUE_ROOM);
-      q.onMessage("queue_status", (m: QueueStatusMessage) => setQueueStatus(m));
-      q.onMessage("queue_timeout", (m: { reason: string }) => (setError(m.reason), setStage("idle")));
-      q.onMessage("match_found", (m: MatchFoundMessage) => {
+      if (gen !== queueGen.current) {
+        await q.leave().catch(() => {});
+        return;
+      }
+      q.onMessage("queue_status", (m: QueueStatusMessage) => {
+        if (gen !== queueGen.current) return;
+        setQueueStatus(m);
+        setNow(Date.now());
+      });
+      q.onMessage("queue_timeout", (m: { reason: string }) => {
+        if (gen !== queueGen.current) return;
+        queueGen.current += 1;
+        setQueueStatus(null);
+        setQueueRoom(null);
+        setError(m.reason);
+        setStage("idle");
+      });
+      let handoffStarted = false;
+      let leavingForHandoff = false;
+      q.onMessage("match_found", (raw: unknown) => {
+        if (gen !== queueGen.current) {
+          void q.leave().catch(() => {});
+          return;
+        }
+        if (handoffStarted) return;
+        const handoff = validateMatchFoundMessage(raw, queue);
+        if (!handoff.ok) {
+          handoffStarted = true;
+          setQueueStatus(null);
+          void q.leave().catch(() => {});
+          setError(handoff.reason);
+          setStage("idle");
+          return;
+        }
+        handoffStarted = true;
         setQueueStatus(null);
         setStage("connecting");
         void (async () => {
           try {
+            const nextRoom = await client.consumeSeatReservation(handoff.message.reservation);
+            if (gen !== queueGen.current) {
+              await nextRoom.leave().catch(() => {});
+              return;
+            }
+            leavingForHandoff = true;
             await q.leave().catch(() => {});
-            attachRoom(await client.consumeSeatReservation(m.reservation));
+            if (gen !== queueGen.current) {
+              await nextRoom.leave().catch(() => {});
+              return;
+            }
+            setQueueRoom((current) => current === q ? null : current);
+            attachRoom(nextRoom, handoff.origin);
             appAudioController?.playUi("ready");
-            setStage("lobby");
+            setStage((current) => current === "connecting" ? "lobby" : current);
           } catch (e) {
+            await q.leave().catch(() => {});
+            if (gen !== queueGen.current) return;
             setError(e instanceof Error ? e.message : String(e));
             setStage("idle");
           }
         })();
       });
-      q.onLeave(() => setStage((s) => (s === "searching" ? "idle" : s)));
+      q.onLeave(() => {
+        if (leavingForHandoff) return;
+        if (gen !== queueGen.current) return;
+        queueGen.current += 1;
+        setQueueRoom(null);
+        setQueueStatus(null);
+        setStage((s) => (s === "searching" ? "idle" : s));
+      });
       setQueueRoom(q);
     } catch (e) {
+      if (gen !== queueGen.current) return;
       setError(e instanceof Error ? e.message : String(e));
       setStage("idle");
     }
   }, [getAccessToken, attachRoom, appAudioController]);
 
-  const cancelSearch = useCallback(() => void queueRoom?.leave().catch(() => {}), [queueRoom]);
+  const cancelSearch = useCallback(() => {
+    queueGen.current += 1;
+    setQueueStatus(null);
+    setQueueRoom(null);
+    setStage("idle");
+    void queueRoom?.leave().catch(() => {});
+  }, [queueRoom]);
 
   const reset = useCallback(() => {
     reconnectGen.current += 1;
-    const mode = resumeInfo.current?.mode ?? initialMode;
+    queueGen.current += 1;
+    const resumeOrigin = resumeInfo.current?.origin ?? resumeOriginForEntryMode(initialMode);
     resumeInfo.current = null;
-    clearResume(mode);
+    clearResume(resumeOrigin);
     void room?.leave().catch(() => {});
     void queueRoom?.leave().catch(() => {});
     setRoom(null);
@@ -516,10 +676,19 @@ export function BattlePanel({
       void connect("practice");
     }, 0);
   }, [connect, initialMode, reset]);
+  const findOpponentAgain = useCallback(() => {
+    if (initialMode !== "unranked" || start?.practiceOpponent?.source !== "unranked-fallback" || connecting.current || battleAgainPending.current) return;
+    battleAgainPending.current = true;
+    reset();
+    setTimeout(() => {
+      battleAgainPending.current = false;
+      void findMatch("unranked");
+    }, 0);
+  }, [findMatch, initialMode, reset, start?.practiceOpponent?.source]);
   const exitBattle = useCallback(() => {
     reset();
-    if (publicMode && initialMode === "practice") router.push("/app/play");
-  }, [initialMode, publicMode, reset, router]);
+    if (publicMode && (initialMode === "practice" || start?.practiceOpponent?.source === "unranked-fallback")) router.push("/app/play");
+  }, [initialMode, publicMode, reset, router, start?.practiceOpponent?.source]);
 
   useEffect(() => () => void room?.leave(), [room]);
   useEffect(() => () => void queueRoom?.leave(), [queueRoom]);
@@ -539,7 +708,7 @@ export function BattlePanel({
       }
       if (Date.now() >= resumeDeadline.current) {
         resumeInfo.current = null;
-        clearResume(info.mode);
+        clearResume(info.origin);
         setError("Reconnect window expired");
         setStage("failed");
         return;
@@ -553,12 +722,12 @@ export function BattlePanel({
           void r.leave().catch(() => {});
           return;
         }
-        attachRoom(r); // the resumed start message flips stage back to active
+        attachRoom(r, info.origin); // the resumed start message flips stage back to active
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
         if (/over|authorized|not found|already started|expired|seat already connected/i.test(msg)) {
           resumeInfo.current = null;
-          clearResume(info.mode);
+          clearResume(info.origin);
           setError(`Recovery failed: ${msg}`);
           setStage("failed");
           return;
@@ -603,6 +772,7 @@ export function BattlePanel({
     const t = setInterval(() => setNow(Date.now()), 500);
     return () => clearInterval(t);
   }, [stage, lobby?.match, presence?.reconnectDeadlineAt]);
+  const fallbackSeconds = initialMode === "unranked" && stage === "searching" ? queueFallbackRemainingSeconds(queueStatus, now) : null;
   useEffect(() => {
     if (feed.current && start) feed.current = { ...feed.current, selected: selected ? start.catalog[selected] ?? null : null };
   }, [selected, start]);
@@ -775,8 +945,11 @@ export function BattlePanel({
 
       {stage === "searching" && (
         <section className={publicMode ? "app-play-battle-controls" : undefined} style={publicMode ? undefined : { display: "grid", gap: 6 }}>
-          <div>
-            Searching for an opponent{queueStatus ? ` · ${queueStatus.waiting} in queue` : ""} · {queueStatus ? Math.max(0, Math.floor((now - queueStatus.since) / 1000)) : 0}s
+          <div role="status">
+            <strong>Searching for an opponent...</strong>
+            {queueStatus && <span> · {queueStatus.waiting} in queue · {Math.max(0, Math.floor((now - queueStatus.since) / 1000))}s</span>}
+            {fallbackSeconds !== null && fallbackSeconds > 0 && <span> · No player found yet? An AI opponent will join if nobody is available. AI backup in {fallbackSeconds}s.</span>}
+            {fallbackSeconds === 0 && <span> · Preparing an opponent...</span>}
           </div>
           <div>
             <button className={publicMode ? "app-btn app-btn--ghost" : undefined} onClick={cancelSearch}>Cancel search</button>
@@ -807,8 +980,8 @@ export function BattlePanel({
           error={error}
           notice={notice}
           onGiveUp={stage === "reconnecting" ? reset : undefined}
-          onExit={initialMode === "practice" && publicMode ? exitBattle : reset}
-          onBattleAgain={initialMode === "practice" ? battleAgain : undefined}
+          onExit={publicMode && (initialMode === "practice" || start?.practiceOpponent?.source === "unranked-fallback") ? exitBattle : reset}
+          onBattleAgain={initialMode === "practice" ? battleAgain : start?.practiceOpponent?.source === "unranked-fallback" ? findOpponentAgain : undefined}
           start={start}
           playerName={identity?.self ?? undefined}
           frame={frame}

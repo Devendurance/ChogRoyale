@@ -59,6 +59,7 @@
 .chud-pill[data-dead="true"] { opacity: .55; text-decoration: line-through; }
 .chud-pill[data-owner="you"] { border-color: #67d8ed; }
 .chud-pill[data-owner="foe"] { border-color: #f38fae; }
+.chud-bot-badge--fallback { border-color: #e7bf67; color: #ffe7a8; }
 .chud-devbtn { flex: none; align-self: center; font-size: 10px; min-width: 44px; min-height: 44px; padding: 4px 7px; background: #23184e; border: 1px solid #a58cc077; border-radius: 6px; color: #d5c9e9; cursor: pointer; }
 .chud-devbtn[aria-pressed="true"] { border-color: #ffc83d; color: #fff0b6; }
 .chud-dev-inline { position: absolute; z-index: 8; top: 80px; left: 8px; right: 8px; max-height: 220px; overflow: auto; background: #1d1437f5; border: 1px solid #9472d9; border-radius: 10px; padding: 10px; box-shadow: 0 8px 20px #0007; }

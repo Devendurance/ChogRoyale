@@ -135,13 +135,13 @@ describe("V2.1c practice rooms", () => {
     await until(() => !!s.lobby);
     expect(s.lobby!.players).toHaveLength(1);
     expect(s.lobby!.players[0]).toEqual({ username: "alice", ready: false });
-    expect(s.lobby!.practice?.opponent).toEqual({ kind: "bot", botId: "practice-medium-v1", difficulty: "medium", displayName: "AI Opponent" });
+    expect(s.lobby!.practice?.opponent).toEqual({ kind: "bot", botId: "practice-medium-v1", difficulty: "medium", displayName: "AI Opponent", source: "practice" });
     expect(s.lobby!.match?.mode).toBe("practice");
     r.send("ready", ready());
     await until(() => !!s.start);
     expect(s.start!.mode).toBe("practice");
     expect(s.start!.opponentKind).toBe("bot");
-    expect(s.start!.practiceOpponent).toEqual({ kind: "bot", botId: "practice-medium-v1", difficulty: "medium", displayName: "AI Opponent" });
+    expect(s.start!.practiceOpponent).toEqual({ kind: "bot", botId: "practice-medium-v1", difficulty: "medium", displayName: "AI Opponent", source: "practice" });
     expect(s.start!.opponent).toBe("AI Opponent");
     await r.leave();
   });
@@ -188,7 +188,7 @@ describe("V2.1c practice rooms", () => {
     await until(() => s2.starts.length > 0);
     expect(s2.start!.resumed).toBe(true);
     expect(s2.start!.opponentKind).toBe("bot");
-    expect(s2.start!.practiceOpponent).toEqual({ kind: "bot", botId: "practice-hard-v1", difficulty: "hard", displayName: "AI Opponent" });
+    expect(s2.start!.practiceOpponent).toEqual({ kind: "bot", botId: "practice-hard-v1", difficulty: "hard", displayName: "AI Opponent", source: "practice" });
     // Idle human: the Hard bot plays alone until a true result.
     // Drive occasional human deploys so the game ends by core rather than timeout.
     let lastDrive = -1;
@@ -202,7 +202,7 @@ describe("V2.1c practice rooms", () => {
       return !!s2.end;
     }, 170_000);
     expect(["win", "loss", "draw"]).toContain(s2.end!.result);
-    expect(s2.end!.practice).toEqual({ opponentKind: "bot", noReward: true });
+    expect(s2.end!.practice).toEqual({ opponentKind: "bot", noReward: true, source: "practice" });
     expect(s2.end!.matchId).toBeTruthy();
     await until(() => !!s2.settlement);
     expect(s2.settlement!.status).toBe("disabled");

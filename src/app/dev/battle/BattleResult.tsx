@@ -48,11 +48,18 @@ export default function BattleResult({ start, end, abort, settlement, me, player
   const dialog = useRef<HTMLDivElement>(null);
   const exit = useRef<HTMLButtonElement>(null);
   const again = useRef<HTMLButtonElement>(null);
-  const view = finaleView(end, abort, me, settlement, start.ticksPerSecond, start.mode);
+  const view = finaleView(end, abort, me, settlement, start.ticksPerSecond, start.mode, start.practiceOpponent?.source);
   const opponent = opponentNameFor(start, view.practice);
   const practiceDifficulty = view.practice ? practiceDifficultyLabel(start.practiceOpponent?.difficulty) : null;
   const goBack = () => { onExit?.(); if (!onExit) router.push("/app/play"); };
-  const goAgain = () => { onAgain?.(); if (!onAgain) router.push("/app/play/battle?mode=practice"); };
+  const hasAgainAction = view.origin === "practice" || (view.origin === "unranked-fallback" && Boolean(onAgain));
+  const goAgain = () => {
+    if (onAgain) {
+      onAgain();
+      return;
+    }
+    if (view.origin === "practice") router.push("/app/play/battle?mode=practice");
+  };
   const [reduced] = useState(() => typeof window !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches);
   const [step, setStep] = useState(() => (reduced ? 3 : 0));
   const cue = useRef(onAudioCue);
@@ -72,7 +79,7 @@ export default function BattleResult({ start, end, abort, settlement, me, player
       }
       branch = branch.parentElement;
     }
-    (view.practice ? again.current : exit.current)?.focus({ preventScroll: true });
+    (hasAgainAction ? again.current : exit.current)?.focus({ preventScroll: true });
     const trap = (event: KeyboardEvent) => {
       if (event.key === "Tab") {
         const buttons = Array.from(node.querySelectorAll<HTMLButtonElement>("button:not([disabled])"));
@@ -91,7 +98,7 @@ export default function BattleResult({ start, end, abort, settlement, me, player
       for (const [element, wasInert] of inert) element.inert = wasInert;
       if (focused?.isConnected) focused.focus({ preventScroll: true });
     };
-  }, [onExit, view.practice]);
+  }, [hasAgainAction, onExit]);
 
   // Presentation-only tally of the server's final crowns. Each step that
   // lights a crown gets one soft tick. Reduced motion shows the final count.
@@ -130,8 +137,8 @@ export default function BattleResult({ start, end, abort, settlement, me, player
       </div>
       <div className="chud-finale-footer">
         <div className={`chud-finale-actions${view.practice ? " chud-finale-actions--practice" : ""}`}>
-          {view.practice && <button ref={again} type="button" className="chud-finale-exit" onClick={goAgain}>Battle Again <span aria-hidden="true">↻</span></button>}
-          <button ref={exit} type="button" className={`chud-finale-exit${view.practice ? " chud-finale-exit--secondary" : ""}`} onClick={goBack}>{view.practice ? "Back to Battle Hall" : "Back to lobby"} <span aria-hidden="true">›</span></button>
+          {hasAgainAction && view.againLabel && <button ref={again} type="button" className="chud-finale-exit" onClick={goAgain}>{view.againLabel} <span aria-hidden="true">↻</span></button>}
+          <button ref={exit} type="button" className={`chud-finale-exit${hasAgainAction ? " chud-finale-exit--secondary" : ""}`} onClick={goBack}>{view.practice ? "Back to Battle Hall" : "Back to lobby"} <span aria-hidden="true">›</span></button>
         </div>
       </div>
     </div>

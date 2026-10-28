@@ -48,4 +48,30 @@ describe("local battle scoreboard", () => {
     expect(html).toContain("AI Opponent");
     expect(html).not.toContain("spoofed-human-name");
   });
+
+  it.each([
+    ["medium", "MEDIUM"],
+    ["hard", "HARD"],
+  ] as const)("shows the confirmed Unranked fallback %s difficulty and source", (difficulty, label) => {
+    const start = {
+      mode: "practice",
+      opponentKind: "bot",
+      practiceOpponent: { kind: "bot", botId: `practice-${difficulty}-v1`, difficulty, displayName: "AI Opponent", source: "unranked-fallback" },
+      seat: 0,
+      self: "LocalChog",
+      opponent: "spoofed-human-name",
+      resumed: true,
+      catalog: {},
+      commander: { class: "scout", kind: "class", name: "Scout" },
+      patron: { tokenId: "1", theme: "test" },
+      ticksPerSecond: 10,
+    } as unknown as StartMessage;
+    const props = { start, me: 0, playerName: "LocalChog", frame: null, end: { result: "draw", reason: "timeout", crowns: [2, 1] }, abort: null, settlement: null, acks: [], showDevDiagnostics: false, feed: { current: null }, mapRef: { current: null }, audioMuted: true, audioVolume: 0 } as unknown as BattleHudProps;
+    const html = renderToStaticMarkup(React.createElement(BattleHud, props));
+    expect(html).toContain(`AI OPPONENT · ${label} · UNRANKED FALLBACK`);
+    expect(html).toContain('data-opponent-kind="bot"');
+    expect(html).toContain('data-opponent-source="unranked-fallback"');
+    expect(html).toContain('class="chud-pill chud-bot-badge chud-bot-badge--fallback"');
+    expect(html).not.toContain("spoofed-human-name");
+  });
 });

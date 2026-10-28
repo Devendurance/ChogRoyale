@@ -117,7 +117,9 @@ void settlementService()
     import("@/server/battle/server").then(({ startBattleServer }) => {
       console.log(describeBattleHostConfig(hostConfig));
       console.log(`ranked public matchmaking: ${RANKED_PUBLIC_MATCHMAKING_ENABLED ? "OPEN" : "closed (release gate)"}`);
-      return startBattleServer(hostConfig.port, { settlement, cardScaling }, hostConfig.host, {
+      const unrankedFallbackEnabled = process.env.UNRANKED_AI_FALLBACK_ENABLED === "1";
+      console.log(`unranked ai fallback: ${unrankedFallbackEnabled ? "ENABLED (20s human-first, medium/hard only)" : "disabled (release gate)"}`);
+      return startBattleServer(hostConfig.port, { settlement, cardScaling, ...(unrankedFallbackEnabled ? { unrankedFallback: { enabled: true } } : {}) }, hostConfig.host, {
         enableShutdownHooks: hosting,
       });
     })

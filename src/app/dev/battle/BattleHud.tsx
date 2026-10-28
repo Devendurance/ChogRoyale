@@ -397,12 +397,15 @@ export default function BattleHud(props: BattleHudProps) {
     </span>
   );
 
-  const isPractice = start.mode === "practice" || start.opponentKind === "bot";
-  const opponentName = isPractice ? PRACTICE_OPPONENT : start.opponent;
+  const isAiOpponent = start.mode === "practice" || start.opponentKind === "bot" || start.practiceOpponent?.kind === "bot";
+  const isUnrankedFallback = isAiOpponent && start.practiceOpponent?.source === "unranked-fallback";
+  const opponentName = isAiOpponent ? PRACTICE_OPPONENT : start.opponent;
   const practiceDifficulty = practiceDifficultyLabel(start.practiceOpponent?.difficulty);
-  const practiceBadge = isPractice
-    ? `AI OPPONENT${practiceDifficulty ? ` · ${practiceDifficulty.toUpperCase()}` : ""}`
+  const opponentBadge = isAiOpponent
+    ? `AI OPPONENT${practiceDifficulty ? ` · ${practiceDifficulty.toUpperCase()}` : ""}${isUnrankedFallback ? " · UNRANKED FALLBACK" : ""}`
     : null;
+  const opponentSource = isUnrankedFallback ? "unranked-fallback" : isAiOpponent ? "practice" : undefined;
+  const opponentBadgeClass = isUnrankedFallback ? "chud-pill chud-bot-badge chud-bot-badge--fallback" : "chud-pill chud-practice-badge";
 
   const abilityControls = frame && (
     <>
@@ -462,7 +465,7 @@ export default function BattleHud(props: BattleHudProps) {
           </div>}
           <div className="chud-subrow">
             {patronChip}
-            {practiceBadge && <span className="chud-pill chud-practice-badge" data-opponent-kind="bot">{practiceBadge}</span>}
+            {opponentBadge && <span className={opponentBadgeClass} data-opponent-kind="bot" data-opponent-source={opponentSource}>{opponentBadge}</span>}
             {presence && (
               <span className="chud-pill" style={{ color: presence.opponentConnected ? "#86efac" : "#fbbf24" }}>
                 {presence.opponentConnected ? "Opponent back" : `Opp. offline ${Math.max(0, Math.ceil(((presence.reconnectDeadlineAt ?? 0) - now) / 1000))}s`}
@@ -568,7 +571,7 @@ export default function BattleHud(props: BattleHudProps) {
       {!start.resumed && !end && !abort && <div className="chud-start" aria-hidden="true">
         <div className="chud-start-band chud-start-band--foe">
           <span className="chud-start-emblem"><GameIcon kind="crown" size={46} /></span>
-          <span className="chud-start-who"><small>{practiceBadge ?? "Opponent"}</small><b>{opponentName}</b></span>
+          <span className="chud-start-who"><small>{opponentBadge ?? "Opponent"}</small><b>{opponentName}</b></span>
         </div>
         <span className="chud-start-vs">VS</span>
         <div className="chud-start-band chud-start-band--you">

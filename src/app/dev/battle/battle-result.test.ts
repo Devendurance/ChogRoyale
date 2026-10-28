@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import type { EndMessage, StartMessage } from "@/lib/battle-protocol";
 import BattleResult from "./BattleResult";
-import { finaleView, opponentNameFor, practiceDifficultyLabel, settlementView, tallyAt } from "./battle-result-model";
+import { finaleView, opponentNameFor, practiceDifficultyLabel, settlementView, tallyAt, UNRANKED_FALLBACK_NO_REWARDS } from "./battle-result-model";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: () => {} }) }));
 
@@ -15,10 +15,16 @@ const practiceStart = {
   mode: "practice",
   practiceOpponent: { kind: "bot", botId: "practice-medium-v1", difficulty: "medium", displayName: "AI Opponent" },
 } as StartMessage;
+const fallbackStart = {
+  ...practiceStart,
+  practiceOpponent: { ...practiceStart.practiceOpponent!, source: "unranked-fallback" },
+} as StartMessage;
 const render = (props: Partial<React.ComponentProps<typeof BattleResult>> = {}) =>
   renderToStaticMarkup(React.createElement(BattleResult, { start, end: end(), abort: null, settlement: null, me: 0, playerName: "MyChog", ...props }));
 const renderPractice = (props: Partial<React.ComponentProps<typeof BattleResult>> = {}) =>
   renderToStaticMarkup(React.createElement(BattleResult, { start: practiceStart, end: end({ practice: { opponentKind: "bot", noReward: true } }), abort: null, settlement: { matchId: "m", status: "disabled" }, me: 0, playerName: "MyChog", ...props }));
+const renderFallback = (props: Partial<React.ComponentProps<typeof BattleResult>> = {}) =>
+  renderToStaticMarkup(React.createElement(BattleResult, { start: fallbackStart, end: end({ practice: { opponentKind: "bot", noReward: true, source: "unranked-fallback" } }), abort: null, settlement: { matchId: "m", status: "disabled" }, me: 0, playerName: "MyChog", ...props }));
 
 describe("finale view model", () => {
   it("reads crowns by seat and names the winner ribbon from the server result", () => {
@@ -45,6 +51,30 @@ describe("finale view model", () => {
     expect(view).toMatchObject({ practice: true, result: "win", title: "Victory", kicker: "Practice complete · AI Opponent", settlement: null, noRewards: "No rewards or progression are awarded in Practice." });
     expect(opponentNameFor(practiceStart)).toBe("AI Opponent");
     expect(opponentNameFor({ ...practiceStart, practiceOpponent: undefined })).toBe("AI Opponent");
+  });
+  it("distinguishes an Unranked AI fallback from solo Practice", () => {
+    const view = finaleView(
+      end({ practice: { opponentKind: "bot", noReward: true, source: "unranked-fallback" } }),
+      null,
+      0,
+      { matchId: "m", status: "disabled" },
+      10,
+      "practice",
+    );
+    expect(view).toMatchObject({
+      origin: "unranked-fallback",
+      practice: true,
+      kicker: "Unranked · AI Opponent",
+      settlement: null,
+      noRewards: UNRANKED_FALLBACK_NO_REWARDS,
+      againLabel: "Find Opponent Again",
+    });
+    expect(finaleView(end(), null, 0, { matchId: "m", status: "settled" }, 10, "matchmaking")).toMatchObject({
+      origin: "human",
+      practice: false,
+      settlement: { state: "recorded", text: "Result recorded" },
+      noRewards: null,
+    });
   });
   it("formats only server-supported practice difficulties", () => {
     expect(practiceDifficultyLabel("medium")).toBe("Medium");
@@ -110,7 +140,20 @@ describe("battle finale render", () => {
     expect(html).not.toContain("untrusted-bot-label");
     expect(html).not.toContain("Result recording is unavailable");
     expect(html).toContain(">Battle Again <");
+    expect(html).not.toContain("Find Opponent Again");
     expect(html).toContain(">Back to Battle Hall <");
+  });
+  it("renders fallback provenance and only offers Find Opponent Again through the existing callback", () => {
+    const withoutCallback = renderFallback();
+    expect(withoutCallback).toContain("Unranked · AI Opponent");
+    expect(withoutCallback).toContain(UNRANKED_FALLBACK_NO_REWARDS);
+    expect(withoutCallback).toContain("AI Opponent · Medium difficulty");
+    expect(withoutCallback).not.toContain("Result recording is unavailable");
+    expect(withoutCallback).not.toContain("Find Opponent Again");
+
+    const withCallback = renderFallback({ onAgain: () => {} });
+    expect(withCallback).toContain(">Find Opponent Again <");
+    expect(withCallback).toContain(">Back to Battle Hall <");
   });
   it.each([
     ["medium", "Medium"],
