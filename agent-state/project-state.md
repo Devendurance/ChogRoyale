@@ -1,5 +1,12 @@
 # Project State
 
+# Owner-supplied battle music production release (2026-10-28)
+
+- Current branch: `codex/owner-battle-music`, based on latest `origin/main` `e6e4c8f7`.
+- Verified `.audio-dev/battle-loop.mp3` and copied the exact SHA-256 `5BC878DD9C4B809CAA500DA01BF33848BC1FC280E5C5047A2FDCF4FE97B8B24C` into `public/assets/audio/v001/music/battle-loop.mp3`.
+- Track B is now production-enabled in the shared audio controller. Track A remains lobby/ready-room music. Owner asserts purchased usage rights. Original Mrthenoronha/Freesound 520710 and CC BY-NC 4.0 metadata remain explicit, with purchase proof absent from the repository.
+- Focused audio tests 27/27, typecheck, scoped ESLint and production build passed. Next: commit, push, open and merge the owner-authorized PR, then verify Vercel and public asset HTTP 200.
+
 # V2.1d Practice difficulty selector (2026-10-28)
 
 - Frontend branch `codex/v2.1d-practice-difficulties` starts from V2.1c `8385910` and preserves the server-owned medium, hard, and ultimate Practice policies.

@@ -1,6 +1,6 @@
 {
   "version": "v001",
-  "preparedAt": "2026-10-27",
+  "preparedAt": "2026-10-28",
   "externalGenerator": {
     "provider": "ElevenLabs",
     "status": "free-tier-no-commercial-entitlement",
@@ -17,6 +17,8 @@
       "wrapCrossfadeSeconds": 4,
       "loopStartSourceSeconds": 4,
       "license": "CC0",
+      "rightsStatus": "cleared",
+      "rightsNote": "CC0 source license.",
       "credit": "Misterbates - Spooky Halloween",
       "source": "https://freesound.org/people/MusicByMisterbates/sounds/677436/",
       "sourceSha256": "2565DA8808CA3D713D204C38ACF743BF845F2EB3E7F7EB6F9F19E344FF56B297",
@@ -24,16 +26,19 @@
     },
     "trackB": {
       "id": "track-b",
-      "path": null,
-      "developmentPath": "/api/dev-audio/battle",
+      "path": "/assets/audio/v001/music/battle-loop.mp3",
       "durationSeconds": 33.409093,
       "loop": true,
-      "production": false,
+      "production": true,
       "license": "CC BY-NC 4.0",
+      "rightsStatus": "owner-asserted-purchased-rights",
+      "rightsNote": "The project owner asserts purchased usage rights. Purchase documentation is not stored in this repository.",
       "credit": "Mrthenoronha - Village game theme loop",
       "source": "https://freesound.org/people/Mrthenoronha/sounds/520710/",
       "sourceSha256": "E9AA4D4A3F53B382EB5B0E3ACE619C9604ABB6A355168A0B175E32DE8715D9B6",
-      "developmentSha256": "F5F77D2C6A33A97875F0C1D6C3B58BEC5638EAED0AE162500A9FE93AA683276C"
+      "browserSha256": "5BC878DD9C4B809CAA500DA01BF33848BC1FC280E5C5047A2FDCF4FE97B8B24C",
+      "encoding": "MP3, 192 kbps, 44.1 kHz stereo",
+      "wrapCrossfadeSeconds": 1.5
     }
   },
   "sfx": {

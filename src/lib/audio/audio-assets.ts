@@ -57,7 +57,8 @@ export type AudioAssetProvenance =
   | "local-procedural-fallback"
   | "web-audio-procedural-fallback"
   | "licensed-cc0"
-  | "development-only-cc-by-nc";
+  | "development-only-cc-by-nc"
+  | "owner-supplied-purchased-rights";
 
 export interface BattleAudioAsset {
   cue: BattleAudioCueKey;
@@ -88,6 +89,8 @@ export interface BattleMusicAsset {
   credit: string;
   sourceUrl: string;
   license: string;
+  rightsStatus: "cleared" | "owner-asserted-purchased-rights";
+  rightsNote: string;
   provenance: AudioAssetProvenance;
 }
 
@@ -164,20 +167,24 @@ export const BATTLE_MUSIC_ASSETS: Record<"track-a" | "track-b", BattleMusicAsset
     credit: "Misterbates - Spooky Halloween",
     sourceUrl: "https://freesound.org/people/MusicByMisterbates/sounds/677436/",
     license: "CC0",
+    rightsStatus: "cleared",
+    rightsNote: "CC0 source license.",
     provenance: "licensed-cc0",
   },
   "track-b": {
     id: "track-b",
-    path: null,
-    developmentPath: "/api/dev-audio/battle",
+    path: "/assets/audio/v001/music/battle-loop.mp3",
+    developmentPath: null,
     mimeType: "audio/mpeg",
     durationSeconds: 33.409093,
     loop: true,
-    production: false,
+    production: true,
     credit: "Mrthenoronha - Village game theme loop",
     sourceUrl: "https://freesound.org/people/Mrthenoronha/sounds/520710/",
     license: "CC BY-NC 4.0",
-    provenance: "development-only-cc-by-nc",
+    rightsStatus: "owner-asserted-purchased-rights",
+    rightsNote: "The project owner asserts purchased usage rights. Purchase documentation is not stored in this repository.",
+    provenance: "owner-supplied-purchased-rights",
   },
 };
 

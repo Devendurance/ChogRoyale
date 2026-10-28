@@ -6,9 +6,9 @@ The `/app` layout owns one persistent Web Audio controller. Music, interface eff
 
 `src/lib/audio/audio-assets.ts` contains the track and cue mappings. Track A is the production lobby loop. Ready rooms keep that track, actual matches select Track B, and results keep the current track while reducing its gain. Returning to a lobby resumes Track A. Hidden pages stop music sources and preserve their offsets.
 
-Track B is CC BY-NC 4.0 and remains development-only. Its production path is `null`, the production endpoint returns 404, and `.audio-dev/` is ignored and excluded from server traces. A future commercially cleared replacement can be configured in the asset map without replacing the audio controller. Keep the manifest and credits consistent with any replacement.
+Track B is the owner-supplied battle loop at `/assets/audio/v001/music/battle-loop.mp3`. The project owner asserts purchased usage rights for this supplied file. The source remains credited as Mrthenoronha, Freesound 520710, with its original `CC BY-NC 4.0` metadata. The purchase documentation is not stored in this repository, so the manifest records the owner assertion without claiming CC0 or inventing proof. The controller can still swap the path without changing the mixer.
 
-To restore the owner's local development soundtrack, copy the prepared derivative from `C:/Users/USER/Documents/ChogRoyale-Assets/audio-overhaul-20261027/derived/battle-loop.mp3` into `.audio-dev/battle-loop.mp3`. That local copy is deliberately absent from Git.
+The checked-in production asset is the exact verified derivative from `.audio-dev/battle-loop.mp3`. The original WAV is not shipped.
 
 ## Asset production
 

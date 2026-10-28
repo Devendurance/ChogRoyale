@@ -298,3 +298,8 @@ Last updated: 2026-10-24
 - Done: accessible three-choice selector, typed `battle_practice` create options, server-authoritative difficulty display in lobby/HUD/result, reconnect and Battle Again retention, no-reward preservation.
 - Verified: focused UI/identity/result 49/49, Practice server 23/23, typecheck, scoped ESLint, production build. No authenticated owner Privy matches run.
 - Next: review explicit diff, commit/push, create and merge PR to `main` through GitHub, then confirm Vercel Production READY and smoke public routes.
+## Owner-supplied battle music production release (2026-10-28)
+
+- Doing: integrate the verified owner-supplied `.audio-dev/battle-loop.mp3` as production Track B from latest `origin/main` on `codex/owner-battle-music`.
+- Done: exact checksum verified and copied to `public/assets/audio/v001/music/battle-loop.mp3`; Track B manifest/config and audio lifecycle tests updated; credits, manifest, quality report, acceptance report and AGENTS rules record owner-asserted purchased rights without claiming CC0. Focused audio tests 27/27, typecheck, scoped ESLint and production build pass.
+- Next: stage only scoped files, commit and push, open the PR, merge with owner authorization already given in this request, verify Vercel Production READY and public asset 200. Report real browser playback as unverified unless an authorized session is available. Preserve unrelated dirty files.

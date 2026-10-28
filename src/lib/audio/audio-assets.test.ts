@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   AUDIO_ASSET_VERSION,
@@ -21,10 +23,14 @@ describe("battle audio asset inventory", () => {
     expect(MUSIC_ASSETS).toBe(BATTLE_MUSIC_ASSETS);
   });
 
-  it("keeps the non-commercial development loop out of production", () => {
+  it("exposes the owner-supplied battle loop as the production Track B asset", () => {
     expect(BATTLE_MUSIC_ASSETS["track-a"].path).toBe("/assets/audio/v001/music/spooky-halloween.mp3");
-    expect(BATTLE_MUSIC_ASSETS["track-b"].path).toBeNull();
-    expect(BATTLE_MUSIC_ASSETS["track-b"].developmentPath).toBe("/api/dev-audio/battle");
-    expect(BATTLE_MUSIC_ASSETS["track-b"].production).toBe(false);
+    expect(BATTLE_MUSIC_ASSETS["track-b"].path).toBe("/assets/audio/v001/music/battle-loop.mp3");
+    expect(BATTLE_MUSIC_ASSETS["track-b"].developmentPath).toBeNull();
+    expect(BATTLE_MUSIC_ASSETS["track-b"].production).toBe(true);
+    expect(BATTLE_MUSIC_ASSETS["track-b"].license).toBe("CC BY-NC 4.0");
+    expect(BATTLE_MUSIC_ASSETS["track-b"].rightsStatus).toBe("owner-asserted-purchased-rights");
+    expect(BATTLE_MUSIC_ASSETS["track-b"].provenance).toBe("owner-supplied-purchased-rights");
+    expect(existsSync(resolve(process.cwd(), "public/assets/audio/v001/music/battle-loop.mp3"))).toBe(true);
   });
 });
