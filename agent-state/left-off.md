@@ -1,3 +1,11 @@
+## V2.1a Live Practice Bot Foundation (2026-10-28, branch v2.1a-practice-foundation c54f2dc, pushed, deployed scoped to endy-vps)
+
+- Doing: shipped bounded human-vs-AI practice slice, STOP after handoff, no V2.1b/fallback/XP/Ranked.
+- Done: protocol BATTLE_PRACTICE_ROOM + MatchMode practice + bot opponent kind; practice.ts MEDIUM smartMove with turret/free-Bulwark deck; PracticeRoom single-human auth, internal bot seat, no settlement, no rewards; server registers practice room, PvP unchanged.
+- Checks: practice 8/8, session/matchmaking/room regressions green (35+14), tsc clean, scoped lint clean, production build pass.
+- Deploy: endy-vps user service restarted, health ok local + https://battle.endyos.xyz/healthz, secrets/proxy/tunnel untouched, single instance, ranked closed, settlement enabled for PvP only.
+- Next: Codex V2.1b UI per handoff; live authenticated Practice acceptance needs a real Privy sign-in (not faked).
+
 ## Final audio overhaul (2026-10-28, delivery)
 
 - Doing: delivered PR #9, https://github.com/Devendurance/ChogRoyale/pull/9, on codex/final-audio-overhaul from main 6907259. No merge or production promotion authorized.
