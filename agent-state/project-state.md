@@ -1,10 +1,15 @@
 # Project State
 
-## Final audio overhaul (2026-10-27, active)
+## Final audio overhaul (2026-10-28, delivery)
 
-- Branch `codex/final-audio-overhaul` from main `6907259`, PRs #6/#7/#8 merged. Scope is persistent music/mixing, original UI SFX, settings and battle transitions, with existing battle audio preserved. No merge/deploy authorized.
-- Both owner soundtrack files found in `C:/Users/USER/Downloads/Telegram Desktop`. Lobby track CC0, battle track CC BY-NC 4.0 development-only. ELEVENLABS_API_KEY is present, entitlement check pending, never expose its value.
-- Three GPT-5.6 Luna/xhigh workers own core/battle integration, asset production and UI/settings wiring. Coordinator reviews and runs acceptance.
+- Doing: final verification and PR delivery on codex/final-audio-overhaul from main 6907259. No merge or production promotion authorized.
+- Done: persistent shared music/UI/battle mixer, 16 original procedural UI cues, server-confirmed interaction mappings, settings, legacy silence migration, cancellable music transitions and recovery. Track A is CC0 production lobby music. Track B remains CC BY-NC development-only.
+- Checkpoints: 0190ec5 scope/state and b2d9c1f credited assets pushed. Coordinator reviewed core, UI and assets from GPT-5.6 Luna/xhigh workers.
+- Acceptance: 110 tests passed, clean production build passed. App browser checks 6/6, UI checks 15/15, real-provider audio phase assertions 7/7. Production smoke 17 assets 200, dev battle endpoint 404, no restricted bytes in 93 traces or injected QA strings in production chunks.
+- Multiplayer: actual local engine, injected auth, shuffled seats 1/0, same-room refresh recovery, Endychog 2-1 Phantom result at 3:07. Playback remained unproven in that match; separate real-WebAudio phase fixture proves transitions. Final return assertion in the match harness used the wrong URL expectation.
+- Limits: physical iOS/Android/PWA and subjective speaker/headphone listening remain unverified. ElevenLabs account is Free tier, no ElevenLabs output generated. Full lint retains 24 inherited errors/one warning.
+- Checks: standalone typecheck and scoped lint passed. Next: commit reviewed integration/evidence, push and open PR. Details in docs/audio/acceptance.md. QA aliases/routes removed, own 3100/2568 services stopped, original 2567 untouched.
+- Preserve unrelated .fast-build/STATE.md, DESIGN.md, demo-production/, messaging doc and V2 improvement plan. External source/QA evidence is under ChogRoyale-Assets/audio-overhaul-20261027.
 
 ## Gameplay improvement V1 README bookmark (2026-10-27)
 
@@ -353,3 +358,9 @@ Last updated: 2026-10-24
 - Done:32 READY_ANIMATED VFX,256 distinct transparent frames,32 matching strips/per-effect GIFs,10 PROVISIONAL child-motion templates. Six unique approved primitives reused through12 role copies. Combined offline proof100frames/10s600x1100 GIF+MP4, not combat replay.
 - QA passed594PNGs,978manifestrefs,15doclinks,641prior-pack files unchanged. Compatible concurrent BattleHud source drift is an explicit provenance warning, captured hashes retained. Unrelated HUD/registry/probe working-tree changes preserved.
 - Next: canonical manifests/presentation-kit.json and README.md. Asset integration can start.18 icons/2 variants need acceptance, six VFX bindings MISSING and26 PROVISIONAL. Ordinary attack/hit and tower/Core fire events absent, projectile snapshots are target positions without source/origin/arrival. Runtime/device/timing/cleanup remain untested. No game/backend/DB edits,Tripo,3D or push.
+
+## Audio asset overhaul, 2026-10-27
+
+- Production audio assets are in `public/assets/audio/v001`: Track A is a 49.55 s cyclic wrap-crossfaded CC0 MP3, and the 16 authored local procedural UI cues use the shared `primary` through `reveal` keys. Existing authoritative battle Web Audio cues remain unchanged.
+- Track B is a 33.409093 s CC BY-NC development loop at `.audio-dev/battle-loop.mp3`, served only through `/api/dev-audio/battle`; its production manifest path is null and `.audio-dev/**` is excluded from Next tracing.
+- Source rights, hashes, waveform/boundary QA and ElevenLabs Free-tier noncommercial decision are recorded in `docs/audio/credits.md`, `docs/audio/quality-report.md` and `docs/audio/audio-manifest.json`. External masters and raw derivatives live in `C:/Users/USER/Documents/ChogRoyale-Assets/audio-overhaul-20261027`.

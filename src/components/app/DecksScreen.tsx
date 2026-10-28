@@ -40,8 +40,10 @@ import {
   replaceCard,
   saveStateLabel,
   saveStateStatus,
+  upgradeResultCue,
   validateDeckDraft,
   type DeckDraft,
+  type DeckUpgradeStatus,
 } from "./decks-model";
 import type {
   CardCostFilter,
@@ -57,6 +59,7 @@ import type {
 } from "./decks-types";
 import type { CardXpEntry } from "@/lib/card-xp";
 import { useMedia, useSaveData } from "@/components/site/use-media";
+import { uiSound } from "@/components/audio/ui-interactions";
 
 /** The local draft key. A convenience store on this device, never an account. */
 const DRAFT_KEY = "chog.a2.deckDraft";
@@ -98,15 +101,7 @@ interface GoldReadData {
 }
 
 interface UpgradeReadData {
-  status?:
-    | "upgraded"
-    | "duplicate"
-    | "invalid-card"
-    | "level-mismatch"
-    | "maxed"
-    | "insufficient-xp"
-    | "insufficient-gold"
-    | "conflict-retry";
+  status?: DeckUpgradeStatus;
   purchasedLevel?: number;
   balance?: number;
 }
@@ -415,11 +410,15 @@ function DecksShell() {
         const incoming = selectedCardId;
         setSwapping(false);
         setSelectedCardId(null);
-        if (incoming) updateDraft({ ...draft, cards: replaceCard(draft.cards, slot, incoming) });
+        if (incoming) {
+          updateDraft({ ...draft, cards: replaceCard(draft.cards, slot, incoming) });
+          uiSound("card-select");
+        }
         return;
       }
       const id = draft.cards[slot];
       if (!id) return;
+      uiSound("card-select");
       setSelectedCardId(id);
     },
     [draft, swapping, selectedCardId, updateDraft]
@@ -473,6 +472,7 @@ function DecksShell() {
           },
         });
       }
+      uiSound("card-select");
       setCommanderOpen(false);
     },
     [draft, updateDraft]
@@ -510,12 +510,15 @@ function DecksShell() {
           return;
         }
         if (!body.success || !body.data?.loadout) {
+          uiSound("error");
           setSaveError(body.error?.message ?? `The server answered ${res.status}. Your deck is kept on this device.`);
           return;
         }
         setLoadout({ loadout: body.data.loadout });
         setSaveError(null);
+        uiSound("success");
       } catch {
+        uiSound("error");
         setSaveError("The deck could not be saved. Your draft is kept on this device.");
       } finally {
         setSaving(false);
@@ -562,6 +565,9 @@ function DecksShell() {
       setUpgradeCardId(cardId);
       setUpgradeStatus("working");
       setUpgradeMessage(null);
+      // The upgrade asset is the completion flourish. The initial gesture is
+      // intentionally ordinary, since the server may still refuse it.
+      uiSound("primary");
 
       try {
         const token = await getAccessToken();
@@ -569,6 +575,7 @@ function DecksShell() {
           upgradeIntent.current = null;
           setUpgradeStatus("error");
           setUpgradeMessage("Your session is no longer valid. Sign in again to upgrade cards.");
+          uiSound("error");
           return;
         }
         const res = await fetch("/api/players/me/card-xp/upgrade", {
@@ -580,6 +587,7 @@ function DecksShell() {
         if (!body.success || !body.data?.status) {
           setUpgradeStatus("error");
           setUpgradeMessage(body.error?.message ?? `The upgrade server answered ${res.status}. Your card level was not changed in the browser.`);
+          uiSound("error");
           if (res.status < 500) upgradeIntent.current = null;
           return;
         }
@@ -587,11 +595,13 @@ function DecksShell() {
         const status = body.data.status;
         setUpgradeMessage(upgradeOutcomeMessage(status));
         setUpgradeStatus(status === "upgraded" || status === "duplicate" ? "success" : "error");
+        uiSound(upgradeResultCue(status));
         await loadProgression();
         if (status !== "conflict-retry") upgradeIntent.current = null;
       } catch {
         setUpgradeStatus("error");
         setUpgradeMessage("The upgrade could not be confirmed. Retry to send the same request safely.");
+        uiSound("error");
       } finally {
         setUpgradeCardId(null);
       }
@@ -716,6 +726,7 @@ function DecksShell() {
         setSelectedCardId(id);
         setUpgradeStatus("idle");
         setUpgradeMessage(null);
+        uiSound("card-select");
       }}
       onOpenCommander={() => {
         setSwapping(false);

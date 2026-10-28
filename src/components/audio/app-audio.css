@@ -1,0 +1,18 @@
+.app-audio-unlock {
+  position: fixed;
+  right: max(14px, env(safe-area-inset-right));
+  bottom: calc(96px + env(safe-area-inset-bottom));
+  z-index: 80;
+  border: 1px solid rgba(255, 255, 255, .24);
+  border-radius: 999px;
+  min-height: 44px;
+  padding: 8px 13px;
+  color: #fff;
+  background: rgba(31, 19, 67, .92);
+  box-shadow: 0 8px 24px rgba(31, 19, 67, .22);
+  font: 600 12px/1.1 var(--font-data, system-ui, sans-serif);
+  cursor: pointer;
+}
+
+.app-audio-unlock:hover { background: rgba(55, 32, 104, .96); }
+.app-audio-unlock:focus-visible { outline: 2px solid #f5be3e; outline-offset: 2px; }

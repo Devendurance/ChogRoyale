@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import AppSession from "@/components/app/AppSession";
+import AppAudioProvider from "@/components/audio/AppAudioProvider";
 import { CatalogProvider } from "@/components/app/catalog-context";
 import { georama, lilitaOne, satoshi } from "@/components/site/fonts";
 import { buildLobbyCatalog } from "./catalog";
@@ -19,7 +20,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <div className={`app-root ${satoshi.variable} ${georama.variable} ${lilitaOne.variable} font-site`}>
       <AppSession>
-        <CatalogProvider catalog={catalog}>{children}</CatalogProvider>
+        <AppAudioProvider>
+          <CatalogProvider catalog={catalog}>{children}</CatalogProvider>
+        </AppAudioProvider>
       </AppSession>
     </div>
   );

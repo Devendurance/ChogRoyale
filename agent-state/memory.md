@@ -1,5 +1,13 @@
 # Memory
 
+- Unassigned production battle music is intentional silence through both active play and results. Preserve null track choices, keep result track identity across mute/visibility source stops, and resume a previously unlocked suspended context once on a genuine visibility return. New shared AudioContexts must clear old cue-clock throttle timestamps.
+
+- App audio contract: `useAppAudio()` is nullable and exposes immutable preferences, `ready`, `needsUnlock`, `unlock`, `playUi`, `duck`, `setBattlePhase`, and `audio.getBattleOutput()`. `@/lib/audio/audio-core.ts` owns one context and v2 storage, while `/app` layout mounts one `AppAudioProvider`. Track A is production lobby music, Track B is development-only battle music. `BattleAudio` must never close a shared context. Battle phase callbacks are gated to `/app/play/battle`, so cached hidden routes reset to lobby and cannot restart active audio.
+- UI interaction sound contract: `UIInteractionSounds` is rendered once inside `AppAudioProvider` and listens on document bubble phase, so semantic React handlers run first. A synchronous semantic handler must mark its control `data-audio-skip="true"`; server-confirmed cues remain separate. The delegated fallback never cues typing, disabled, skipped or passive controls, and drag uses `dragstart` only.
+- Next Link's same-origin click is expected to be `defaultPrevented` before the document listener runs. Keep enabled same-origin anchors eligible for navigation audio, while canceled buttons, modified clicks, downloads and external links remain silent.
+- Audio build scripts are intentional `.cjs` CommonJS entry points. Use a file-scoped `no-require-imports` disable, not a format rewrite, and keep analyzer code free of unused imports/counters.
+- UI browser evidence is external under `ChogRoyale-Assets/audio-overhaul-20261027/qa-ui`; do not add product QA globals. The harness instruments only browser-context WebAudio and mocks existing API reads/routes.
+
 - Audio overhaul: supplied music masters are in Downloads/Telegram Desktop, exact Freesound filenames 677436 MP3 and 520710 WAV. Only the first is CC0. The second stays development-only under CC BY-NC 4.0, absent separate permission. Production byte exclusion matters as well as playback gating.
 
 - README gameplay bookmarks use a thumbnail from the linked recording, not an older game screenshot. Drive videos open via `/preview`; keep the genuine thumbnail locally for reliable GitHub rendering.
@@ -235,6 +243,12 @@ Durable facts, conventions, and gotchas that should survive across sessions.
 - Done:32 READY_ANIMATED VFX,256 distinct transparent frames,32 matching strips/per-effect GIFs,10 PROVISIONAL child-motion templates. Six unique approved primitives reused through12 role copies. Combined offline proof100frames/10s600x1100 GIF+MP4, not combat replay.
 - QA passed594PNGs,978manifestrefs,15doclinks,641prior-pack files unchanged. Compatible concurrent BattleHud source drift is an explicit provenance warning, captured hashes retained. Unrelated HUD/registry/probe working-tree changes preserved.
 - Next: canonical manifests/presentation-kit.json and README.md. Asset integration can start.18 icons/2 variants need acceptance, six VFX bindings MISSING and26 PROVISIONAL. Ordinary attack/hit and tower/Core fire events absent, projectile snapshots are target positions without source/origin/arrival. Runtime/device/timing/cleanup remain untested. No game/backend/DB edits,Tripo,3D or push.
+
+## Audio rights and asset invariants
+
+- ElevenLabs account check resolved to Free tier, so no commercial generation or ElevenLabs output claim is allowed. The UI pack is original deterministic local procedural audio from `tools/audio/generate-procedural-sfx.cjs`.
+- `UI_AUDIO_CUE_KEYS` must remain the 16 semantic keys consumed by `audio-core`: primary, secondary, navigation, card-select, card-drag, placement, success, error, friend-request, notification, invite, ready, upgrade, reward, confirm, reveal. Battle cue playback stays on the existing authoritative Web Audio engine.
+- Track B stays out of `public/`, has manifest `path: null`, and is only reachable from the dev route. Track A is a true cyclic loop, not a one-shot with a silent tail.
 - Final UX: HUD self left blue, opponent right red. Results self top blue, opponent bottom red for win/loss/draw and either seat. Official crown master is 256x236 transparent WebP. Image flights retain score refs and existing chime timing.
 - Private room ids are case-sensitive nanoid(9), including `_` and `-`. Share canonical current-origin URL without credentials. An invite autojoins once after verified setup and preserves the destination through onboarding. Server locked errors cannot distinguish full from started.
 - Invite refresh resumes matching stored seat credentials before trying a fresh join. A different stored room must never override the invite. Both automatic effects consume their ref inside the timer so Strict Mode's first cleanup is safe.

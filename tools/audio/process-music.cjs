@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-require-imports */
 
 /** Rebuilds the licensed music derivatives without touching either master. */
 const { execFileSync } = require("node:child_process");

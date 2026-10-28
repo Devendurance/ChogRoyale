@@ -5,7 +5,8 @@
 // a static preview with sample data.
 //
 // The screen shows the real account only. It has no invented preferences, no
-// extra toggles, and it never renders a wallet address or a Privy identifier.
+// account preferences beyond the real audio controls, and it never renders a
+// wallet address or a Privy identifier.
 
 import Image from "next/image";
 import AppHud from "./AppHud";
@@ -16,6 +17,7 @@ import { accountStatusLabel, onboardingLabel } from "./profile-model";
 import { dedupeNotices } from "./feedback-model";
 import { DISPLAY_NAME_MAX, saveStatusText } from "./settings-model";
 import type { SettingsViewProps } from "./settings-types";
+import AudioSettings from "@/components/audio/AudioSettings";
 
 export default function SettingsView({
   phase,
@@ -80,11 +82,12 @@ export default function SettingsView({
               Settings holds your display name, avatar, verified wallets and this session. Sign in to load the real
               account details.
             </p>
+            <AudioSettings />
             <button type="button" className="app-btn app-btn--battle" onClick={onSignIn}>
               <Icon name="user" size={22} />
               Log in
             </button>
-            <p className="app-gate__note">Sign-in runs through Privy. Nothing on this screen is editable before then.</p>
+            <p className="app-gate__note">Sign-in runs through Privy. Profile fields stay locked before then, while sound controls remain available.</p>
             {noticeList.length > 0 && <div className="app-gate__notices">{noticeList}</div>}
           </div>
         </div>
@@ -106,6 +109,7 @@ export default function SettingsView({
             ) : (
               <p className="app-gate__lead">Your account could not be read.</p>
             )}
+            <AudioSettings />
             <div className="app-gate__actions">
               <button type="button" className="app-btn app-btn--battle" onClick={onRefresh} disabled={busy}>
                 {busy ? "Checking" : "Try again"}
@@ -171,6 +175,7 @@ export default function SettingsView({
 
           <div className="app-settings">
             <div className="app-settings__main">
+              <AudioSettings />
               <section className="app-panel app-profile-id app-rise" aria-labelledby="app-settings-identity-title">
                 <span className="app-profile-id__avatar">
                   {player?.avatarUrl ? (
@@ -261,6 +266,7 @@ export default function SettingsView({
                               type="button"
                               className={`app-avatar-choice${selected ? " app-avatar-choice--active" : ""}`}
                               aria-pressed={selected}
+                              data-audio-skip="true"
                               onClick={() => onAvatarSelect(choice.id)}
                             >
                               <Image

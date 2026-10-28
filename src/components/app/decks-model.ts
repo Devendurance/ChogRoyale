@@ -6,6 +6,7 @@
 // ruleset says.
 
 import type { CommanderChoice } from "@/lib/battle-protocol";
+import type { UiCue } from "@/lib/audio/audio-core";
 import type { LobbyCatalog, LobbyCatalogCard } from "./lobby-types";
 import type { CommandersPayload } from "./lobby-model";
 import type {
@@ -52,6 +53,23 @@ export const DECK_CARD_COUNT = 7;
 
 /** Ordinary cards plus the commander. */
 export const DECK_TOTAL_CARDS = 8;
+
+export type DeckUpgradeStatus =
+  | "upgraded"
+  | "duplicate"
+  | "invalid-card"
+  | "level-mismatch"
+  | "maxed"
+  | "insufficient-xp"
+  | "insufficient-gold"
+  | "conflict-retry";
+
+/** Maps only the server's terminal upgrade status to its semantic cue. */
+export function upgradeResultCue(status: DeckUpgradeStatus): UiCue {
+  if (status === "upgraded") return "upgrade";
+  if (status === "duplicate") return "confirm";
+  return "error";
+}
 
 /** The deck the player is editing. The commander claim is the strict one. */
 export interface DeckDraft {

@@ -7,13 +7,15 @@
 // avatar through the existing POST /api/players/onboard flow. The view stays
 // free of tokens, fetch calls and Privy.
 //
-// Nothing here invents a preference or a second persistence path. A save is
-// only reported as saved after the server confirms it, and no wallet address
+// Account values still use the existing server path. Audio controls are
+// provided by the shared app audio provider. A profile save is only reported
+// as saved after the server confirms it, and no wallet address
 // or Privy identifier ever reaches the view.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePrivy, useLogin } from "@privy-io/react-auth";
 import SettingsView from "./SettingsView";
+import { uiSound } from "@/components/audio/ui-interactions";
 import { useMedia, useSaveData } from "@/components/site/use-media";
 import { sessionNotice } from "./feedback-model";
 import { formatMemberSince } from "./profile-model";
@@ -333,6 +335,7 @@ function SettingsShell() {
     draftRef.current = next;
     setDraft(next);
     setSave((state) => (state.state === "saving" ? state : { state: "idle", message: null }));
+    uiSound("card-select");
   }, []);
 
   const onSave = useCallback(async () => {
@@ -344,20 +347,24 @@ function SettingsShell() {
     if (!nameIsChanged && !avatarIsChanged) return;
 
     if (nameIsChanged && !nameCheckNow.ok) {
+      uiSound("error");
       setSave({ state: "error", message: nameCheckNow.message });
       return;
     }
     if (avatarIsChanged && !draft.avatarId) {
+      uiSound("error");
       setSave({ state: "error", message: "Choose an avatar before saving." });
       return;
     }
     if (avatarIsChanged && !avatarChoiceById(avatarChoices, draft.avatarId)) {
+      uiSound("error");
       setSave({ state: "error", message: "That avatar is not in the current catalog." });
       return;
     }
 
     const token = await getAccessToken();
     if (!token) {
+      uiSound("error");
       setSave({
         state: "error",
         message: "Your session is no longer valid, so nothing was saved. Sign in again and retry.",
@@ -373,12 +380,14 @@ function SettingsShell() {
     const result = await postJson<OnboardPayload>("/api/players/onboard", token, body);
 
     if (!result.ok) {
+      uiSound("error");
       setSave({ state: "error", message: saveErrorMessage(result.code, result.message) });
       return;
     }
 
     const saved = result.data?.player;
     if (!saved || typeof saved !== "object") {
+      uiSound("error");
       // A confirmation without the saved player is not enough to claim a save.
       setSave({
         state: "error",
@@ -422,6 +431,7 @@ function SettingsShell() {
     draftRef.current = confirmed;
     setDraft(confirmed);
     setSave({ state: "saved", message: null });
+    uiSound("success");
   }, [draft, profile, save.state, avatarChoices, getAccessToken, apply, readAll]);
 
   const onSignIn = useCallback(() => {

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-require-imports */
 
 const { execFileSync } = require("node:child_process");
-const fs = require("node:fs");
 
 const file = process.argv[2];
 if (!file) {
@@ -72,14 +72,12 @@ function correlation(aStart, bStart, length) {
   let aa = 0;
   let bb = 0;
   let ab = 0;
-  let count = 0;
   for (let i = 0; i < length; i++) {
     const a = value(aStart + i);
     const b = value(bStart + i);
     aa += a * a;
     bb += b * b;
     ab += a * b;
-    count++;
   }
   return ab / Math.sqrt(Math.max(1e-12, aa * bb));
 }

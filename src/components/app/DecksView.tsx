@@ -71,6 +71,7 @@ function DeckSlot({
         type="button"
         className={`app-slot${selected ? " app-slot--selected" : ""}${swapping ? " app-slot--target" : ""}`}
         onClick={() => onSelect(index)}
+        data-audio-skip="true"
         aria-pressed={selected}
       >
         <span className="app-slot__gem">
@@ -137,6 +138,7 @@ function CollectionTile({
         type="button"
         className={`app-tile${selected ? " app-tile--selected" : ""}${inDeck ? " app-tile--indeck" : ""}`}
         onClick={() => onSelect(card.id)}
+        data-audio-skip="true"
         aria-pressed={selected}
       >
         <span className="app-tile__gem">
@@ -313,7 +315,7 @@ function DetailSheet({
                 <span className="app-progression__cost-label">Next upgrade</span>
                 <strong>{progression.goldCost === null ? "MAX" : `${progression.goldCost} Gold`}</strong>
               </div>
-              <button type="button" className="app-btn app-btn--battle" onClick={() => onUpgrade(card.id)} disabled={!canUpgrade}>
+              <button type="button" className="app-btn app-btn--battle" onClick={() => onUpgrade(card.id)} data-audio-skip="true" disabled={!canUpgrade}>
                 {upgradeCardId === card.id && upgradeStatus === "working" ? "Confirming" : displayState === "maxed" ? "Max level" : displayState === "ready" ? "Upgrade card" : progressionStatusText(displayState, progression)}
               </button>
             </div>
@@ -381,6 +383,7 @@ function CommanderSheet({
                 type="button"
                 className={`app-cmdr${active ? " app-cmdr--active" : ""}`}
                 onClick={() => onSelect(option)}
+                data-audio-skip="true"
                 aria-pressed={active}
               >
                 <span className="app-cmdr__badge">Free</span>
@@ -412,6 +415,7 @@ function CommanderSheet({
                   type="button"
                   className={`app-cmdr${active ? " app-cmdr--active" : ""}${blocked ? " app-cmdr--blocked" : ""}`}
                   onClick={() => onSelect(option)}
+                  data-audio-skip="true"
                   disabled={blocked}
                   aria-pressed={active}
                 >

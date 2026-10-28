@@ -1,0 +1,136 @@
+.audio-settings {
+  --audio-ink: var(--color-chog-ink, #1b1140);
+  --audio-muted: var(--color-chog-ink-70, rgba(27, 17, 64, 0.7));
+  --audio-violet: var(--color-chog-royal, #5b2fd6);
+  --audio-lilac: var(--color-chog-lilac, #e6dcff);
+  padding: 20px;
+  border: 1px solid var(--color-chog-hairline, rgba(91, 47, 214, 0.14));
+  border-radius: 18px;
+  background: var(--color-chog-white, #fff);
+  color: var(--audio-ink);
+}
+
+.audio-settings__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.audio-settings__eyebrow,
+.audio-settings__title,
+.audio-settings__lead,
+.audio-settings__label,
+.audio-settings__description {
+  margin: 0;
+}
+
+.audio-settings__eyebrow {
+  color: var(--audio-violet);
+  font: 700 12px/1 var(--font-data, "Georama", sans-serif);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.audio-settings__title {
+  margin-top: 6px;
+  font: 700 24px/1.05 var(--font-game, "Lilita One", sans-serif);
+}
+
+.audio-settings__lead {
+  max-width: 38rem;
+  margin-top: 8px;
+  color: var(--audio-muted);
+  font: 400 14px/1.45 var(--font-site, "Satoshi", sans-serif);
+}
+
+.audio-settings__toggle {
+  min-width: 112px;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid var(--audio-violet);
+  border-radius: 12px;
+  background: var(--audio-violet);
+  color: #fff;
+  cursor: pointer;
+  font: 700 14px/1 var(--font-data, "Georama", sans-serif);
+}
+
+.audio-settings__toggle--muted {
+  background: transparent;
+  color: var(--audio-violet);
+}
+
+.audio-settings__controls {
+  display: grid;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.audio-settings__row {
+  display: grid;
+  gap: 7px;
+}
+
+.audio-settings__label {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font: 700 14px/1.2 var(--font-data, "Georama", sans-serif);
+}
+
+.audio-settings__value {
+  color: var(--audio-violet);
+  font-variant-numeric: tabular-nums;
+}
+
+.audio-settings__controls-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.audio-settings__channel-toggle {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 6px 8px;
+  border: 1px solid var(--audio-violet);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--audio-violet);
+  cursor: pointer;
+  font: 700 11px/1 var(--font-data, "Georama", sans-serif);
+}
+
+.audio-settings__channel-toggle--muted {
+  background: var(--audio-lilac);
+}
+
+.audio-settings__description {
+  color: var(--audio-muted);
+  font: 400 13px/1.3 var(--font-site, "Satoshi", sans-serif);
+}
+
+.audio-settings__range {
+  width: 100%;
+  min-height: 44px;
+  accent-color: var(--audio-violet);
+  cursor: pointer;
+}
+
+.audio-settings__toggle:focus-visible,
+.audio-settings__channel-toggle:focus-visible,
+.audio-settings__range:focus-visible {
+  outline: 3px solid var(--color-chog-lavender, #b9a2ff);
+  outline-offset: 2px;
+}
+
+@media (max-width: 520px) {
+  .audio-settings__heading {
+    display: grid;
+  }
+
+  .audio-settings__toggle {
+    width: 100%;
+  }
+}
