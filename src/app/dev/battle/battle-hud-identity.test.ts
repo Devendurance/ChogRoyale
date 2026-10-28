@@ -27,4 +27,25 @@ describe("local battle scoreboard", () => {
       expect(foe).toContain(`${seat === 0 ? 1 : 2} <img`);
     }
   });
+
+  it("shows the server-owned Practice identity and difficulty without a Medium fallback", () => {
+    const start = {
+      mode: "practice",
+      opponentKind: "bot",
+      practiceOpponent: { kind: "bot", botId: "practice-ultimate-v1", difficulty: "ultimate", displayName: "AI Opponent" },
+      seat: 0,
+      self: "LocalChog",
+      opponent: "spoofed-human-name",
+      resumed: false,
+      catalog: {},
+      commander: { class: "scout", kind: "class", name: "Scout" },
+      patron: { tokenId: "1", theme: "test" },
+      ticksPerSecond: 10,
+    } as unknown as StartMessage;
+    const props = { start, me: 0, playerName: "LocalChog", frame: null, end: { result: "draw", reason: "timeout", crowns: [2, 1] }, abort: null, settlement: null, acks: [], showDevDiagnostics: false, feed: { current: null }, mapRef: { current: null }, audioMuted: true, audioVolume: 0 } as unknown as BattleHudProps;
+    const html = renderToStaticMarkup(React.createElement(BattleHud, props));
+    expect(html).toContain("AI OPPONENT · ULTIMATE");
+    expect(html).toContain("AI Opponent");
+    expect(html).not.toContain("spoofed-human-name");
+  });
 });

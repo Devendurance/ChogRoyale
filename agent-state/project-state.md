@@ -1,5 +1,13 @@
 # Project State
 
+# V2.1d Practice difficulty selector (2026-10-28)
+
+- Frontend branch `codex/v2.1d-practice-difficulties` starts from V2.1c `8385910` and preserves the server-owned medium, hard, and ultimate Practice policies.
+- Added accessible Medium, Hard, and Ultimate radio cards on `/app/play/battle?mode=practice`. BattlePanel sends `{ difficulty }` only to `battle_practice`, adopts the lobby/start descriptor, and reuses it for reconnects and fresh Battle Again rooms.
+- Lobby, HUD, and result use fixed `AI Opponent` identity and server-confirmed difficulty. Practice remains no-reward and PvP/ranked paths are unchanged.
+- Focused UI/identity/result tests 49/49, Practice server tests 23/23, typecheck, scoped ESLint, and production build pass. Real authenticated matches remain owner-gated.
+- Next: commit and push the scoped branch, open the V2.1d PR, merge only through the approved GitHub workflow, and verify Vercel Production.
+
 # V2.1b Practice Mode UI (2026-10-28)
 
 - Frontend branch `codex/v2.1b-practice-ui` starts from V2.1a `54c3ad6` and preserves the live `battle_practice` backend.

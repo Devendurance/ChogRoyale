@@ -1,6 +1,6 @@
 // Pure finale view model. Reads only the server EndMessage, the abort reason
 // and the settlement message. Nothing here invents a score, reward or record.
-import type { EndMessage, MatchMode, SettlementMessage, StartMessage } from "@/lib/battle-protocol";
+import type { EndMessage, MatchMode, PracticeDifficulty, SettlementMessage, StartMessage } from "@/lib/battle-protocol";
 
 export type FinaleResult = "win" | "loss" | "draw" | "abort";
 export type SettlementState = "waiting" | "recorded" | "pending" | "disabled" | "refused";
@@ -24,11 +24,26 @@ export interface FinaleView {
 }
 
 const PRACTICE_NO_REWARDS = "No rewards or progression are awarded in Practice.";
-const PRACTICE_OPPONENT = "AI Opponent";
+export const PRACTICE_OPPONENT = "AI Opponent";
+
+const PRACTICE_DIFFICULTY_NAMES: Record<PracticeDifficulty, string> = {
+  medium: "Medium",
+  hard: "Hard",
+  ultimate: "Ultimate",
+};
+
+/** Format only a difficulty that the server contract explicitly supports. */
+export function practiceDifficultyLabel(difficulty: PracticeDifficulty | null | undefined): string | null {
+  if (!difficulty || !(difficulty in PRACTICE_DIFFICULTY_NAMES)) return null;
+  return PRACTICE_DIFFICULTY_NAMES[difficulty];
+}
 
 /** Resolve the player-facing opponent identity without trusting a bot username. */
 export function opponentNameFor(start: Pick<StartMessage, "mode" | "opponent" | "practiceOpponent">, practice = start.mode === "practice"): string {
-  return practice ? start.practiceOpponent?.displayName ?? PRACTICE_OPPONENT : start.opponent;
+  // The bot display name is a protocol identity, not a player-controlled
+  // username. Keep the player-facing label stable even if an older or
+  // malformed payload carries a different string.
+  return practice ? PRACTICE_OPPONENT : start.opponent;
 }
 
 const REASONS: Record<string, string> = { core: "Core broken", crowns: "Crown lead", overtime: "Overtime tiebreak", timeout: "Time expired" };

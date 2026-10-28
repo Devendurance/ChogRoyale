@@ -6,7 +6,7 @@ import type { EndMessage, SettlementMessage, StartMessage } from "@/lib/battle-p
 import type { RankedAwardView } from "@/lib/ranked";
 import { GameIcon } from "@/components/game/GameIcon";
 import type { BattleCue } from "./battle-audio";
-import { finaleView, opponentNameFor, tallyAt } from "./battle-result-model";
+import { finaleView, opponentNameFor, practiceDifficultyLabel, tallyAt } from "./battle-result-model";
 import "./battle-result.css";
 
 interface Props {
@@ -50,6 +50,7 @@ export default function BattleResult({ start, end, abort, settlement, me, player
   const again = useRef<HTMLButtonElement>(null);
   const view = finaleView(end, abort, me, settlement, start.ticksPerSecond, start.mode);
   const opponent = opponentNameFor(start, view.practice);
+  const practiceDifficulty = view.practice ? practiceDifficultyLabel(start.practiceOpponent?.difficulty) : null;
   const goBack = () => { onExit?.(); if (!onExit) router.push("/app/play"); };
   const goAgain = () => { onAgain?.(); if (!onAgain) router.push("/app/play/battle?mode=practice"); };
   const [reduced] = useState(() => typeof window !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches);
@@ -113,6 +114,7 @@ export default function BattleResult({ start, end, abort, settlement, me, player
         <div className="chud-finale-emblem" aria-hidden="true"><GameIcon kind={view.result === "win" ? "victory" : view.result === "loss" ? "defeat" : "crown"} size={112} /></div>
         <h2 id="chud-finale-title">{view.title}</h2>
         <p className="chud-finale-context" id="chud-finale-context">{view.context}</p>
+        {view.practice && <p className="chud-finale-practice-meta" data-difficulty={practiceDifficulty?.toLowerCase() ?? "unknown"}>{opponent}{practiceDifficulty ? ` · ${practiceDifficulty} difficulty` : ""}</p>}
         {end && <div className="chud-finale-versus">
           <Ribbon side="mine" name={playerName ?? null} crowns={view.mine} shown={tallyAt(step, view.mine)} winner={view.winner === "mine"} you />
           <span className="chud-finale-vs" aria-hidden="true">VS</span>

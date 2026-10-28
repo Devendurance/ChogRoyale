@@ -1,14 +1,24 @@
-// V2.1a Practice room: genuine human-vs-AI through the existing combat engine.
-// One Privy-verified human plus one internal bot seat. No synthetic Privy
+// V2.1c Practice room: genuine human-vs-AI through the existing combat engine.
+// One Privy-verified human plus one internal bot seat at a server-validated
+// difficulty (medium/hard/ultimate, default medium). No synthetic Privy
 // account, no DB player row for the bot, no MatchCoordinator ticket/queue,
-// no PvP settlement writer. The bot runs MEDIUM (smartMove) on bounded
+// no PvP settlement writer. The bot runs its difficulty policy on bounded
 // server ticks with the same energy/cards/timing/legal placement rules.
 
 import { randomBytes, randomUUID, timingSafeEqual } from "crypto";
 import { CloseCode, Room, ServerError, type Client } from "@colyseus/core";
 import { logger } from "@/lib/logger";
-import { readySchema, type CommanderChoice } from "@/lib/battle-protocol";
-import { PRACTICE_OPPONENT, botSeatFor, policyFor, practiceBotCommanderClass, practiceBotOrdinaryCards } from "@/server/battle/practice";
+import { readySchema, type CommanderChoice, type PracticeDifficulty, type PracticeOpponent } from "@/lib/battle-protocol";
+import {
+  PRACTICE_BOT_DISPLAY_NAME,
+  botSeatFor,
+  policyFor,
+  practiceBotCommanderClass,
+  practiceBotOrdinaryCards,
+  practiceBotPlayerId,
+  practiceOpponentFor,
+  resolvePracticeDifficulty,
+} from "@/server/battle/practice";
 import { BattleSession, deckFor, type SeatPlayer, type SessionRandom, type TrustedLoadout } from "@/server/battle/session";
 import { authenticateSeat, type BattleRoomDeps } from "@/server/battle/room";
 import { freeStarterSlot } from "@/lib/combat";
@@ -19,8 +29,8 @@ import type { MatchCoordinator } from "@/server/battle/matchmaking";
 
 type PracticeClient = Client & { auth: SeatPlayer };
 
-export const PRACTICE_BOT_PLAYER_ID = "bot:practice-medium-v1";
-const BOT_USERNAME = "AI Opponent";
+/** V2.1a compatibility alias: the Medium internal seat id. */
+export const PRACTICE_BOT_PLAYER_ID = practiceBotPlayerId("medium");
 const MATCH_LOBBY_MS = 90_000;
 const RECONNECT_GRACE_MS = 30_000;
 
@@ -71,6 +81,11 @@ export class PracticeRoom extends Room {
   static coordinator: MatchCoordinator | null = null;
   maxClients = 1;
   private session!: BattleSession;
+  /** Immutable difficulty profile, resolved once at room creation. */
+  private difficulty: PracticeDifficulty = "medium";
+  private opponent: PracticeOpponent = practiceOpponentFor("medium");
+  private botPlayerId: string = practiceBotPlayerId("medium");
+  private humanClient: PracticeClient | null = null;
   private choice: CommanderChoice | null = null;
   private checking = false;
   private matchId: string | null = null;
@@ -82,11 +97,16 @@ export class PracticeRoom extends Room {
     return authenticateSeat(token, PracticeRoom.deps);
   }
 
-  onCreate() {
+  onCreate(options?: { difficulty?: unknown }) {
+    // Server-owned difficulty: omitted means Medium (existing clients),
+    // anything else must be an exact supported value or creation fails.
+    this.difficulty = resolvePracticeDifficulty(options?.difficulty);
+    this.opponent = practiceOpponentFor(this.difficulty);
+    this.botPlayerId = practiceBotPlayerId(this.difficulty);
     this.session = new BattleSession(PracticeRoom.deps.rng as SessionRandom | undefined);
     this.session.mode = "practice";
-    this.session.slots[1] = { playerId: PRACTICE_BOT_PLAYER_ID, username: BOT_USERNAME };
-    try { this.session.setReady(PRACTICE_BOT_PLAYER_ID, botLoadout()); } catch (e) { logger.info("practice bot ready failed", { roomId: this.roomId, reason: e instanceof Error ? e.message : String(e) }); }
+    this.session.slots[1] = { playerId: this.botPlayerId, username: PRACTICE_BOT_DISPLAY_NAME };
+    try { this.session.setReady(this.botPlayerId, botLoadout()); } catch (e) { logger.info("practice bot ready failed", { roomId: this.roomId, reason: e instanceof Error ? e.message : String(e) }); }
     this.onMessage("ready", (client: PracticeClient, msg: unknown) => void this.onReady(client, msg));
     this.onMessage("unready", (client: PracticeClient) => {
       try {
@@ -105,6 +125,7 @@ export class PracticeRoom extends Room {
 
   onJoin(client: PracticeClient, options?: { resume?: unknown }) {
     const playerId = client.auth.playerId;
+    this.humanClient = client;
     if (playerId.startsWith("bot:")) throw new ServerError(403, "Bot seats are server-owned");
     if (this.session.phase === "finished" || this.session.phase === "aborted") {
       throw new ServerError(409, "Practice is over");
@@ -132,8 +153,8 @@ export class PracticeRoom extends Room {
       ...base,
       you: 0,
       players: [{ username: this.session.slots[0]?.username ?? "", ready: base.mine !== null }],
-      practice: { opponent: PRACTICE_OPPONENT },
-      match: { opponent: PRACTICE_OPPONENT.displayName, deadlineAt: Date.now() + MATCH_LOBBY_MS, mode: "practice" as const },
+      practice: { opponent: this.opponent },
+      match: { opponent: this.opponent.displayName, deadlineAt: Date.now() + MATCH_LOBBY_MS, mode: "practice" as const },
     });
   }
 
@@ -207,29 +228,39 @@ export class PracticeRoom extends Room {
     msg.resumeToken = this.resumeToken;
     msg.reconnectGraceMs = grace;
     msg.opponentKind = "bot";
-    msg.practiceOpponent = PRACTICE_OPPONENT;
-    msg.opponent = PRACTICE_OPPONENT.displayName;
+    msg.practiceOpponent = this.opponent;
+    msg.opponent = this.opponent.displayName;
     client.send("start", msg);
-    this.setSimulationInterval(() => this.step(client), PracticeRoom.deps.tickMs ?? 100);
+    this.setSimulationInterval(() => this.step(), PracticeRoom.deps.tickMs ?? 100);
   }
 
-  private step(client: PracticeClient) {
+  private step() {
+    const client = this.humanClient;
+    if (!client) return;
     const state = this.session.state;
     if (state && this.session.phase === "active") {
       try {
         const humanSeat = this.session.seatOfSlot[0]!;
         const botSeat = botSeatFor(humanSeat);
-        const move = policyFor("medium").choose(state, botSeat, state.tick);
-        if (move) {
+        const policy = policyFor(this.difficulty);
+        // Ultimate also times commander abilities; Medium/Hard hold them.
+        const abilityId = policy.ability?.(state, botSeat);
+        if (abilityId) {
           this.botCid += 1;
-          const cid = `bot-${state.tick}-${this.botCid}`;
-          this.session.submit(PRACTICE_BOT_PLAYER_ID, {
-            type: "deploy",
-            cid,
-            cardId: move.cardId,
-            x: Math.max(0, Math.min(100, move.x)),
-            y: Math.max(0, Math.min(160, move.y)),
-          });
+          this.session.submit(this.botPlayerId, { type: "ability", cid: `bot-${state.tick}-${this.botCid}`, abilityId });
+        } else {
+          const move = policy.choose(state, botSeat, state.tick);
+          if (move) {
+            this.botCid += 1;
+            const cid = `bot-${state.tick}-${this.botCid}`;
+            this.session.submit(this.botPlayerId, {
+              type: "deploy",
+              cid,
+              cardId: move.cardId,
+              x: Math.max(0, Math.min(100, move.x)),
+              y: Math.max(0, Math.min(160, move.y)),
+            });
+          }
         }
       } catch (e) {
         logger.info("practice bot tick skipped", { roomId: this.roomId, reason: e instanceof Error ? e.message : String(e) });
@@ -264,14 +295,15 @@ export class PracticeRoom extends Room {
     this.drop.timer.clear();
     this.drop = null;
     this.resumeToken = randomBytes(16).toString("hex");
+    this.lock();
     const seat = this.session.seatOfSlot[0]!;
     const msg = this.session.startMessage(0);
     msg.resumeToken = this.resumeToken;
     msg.resumed = true;
     msg.reconnectGraceMs = PracticeRoom.deps.reconnectGraceMs ?? RECONNECT_GRACE_MS;
     msg.opponentKind = "bot";
-    msg.practiceOpponent = PRACTICE_OPPONENT;
-    msg.opponent = PRACTICE_OPPONENT.displayName;
+    msg.practiceOpponent = this.opponent;
+    msg.opponent = this.opponent.displayName;
     client.send("start", msg);
     client.send("frame", this.session.frame(seat, []));
     client.send("presence", { opponentConnected: true, reconnectDeadlineAt: null });
@@ -282,6 +314,7 @@ export class PracticeRoom extends Room {
     const slot = playerId ? this.session.slotOf(playerId) : -1;
     if (this.session.phase === "waiting" && slot === 0) {
       this.session.leave(playerId!);
+      if (this.humanClient?.auth?.playerId === playerId) this.humanClient = null;
       this.releaseHuman();
       return;
     }
@@ -290,6 +323,9 @@ export class PracticeRoom extends Room {
       const deadlineAt = Date.now() + grace;
       const timer = this.clock.setTimeout(() => this.graceExpired(), grace);
       this.drop = { deadlineAt, timer };
+      // Keep the room open and joinable so joinById can deliver a resume.
+      this.autoDispose = false;
+      this.unlock();
       return;
     }
     if (this.session.phase === "active" && slot === 0) {

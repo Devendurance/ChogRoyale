@@ -30,6 +30,7 @@ import type { BattleCue } from "./battle-audio";
 import { GameIcon } from "@/components/game/GameIcon";
 import BattleResult from "./BattleResult";
 import CrownCelebration from "./CrownCelebration";
+import { PRACTICE_OPPONENT, practiceDifficultyLabel } from "./battle-result-model";
 import "./battle-hud.css";
 
 // Display-only copy of energyPhaseMult (src/lib/combat.ts). combat.ts imports
@@ -397,11 +398,10 @@ export default function BattleHud(props: BattleHudProps) {
   );
 
   const isPractice = start.mode === "practice" || start.opponentKind === "bot";
-  const opponentName = isPractice
-    ? start.practiceOpponent?.displayName ?? "AI Opponent"
-    : start.opponent;
+  const opponentName = isPractice ? PRACTICE_OPPONENT : start.opponent;
+  const practiceDifficulty = practiceDifficultyLabel(start.practiceOpponent?.difficulty);
   const practiceBadge = isPractice
-    ? `AI OPPONENT · ${(start.practiceOpponent?.difficulty ?? "medium").toUpperCase()}`
+    ? `AI OPPONENT${practiceDifficulty ? ` · ${practiceDifficulty.toUpperCase()}` : ""}`
     : null;
 
   const abilityControls = frame && (

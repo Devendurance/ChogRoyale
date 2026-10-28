@@ -2,6 +2,7 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import BattleEntry from "./BattleEntry";
+import { PRACTICE_DIFFICULTY_OPTIONS } from "./practice-difficulty-model";
 
 function entry(mode: "private" | "unranked" | "ranked" | "practice", code = "", error: string | null = null) {
   return renderToStaticMarkup(React.createElement(BattleEntry, { mode, code, error,
@@ -41,10 +42,29 @@ describe("battle entry mode boundaries", () => {
     expect(html).toContain("Medium difficulty");
     expect(html).toContain("Practice has no rewards yet");
     expect(html).toContain("Start Practice");
+    expect(html).toContain('name="practice-difficulty"');
+    expect(html).toMatch(/<input[^>]*checked=""[^>]*value="medium"/);
+    expect(html).toContain("Choose AI difficulty");
+    for (const option of PRACTICE_DIFFICULTY_OPTIONS) {
+      expect(html).toContain(`value="${option.value}"`);
+      expect(html).toContain(option.label);
+      expect(html).toContain(option.tagline);
+      expect(html).toContain(option.description);
+    }
+    expect(html).toContain("Same cards and rules at every difficulty.");
     expect(html).not.toContain("Find Opponent");
     expect(html).not.toContain("Create Private Room");
     expect(html).not.toContain("Join with Code");
     expect(html).not.toContain("Ranked queue");
+  });
+
+  it("renders a supplied practice difficulty as the selected card", () => {
+    const html = renderToStaticMarkup(React.createElement(BattleEntry, { mode: "practice", code: "", error: null,
+      practiceDifficulty: "ultimate", onCodeChange: () => {}, onFind: () => {}, onCreate: () => {}, onJoin: () => {}, onStartPractice: () => {} }));
+    expect(html).toMatch(/<input[^>]*checked=""[^>]*value="ultimate"/);
+    expect(html).toContain('data-difficulty="ultimate" data-selected="true"');
+    expect(html).toContain("Ultimate difficulty");
+    expect(html).not.toMatch(/<input[^>]*checked=""[^>]*value="medium"/);
   });
 
   it("keeps ranked closed without exposing a queue or private-room action", () => {

@@ -13,8 +13,14 @@ export const BATTLE_PRACTICE_ROOM = "battle_practice";
 export type MatchMode = "private" | "matchmaking" | "ranked" | "practice";
 /** Which queue a ticket waits in. Unranked tickets use the casual queue. */
 export type QueueMode = "unranked" | "ranked";
-/** Practice bot difficulty. V2.1a ships MEDIUM only; HARD/ULTIMATE are typed but unimplemented. */
+/** Practice bot difficulty. Server-validated at room creation; omitted means Medium. */
 export type PracticeDifficulty = "medium" | "hard" | "ultimate";
+/** Supported Practice room creation difficulties, in ascending strength. */
+export const PRACTICE_DIFFICULTIES: readonly PracticeDifficulty[] = ["medium", "hard", "ultimate"] as const;
+/** Room creation options for battle_practice. Difficulty only; everything else is server-owned. */
+export interface PracticeCreateOptions {
+  difficulty?: PracticeDifficulty;
+}
 /** Server-owned Practice opponent. Never a human username, never a players row. */
 export interface PracticeOpponent {
   kind: "bot";

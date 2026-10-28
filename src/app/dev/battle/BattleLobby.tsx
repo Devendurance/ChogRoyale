@@ -3,6 +3,7 @@
 import RoomInvite from "./RoomInvite";
 import { GameIcon } from "@/components/game/GameIcon";
 import LoadoutPicker, { type LoadoutPickerProps } from "./LoadoutPicker";
+import { PRACTICE_OPPONENT, practiceDifficultyLabel } from "./battle-result-model";
 import "./loadout-picker.css";
 
 export type BattleLobbyProps = Omit<LoadoutPickerProps, "mine"> & {
@@ -16,10 +17,11 @@ export default function BattleLobby({ lobby, roomCode, now, ...picker }: BattleL
   const practiceOpponent = lobby.practice?.opponent;
   const isPractice = practiceOpponent?.kind === "bot" || lobby.match?.mode === "practice";
   const opponent = lobby.players.find((_, index) => index !== lobby.you);
-  const opponentName = practiceOpponent?.displayName ?? opponent?.username ?? lobby.match?.opponent ?? "Open seat";
+  const opponentName = isPractice ? PRACTICE_OPPONENT : opponent?.username ?? lobby.match?.opponent ?? "Open seat";
   const opponentReady = isPractice ? true : !!opponent?.ready;
+  const practiceDifficulty = practiceDifficultyLabel(practiceOpponent?.difficulty);
   const opponentStatus = isPractice
-    ? `${practiceOpponent?.difficulty === "medium" ? "Medium" : practiceOpponent?.difficulty ?? "Practice"} difficulty · no rewards`
+    ? `${practiceDifficulty ? `${practiceDifficulty} difficulty` : "Practice"} · no rewards`
     : opponent?.username ? opponent.ready ? "Ready" : "Not ready" : "Waiting to join";
   const seconds = lobby.match && now > 0 ? Math.max(0, Math.ceil((lobby.match.deadlineAt - now) / 1000)) : null;
   return (
