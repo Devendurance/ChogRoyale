@@ -311,3 +311,9 @@ Last updated: 2026-10-24
 - Doing: integrate the verified owner-supplied `.audio-dev/battle-loop.mp3` as production Track B from latest `origin/main` on `codex/owner-battle-music`.
 - Done: exact checksum verified and copied to `public/assets/audio/v001/music/battle-loop.mp3`; Track B manifest/config and audio lifecycle tests updated; credits, manifest, quality report, acceptance report and AGENTS rules record owner-asserted purchased rights without claiming CC0. Focused audio tests 27/27, typecheck, scoped ESLint and production build pass.
 - Next: stage only scoped files, commit and push, open the PR, merge with owner authorization already given in this request, verify Vercel Production READY and public asset 200. Report real browser playback as unverified unless an authorized session is available. Preserve unrelated dirty files.
+# Current task: V2.1f Unranked AI fallback frontend
+
+- Done: reviewed worker commits for queue handoff, lobby/HUD identity, result origin, separate resume slots, stale queue cancellation, and fallback result actions.
+- Done: added coordinator fixes for explicit queue copy, timeout/handoff race protection, and fallback Back to Battle Hall navigation.
+- Next: finish dependency-backed focused tests, typecheck, scoped lint, production build, then stage only V2.1f files plus state/rules docs, commit, push, open/merge PR, and verify Vercel Production. Keep backend fallback flag OFF.
+- Preserve unrelated `.fast-build/STATE.md`, `DESIGN.md`, `demo-production/`, and the docs files already present in the worktree.

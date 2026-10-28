@@ -1,5 +1,12 @@
 # Project State
 
+# V2.1f Unranked AI fallback frontend (2026-10-28)
+
+- Current branch: `codex/v2.1f-unranked-fallback-ui`, based on `v2.1e-unranked-fallback` at `8a2befd` plus reviewed V2.1f commits.
+- Human-first queue now renders an advertised-only fallback countdown, validates the server fallback handoff before consuming its reservation, and keeps cancellation, timeout, and stale async work from handing off later.
+- Unranked fallback keeps route intent `unranked` separate from server room mode `practice`, uses `practiceOpponent.source === "unranked-fallback"`, and stores resume credentials in `b3.unranked-fallback.resume` separately from solo Practice and PvP.
+- Lobby, HUD, result, and Find Opponent Again copy identify the server-owned AI and preserve no-reward behavior. The backend fallback flag remains OFF. Live authenticated fallback acceptance is intentionally unverified.
+
 # Owner-supplied battle music production release (2026-10-28)
 
 - Current branch: `codex/owner-battle-music`, based on latest `origin/main` `e6e4c8f7`.

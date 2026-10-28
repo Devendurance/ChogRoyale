@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach, vi } from "vitest";
 import {
   queueFallbackRemainingSeconds,
   readResume,
@@ -6,6 +6,9 @@ import {
   resumeOriginForStart,
   validateMatchFoundMessage,
 } from "./BattlePanel";
+
+vi.mock("next/font/local", () => ({ default: () => ({ variable: "" }) }));
+vi.mock("next/font/google", () => ({ Georama: () => ({ variable: "" }), Lilita_One: () => ({ variable: "" }) }));
 
 const reservation = { name: "battle", sessionId: "session-1", roomId: "room-1" };
 

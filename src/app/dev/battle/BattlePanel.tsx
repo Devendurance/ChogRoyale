@@ -522,7 +522,7 @@ export function BattlePanel({
         connecting.current = false;
       }
     },
-    [appAudioController, attachRoom, code, getAccessToken, initialMode]
+    [appAudioController, attachRoom, code, getAccessToken]
   );
 
   const inviteTried = useRef(false);
@@ -563,12 +563,14 @@ export function BattlePanel({
       });
       q.onMessage("queue_timeout", (m: { reason: string }) => {
         if (gen !== queueGen.current) return;
+        queueGen.current += 1;
         setQueueStatus(null);
         setQueueRoom(null);
         setError(m.reason);
         setStage("idle");
       });
       let handoffStarted = false;
+      let leavingForHandoff = false;
       q.onMessage("match_found", (raw: unknown) => {
         if (gen !== queueGen.current) {
           void q.leave().catch(() => {});
@@ -594,23 +596,28 @@ export function BattlePanel({
               await nextRoom.leave().catch(() => {});
               return;
             }
+            leavingForHandoff = true;
             await q.leave().catch(() => {});
             if (gen !== queueGen.current) {
               await nextRoom.leave().catch(() => {});
               return;
             }
+            setQueueRoom((current) => current === q ? null : current);
             attachRoom(nextRoom, handoff.origin);
             appAudioController?.playUi("ready");
             setStage((current) => current === "connecting" ? "lobby" : current);
           } catch (e) {
             await q.leave().catch(() => {});
+            if (gen !== queueGen.current) return;
             setError(e instanceof Error ? e.message : String(e));
             setStage("idle");
           }
         })();
       });
       q.onLeave(() => {
+        if (leavingForHandoff) return;
         if (gen !== queueGen.current) return;
+        queueGen.current += 1;
         setQueueRoom(null);
         setQueueStatus(null);
         setStage((s) => (s === "searching" ? "idle" : s));
@@ -680,8 +687,8 @@ export function BattlePanel({
   }, [findMatch, initialMode, reset, start?.practiceOpponent?.source]);
   const exitBattle = useCallback(() => {
     reset();
-    if (publicMode && initialMode === "practice") router.push("/app/play");
-  }, [initialMode, publicMode, reset, router]);
+    if (publicMode && (initialMode === "practice" || start?.practiceOpponent?.source === "unranked-fallback")) router.push("/app/play");
+  }, [initialMode, publicMode, reset, router, start?.practiceOpponent?.source]);
 
   useEffect(() => () => void room?.leave(), [room]);
   useEffect(() => () => void queueRoom?.leave(), [queueRoom]);
@@ -938,9 +945,11 @@ export function BattlePanel({
 
       {stage === "searching" && (
         <section className={publicMode ? "app-play-battle-controls" : undefined} style={publicMode ? undefined : { display: "grid", gap: 6 }}>
-          <div>
-            Searching for an opponent{queueStatus ? ` · ${queueStatus.waiting} in queue` : ""} · {queueStatus ? Math.max(0, Math.floor((now - queueStatus.since) / 1000)) : 0}s
-            {fallbackSeconds !== null && <span> · Human opponent first · AI fallback in {fallbackSeconds}s</span>}
+          <div role="status">
+            <strong>Searching for an opponent...</strong>
+            {queueStatus && <span> · {queueStatus.waiting} in queue · {Math.max(0, Math.floor((now - queueStatus.since) / 1000))}s</span>}
+            {fallbackSeconds !== null && fallbackSeconds > 0 && <span> · No player found yet? An AI opponent will join if nobody is available. AI backup in {fallbackSeconds}s.</span>}
+            {fallbackSeconds === 0 && <span> · Preparing an opponent...</span>}
           </div>
           <div>
             <button className={publicMode ? "app-btn app-btn--ghost" : undefined} onClick={cancelSearch}>Cancel search</button>
@@ -971,7 +980,7 @@ export function BattlePanel({
           error={error}
           notice={notice}
           onGiveUp={stage === "reconnecting" ? reset : undefined}
-          onExit={initialMode === "practice" && publicMode ? exitBattle : reset}
+          onExit={publicMode && (initialMode === "practice" || start?.practiceOpponent?.source === "unranked-fallback") ? exitBattle : reset}
           onBattleAgain={initialMode === "practice" ? battleAgain : start?.practiceOpponent?.source === "unranked-fallback" ? findOpponentAgain : undefined}
           start={start}
           playerName={identity?.self ?? undefined}
