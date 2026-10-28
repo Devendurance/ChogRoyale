@@ -2,7 +2,7 @@
 
 - Doing: finish review and delivery of `codex/v2.1h-unranked-ai-gold-ui`, based on `v2.1g-bot-gold` `95899c5`.
 - Done: Bot Gold validation/reducer, BattlePanel late-message lifecycle and balance refresh, BattleHud/BattleResult reward states, focused tests, scoped lint, typecheck and production build.
-- Done: commit `d762aa8` is pushed on PR #16, https://github.com/Devendurance/ChogRoyale/pull/16. Vercel preview is building, while Production remains the prior main deployment. Do not apply migrations, deploy the battle server, enable the reward flag, merge or promote without owner approval.
+- Done: branch head `4a19f41` is pushed on PR #16, https://github.com/Devendurance/ChogRoyale/pull/16. Vercel preview is building, while Production remains the prior main deployment. Do not apply migrations, deploy the battle server, enable the reward flag, merge or promote without owner approval.
 - Limitation: `src/server/battle/bot-gold-flag.test.ts` still has an existing isolation failure when its flag-off and flag-on servers run together. Static `PracticeRoom.deps` is overwritten by the second server, so the flag-off case receives a pending message. No backend code was changed in this UI slice.
 - Next: wait for PR/Vercel checks and owner approval. Preserve unrelated `.fast-build/STATE.md`, `DESIGN.md`, `demo-production/`, and docs files.
 

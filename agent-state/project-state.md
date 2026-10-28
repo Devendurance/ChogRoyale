@@ -5,7 +5,7 @@
 - Current branch: `codex/v2.1h-unranked-ai-gold-ui`, based on `v2.1g-bot-gold` at `95899c5`. Frontend-only, reward flag OFF, migrations 0023/0024 untouched.
 - Added strict `bot_gold` validation and monotonic message handling, late delivery after `end`, fallback provenance and match-id isolation, confirmed-only `/api/players/me/gold` refresh, and result reward states for confirmed, duplicate, pending, capped and refusal outcomes.
 - Solo Practice remains no-reward, human PvP settlement is unchanged, and fresh searches/reset clear prior reward state. No authenticated live reward acceptance is possible while the production flag remains OFF.
-- Checks: focused reward/queue/result tests 54 passed, the full battle-surface suite 216/216 passed, TypeScript and scoped ESLint passed, and the production build passed. Commit `d762aa8` is pushed on PR #16, https://github.com/Devendurance/ChogRoyale/pull/16. Preview is building, production remains the prior main deployment. Merge and production promotion remain owner-gated.
+- Checks: focused reward/queue/result tests 54 passed, the full battle-surface suite 216/216 passed, TypeScript and scoped ESLint passed, and the production build passed after the stale-receipt fix. Branch head `4a19f41` is pushed on PR #16, https://github.com/Devendurance/ChogRoyale/pull/16. Preview is building, production remains the prior main deployment. Merge and production promotion remain owner-gated.
 
 # V2.1f P0 blank-screen hotfix (2026-10-28)
 
