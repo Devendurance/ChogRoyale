@@ -1,3 +1,12 @@
+## V2.1g/h Bot Gold Production Preflight (2026-10-28, PR #16 branch 4e9f636, pushed, no PROD changes)
+
+- Doing: preflight-only slice, STOP after verdict. No migrations applied, no flags flipped, no restarts, no synthetic tests.
+- CHECK 1: reproduced the flag-test isolation fault by inspection (two live servers share process-wide PracticeRoom.deps, so the second boot silently reconfigures the first). Fixed on the PR branch by using one server with per-test deps assignment; flag file passes 2/2 deterministically.
+- CHECK 2: confirmed a real delivery hole, a confirmed bot_gold can miss the browser when the award lands after the 50ms post-end disconnect. Fixed on the PR branch by holding the fallback room open until the receipt sends (15s cap); solo and flag-OFF timing unchanged.
+- CHECK 3: migrations 0023/0024 verified additive, FKs to real players only, no matches writes, no fake bots, safe with flag OFF. Not applied to PROD.
+- CHECK 4: economy paths unchanged in this slice; bot-gold unit 12/12, live flag ON/OFF 2/2, practice/unranked suites green, matchmaking plus room 26/26, tsc clean, scoped lint clean, production build pass.
+- Verdict: GO, conditional on PR checks passing and the coordinated rollout below. Remaining: owner merge of PR #16, apply 0023/0024 to PROD, deploy battle server, set UNRANKED_BOT_GOLD_REWARDS_ENABLED=1, live authenticated acceptance.
+
 # V2.1h Unranked AI Gold UI (2026-10-28, current)
 
 - Doing: finish review and delivery of `codex/v2.1h-unranked-ai-gold-ui`, based on `v2.1g-bot-gold` `95899c5`.
