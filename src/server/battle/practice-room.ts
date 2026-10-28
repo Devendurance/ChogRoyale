@@ -310,10 +310,10 @@ export class PracticeRoom extends Room {
       const end = { ...out.end[humanSeat], matchId: this.matchId, practice: { opponentKind: "bot" as const, noReward: true as const, source: this.origin } };
       client.send("end", end);
       client.send("settlement", { matchId: this.matchId, status: "disabled" });
-      this.maybeAwardBotGold();
+      const awardDelivered = this.maybeAwardBotGold();
       this.setSimulationInterval();
       this.releaseHuman();
-      this.clock.setTimeout(() => void this.disconnect(), PracticeRoom.deps.closeAfterMs ?? 5_000);
+      this.closeAfterEnd(awardDelivered);
     }
   }
 
@@ -323,18 +323,18 @@ export class PracticeRoom extends Room {
    * service; solo Practice and flag-OFF rooms send nothing and write
    * nothing. Never touches the PvP settlement writer.
    */
-  private maybeAwardBotGold() {
-    if (this.origin !== "unranked-fallback") return;
-    if (!PracticeRoom.deps.botGold?.enabled) return;
+  private maybeAwardBotGold(): Promise<void> | null {
+    if (this.origin !== "unranked-fallback") return null;
+    if (!PracticeRoom.deps.botGold?.enabled) return null;
     const replay = this.session.replay;
     const human = this.session.slots[0];
     const matchId = this.matchId;
-    if (!replay || !human || !matchId) return;
+    if (!replay || !human || !matchId) return null;
     const humanSeat = this.session.seatOfSlot[0]!;
     const humanDeploys = replay.commands.filter(
       (c) => !isAbilityCommand(c) && c.player === humanSeat
     ).length;
-    void botGold()
+    return botGold()
       .processEvidence({
         matchId,
         playerId: human.playerId,
@@ -365,6 +365,28 @@ export class PracticeRoom extends Room {
         });
       })
       .catch((err) => logger.error("bot gold hook failed", { roomId: this.roomId, reason: err instanceof Error ? err.message : String(err) }));
+  }
+
+  /**
+   * Post-match disconnect. Solo Practice and flag-OFF rooms close on the
+   * existing short timer. A fallback room with rewards on holds the seat
+   * (bounded) until the authoritative bot_gold outcome is delivered, so a
+   * confirmed award cannot be missed by a client still on the result
+   * screen. Anything later is covered by reconcile and Gold history.
+   */
+  private closeAfterEnd(awardDelivered: Promise<void> | null) {
+    const minDelay = PracticeRoom.deps.closeAfterMs ?? 5_000;
+    if (!awardDelivered) {
+      this.clock.setTimeout(() => void this.disconnect(), minDelay);
+      return;
+    }
+    const cap = this.clock.setTimeout(() => void this.disconnect(), Math.max(minDelay, 15_000));
+    void awardDelivered.finally(() => {
+      this.clock.setTimeout(() => {
+        cap.clear();
+        void this.disconnect();
+      }, minDelay);
+    });
   }
 
   private resume(client: PracticeClient, token: unknown) {
