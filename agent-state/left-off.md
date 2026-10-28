@@ -2,7 +2,8 @@
 
 - Doing: finish review and delivery of `codex/v2.1h-unranked-ai-gold-ui`, based on `v2.1g-bot-gold` `95899c5`.
 - Done: Bot Gold validation/reducer, BattlePanel late-message lifecycle and balance refresh, BattleHud/BattleResult reward states, focused tests, scoped lint, typecheck and production build.
-- Next: inspect staged diff, preserve unrelated `.fast-build/STATE.md`, `DESIGN.md`, `demo-production/`, and docs files, commit/push/open PR. Do not apply migrations, deploy the battle server, enable the reward flag, merge or promote without owner approval.
+- Done: commit `d762aa8` is pushed on PR #16, https://github.com/Devendurance/ChogRoyale/pull/16. Vercel preview is building, while Production remains the prior main deployment. Do not apply migrations, deploy the battle server, enable the reward flag, merge or promote without owner approval.
+- Next: wait for PR/Vercel checks and owner approval. Preserve unrelated `.fast-build/STATE.md`, `DESIGN.md`, `demo-production/`, and docs files.
 
 ## V2.1g Unranked AI Bot Gold (2026-10-28, branch v2.1g-bot-gold 312c226, pushed, TEST migration only, flag OFF)
 
