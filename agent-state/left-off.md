@@ -1,3 +1,13 @@
+## V2.1c Three-Difficulty Practice AI (2026-10-28, branch v2.1c-practice-difficulties 2c25776, pushed, deployed scoped to endy-vps)
+
+- Doing: shipped Hard/Ultimate server-owned practice bots, STOP after backend, no Codex UI/fallback/Ranked/XP.
+- Done: hard (lane-threat defense, strict spells, coordinated pushes) and ultimate (support sniping, ability timing, hazard awareness) policies, same legal rules and deck for all; validated difficulty room option defaulting to medium; immutable per-room identity through lobby/start/reconnect/end.
+- Fixed: practice tick loop follows the live socket across reconnects (stale-socket resume bug found by the new room test).
+- Checks: unit 11/11 + room 4/4, V2.1a suite updated and green, PvP suites green (session/matchmaking/room 14), tsc clean, scoped lint clean, production build pass.
+- Eval: 32 deterministic games across decks/seats, all replay-identical, mixed winners, no advantage claimed.
+- Deploy: endy-vps user service restarted with zero live matches to disrupt, local + public /healthz ok, single instance, secrets/proxy/tunnel untouched, ranked closed.
+- Next: Codex difficulty-selection UI per handoff; live authenticated three-difficulty acceptance needs a real Privy sign-in.
+
 ## V2.1b Practice Mode UI (2026-10-28, branch codex/v2.1b-practice-ui)
 
 - Doing: reviewed and integrated the player-facing Practice Mode on top of V2.1a `54c3ad6`. Main integration and Production promotion are next after the scoped commit and PR checks.
