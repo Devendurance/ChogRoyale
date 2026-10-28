@@ -194,6 +194,8 @@ export function BattlePanel({
   const [resumeDeadlineAt, setResumeDeadlineAt] = useState(0);
   /** Bump to cancel any in-flight reconnect loop. */
   const reconnectGen = useRef(0);
+  /** Bump to cancel a queue join or handoff that is still awaiting the SDK. */
+  const queueGen = useRef(0);
   const cidN = useRef(0);
   const mapRef = useRef<BoardMapper | null>(null);
   const gesture = useRef<Gesture | null>(null);
@@ -541,6 +543,7 @@ export function BattlePanel({
    * ranked room only ever pairs ranked tickets, and the client label below
    * never decides settlement. Ranked stays hub-gated until trophies land. */
   const findMatch = useCallback(async (queue: "unranked" | "ranked" = "unranked") => {
+    const gen = ++queueGen.current;
     setError(null);
     setStage("searching");
     setQueueStatus(null);
@@ -549,11 +552,17 @@ export function BattlePanel({
       if (!token) throw new Error("No Privy access token. Log in first.");
       const client = new Client(SERVER, { headers: { authorization: `Bearer ${token}` } });
       const q = await client.joinOrCreate(queue === "ranked" ? BATTLE_RANKED_QUEUE_ROOM : BATTLE_QUEUE_ROOM);
+      if (gen !== queueGen.current) {
+        await q.leave().catch(() => {});
+        return;
+      }
       q.onMessage("queue_status", (m: QueueStatusMessage) => {
+        if (gen !== queueGen.current) return;
         setQueueStatus(m);
         setNow(Date.now());
       });
       q.onMessage("queue_timeout", (m: { reason: string }) => {
+        if (gen !== queueGen.current) return;
         setQueueStatus(null);
         setQueueRoom(null);
         setError(m.reason);
@@ -561,6 +570,10 @@ export function BattlePanel({
       });
       let handoffStarted = false;
       q.onMessage("match_found", (raw: unknown) => {
+        if (gen !== queueGen.current) {
+          void q.leave().catch(() => {});
+          return;
+        }
         if (handoffStarted) return;
         const handoff = validateMatchFoundMessage(raw, queue);
         if (!handoff.ok) {
@@ -577,7 +590,15 @@ export function BattlePanel({
         void (async () => {
           try {
             const nextRoom = await client.consumeSeatReservation(handoff.message.reservation);
+            if (gen !== queueGen.current) {
+              await nextRoom.leave().catch(() => {});
+              return;
+            }
             await q.leave().catch(() => {});
+            if (gen !== queueGen.current) {
+              await nextRoom.leave().catch(() => {});
+              return;
+            }
             attachRoom(nextRoom, handoff.origin);
             appAudioController?.playUi("ready");
             setStage((current) => current === "connecting" ? "lobby" : current);
@@ -589,25 +610,30 @@ export function BattlePanel({
         })();
       });
       q.onLeave(() => {
+        if (gen !== queueGen.current) return;
         setQueueRoom(null);
         setQueueStatus(null);
         setStage((s) => (s === "searching" ? "idle" : s));
       });
       setQueueRoom(q);
     } catch (e) {
+      if (gen !== queueGen.current) return;
       setError(e instanceof Error ? e.message : String(e));
       setStage("idle");
     }
   }, [getAccessToken, attachRoom, appAudioController]);
 
   const cancelSearch = useCallback(() => {
+    queueGen.current += 1;
     setQueueStatus(null);
     setQueueRoom(null);
+    setStage("idle");
     void queueRoom?.leave().catch(() => {});
   }, [queueRoom]);
 
   const reset = useCallback(() => {
     reconnectGen.current += 1;
+    queueGen.current += 1;
     const resumeOrigin = resumeInfo.current?.origin ?? resumeOriginForEntryMode(initialMode);
     resumeInfo.current = null;
     clearResume(resumeOrigin);

@@ -66,6 +66,23 @@ describe("production battle ready room", () => {
     expect(html).not.toContain("Medium difficulty");
   });
 
+  it("labels a server-assigned Unranked AI fallback separately from solo Practice", () => {
+    const html = render({
+      players: [{ username: "ChogOne", ready: false }],
+      practice: { opponent: { kind: "bot", botId: "practice-hard-v1", difficulty: "hard", displayName: "AI Opponent", source: "unranked-fallback" } },
+      match: { opponent: "AI Opponent", deadlineAt: 112_000, mode: "practice" },
+    });
+    expect(html).toContain("UNRANKED BATTLE");
+    expect(html).toContain("AI opponent found");
+    expect(html).toContain("AI Opponent");
+    expect(html).toContain('data-opponent-kind="bot"');
+    expect(html).toContain('data-opponent-source="unranked-fallback"');
+    expect(html).toContain("Hard difficulty · Unranked AI fallback");
+    expect(html).toContain("AI match — no rewards yet.");
+    expect(html).not.toContain("Practice arena");
+    expect(html).not.toContain("Practice against AI");
+  });
+
   it("stages seven ordinary portraits and one distinct commander with a real ready action", () => {
     const html = render();
     expect(html.match(/class="lp-card"/g)).toHaveLength(7);
