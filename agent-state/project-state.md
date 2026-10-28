@@ -5,7 +5,7 @@
 - Current branch: `codex/p0-unranked-ai-handoff`, based on `origin/main` merge `4409cd9`.
 - Queue handoff now claims the match before awaits, attaches the reserved room before queue cleanup, ignores duplicate match_found and late queue closes, and disposes late reservations after cancellation.
 - Practice and PvP rooms support authenticated idempotent `lobby_sync` snapshots. The client retries hydration for 2.5 seconds, shows `Preparing your battle...`, and fails visibly with a Battle Hall recovery action instead of a blank shell.
-- Focused lifecycle and room tests pass 40/40. TypeScript and scoped lint pass. Backend sync code needs the matching VPS deployment before the server-side replay guarantee is live.
+- Focused lifecycle and room tests pass 40/40. TypeScript, scoped lint and production build pass. PR #15 merged at `e78dd2d1c58dc3c76988a0617b3d9f6f2ff9d706`; Vercel Production deployment `dpl_GMNh9qpYWUPk3RDDeTj5CNgB6BBk` is READY. The two server room files were deployed to endy-vps with a recoverable backup and the service restarted with no active clients. Live authenticated acceptance remains owner-gated.
 
 # V2.1f Unranked AI fallback frontend (2026-10-28)
 

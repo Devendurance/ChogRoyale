@@ -319,6 +319,6 @@ Last updated: 2026-10-24
 - Preserve unrelated `.fast-build/STATE.md`, `DESIGN.md`, `demo-production/`, and the docs files already present in the worktree.
 ## V2.1f P0 blank-screen hotfix (2026-10-28)
 
-- Doing: finish the hotfix on `codex/p0-unranked-ai-handoff`, then push, open and merge the scoped PR and verify Vercel.
-- Done: fixed reservation handoff ordering, duplicate/cancel races, visible lobby hydration state, bounded `lobby_sync` recovery, and Practice/PvP room snapshot tests. Focused lifecycle/room tests 40/40 and typecheck pass.
-- Next: run scoped lint and production build, commit only hotfix/state files, push and merge. Coordinate the exact `PracticeRoom`/`BattleRoom` VPS deployment because the remote server must include `lobby_sync` for replay recovery. No new gameplay or reward work.
+- Doing: retain the merged P0 hotfix record and wait for owner-authenticated acceptance.
+- Done: fixed reservation handoff ordering, duplicate/cancel races, visible lobby hydration state, bounded `lobby_sync` recovery, and Practice/PvP room snapshot tests. Focused lifecycle/room tests 40/40, typecheck, scoped lint and production build pass. PR #15 merged at `e78dd2d1c58dc3c76988a0617b3d9f6f2ff9d706`; Vercel Production `dpl_GMNh9qpYWUPk3RDDeTj5CNgB6BBk` is READY. Matching server files are live on endy-vps, with backup `.hotfix-backup-20261028-p0-lobby`.
+- Next: owner acceptance with a real Privy account, including Unranked AI assignment, ready lobby, reconnect and Find Opponent Again. No new gameplay or reward work.
