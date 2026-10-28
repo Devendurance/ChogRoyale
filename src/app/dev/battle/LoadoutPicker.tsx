@@ -7,6 +7,7 @@ import {
 } from "@/lib/battle-protocol";
 import { chooseInitialLoadout, LOADOUT_SCHEMA_VERSION, type SavedLoadout } from "@/lib/loadout";
 import { GameIcon } from "@/components/game/GameIcon";
+import { uiSound } from "@/components/audio/ui-interactions";
 import { Portrait } from "./portrait";
 import { useSpriteManifest } from "./use-sprite-manifest";
 import { portraitCandidatesForCard, portraitForCommanderClass } from "./sprite-registry";
@@ -66,6 +67,12 @@ export default function LoadoutPicker({ lobby, mine, getAccessToken, onConfirm, 
   // The catalog and presets belong to this mounted lobby. Parent countdown
   // renders and ready-flag snapshots must never refetch the account draft.
   const initialInputs = useRef({ ordinary, presets: lobby.presets, saved });
+  const readyConfirmed = useRef(Boolean(mine));
+
+  useEffect(() => {
+    if (mine && !readyConfirmed.current) uiSound("ready");
+    readyConfirmed.current = Boolean(mine);
+  }, [mine]);
 
   const fetchLoadout = useCallback(async () => {
     setReadStatus("loading");
@@ -120,10 +127,12 @@ export default function LoadoutPicker({ lobby, mine, getAccessToken, onConfirm, 
   const toggle = (id: string) => {
     markDirty();
     setCards((current) => current.includes(id) ? current.filter((c) => c !== id) : current.length < 7 ? [...current, id] : current);
+    uiSound("card-select");
   };
   const selectNft = (tokenId: string) => {
     markDirty();
     setCommander({ kind: "nft", chainId: CHOG_GENESIS_CHAIN_ID, contract: CHOG_GENESIS_CONTRACT, tokenId });
+    uiSound("card-select");
   };
 
   const saveDeck = async (expectedRevision: number | null) => {
@@ -142,12 +151,13 @@ export default function LoadoutPicker({ lobby, mine, getAccessToken, onConfirm, 
         setSaveMsg("A newer deck was saved elsewhere. Your draft is still here.");
         return;
       }
-      if (!response.ok || !body.success || !body.data?.loadout) { setSaveMsg("Save failed. Your draft is still here. Try again."); return; }
+      if (!response.ok || !body.success || !body.data?.loadout) { uiSound("error"); setSaveMsg("Save failed. Your draft is still here. Try again."); return; }
       setConflict(null);
       setServerDeck({ loadout: body.data.loadout });
       setReadStatus("loaded");
       setSaveMsg("Saved to your account.");
-    } catch { setSaveMsg("Save failed. Your draft is still here. Try again."); }
+      uiSound("success");
+    } catch { uiSound("error"); setSaveMsg("Save failed. Your draft is still here. Try again."); }
     finally { setSaving(false); }
   };
 
@@ -223,28 +233,28 @@ export default function LoadoutPicker({ lobby, mine, getAccessToken, onConfirm, 
         <details className="lp-editor">
           <summary><GameIcon kind="deck" size={20} />Edit Deck &amp; Presets<span>Choose your seven</span></summary>
           <div className="lp-editor-content">
-            <div className="lp-presets">{Object.entries(lobby.presets).map(([name, preset]) => <button type="button" className="lp-button lp-button--small" key={name} disabled={frozen} onClick={() => {
-              markDirty(); setCards([...preset.cards]);
+            <div className="lp-presets">{Object.entries(lobby.presets).map(([name, preset]) => <button type="button" className="lp-button lp-button--small" key={name} disabled={frozen} data-audio-skip="true" onClick={() => {
+              markDirty(); setCards([...preset.cards]); uiSound("card-select");
               if (COMMANDER_CLASS_CHOICES.includes(preset.commanderClass as typeof COMMANDER_CLASS_CHOICES[number])) setCommander({ kind: "free", class: preset.commanderClass as typeof COMMANDER_CLASS_CHOICES[number] });
             }}>{titleCase(name)}</button>)}</div>
             <p className="lp-help">Select seven different cards. Remove a selected card before adding a replacement.</p>
             <div className="lp-collection">{ordinary.map((card) => {
               const selected = cards.includes(card.id);
-              return <button type="button" className={`lp-choice${selected ? " lp-choice--selected" : ""}`} key={card.id} aria-pressed={selected} aria-label={`${selected ? "Remove" : "Add"} ${card.name}, ${card.cost} energy`} title={card.description} disabled={frozen || (!selected && cards.length >= 7)} onClick={() => toggle(card.id)}><span className="lp-cost">{card.cost}</span><Portrait src={kit ? portraitCandidatesForCard(kit, card.id) : null} name={card.name} style={{ objectFit: "contain" }} /><span>{card.name}</span>{selected && <GameIcon kind="ready" size={18} className="lp-choice-check" />}</button>;
+              return <button type="button" className={`lp-choice${selected ? " lp-choice--selected" : ""}`} key={card.id} data-audio-skip="true" aria-pressed={selected} aria-label={`${selected ? "Remove" : "Add"} ${card.name}, ${card.cost} energy`} title={card.description} disabled={frozen || (!selected && cards.length >= 7)} onClick={() => toggle(card.id)}><span className="lp-cost">{card.cost}</span><Portrait src={kit ? portraitCandidatesForCard(kit, card.id) : null} name={card.name} style={{ objectFit: "contain" }} /><span>{card.name}</span>{selected && <GameIcon kind="ready" size={18} className="lp-choice-check" />}</button>;
             })}</div>
             <details className="lp-subdetails"><summary>Card details</summary>{ordinary.filter((card) => cards.includes(card.id)).map((card) => <p key={card.id}><strong>{card.name}</strong> · {card.cost} energy · {card.kind}{card.air ? " · Air" : ""}<br />{card.description}</p>)}</details>
           </div>
         </details>
         <details className="lp-editor"><summary><GameIcon kind="crown" size={20} />Change Commander<span>Free or Genesis</span></summary><div className="lp-editor-content">
-          <div className="lp-free-commanders">{COMMANDER_CLASS_CHOICES.map((cls) => <button type="button" key={cls} disabled={frozen} aria-pressed={commander.kind === "free" && commander.class === cls} className={`lp-choice${commander.kind === "free" && commander.class === cls ? " lp-choice--selected" : ""}`} onClick={() => { markDirty(); setCommander({ kind: "free", class: cls }); }}><Portrait src={kit ? portraitForCommanderClass(kit, cls) : null} name={titleCase(cls)} style={{ objectFit: "contain" }} /><span>{titleCase(cls)}</span><small>Free · Class art</small></button>)}</div>
+          <div className="lp-free-commanders">{COMMANDER_CLASS_CHOICES.map((cls) => <button type="button" key={cls} disabled={frozen} data-audio-skip="true" aria-pressed={commander.kind === "free" && commander.class === cls} className={`lp-choice${commander.kind === "free" && commander.class === cls ? " lp-choice--selected" : ""}`} onClick={() => { markDirty(); setCommander({ kind: "free", class: cls }); uiSound("card-select"); }}><Portrait src={kit ? portraitForCommanderClass(kit, cls) : null} name={titleCase(cls)} style={{ objectFit: "contain" }} /><span>{titleCase(cls)}</span><small>Free · Class art</small></button>)}</div>
           <div className="lp-nft-heading"><h4>Your Genesis Commanders</h4><button type="button" className="lp-button lp-button--small" disabled={frozen || nftStatus === "Loading commanders"} onClick={() => void fetchNfts(true)}>Refresh Commanders</button></div>
           {nftStatus && <p className="lp-help" role="status">{nftStatus}</p>}
           {!nfts.length && !nftStatus && <p className="lp-help">No Genesis commander candidates returned for this account.</p>}
-          <div className="lp-nfts">{nfts.map((candidate) => <button type="button" key={candidate.tokenId} className={`lp-nft${commander.kind === "nft" && commander.tokenId === candidate.tokenId ? " lp-nft--selected" : ""}`} disabled={frozen || !usableNft(candidate)} onClick={() => selectNft(candidate.tokenId)}>
+          <div className="lp-nfts">{nfts.map((candidate) => <button type="button" key={candidate.tokenId} data-audio-skip="true" className={`lp-nft${commander.kind === "nft" && commander.tokenId === candidate.tokenId ? " lp-nft--selected" : ""}`} disabled={frozen || !usableNft(candidate)} onClick={() => selectNft(candidate.tokenId)}>
             {candidate.imageUrl && <Portrait src={candidate.imageUrl} name={candidate.name ?? "Genesis commander"} className="lp-nft-art" />}
             {(() => { const label = candidateLabel(candidate); return <span><strong>{candidate.name ?? "Genesis commander"}</strong><small><b className="lp-badge" data-badge={label.badge}>{label.badge}</b>{candidate.commander ? titleCase(candidate.commander.class) : "Class pending"}</small><small>{label.detail}</small></span>; })()}
           </button>)}</div>
-          <details className="lp-subdetails"><summary>Ownership checks &amp; token ID</summary><p>Genesis ownership or borrowed access is checked by the server when you ready up and again at match start. {nftFreshness === "live" ? "This list was just checked onchain." : "This list comes from your last ownership check. Refresh to check again."} Saving a deck does not verify access.</p><label htmlFor="lp-token-id">Use a Genesis token ID</label><div className="lp-manual"><input id="lp-token-id" inputMode="numeric" placeholder="Genesis token ID" value={manualToken} disabled={frozen} onChange={(event) => setManualToken(event.target.value.replace(/\D/g, ""))} /><button type="button" className="lp-button lp-button--small" disabled={!/^\d{1,78}$/.test(manualToken) || frozen} onClick={() => selectNft(manualToken)}>Use Token</button></div>{commander.kind === "nft" && <p>Selected token claim: {commander.tokenId}. The server confirms access.</p>}</details>
+          <details className="lp-subdetails"><summary>Ownership checks &amp; token ID</summary><p>Genesis ownership or borrowed access is checked by the server when you ready up and again at match start. {nftFreshness === "live" ? "This list was just checked onchain." : "This list comes from your last ownership check. Refresh to check again."} Saving a deck does not verify access.</p><label htmlFor="lp-token-id">Use a Genesis token ID</label><div className="lp-manual"><input id="lp-token-id" inputMode="numeric" placeholder="Genesis token ID" value={manualToken} disabled={frozen} onChange={(event) => setManualToken(event.target.value.replace(/\D/g, ""))} /><button type="button" className="lp-button lp-button--small" data-audio-skip="true" disabled={!/^\d{1,78}$/.test(manualToken) || frozen} onClick={() => selectNft(manualToken)}>Use Token</button></div>{commander.kind === "nft" && <p>Selected token claim: {commander.tokenId}. The server confirms access.</p>}</details>
         </div></details>
       </>}
     </section>

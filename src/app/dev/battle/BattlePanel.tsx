@@ -4,7 +4,7 @@
 // Phaser view. Gated to development unless explicitly enabled.
 
 import { hasMatchingInviteResume, roomJoinError, validRoomCode } from "@/lib/battle-invite";
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { usePrivy, useLogin } from "@privy-io/react-auth";
 import { Client, type Room } from "@colyseus/sdk";
 import {
@@ -30,6 +30,8 @@ import BattleLobby from "./BattleLobby";
 import BattleEntry from "@/components/app/BattleEntry";
 import BattleHud from "./BattleHud";
 import { battleIdentity } from "./battle-identity";
+import { useAppAudio } from "@/components/audio/AppAudioProvider";
+import type { BattlePhase } from "@/lib/audio/audio-core";
 import {
   BattleAudio,
   DEFAULT_BATTLE_AUDIO_PREFERENCES,
@@ -68,6 +70,8 @@ export function BattlePanel({
 }) {
   const { ready, authenticated, getAccessToken, logout } = usePrivy();
   const { login } = useLogin();
+  const appAudio = useAppAudio();
+  const appAudioController = appAudio?.audio ?? null;
   const [stage, setStage] = useState<Stage>("idle");
   const [error, setError] = useState<string | null>(invalidInvite ? "This invitation has an invalid room code. Ask your friend for a new link." : null);
   const [code, setCode] = useState(initialRoom ?? "");
@@ -105,9 +109,22 @@ export function BattlePanel({
   const audioSeen = useRef(new Set<string>());
   const audioPriming = useRef(false);
   const audioResultSeen = useRef<string | null>(null);
-  const [audioPreferences, setAudioPreferences] = useState<BattleAudioPreferences>(() => ({ ...DEFAULT_BATTLE_AUDIO_PREFERENCES }));
-  const [audio] = useState(() => new BattleAudio(DEFAULT_BATTLE_AUDIO_PREFERENCES));
+  const [localAudioPreferences, setLocalAudioPreferences] = useState<BattleAudioPreferences>(() => ({ ...DEFAULT_BATTLE_AUDIO_PREFERENCES }));
+  const [audio] = useState(() => new BattleAudio(DEFAULT_BATTLE_AUDIO_PREFERENCES, appAudio?.audio.getBattleOutput() ?? null));
+  const audioPreferences: BattleAudioPreferences = useMemo(() => appAudio
+    ? {
+      muted: appAudio.preferences.masterMuted || appAudio.preferences.battleMuted,
+      volume: appAudio.preferences.battleVolume,
+    }
+    : localAudioPreferences, [
+    appAudio,
+    localAudioPreferences,
+  ]);
   const audioReady = useSyncExternalStore(audio.subscribe, audio.getReady, () => false);
+
+  const setAudioPhase = useCallback((phase: BattlePhase) => {
+    appAudioController?.setBattlePhase(phase);
+  }, [appAudioController]);
 
   const unlockAudio = useCallback(() => {
     void audio.unlock();
@@ -118,14 +135,21 @@ export function BattlePanel({
   }, [audio]);
 
   const updateAudio = useCallback((next: BattleAudioPreferences) => {
-    setAudioPreferences(next);
-    audio.setPreferences(next);
-    try {
-      writeBattleAudioPreferences(next, window.localStorage);
-    } catch {
-      /* Storage is optional. The in-memory preference still applies. */
+    if (appAudio) {
+      appAudio.setPreferences({
+        battleMuted: next.muted,
+        battleVolume: next.volume,
+        // This path is only reached from the explicit battle Sound control.
+        // It is therefore a valid user gesture to clear a migrated global
+        // silence flag, while ordinary route changes never do so.
+        ...(next.muted ? {} : { masterMuted: false }),
+      });
+      return;
     }
-  }, [audio]);
+    setLocalAudioPreferences(next);
+    audio.setPreferences(next);
+    try { writeBattleAudioPreferences(next, window.localStorage); } catch { /* optional storage */ }
+  }, [appAudio, audio]);
 
   const toggleAudio = useCallback(() => {
     const next = audio.getReady()
@@ -141,43 +165,50 @@ export function BattlePanel({
   );
 
   useEffect(() => {
-    audio.setPreferences(audioPreferences);
-  }, [audio, audioPreferences]);
+    if (!appAudio) audio.setPreferences(audioPreferences);
+  }, [appAudio, audio, audioPreferences]);
 
   useEffect(() => {
+    if (appAudio) return;
     const timer = setTimeout(() => {
       try {
         const saved = readBattleAudioPreferences(window.localStorage);
         audio.setPreferences(saved);
-        setAudioPreferences(saved);
+        setLocalAudioPreferences(saved);
       } catch {
         /* Storage is optional. The deterministic default remains active. */
       }
     }, 0);
     return () => clearTimeout(timer);
-  }, [audio]);
+  }, [appAudio, audio]);
 
   useEffect(() => () => audio.dispose(), [audio]);
 
   useEffect(() => {
+    if (appAudio) return;
     const syncVisibility = () => audio.setPageHidden(document.hidden);
     syncVisibility();
     document.addEventListener("visibilitychange", syncVisibility);
     return () => document.removeEventListener("visibilitychange", syncVisibility);
-  }, [audio]);
+  }, [appAudio, audio]);
 
   // One handler set shared by room-code create/join, matched reservations
   // and resume re-joins. SDK auto-reconnect is disabled: our resume flow owns
   // recovery, and the built-in retry would delay onLeave past the grace window.
   const attachRoom = useCallback((r: Room) => {
     r.reconnection.enabled = false;
-    r.onMessage("lobby", (m: LobbyMessage) => (setLobby(m), setStage((s) => (s === "connecting" || s === "searching" ? "lobby" : s))));
+    r.onMessage("lobby", (m: LobbyMessage) => {
+      setLobby(m);
+      setAudioPhase("lobby");
+      setStage((s) => (s === "connecting" || s === "searching" ? "lobby" : s));
+    });
     r.onMessage("start", (m: StartMessage) => {
       feed.current = { start: m, frame: null, prev: null, receivedAt: performance.now(), selected: null, ghost: null };
       audioSeen.current.clear();
       audioResultSeen.current = null;
       audioPriming.current = m.resumed;
       if (!m.resumed) audio.play("start");
+      setAudioPhase("active");
       setSelected(null);
       setDragging(null);
       gesture.current = null;
@@ -224,10 +255,17 @@ export function BattlePanel({
         audio.play(cue.cue);
       }
       setEnd(e);
+      setAudioPhase("result");
       setStage("ended");
     });
     r.onMessage("settlement", (m: SettlementMessage) => setSettlement(m));
-    r.onMessage("aborted", (a: { reason: string }) => (resumeInfo.current = null, sessionStorage.removeItem(RESUME_KEY), setAbort(a.reason), setStage("aborted")));
+    r.onMessage("aborted", (a: { reason: string }) => {
+      resumeInfo.current = null;
+      sessionStorage.removeItem(RESUME_KEY);
+      setAbort(a.reason);
+      setAudioPhase("lobby");
+      setStage("aborted");
+    });
     r.onMessage("presence", (m: PresenceMessage) => setPresence(m));
     r.onMessage("error", (e: { reason: string }) => setError(e.reason));
     r.onLeave((code: number) => {
@@ -236,15 +274,17 @@ export function BattlePanel({
         if (s === "active" && code !== 4000 && resumeInfo.current) {
           resumeDeadline.current = Date.now() + resumeInfo.current.graceMs;
           setResumeDeadlineAt(resumeDeadline.current);
+          setAudioPhase("reconnecting");
           return "reconnecting";
         }
         resumeInfo.current = null;
         sessionStorage.removeItem(RESUME_KEY);
+        setAudioPhase(s === "ended" ? "result" : "lobby");
         return s === "ended" || s === "aborted" ? s : "closed";
       });
     });
     setRoom(r);
-  }, [audio]);
+  }, [audio, setAudioPhase]);
 
   // Ranked awards are read back only after the server confirms settlement.
   // This bounded read never infers a trophy delta from the battle result.
@@ -316,6 +356,7 @@ export function BattlePanel({
         const client = new Client(SERVER, { headers: { authorization: `Bearer ${token}` } });
         const r = mode === "create" ? await client.create(BATTLE_ROOM) : await client.joinById(joinCode.trim());
         attachRoom(r);
+        if (mode === "create") appAudioController?.playUi("invite");
         setStage("lobby");
       } catch (e) {
         setError(mode === "join" ? roomJoinError(e) : "Couldn't create a room. Check your connection and try again.");
@@ -324,7 +365,7 @@ export function BattlePanel({
         connecting.current = false;
       }
     },
-    [code, getAccessToken, attachRoom]
+    [code, getAccessToken, attachRoom, appAudioController]
   );
 
   const inviteTried = useRef(false);
@@ -363,6 +404,7 @@ export function BattlePanel({
           try {
             await q.leave().catch(() => {});
             attachRoom(await client.consumeSeatReservation(m.reservation));
+            appAudioController?.playUi("ready");
             setStage("lobby");
           } catch (e) {
             setError(e instanceof Error ? e.message : String(e));
@@ -376,7 +418,7 @@ export function BattlePanel({
       setError(e instanceof Error ? e.message : String(e));
       setStage("idle");
     }
-  }, [getAccessToken, attachRoom]);
+  }, [getAccessToken, attachRoom, appAudioController]);
 
   const cancelSearch = useCallback(() => void queueRoom?.leave().catch(() => {}), [queueRoom]);
 
@@ -399,11 +441,12 @@ export function BattlePanel({
     setQueueStatus(null);
     feed.current = null;
     audio.dispose();
+    setAudioPhase("lobby");
     audioSeen.current.clear();
     audioResultSeen.current = null;
     audioPriming.current = false;
     setStage("idle");
-  }, [audio, room, queueRoom]);
+  }, [audio, room, queueRoom, setAudioPhase]);
 
   useEffect(() => () => void room?.leave(), [room]);
   useEffect(() => () => void queueRoom?.leave(), [queueRoom]);

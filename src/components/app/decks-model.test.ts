@@ -22,6 +22,7 @@ import {
   sameDraft,
   saveStateLabel,
   saveStateStatus,
+  upgradeResultCue,
   validateDeckDraft,
   type DeckDraft,
 } from "./decks-model";
@@ -173,6 +174,19 @@ describe("card progression display", () => {
     expect(progressionDisplayState(null, 100, "unavailable")).toBe("unavailable");
     expect(progressionPercent(null)).toBe(0);
     expect(progressionStatusText("unavailable", null)).toBe("Progression unavailable");
+  });
+});
+
+describe("upgrade result audio mapping", () => {
+  it("reserves the dramatic upgrade cue for a confirmed server upgrade", () => {
+    expect(upgradeResultCue("upgraded")).toBe("upgrade");
+  });
+
+  it("uses a gentle confirmation for an idempotent duplicate and error for refusals", () => {
+    expect(upgradeResultCue("duplicate")).toBe("confirm");
+    for (const status of ["invalid-card", "level-mismatch", "maxed", "insufficient-xp", "insufficient-gold", "conflict-retry"] as const) {
+      expect(upgradeResultCue(status)).toBe("error");
+    }
   });
 });
 

@@ -57,3 +57,6 @@ credentials*.json
 
 # B3.3a settlement outbox (contains server seeds)
 .battle-settlements/
+
+# Development-only audio whose CC BY-NC terms are not production-safe
+.audio-dev/

@@ -176,6 +176,62 @@ describe("battle audio browser lifecycle", () => {
     expect(seen.size).toBe(2048);
     expect(seen.has("2999")).toBe(true);
   });
+
+  it("does not close the app context when a shared battle output is disposed", async () => {
+    const { context } = setup();
+    const bus = context.createGain();
+    const listeners = new Set<() => void>();
+    const shared = {
+      kind: "shared" as const,
+      getContext: () => context as unknown as AudioContext,
+      getGain: () => bus as unknown as GainNode,
+      getReady: () => true,
+      subscribe: (listener: () => void) => { listeners.add(listener); return () => listeners.delete(listener); },
+      unlock: vi.fn(async () => { context.state = "running"; return true; }),
+      duck: vi.fn(),
+    };
+    const audio = new BattleAudio({ muted: false, volume: 1 }, shared);
+    expect(await audio.unlock()).toBe(true);
+    audio.dispose();
+    expect(context.close).not.toHaveBeenCalled();
+    expect(listeners.size).toBe(0);
+  });
+
+  it("plays immediately from a ready shared output and follows context replacement", () => {
+    const first = new MockContext();
+    first.state = "running";
+    first.currentTime = 100;
+    const second = new MockContext();
+    second.state = "running";
+    second.currentTime = 0;
+    let current = first;
+    let currentBus = first.createGain();
+    const listeners = new Set<() => void>();
+    const duck = vi.fn();
+    const shared = {
+      kind: "shared" as const,
+      getContext: () => current as unknown as AudioContext,
+      getGain: () => currentBus as unknown as GainNode,
+      getReady: () => true,
+      subscribe: (listener: () => void) => { listeners.add(listener); return () => listeners.delete(listener); },
+      unlock: vi.fn(async () => true),
+      duck,
+    };
+    const audio = new BattleAudio({ muted: false, volume: 1 }, shared);
+    const changed = vi.fn();
+    const unsubscribe = audio.subscribe(changed);
+    expect(audio.play("ability")).toBe(true);
+    expect(first.sources.length).toBeGreaterThan(0);
+    expect(duck).toHaveBeenCalled();
+    current = second;
+    currentBus = second.createGain();
+    expect(audio.play("ability")).toBe(true);
+    expect(second.sources.length).toBeGreaterThan(0);
+    audio.dispose();
+    expect(listeners.size).toBe(1);
+    unsubscribe();
+    expect(listeners.size).toBe(0);
+  });
 });
 
 describe("battle audio event projection", () => {

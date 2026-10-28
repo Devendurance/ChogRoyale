@@ -1,4 +1,5 @@
 import type { AckMessage, BattleFrame, FrameEvent } from "@/lib/battle-protocol";
+import type { BattleAudioOutput } from "@/lib/audio/audio-core";
 import { combatEventKey } from "./combat-vfx";
 
 export type BattleCue =
@@ -192,6 +193,18 @@ const cueGap: Record<BattleCue, number> = {
   draw: 0.8,
 };
 
+const IMPORTANT_BATTLE_CUES: ReadonlySet<BattleCue> = new Set([
+  "start",
+  "ability",
+  "ability-impact",
+  "destroy",
+  "crown-earned",
+  "crown-tally",
+  "victory",
+  "defeat",
+  "draw",
+]);
+
 interface ToneSpec {
   frequency: number;
   endFrequency?: number;
@@ -266,6 +279,8 @@ const percussion: Partial<Record<BattleCue, ToneSpec>> = {
 export const BATTLE_AUDIO_VOICE_LIMIT = 16;
 
 export class BattleAudio {
+  private readonly sharedOutput: BattleAudioOutput | null;
+  private sharedUnsubscribe: (() => void) | null = null;
   private context: AudioContext | null = null;
   private master: GainNode | null = null;
   private noiseBuffer: AudioBuffer | null = null;
@@ -280,16 +295,27 @@ export class BattleAudio {
 
   readonly subscribe = (listener: () => void): (() => void) => {
     this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
+    if (this.listeners.size === 1 && this.sharedOutput) this.sharedUnsubscribe = this.sharedOutput.subscribe(() => this.notify());
+    return () => {
+      this.listeners.delete(listener);
+      if (this.listeners.size === 0) {
+        this.sharedUnsubscribe?.();
+        this.sharedUnsubscribe = null;
+      }
+    };
   };
 
-  readonly getReady = (): boolean => this.context?.state === "running" && !this.muted && !this.pageHidden && this.volume > 0;
+  readonly getReady = (): boolean => {
+    const outputReady = this.sharedOutput ? this.sharedOutput.getReady() : this.context?.state === "running";
+    return Boolean(outputReady && !this.muted && !this.pageHidden && this.volume > 0);
+  };
 
   private notify(): void {
     for (const listener of this.listeners) listener();
   }
 
-  constructor(preferences: BattleAudioPreferences = DEFAULT_BATTLE_AUDIO_PREFERENCES) {
+  constructor(preferences: BattleAudioPreferences = DEFAULT_BATTLE_AUDIO_PREFERENCES, sharedOutput?: BattleAudioOutput | null) {
+    this.sharedOutput = sharedOutput ?? null;
     this.muted = preferences.muted;
     this.volume = clampVolume(preferences.volume);
   }
@@ -301,20 +327,34 @@ export class BattleAudio {
   setPreferences(preferences: BattleAudioPreferences): void {
     this.muted = preferences.muted;
     this.volume = clampVolume(preferences.volume);
-    if (this.master && this.context) this.master.gain.setTargetAtTime(this.muted || this.pageHidden ? 0 : this.volume, this.context.currentTime, 0.015);
+    if (!this.sharedOutput && this.master && this.context) this.master.gain.setTargetAtTime(this.muted || this.pageHidden ? 0 : this.volume, this.context.currentTime, 0.015);
     if (this.muted || this.volume === 0) this.stopVoices();
     this.notify();
   }
 
   setPageHidden(hidden: boolean): void {
     this.pageHidden = hidden;
-    if (this.master && this.context) this.master.gain.setTargetAtTime(this.muted || hidden ? 0 : this.volume, this.context.currentTime, 0.015);
+    if (!this.sharedOutput && this.master && this.context) this.master.gain.setTargetAtTime(this.muted || hidden ? 0 : this.volume, this.context.currentTime, 0.015);
     if (hidden) this.stopVoices();
     this.notify();
   }
 
   async unlock(): Promise<boolean> {
     if (this.muted) return false;
+    if (this.sharedOutput) {
+      const ready = await this.sharedOutput.unlock();
+      const sharedContext = this.sharedOutput.getContext();
+      if (sharedContext !== this.context) {
+        this.stopVoices();
+        this.noiseBuffer = null;
+        this.lastPlayed.clear();
+      }
+      this.context = sharedContext;
+      this.master = this.sharedOutput.getGain();
+      this.ensureNoiseBuffer();
+      this.notify();
+      return ready && this.getReady();
+    }
     if (!this.context || this.context.state === "closed") {
       const Ctor = audioContextCtor();
       if (!Ctor) return false;
@@ -375,6 +415,18 @@ export class BattleAudio {
   }
 
   play(cue: BattleCue): boolean {
+    if (this.sharedOutput) {
+      const sharedContext = this.sharedOutput.getContext();
+      const sharedGain = this.sharedOutput.getGain();
+      if (sharedContext !== this.context) {
+        this.stopVoices();
+        this.context = sharedContext;
+        this.noiseBuffer = null;
+        this.lastPlayed.clear();
+      }
+      this.master = sharedGain;
+      this.ensureNoiseBuffer();
+    }
     const context = this.context;
     const master = this.master;
     if (!this.getReady() || !context || !master) return false;
@@ -386,6 +438,10 @@ export class BattleAudio {
     if (this.activeVoices + layers.length > BATTLE_AUDIO_VOICE_LIMIT) return false;
     this.lastPlayed.set(cue, now);
     for (const spec of layers) this.playTone(spec);
+    if (IMPORTANT_BATTLE_CUES.has(cue)) {
+      const duration = Math.max(...layers.map((spec) => (spec.delay ?? 0) + spec.duration));
+      this.sharedOutput?.duck(duration + 0.09);
+    }
     return true;
   }
 
@@ -396,9 +452,16 @@ export class BattleAudio {
     this.master = null;
     this.noiseBuffer = null;
     this.unlockPromise = null;
+    // Keep the upstream subscription while React still owns this reusable
+    // engine. A lobby reset disposes voices, then the same instance can be
+    // reused without losing external readiness notifications.
+    if (this.listeners.size === 0) {
+      this.sharedUnsubscribe?.();
+      this.sharedUnsubscribe = null;
+    }
     this.lastPlayed.clear();
     this.activeVoices = 0;
-    if (context) {
+    if (context && !this.sharedOutput) {
       context.onstatechange = null;
       void context.close().catch(() => {});
     }
@@ -412,6 +475,18 @@ export class BattleAudio {
     }
     this.voices.clear();
     this.activeVoices = 0;
+  }
+
+  private ensureNoiseBuffer(): void {
+    const context = this.context;
+    if (!context || this.noiseBuffer) return;
+    this.noiseBuffer = context.createBuffer(1, Math.ceil(context.sampleRate * 0.5), context.sampleRate);
+    const samples = this.noiseBuffer.getChannelData(0);
+    let seed = 1319;
+    for (let i = 0; i < samples.length; i++) {
+      seed = (Math.imul(seed, 1664525) + 1013904223) | 0;
+      samples[i] = (seed >>> 0) / 2147483648 - 1;
+    }
   }
 
   private playTone(spec: ToneSpec): void {

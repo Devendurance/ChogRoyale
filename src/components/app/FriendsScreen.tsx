@@ -15,6 +15,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePrivy, useLogin } from "@privy-io/react-auth";
 import FriendsView from "./FriendsView";
+import { uiSound, type UiSoundCue } from "@/components/audio/ui-interactions";
 import { useMedia, useSaveData } from "@/components/site/use-media";
 import { feedbackNoticeFor, sessionNotice } from "./feedback-model";
 import { resolvePlayer, type ProfilePayload } from "./lobby-model";
@@ -94,9 +95,16 @@ function FriendsShell() {
   const sessionKey = user?.id ?? null;
   const [loadedFor, setLoadedFor] = useState<string | null>(null);
   const loadedForRef = useRef<string | null>(null);
+  const seenIncomingRequests = useRef(new Set<string>());
+  const incomingBaseline = useRef(false);
   useEffect(() => {
     loadedForRef.current = loadedFor;
   }, [loadedFor]);
+
+  useEffect(() => {
+    seenIncomingRequests.current.clear();
+    incomingBaseline.current = false;
+  }, [sessionKey]);
 
   const reducedMotion = useMedia("(prefers-reduced-motion: reduce)");
   const saveData = useSaveData();
@@ -105,6 +113,15 @@ function FriendsShell() {
   const readLists = useCallback(async (token: string): Promise<boolean> => {
     const res = await getJson<FriendLists>("/api/players/me/friends", token);
     if (res.ok) {
+      const freshIncoming = res.data.incoming.filter((entry) => !seenIncomingRequests.current.has(entry.friendshipId));
+      if (incomingBaseline.current && freshIncoming.length > 0) uiSound("friend-request");
+      for (const entry of res.data.incoming) seenIncomingRequests.current.add(entry.friendshipId);
+      while (seenIncomingRequests.current.size > 512) {
+        const oldest = seenIncomingRequests.current.values().next().value;
+        if (typeof oldest !== "string") break;
+        seenIncomingRequests.current.delete(oldest);
+      }
+      incomingBaseline.current = true;
       setLists(res.data);
       setListsOk(true);
       setListsError(null);
@@ -172,7 +189,7 @@ function FriendsShell() {
   }, [ready, authenticated, sessionKey, getAccessToken, load]);
 
   const mutate = useCallback(
-    async (id: string, run: (token: string) => Promise<Result<unknown>>) => {
+    async (id: string, run: (token: string) => Promise<Result<unknown>>, cue?: UiSoundCue) => {
       const token = await getAccessToken();
       if (!token) {
         setActionError({ code: "UNAUTHORIZED", message: "Your session expired. Sign in again." });
@@ -183,9 +200,11 @@ function FriendsShell() {
       try {
         const res = await run(token);
         if (!res.ok) {
+          uiSound("error");
           setActionError({ code: res.code, message: res.message });
           return;
         }
+        if (cue) uiSound(cue);
         await readLists(token);
         await readBlocked(token);
         if (searchHits !== null && searchQuery.trim().length > 0) {
@@ -340,17 +359,17 @@ function FriendsShell() {
       onRefresh={() => void getAccessToken().then((t) => load(t))}
       onSearchChange={setSearchQuery}
       onSearch={() => void onSearch()}
-      onSend={(playerId) => void mutate(playerId, (t) => sendJson("/api/players/me/friends", t, "POST", { playerId })) }
-      onAccept={(fid) => void mutate(fid, (t) => sendJson(`/api/players/me/friends/${fid}/accept`, t, "POST"))}
+      onSend={(playerId) => void mutate(playerId, (t) => sendJson("/api/players/me/friends", t, "POST", { playerId }), "friend-request")}
+      onAccept={(fid) => void mutate(fid, (t) => sendJson(`/api/players/me/friends/${fid}/accept`, t, "POST"), "friend-request")}
       onDecline={(fid) => void mutate(fid, (t) => sendJson(`/api/players/me/friends/${fid}/decline`, t, "POST"))}
-      onRemove={(fid) => void mutate(fid, (t) => sendJson(`/api/players/me/friends/${fid}`, t, "DELETE"))}
+      onRemove={(fid) => void mutate(fid, (t) => sendJson(`/api/players/me/friends/${fid}`, t, "DELETE"), "success")}
       blocked={blocked}
       blockedState={blockedState}
       onBlock={(playerId) =>
-        void mutate(`block:${playerId}`, (t) => sendJson("/api/players/me/blocks", t, "POST", { playerId }))
+        void mutate(`block:${playerId}`, (t) => sendJson("/api/players/me/blocks", t, "POST", { playerId }), "success")
       }
       onUnblock={(playerId) =>
-        void mutate(`unblock:${playerId}`, (t) => sendJson(`/api/players/me/blocks/${playerId}`, t, "DELETE"))
+        void mutate(`unblock:${playerId}`, (t) => sendJson(`/api/players/me/blocks/${playerId}`, t, "DELETE"), "success")
       }
     />
   );

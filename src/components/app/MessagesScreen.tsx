@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { usePrivy, useLogin } from "@privy-io/react-auth";
 import AppHud from "./AppHud";
 import AppNav from "./AppNav";
+import { uiSound } from "@/components/audio/ui-interactions";
 import { resolvePlayer, type ProfilePayload } from "./lobby-model";
 import type { FriendLists } from "./friends-types";
 import { MessagingError, isConversation, isMessage, mergeMessages, messagingRequest, peerName, validDraft, type Conversation, type Message, type MessagePage } from "./messages-model";
@@ -128,7 +129,8 @@ function ConversationPane({ conversation, canSend, getToken, changed }: { conver
       setDraft("");
       attempt.current = null;
       changed();
-    } catch (e) { if (live.current) setSendError(errorFor(e)); }
+      uiSound("success");
+    } catch (e) { if (live.current) { uiSound("error"); setSendError(errorFor(e)); } }
     finally { sendLock.current = false; if (live.current) setSending(false); }
   }
   const locked = !canSend || sendError?.status === 403 || sendError?.status === 404;
@@ -167,6 +169,8 @@ function MessagesAccount({ getToken, signOut }: { getToken: GetToken; signOut: (
   const [startRetry, setStartRetry] = useState(0);
   const live = useRef(true);
   const loading = useRef(false);
+  const seenInboxMessages = useRef(new Set<string>());
+  const inboxBaseline = useRef(false);
   const load = useCallback(async () => {
     if (loading.current) return;
     loading.current = true;
@@ -178,6 +182,21 @@ function MessagesAccount({ getToken, signOut }: { getToken: GetToken; signOut: (
       ]);
       if (!Array.isArray(inbox.conversations) || !inbox.conversations.every(isConversation) || !Array.isArray(friends.friends) || !identity.player) throw new MessagingError(503);
       if (!live.current) return;
+      const latestIncoming = inbox.conversations.flatMap((entry) => {
+        const message = entry.lastMessage;
+        if (!message || message.sender !== entry.peer.id) return [];
+        return [message];
+      });
+      if (inboxBaseline.current && latestIncoming.some((message) => !seenInboxMessages.current.has(message.id))) {
+        uiSound("notification");
+      }
+      for (const message of latestIncoming) seenInboxMessages.current.add(message.id);
+      while (seenInboxMessages.current.size > 512) {
+        const oldest = seenInboxMessages.current.values().next().value;
+        if (typeof oldest !== "string") break;
+        seenInboxMessages.current.delete(oldest);
+      }
+      inboxBaseline.current = true;
       setProfile(identity.player);
       setConversations(inbox.conversations);
       setFriendIds(friends.friends.map((friend) => friend.player.id));
@@ -199,8 +218,8 @@ function MessagesAccount({ getToken, signOut }: { getToken: GetToken; signOut: (
     void messagingRequest<{ conversationId: string }>("/api/players/me/messages/conversations", getToken, { peerId: startPlayer }).then(async (result) => {
       if (!active) return;
       await load();
-      if (active) router.replace(`/app/messages?conversation=${encodeURIComponent(result.conversationId)}`);
-    }).catch((e) => { if (active) setError(errorFor(e)); });
+      if (active) { uiSound("navigation"); router.replace(`/app/messages?conversation=${encodeURIComponent(result.conversationId)}`); }
+    }).catch((e) => { if (active) { uiSound("error"); setError(errorFor(e)); } });
     return () => { active = false; };
   }, [startPlayer, loaded, startRetry, getToken, load, router]);
   const selected = conversations.find((entry) => entry.conversationId === conversationId);

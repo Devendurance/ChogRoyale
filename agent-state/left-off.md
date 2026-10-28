@@ -1,3 +1,14 @@
+## Final audio overhaul (2026-10-28, delivery)
+
+- Doing: delivered PR #9, https://github.com/Devendurance/ChogRoyale/pull/9, on codex/final-audio-overhaul from main 6907259. No merge or production promotion authorized.
+- Done: persistent shared music/UI/battle mixer, 16 original procedural UI cues, server-confirmed interaction mappings, settings, legacy silence migration, cancellable music transitions and recovery. Track A is CC0 production lobby music. Track B remains CC BY-NC development-only.
+- Checkpoints: 0190ec5 scope/state, b2d9c1f credited assets and 4ee0d88 reviewed integration pushed. Coordinator reviewed core, UI and assets from GPT-5.6 Luna/xhigh workers.
+- Acceptance: 110 tests passed, clean production build passed. App browser checks 6/6, UI checks 15/15, real-provider audio phase assertions 7/7. Production smoke 17 assets 200, dev battle endpoint 404, no restricted bytes in 93 traces or injected QA strings in production chunks.
+- Multiplayer: actual local engine, injected auth, shuffled seats 1/0, same-room refresh recovery, Endychog 2-1 Phantom result at 3:07. Playback remained unproven in that match; separate real-WebAudio phase fixture proves transitions. Final return assertion in the match harness used the wrong URL expectation.
+- Limits: physical iOS/Android/PWA and subjective speaker/headphone listening remain unverified. ElevenLabs account is Free tier, no ElevenLabs output generated. Full lint retains 24 inherited errors/one warning.
+- Checks: standalone typecheck and scoped lint passed. Next: owner review of PR #9, commercial permission before production Track B, physical-device/listening acceptance. Details in docs/audio/acceptance.md. QA aliases/routes removed, own 3100/2568/3101 services stopped, original 2567 untouched.
+- Preserve unrelated .fast-build/STATE.md, DESIGN.md, demo-production/, messaging doc and V2 improvement plan. External source/QA evidence is under ChogRoyale-Assets/audio-overhaul-20261027.
+
 ## Gameplay improvement V1 README bookmark (2026-10-27)
 
 - Doing: add the owner's Drive gameplay recording as a clickable README bookmark on `codex/gameplay-improvement-v1`.
@@ -243,3 +254,9 @@ Last updated: 2026-10-24
 - Scoped change: `getPlayerStats` ranked breakdown, dev progress Ranked row, new ranked-bucket test. Verification: progression 10/10, stats route 3/3, progress-model 29/29, typecheck, lint (1 pre-existing warning), build green. Live pool read-only: 1969 resolved, 0 invalid.
 - Local commit: pending (scoped: progression.ts, progression.test.ts, dev progress page, agent-state). `.fast-build/STATE.md`, `DESIGN.md`, `docs/Chog Royale messaging.md` untouched. No PROD activation, no migrations 0010-0014, no push, no deploy.
 - Next: owner review, including the still-gated live NFT-holder acceptance match. Do not start P4.
+
+## Audio asset overhaul, current checkpoint
+
+- Done: source audit, external master preservation, ElevenLabs Free-tier check, 16 canonical UI MP3 fallback cues, cyclic production Track A, dev-only crossfaded Track B, credits/manifest/quality docs, pure `audio-assets.ts` exports, dev route, tracing exclusion and focused asset tests.
+- Verification: focused asset tests 2/2, scoped lint and typecheck pass. Production build reaches a pre-existing concurrent `GiftsScreen.tsx` parse error after the audio route config was corrected. Full build needs the coordinator's UI changes settled.
+- Next: coordinator wires `UI_AUDIO_ASSETS` if static UI files are desired, re-runs the full build, and reviews the audio evidence. No commit or push was made.

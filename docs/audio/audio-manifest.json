@@ -1,0 +1,50 @@
+{
+  "version": "v001",
+  "preparedAt": "2026-10-27",
+  "externalGenerator": {
+    "provider": "ElevenLabs",
+    "status": "free-tier-no-commercial-entitlement",
+    "runtimeUse": false,
+    "generatedClaim": false
+  },
+  "productionMusic": {
+    "trackA": {
+      "id": "track-a",
+      "path": "/assets/audio/v001/music/spooky-halloween.mp3",
+      "durationSeconds": 49.55,
+      "loop": true,
+      "trimEndSeconds": 53.55,
+      "wrapCrossfadeSeconds": 4,
+      "loopStartSourceSeconds": 4,
+      "license": "CC0",
+      "credit": "Misterbates - Spooky Halloween",
+      "source": "https://freesound.org/people/MusicByMisterbates/sounds/677436/",
+      "sourceSha256": "2565DA8808CA3D713D204C38ACF743BF845F2EB3E7F7EB6F9F19E344FF56B297",
+      "browserSha256": "FECBC8E9F0D0D1222348AEC5CA900E09E803B95BDB011B148EB659368F749C0E"
+    },
+    "trackB": {
+      "id": "track-b",
+      "path": null,
+      "developmentPath": "/api/dev-audio/battle",
+      "durationSeconds": 33.409093,
+      "loop": true,
+      "production": false,
+      "license": "CC BY-NC 4.0",
+      "credit": "Mrthenoronha - Village game theme loop",
+      "source": "https://freesound.org/people/Mrthenoronha/sounds/520710/",
+      "sourceSha256": "E9AA4D4A3F53B382EB5B0E3ACE619C9604ABB6A355168A0B175E32DE8715D9B6",
+      "developmentSha256": "F5F77D2C6A33A97875F0C1D6C3B58BEC5638EAED0AE162500A9FE93AA683276C"
+    }
+  },
+  "sfx": {
+    "generatedCount": 16,
+    "source": "tools/audio/generate-procedural-sfx.cjs",
+    "provenance": "original local procedural fallback",
+    "cueKeys": [
+      "primary", "secondary", "navigation", "card-select", "card-drag", "placement",
+      "success", "error", "friend-request", "notification", "invite", "ready", "upgrade",
+      "reward", "confirm", "reveal"
+    ],
+    "battleWebAudioFallback": "Battle cue keys remain in the authoritative Web Audio engine and are not replaced by this UI pack."
+  }
+}
