@@ -11,7 +11,7 @@ Prepared 2026-10-27 with `ffprobe`, FFmpeg `ebur128`, and `tools/audio/analyze_a
 
 Track A's 2.952245 s near-zero tail is trimmed at 53.55 s, then the source is rotated to its 4.0 s musical boundary and wrap-crossfaded over 4.0 s. The resulting file is a true 49.55 s cyclic loop, -16.1 LUFS, with an `ebur128=peak=true` true peak of -2.4 dBFS and an edge discontinuity of 0.00128 sample units. The source master remains unchanged. `ebur128` is the loudness and true-peak authority for final release checks.
 
-Track B is treated as a real loop candidate, not copied directly. A 1.5 s rotation and linear wrap crossfade removes the opening phrase from the end boundary and produces a 33.409093 s loop. The development MP3 is -16.6 LUFS, 128 kbps, has an `ebur128=peak=true` true peak of -4.7 dBFS, and its raw edge discontinuity falls to 0.00562 sample units, with no byte present in production assets.
+Track B is treated as a real loop candidate, not copied directly. A 1.5 s rotation and linear wrap crossfade removes the opening phrase from the end boundary and produces a 33.409093 s loop. The owner-supplied production MP3 is -16.1 LUFS, 192 kbps, 44.1 kHz stereo, has an `ebur128=peak=true` true peak of -4.6 dBFS, and its raw edge discontinuity falls to 0.00562 sample units. The shipped derivative is SHA-256 `5BC878DD9C4B809CAA500DA01BF33848BC1FC280E5C5047A2FDCF4FE97B8B24C`.
 
 ## Production SFX
 
@@ -59,10 +59,10 @@ Whole-file `ebur128=peak=true` results are below. FFmpeg's integrated loudness g
 
 ## Independent release QA
 
-- Whole-file derived-track measurements: Track A `-16.1 LUFS`, `-2.4 dBFS` true peak. Track B `-16.6 LUFS`, `-4.7 dBFS` true peak.
+- Whole-file derived-track measurements: Track A `-16.1 LUFS`, `-2.4 dBFS` true peak. Track B `-16.1 LUFS`, `-4.6 dBFS` true peak.
 - PCM seam comparison uses aligned 250 ms first/last windows against the mean of the adjacent 250 ms windows. Track A's raw seam RMS changed from `0.11120` on the 53.55 s trimmed source to `0.12510` on the derived loop, a `12.5%` increase. Its seam-to-adjacent ratio improved from `1.615x` to `0.852x`, so the crossfade made the boundary less exceptional relative to nearby musical material even though the raw difference did not decrease. Track B's raw seam RMS improved from `0.33261` to `0.18051`, a `45.7%` reduction. Its seam-to-adjacent ratio moved from `0.864x` to `1.042x`, so the absolute seam improved while the local adjacent-window comparison did not.
-- All 17 production runtime paths checked from the manifest and UI cue inventory exist. The Track B production manifest path is `null`.
-- No public file matched the SHA-256 of the Track B master or development derivative. The CC BY-NC bytes remain outside `public/`.
+- All 18 production runtime paths checked from the manifest and UI cue inventory exist, including `/assets/audio/v001/music/battle-loop.mp3`.
+- The original WAV remains outside `public/`. The shipped MP3 is the owner-supplied processed derivative recorded in the manifest and credits.
 - External audition reel: `C:/Users/USER/Documents/ChogRoyale-Assets/audio-overhaul-20261027/qa/ui-sfx-audition.mp3`. Cue order is in `ui-sfx-audition-order.txt`. Compact evidence, hashes and path checks are in `final-audio-evidence.json`.
 
 This is objective file QA only. The audition reel is a convenient review aid, not subjective approval. Physical-device loudness, authenticated two-player delivery and production trace inspection remain separate acceptance steps.

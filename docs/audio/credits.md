@@ -1,6 +1,6 @@
 # Battle audio credits and rights
 
-Audio asset inventory: `v001`, prepared 2026-10-27.
+Audio asset inventory: `v001`, prepared 2026-10-28.
 
 ## Production music
 
@@ -9,12 +9,13 @@ Audio asset inventory: `v001`, prepared 2026-10-27.
 - License: CC0, as stated on the source page. Production path: `/assets/audio/v001/music/spooky-halloween.mp3`.
 - The source master is preserved outside the repository at `C:/Users/USER/Documents/ChogRoyale-Assets/audio-overhaul-20261027/masters/track-a-misterbates.mp3`.
 
-## Development-only music
+## Battle music
 
-- `battle-loop.mp3` is a wrapped and crossfaded development derivative of **Mrthenoronha - Village game theme loop**.
+- `battle-loop.mp3` is the wrapped and crossfaded production derivative of **Mrthenoronha - Village game theme loop**.
 - Source: [Freesound 520710](https://freesound.org/people/Mrthenoronha/sounds/520710/).
-- License: CC BY-NC 4.0. The source page also asks for a donation and does not provide commercial permission. This track is therefore development-only and is never in `public/`, the production manifest path, or the production server trace.
-- Local development path: `.audio-dev/battle-loop.mp3`, served only by `GET /api/dev-audio/battle` while `NODE_ENV` is not `production`.
+- Original source metadata: CC BY-NC 4.0. The project owner asserts purchased usage rights for the supplied processed file and explicitly authorized production integration. That purchase documentation is not stored in this repository, so this record does not claim CC0 or independently verify the purchase.
+- Production path: `/assets/audio/v001/music/battle-loop.mp3`.
+- Verified browser derivative SHA-256: `5BC878DD9C4B809CAA500DA01BF33848BC1FC280E5C5047A2FDCF4FE97B8B24C`.
 - The source master and an identical external copy of the derivative are preserved at `C:/Users/USER/Documents/ChogRoyale-Assets/audio-overhaul-20261027/masters/track-b-mrthenoronha.wav` and `C:/Users/USER/Documents/ChogRoyale-Assets/audio-overhaul-20261027/derived/battle-loop.mp3`.
 
 ## SFX

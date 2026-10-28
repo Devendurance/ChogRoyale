@@ -196,7 +196,7 @@ describe("persistent app audio", () => {
     reentryRelease();
   });
 
-  it("crossfades lobby A to development battle B and keeps B through result", async () => {
+  it("crossfades lobby A to production battle B and keeps B through result", async () => {
     const context = new MockAudioContext();
     (context as unknown as { decodeAudioData: (bytes: ArrayBuffer) => Promise<AudioBuffer> }).decodeAudioData = vi.fn(async () => ({ duration: 10 } as unknown as AudioBuffer));
     const fetchMock = vi.fn(async () => ({ ok: true, arrayBuffer: async () => new ArrayBuffer(8) }));
@@ -211,7 +211,7 @@ describe("persistent app audio", () => {
     expect(fetchMock).toHaveBeenCalledWith("/assets/audio/v001/music/spooky-halloween.mp3", { cache: "force-cache" });
     audio.setBattlePhase("active");
     await new Promise((resolve) => setTimeout(resolve, 0));
-    expect(fetchMock).toHaveBeenCalledWith("/api/dev-audio/battle", { cache: "force-cache" });
+    expect(fetchMock).toHaveBeenCalledWith("/assets/audio/v001/music/battle-loop.mp3", { cache: "force-cache" });
     const callsBeforeResult = fetchMock.mock.calls.length;
     audio.setBattlePhase("result");
     await new Promise((resolve) => setTimeout(resolve, 0));
@@ -220,7 +220,7 @@ describe("persistent app audio", () => {
     release();
   });
 
-  it("keeps unavailable production battle music silent through result", async () => {
+  it("loads production battle music and keeps it through result", async () => {
     vi.stubEnv("NODE_ENV", "production");
     const context = new MockAudioContext();
     (context as unknown as { decodeAudioData: (bytes: ArrayBuffer) => Promise<AudioBuffer> }).decodeAudioData = vi.fn(async () => ({ duration: 10 } as unknown as AudioBuffer));
@@ -237,14 +237,15 @@ describe("persistent app audio", () => {
     expect(musicStarts()).toHaveLength(1);
     audio.setBattlePhase("active");
     await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(musicStarts()).toHaveLength(2);
     audio.setBattlePhase("result");
     await new Promise((resolve) => setTimeout(resolve, 650));
-    expect(musicStarts()).toHaveLength(1);
+    expect(musicStarts()).toHaveLength(2);
     const calledPaths = fetchMock.mock.calls as unknown as Array<[string]>;
-    expect(calledPaths.some(([path]) => path === "/api/dev-audio/battle")).toBe(false);
+    expect(calledPaths.some(([path]) => path === "/assets/audio/v001/music/battle-loop.mp3")).toBe(true);
     audio.setBattlePhase("lobby");
     await new Promise((resolve) => setTimeout(resolve, 0));
-    expect(musicStarts()).toHaveLength(2);
+    expect(musicStarts()).toHaveLength(3);
     release();
   });
 

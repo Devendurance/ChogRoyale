@@ -549,9 +549,9 @@ class AppAudio implements AppAudioController {
       return;
     }
     const desired = this.desiredMusicTrack();
-    // A null desired track is meaningful. In production it records that the
-    // manifest intentionally has no commercial battle master, so result mode
-    // must not fall back to the previous lobby track.
+    // A null desired track is meaningful. Result mode must not silently fall
+    // back to a different music source when the configured battle track is
+    // unavailable.
     this.lastDesiredMusicTrack = desired;
     this.musicTrack = desired;
     const transition = ++this.musicTransition;

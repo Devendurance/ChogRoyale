@@ -1,6 +1,6 @@
 # Final audio overhaul acceptance
 
-Branch: `codex/final-audio-overhaul`, based on main `6907259`. The owner authorized pushing and opening a PR, with no merge or production promotion.
+Branch: `codex/owner-battle-music`, based on the latest `origin/main`. The owner explicitly authorized production integration of the supplied processed battle soundtrack.
 
 ## Delivered behavior
 
@@ -15,7 +15,7 @@ Branch: `codex/final-audio-overhaul`, based on main `6907259`. The owner authori
 
 Track A, `Misterbates - Spooky Halloween`, is the supplied CC0 lobby soundtrack. The prepared cyclic loop is 49.55 seconds, measured at -16.1 LUFS and -2.4 dBFS true peak.
 
-Track B, `Mrthenoronha - Village game theme loop`, is the supplied CC BY-NC 4.0 battle soundtrack. The development loop is 33.409093 seconds, measured at -16.6 LUFS and -4.7 dBFS true peak. It remains outside production assets and requires appropriate separate permission before commercial production use.
+Track B, `Mrthenoronha - Village game theme loop`, is the supplied battle soundtrack. The production loop is 33.409093 seconds, measured at about -16.1 LUFS and -4.6 dBFS true peak, at 192 kbps and 44.1 kHz stereo. The source page's original `CC BY-NC 4.0` metadata remains recorded. The project owner asserts purchased usage rights and authorized this integration, but purchase documentation is not stored in the repository.
 
 The configured ElevenLabs subscription reported Free tier. No ElevenLabs sound was generated. All 16 interface files are original procedural renders, with the existing procedural battle sound engine preserved.
 
@@ -36,7 +36,7 @@ Raw QA scripts, reports, source masters and the SFX audition reel live outside t
 | App navigation, visibility, app exit/re-entry, volume persistence and legacy silence after reload | 6 checks passed across both viewport sizes | Real app routes and Web Audio, injected login and mocked account reads |
 | Mouse, keyboard, touch, disabled controls, Next Link, zero master volume, confirmed and refused upgrades | 15 checks passed | Real controls and Web Audio. Upgrade responses are mocked to verify client ordering, not economic rules |
 | Lobby A to battle B, result ducking without restart, hide/show, mute/unmute and return to A | 7 phase assertions passed, one context | Real provider and Web Audio driven by a temporary phase fixture, separate from multiplayer evidence |
-| Runtime audio requests | 17 production assets and the additional development Track B endpoint returned 200 | No missing audio response in the focused phase run |
+| Runtime audio requests | 18 production audio assets returned 200, including Track B | No missing audio response in the focused phase run |
 | Real local match and reconnect | Shuffled seats `[1, 0]`, both players ready, same-room refresh recovery, 2–1 victory/defeat after overtime at 3:07 | Real engine with injected authentication. This run did not establish unlocked audio playback |
 
 The multiplayer harness clicked the exit control, then incorrectly waited for a URL change. The app returns to its idle stage in place. That final assertion timed out, so this run does not claim a fully verified multiplayer return step. The separate provider fixture verified the music return to lobby. Its temporary route emitted one hydration warning and was removed after the test.
@@ -49,11 +49,11 @@ Settings screenshots: [390×844](review/settings-390x844.png), [1366×768](revie
 
 ## Final release checks
 
-- Relevant unit/regression suites: 110 tests passed across 11 files, including audio lifecycle, mixing, production silence, identity, result and interaction coverage.
+- Relevant unit/regression suites: the focused audio lifecycle, mixing, production Track B, identity, result and interaction coverage passed. The final counts are reported with the release run below.
 - Standalone `npm run typecheck` and scoped ESLint for all audio changes passed.
 - Clean production build passed with normal Privy imports and no QA route.
-- Production smoke: all 17 public audio assets returned 200, `/api/dev-audio/battle` returned 404, and none of 93 server traces contained `.audio-dev` or `battle-loop.mp3`.
+- Production smoke: all 18 public audio assets returned 200, including `/assets/audio/v001/music/battle-loop.mp3`. The original WAV is not in `public/`.
 - Production route/chunk checks found no temporary audio QA route or injected `qa-alice`, `qa-bob` or Privy alias strings.
 - Full repository lint retains 24 existing errors and one warning in unchanged files. The audio work does not expand that baseline.
 
-Production smoke evidence is in `qa-coordinator/production-report.json`. No merge, production promotion, schema change or production account mutation was performed.
+Production smoke evidence for this release is recorded after deployment. No gameplay, database, economy, account or battle-server behavior was changed.
