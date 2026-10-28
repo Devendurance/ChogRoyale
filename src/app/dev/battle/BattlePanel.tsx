@@ -174,6 +174,18 @@ export async function completeQueueHandoff<T>(lifecycle: QueueHandoffLifecycle<T
   return "attached";
 }
 
+/** A queue can replay match_found while its socket is closing. Consume once. */
+export function createQueueHandoffGate() {
+  let started = false;
+  return {
+    claim: () => {
+      if (started) return false;
+      started = true;
+      return true;
+    },
+  };
+}
+
 /** The room name is the server-side mode authority. Practice never joins PvP. */
 export function battleRoomForMode(mode: BattleEntryMode): typeof BATTLE_ROOM | typeof BATTLE_PRACTICE_ROOM {
   return mode === "practice" ? BATTLE_PRACTICE_ROOM : BATTLE_ROOM;
@@ -608,45 +620,44 @@ export function BattlePanel({
         setError(m.reason);
         setStage("idle");
       });
-      let handoffStarted = false;
+      const handoffGate = createQueueHandoffGate();
       let leavingForHandoff = false;
       q.onMessage("match_found", (raw: unknown) => {
         if (gen !== queueGen.current) {
           void q.leave().catch(() => {});
           return;
         }
-        if (handoffStarted) return;
+        if (!handoffGate.claim()) return;
         const handoff = validateMatchFoundMessage(raw, queue);
         if (!handoff.ok) {
-          handoffStarted = true;
           setQueueStatus(null);
           void q.leave().catch(() => {});
           setError(handoff.reason);
           setStage("idle");
           return;
         }
-        handoffStarted = true;
+        // The queue server closes its ticket shortly after match_found. Mark
+        // the handoff before any await so that close cannot invalidate it.
+        leavingForHandoff = true;
         setQueueStatus(null);
         setStage("connecting");
         void (async () => {
           try {
-            const nextRoom = await client.consumeSeatReservation(handoff.message.reservation);
-            if (gen !== queueGen.current) {
-              await nextRoom.leave().catch(() => {});
-              return;
-            }
-            leavingForHandoff = true;
-            await q.leave().catch(() => {});
-            if (gen !== queueGen.current) {
-              await nextRoom.leave().catch(() => {});
-              return;
-            }
-            setQueueRoom((current) => current === q ? null : current);
-            attachRoom(nextRoom, handoff.origin);
-            appAudioController?.playUi("ready");
-            setStage((current) => current === "connecting" ? "lobby" : current);
+            const result = await completeQueueHandoff({
+              consume: () => client.consumeSeatReservation(handoff.message.reservation),
+              isCurrent: () => gen === queueGen.current,
+              attach: (nextRoom) => {
+                setQueueRoom((current) => current === q ? null : current);
+                attachRoom(nextRoom, handoff.origin);
+                appAudioController?.playUi("ready");
+                setStage((current) => current === "connecting" ? "lobby" : current);
+              },
+              leaveQueue: () => q.leave(),
+              leaveRoom: (nextRoom) => nextRoom.leave(),
+            });
+            if (result === "cancelled") return;
           } catch (e) {
-            await q.leave().catch(() => {});
+            await Promise.resolve().then(() => q.leave()).catch(() => {});
             if (gen !== queueGen.current) return;
             setError(e instanceof Error ? e.message : String(e));
             setStage("idle");
