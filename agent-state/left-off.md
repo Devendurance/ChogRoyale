@@ -1,3 +1,11 @@
+## V2.1e Unranked AI Fallback (2026-10-28, branch v2.1e-unranked-fallback 1096734, pushed, deployed scoped to endy-vps with flag OFF)
+
+- Doing: shipped human-first Unranked queue with server-owned 20s bot assignment, STOP after backend, no UI/fallback-activation/Ranked/XP.
+- Done: coordinator fallback engine (atomic claims, 50/50 medium/hard, one-shot key origin, capacity cap with honest retry), PracticeRoom fallback origin with forged-key rejection, no-reward isolation from the PvP settlement writer, ranked untouched.
+- Checks: fallback unit 13/13 + live handoff 2/2, V2.1a/c suites green, PvP suites green (matchmaking/room 25), tsc clean, scoped lint clean, production build pass.
+- Deploy: endy-vps restarted with zero live matches to disrupt, local + public /healthz ok, fallback log line reads disabled (release gate), secrets/proxy/tunnel untouched.
+- Next: Codex V2.1f UI per handoff; coordinated production rollout to enable the flag after UI lands.
+
 ## V2.1c Three-Difficulty Practice AI (2026-10-28, branch v2.1c-practice-difficulties 2c25776, pushed, deployed scoped to endy-vps)
 
 - Doing: shipped Hard/Ultimate server-owned practice bots, STOP after backend, no Codex UI/fallback/Ranked/XP.
