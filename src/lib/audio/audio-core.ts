@@ -34,6 +34,11 @@ export interface AppAudioSnapshot {
   battlePhase: BattlePhase;
 }
 
+export interface AudioUnlockOptions {
+  /** Replace a still-pending autoplay resume from a real user gesture. */
+  fromGesture?: boolean;
+}
+
 /**
  * UI cue names are a closed union shared by the asset manifest and all
  * semantic interaction callers.
@@ -72,7 +77,7 @@ export interface AppAudioController {
   readonly getSnapshot: () => AppAudioSnapshot;
   readonly getServerSnapshot: () => AppAudioSnapshot;
   readonly setPreferences: (patch: Partial<AppAudioPreferences>) => void;
-  readonly unlock: () => Promise<boolean>;
+  readonly unlock: (options?: AudioUnlockOptions) => Promise<boolean>;
   readonly attemptAutoplay: () => Promise<boolean>;
   readonly playUi: (cue: UiCue) => boolean;
   readonly duck: (cues: boolean | number | readonly UiCue[]) => void;
@@ -231,6 +236,7 @@ class AppAudio implements AppAudioController {
   private readonly voices = new Set<AudioScheduledSourceNode>();
   private readonly lastUi = new Map<string, number>();
   private unlockPromise: Promise<boolean> | null = null;
+  private unlockPromiseOrigin: "autoplay" | "gesture" | null = null;
   private autoplayAttempted = false;
   private mounted = 0;
   private teardownTimer: ReturnType<typeof setTimeout> | null = null;
@@ -333,10 +339,16 @@ class AppAudio implements AppAudioController {
     return this.unlock();
   }
 
-  async unlock(): Promise<boolean> {
+  async unlock(options: AudioUnlockOptions = {}): Promise<boolean> {
     if (this.preferences.masterMuted || this.pageHidden || !this.hasAnyAudibleBus()) {
       this.rebuildSnapshot();
       return false;
+    }
+    if (options.fromGesture
+      && this.context?.state !== "running"
+      && this.unlockPromise
+      && this.unlockPromiseOrigin !== "gesture") {
+      this.replacePendingUnlockContext();
     }
     if (!this.context || this.context.state === "closed") {
       const Ctor = getAudioContextCtor();
@@ -386,8 +398,12 @@ class AppAudio implements AppAudioController {
           })
           .catch(() => false);
         this.unlockPromise = pending;
+        this.unlockPromiseOrigin = options.fromGesture ? "gesture" : "autoplay";
         void pending.finally(() => {
-          if (this.unlockPromise === pending) this.unlockPromise = null;
+          if (this.unlockPromise === pending) {
+            this.unlockPromise = null;
+            this.unlockPromiseOrigin = null;
+          }
           this.rebuildSnapshot();
         });
       }
@@ -728,6 +744,8 @@ class AppAudio implements AppAudioController {
   }
 
   private clearContext(): void {
+    this.unlockPromise = null;
+    this.unlockPromiseOrigin = null;
     this.stopMusic();
     this.musicBuffers.clear();
     this.musicLoads.clear();
@@ -747,6 +765,17 @@ class AppAudio implements AppAudioController {
     delete this.buses.ui;
     delete this.buses.battle;
     this.rebuildSnapshot();
+  }
+
+  private replacePendingUnlockContext(): void {
+    const context = this.context;
+    this.unlockPromise = null;
+    this.unlockPromiseOrigin = null;
+    if (context) {
+      context.onstatechange = null;
+      void context.close().catch(() => {});
+    }
+    this.clearContext();
   }
 
   private shutdown(): void {

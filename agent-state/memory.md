@@ -252,3 +252,8 @@ Durable facts, conventions, and gotchas that should survive across sessions.
 - Final UX: HUD self left blue, opponent right red. Results self top blue, opponent bottom red for win/loss/draw and either seat. Official crown master is 256x236 transparent WebP. Image flights retain score refs and existing chime timing.
 - Private room ids are case-sensitive nanoid(9), including `_` and `-`. Share canonical current-origin URL without credentials. An invite autojoins once after verified setup and preserves the destination through onboarding. Server locked errors cannot distinguish full from started.
 - Invite refresh resumes matching stored seat credentials before trying a fresh join. A different stored room must never override the invite. Both automatic effects consume their ref inside the timer so Strict Mode's first cleanup is safe.
+## Audio refresh recovery rules
+
+- Never render a provider-level sound-enable prompt merely because `needsUnlock` is true after refresh. Autoplay recovery belongs to real pointer or keyboard gestures, with the accessible manual control kept in `AudioSettings`.
+- A real gesture passes `fromGesture: true` to the shared controller. Only an autoplay-origin pending resume may be replaced. Repeated callers from the same gesture must reuse the gesture-origin promise to avoid closing and recreating contexts repeatedly.
+- Clear stale unlock promises whenever the context graph is cleared, including delayed shutdown, so Strict Mode remounts and later gestures cannot inherit a dead promise.

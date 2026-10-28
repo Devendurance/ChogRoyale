@@ -9,6 +9,13 @@
 - Checks: standalone typecheck and scoped lint passed. Next: owner review of PR #9, commercial permission before production Track B, physical-device/listening acceptance. Details in docs/audio/acceptance.md. QA aliases/routes removed, own 3100/2568/3101 services stopped, original 2567 untouched.
 - Preserve unrelated .fast-build/STATE.md, DESIGN.md, demo-production/, messaging doc and V2 improvement plan. External source/QA evidence is under ChogRoyale-Assets/audio-overhaul-20261027.
 
+## Audio refresh autoplay recovery (2026-10-28, complete)
+
+- Doing: fix refresh behavior on `codex/final-audio-overhaul` without changing assets, settings design or battle rules.
+- Done: removed the global floating Enable Sound button, added pointer and keyboard recovery listeners on `/app`, kept the intentional settings control, preserved mute and zero-volume silence, and made gesture recovery replace only a stale autoplay resume. Added listener and unresolved-promise regression coverage.
+- Checks: focused audio tests 27/27, typecheck, changed-file lint and production build pass. Browser smoke reached `/app` before auth and showed no floating prompt on first load or refresh. Full lint retains 24 inherited errors and one warning. Full Vitest was stopped after unrelated public-site and database failures.
+- Next: owner review of the pushed refresh fix. Do not merge or deploy automatically.
+
 ## Gameplay improvement V1 README bookmark (2026-10-27)
 
 - Doing: add the owner's Drive gameplay recording as a clickable README bookmark on `codex/gameplay-improvement-v1`.

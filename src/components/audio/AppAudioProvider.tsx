@@ -7,6 +7,7 @@ import {
   type AppAudioController,
   type AppAudioSnapshot,
   type AppAudioPreferences,
+  type AudioUnlockOptions,
   type BattlePhase,
   type UiCue,
 } from "@/lib/audio/audio-core";
@@ -15,7 +16,7 @@ import UIInteractionSounds from "./UIInteractionSounds";
 
 export interface AppAudioContextValue extends AppAudioSnapshot {
   setPreferences: (patch: Partial<AppAudioPreferences>) => void;
-  unlock: () => Promise<boolean>;
+  unlock: (options?: AudioUnlockOptions) => Promise<boolean>;
   playUi: (cue: UiCue) => boolean;
   duck: (cues: boolean | number | readonly UiCue[]) => void;
   setPageHidden: (hidden: boolean) => void;
@@ -25,6 +26,50 @@ export interface AppAudioContextValue extends AppAudioSnapshot {
 }
 
 const AppAudioContext = createContext<AppAudioContextValue | null>(null);
+
+type GestureTarget = Pick<Document, "addEventListener" | "removeEventListener">;
+type GestureAudio = Pick<AppAudioController, "unlock" | "getSnapshot" | "subscribe">;
+
+/**
+ * Keeps autoplay recovery gesture-driven without painting a persistent
+ * affordance over every app route. The capture listener runs before React's
+ * handler and removes itself after the shared context is actually running.
+ */
+export function installAudioGestureUnlock(audio: GestureAudio, target: GestureTarget = document): () => void {
+  let listening = true;
+  let unsubscribeAudio: (() => void) | null = null;
+  const stop = () => {
+    if (!listening) return;
+    listening = false;
+    target.removeEventListener("pointerdown", onPointer, { capture: true });
+    target.removeEventListener("keydown", onKeyDown, { capture: true });
+    unsubscribeAudio?.();
+    unsubscribeAudio = null;
+  };
+  const attempt = () => {
+    if (!listening) return;
+    const snapshot = audio.getSnapshot();
+    if (!snapshot.needsUnlock || snapshot.preferences.masterMuted) return;
+    void audio.unlock({ fromGesture: true }).then((ready) => {
+      if (ready) stop();
+    }).catch(() => undefined);
+  };
+  const onPointer = () => attempt();
+  const onKeyDown = (event: Event) => {
+    const keyboard = event as KeyboardEvent;
+    if (keyboard.isComposing || keyboard.repeat) return;
+    attempt();
+  };
+  const initial = audio.getSnapshot();
+  if (initial.ready || !initial.needsUnlock || initial.preferences.masterMuted) return () => undefined;
+  target.addEventListener("pointerdown", onPointer, { capture: true, passive: true });
+  target.addEventListener("keydown", onKeyDown, { capture: true });
+  unsubscribeAudio = audio.subscribe(() => {
+    const next = audio.getSnapshot();
+    if (next.ready || !next.needsUnlock || next.preferences.masterMuted) stop();
+  });
+  return stop;
+}
 
 /**
  * One provider belongs in the shared /app layout. The layout survives client
@@ -52,10 +97,15 @@ export default function AppAudioProvider({ children }: { children: React.ReactNo
     return () => document.removeEventListener("visibilitychange", syncVisibility);
   }, [audio, pathname]);
 
+  useEffect(() => {
+    if (!isAppPath(pathname)) return undefined;
+    return installAudioGestureUnlock(audio);
+  }, [audio, pathname]);
+
   const value = useMemo<AppAudioContextValue>(() => ({
     ...snapshot,
     setPreferences: (patch) => audio.setPreferences(patch),
-    unlock: () => audio.unlock(),
+    unlock: (options) => audio.unlock(options),
     playUi: (cue) => audio.playUi(cue),
     duck: (cues) => audio.duck(cues),
     setPageHidden: (hidden) => audio.setPageHidden(hidden),
@@ -68,16 +118,6 @@ export default function AppAudioProvider({ children }: { children: React.ReactNo
     <AppAudioContext.Provider value={value}>
       <UIInteractionSounds audio={audio} />
       {children}
-      {snapshot.needsUnlock && (
-        <button
-          type="button"
-          className="app-audio-unlock"
-          data-audio-skip="true"
-          onClick={() => { void audio.unlock().then((ready) => { if (ready) audio.playUi("primary"); }); }}
-        >
-          Enable Sound
-        </button>
-      )}
     </AppAudioContext.Provider>
   );
 }
