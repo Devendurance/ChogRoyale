@@ -26,7 +26,7 @@ import { readySchema, type CommanderChoice } from "@/lib/battle-protocol";
 import { BattleSession, type SeatPlayer, type SessionRandom, type TrustedLoadout } from "@/server/battle/session";
 import { productionEntitlementDeps, resolveCommander, type EntitlementDeps } from "@/server/battle/entitlement";
 import { productionPatronSource, type PatronSource } from "@/server/battle/patron-source";
-import type { MatchCoordinator, PendingMatch } from "@/server/battle/matchmaking";
+import type { MatchCoordinator, MatchCoordinatorFallbackDeps, PendingMatch } from "@/server/battle/matchmaking";
 import type { MatchMode } from "@/lib/battle-protocol";
 import { recordFromReplay, type SettlementService } from "@/server/battle/settlement";
 import { getPurchasedLevels } from "@/db/card-xp";
@@ -47,6 +47,10 @@ export interface BattleRoomDeps {
   matchLobbyMs?: number;
   /** Queue ticket expiry, consumed by the MatchCoordinator. */
   queueMaxWaitMs?: number;
+  /** Server-owned Unranked AI fallback, consumed by the MatchCoordinator.
+   * Absent or disabled means human-only matchmaking. Gated OFF for public
+   * clients until the V2.1f UI understands bot provenance and no-reward state. */
+  unrankedFallback?: MatchCoordinatorFallbackDeps;
   /** How long a dropped seat stays reservable during an active match. */
   reconnectGraceMs?: number;
   /** Durable settlement service; absent or null disables DB writes. */

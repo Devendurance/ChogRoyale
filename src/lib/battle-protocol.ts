@@ -27,6 +27,8 @@ export interface PracticeOpponent {
   botId: string;
   difficulty: PracticeDifficulty;
   displayName: "AI Opponent";
+  /** Solo practice vs server-assigned Unranked fallback. Defaults to practice when omitted. */
+  source?: "practice" | "unranked-fallback";
 }
 export const BATTLE_PROTOCOL_VERSION = "b3.1" as const;
 
@@ -41,12 +43,18 @@ export interface SeatReservation {
   devMode?: boolean;
 }
 
+/** Server-owned Unranked AI fallback wait before a lone ticket gets a bot. */
+export const UNRANKED_FALLBACK_DELAY_MS = 20_000 as const;
+/** Difficulties the Unranked fallback may assign. Never ultimate. */
+export const UNRANKED_FALLBACK_DIFFICULTIES = ["medium", "hard"] as const;
 /** Sent on the queue socket while a ticket waits. */
 export interface QueueStatusMessage {
   state: "searching";
   waiting: number;
   /** Epoch ms when this ticket joined the queue. */
   since: number;
+  /** Present while an Unranked AI fallback is armed for this ticket. */
+  fallback?: { scheduledInMs: number };
 }
 
 /** Sent once per matched player; consume the reservation to enter the room. */
@@ -55,6 +63,8 @@ export interface MatchFoundMessage {
   opponent: string;
   /** Authoritative queue the pair came from. */
   mode: QueueMode;
+  /** Present only when the server assigned an Unranked AI opponent. */
+  fallback?: { botId: string; difficulty: "medium" | "hard"; source: "unranked-fallback" };
 }
 
 /** The ticket waited too long; the queue socket is closed after this. */
@@ -300,7 +310,7 @@ export interface EndMessage {
   /** Server-issued durable match id, present whether or not settlement runs. */
   matchId: string | null;
   /** Present only in Practice rooms. No rewards, no settlement, no progression writes. */
-  practice?: { opponentKind: "bot"; noReward: true };
+  practice?: { opponentKind: "bot"; noReward: true; source?: "practice" | "unranked-fallback" };
 }
 
 /** Durable settlement status, sent after `end` once the service reports back. */
