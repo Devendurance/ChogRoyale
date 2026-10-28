@@ -27,6 +27,22 @@ function render(override: Partial<LobbyMessage> = {}, roomCode = "AbC_12-x9") {
 }
 
 describe("production battle ready room", () => {
+  it("identifies the server-owned practice opponent without treating it as a human seat", () => {
+    const html = render({
+      players: [{ username: "ChogOne", ready: false }],
+      practice: { opponent: { kind: "bot", botId: "practice-medium-v1", difficulty: "medium", displayName: "AI Opponent" } },
+      match: { opponent: "AI Opponent", deadlineAt: 112_000, mode: "practice" },
+    });
+    expect(html).toContain("Practice arena");
+    expect(html).toContain("Practice against AI");
+    expect(html).toContain('data-opponent-kind="bot"');
+    expect(html).toContain("AI Opponent");
+    expect(html).toContain("Medium difficulty · no rewards");
+    expect(html).toContain("Practice currently has no rewards or progression.");
+    expect(html).not.toContain("Waiting to join");
+    expect(html).not.toContain("Share Invite");
+  });
+
   it("stages seven ordinary portraits and one distinct commander with a real ready action", () => {
     const html = render();
     expect(html.match(/class="lp-card"/g)).toHaveLength(7);

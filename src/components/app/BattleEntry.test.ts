@@ -3,9 +3,9 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import BattleEntry from "./BattleEntry";
 
-function entry(mode: "private" | "unranked" | "ranked", code = "", error: string | null = null) {
+function entry(mode: "private" | "unranked" | "ranked" | "practice", code = "", error: string | null = null) {
   return renderToStaticMarkup(React.createElement(BattleEntry, { mode, code, error,
-    onCodeChange: () => {}, onFind: () => {}, onCreate: () => {}, onJoin: () => {} }));
+    onCodeChange: () => {}, onFind: () => {}, onCreate: () => {}, onJoin: () => {}, onStartPractice: () => {} }));
 }
 
 describe("battle entry mode boundaries", () => {
@@ -32,6 +32,19 @@ describe("battle entry mode boundaries", () => {
     expect(html).not.toContain("Join with Code");
     expect(html).not.toContain("<input");
     expect(html).not.toContain("<form");
+  });
+
+  it("offers a clearly labelled AI practice start without private or queue actions", () => {
+    const html = entry("practice");
+    expect(html).toContain("Practice battle");
+    expect(html).toContain("AI Opponent");
+    expect(html).toContain("Medium difficulty");
+    expect(html).toContain("Practice has no rewards yet");
+    expect(html).toContain("Start Practice");
+    expect(html).not.toContain("Find Opponent");
+    expect(html).not.toContain("Create Private Room");
+    expect(html).not.toContain("Join with Code");
+    expect(html).not.toContain("Ranked queue");
   });
 
   it("keeps ranked closed without exposing a queue or private-room action", () => {

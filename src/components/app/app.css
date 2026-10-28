@@ -3146,7 +3146,9 @@
 }
 
 .app-play-card--featured { border-top-color: #ffc83d; }
+.app-play-card--practice { border-top-color: #a98bff; }
 .app-play-card--locked { opacity: .82; border-style: dashed; }
+.app-play-card__icon--practice { border-color: #b89cff; color: #e2d6ff; }
 .app-play-card__icon--gold { border-color: #ffc83d; color: #ffc83d; }
 .app-play-card__icon--muted { border-color: #9c8bbd; color: #cbbbe4; }
 .app-play-card__body { display: flex; flex: 1; flex-direction: column; min-width: 0; }
@@ -3214,6 +3216,8 @@
 .app-play-battle-entry .app-play-kicker { margin: 0 0 6px; font: 700 10px/1.2 var(--font-data); }
 .app-play-entry-lead { max-width: 48ch; margin: 14px 0 18px; color: var(--app-ink-85); font: 500 14px/1.5 var(--font-site); }
 .app-play-entry-actions { display: grid; justify-items: start; gap: 20px; }
+.app-play-practice-entry { display: grid; gap: 12px; width: 100%; }
+.app-play-practice-entry .app-play-battle-state { display: grid; gap: 4px; text-align: left; }
 .app-play-entry-actions > .app-btn--battle { min-height: 52px; max-width: 100%; padding: 10px 20px; font-size: 23px; }
 .app-play-join { display: flex; align-items: end; flex-wrap: wrap; gap: 10px; width: 100%; padding-top: 16px; border-top: 1px solid rgba(185,162,255,.25); }
 .app-play-join .app-play-code { display: grid; gap: 6px; color: var(--app-ink-65); font: 600 11px/1.4 var(--font-data); }

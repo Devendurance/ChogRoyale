@@ -121,8 +121,8 @@ interface MatchedContext {
   playerIds: Set<string>;
   /** playerId -> username, known before either client connects. */
   usernames: Record<string, string>;
-  /** Authoritative queue the pair came from. Server-set at creation. */
-  mode: MatchMode;
+  /** Authoritative queue the pair came from. Server-set at creation. Practice never enters BattleRoom. */
+  mode: Exclude<MatchMode, "practice">;
   /** Epoch ms by which the match must start, else the room aborts. */
   deadlineAt: number;
 }

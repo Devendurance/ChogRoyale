@@ -3,14 +3,22 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import type { EndMessage, StartMessage } from "@/lib/battle-protocol";
 import BattleResult from "./BattleResult";
-import { finaleView, settlementView, tallyAt } from "./battle-result-model";
+import { finaleView, opponentNameFor, settlementView, tallyAt } from "./battle-result-model";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: () => {} }) }));
 
 const end = (over: Partial<EndMessage> = {}): EndMessage => ({ result: "win", reason: "core", crowns: [3, 1], ticks: 890, replayIdentical: true, stateHash: "private-state-hash", commands: 12, matchId: "private-match-id", ...over });
 const start = { opponent: "RivalChog", ticksPerSecond: 10, mode: "private" } as unknown as StartMessage;
+const practiceStart = {
+  opponent: "untrusted-bot-label",
+  ticksPerSecond: 10,
+  mode: "practice",
+  practiceOpponent: { kind: "bot", botId: "practice-medium-v1", difficulty: "medium", displayName: "AI Opponent" },
+} as StartMessage;
 const render = (props: Partial<React.ComponentProps<typeof BattleResult>> = {}) =>
   renderToStaticMarkup(React.createElement(BattleResult, { start, end: end(), abort: null, settlement: null, me: 0, playerName: "MyChog", ...props }));
+const renderPractice = (props: Partial<React.ComponentProps<typeof BattleResult>> = {}) =>
+  renderToStaticMarkup(React.createElement(BattleResult, { start: practiceStart, end: end({ practice: { opponentKind: "bot", noReward: true } }), abort: null, settlement: { matchId: "m", status: "disabled" }, me: 0, playerName: "MyChog", ...props }));
 
 describe("finale view model", () => {
   it("reads crowns by seat and names the winner ribbon from the server result", () => {
@@ -31,6 +39,20 @@ describe("finale view model", () => {
   });
   it("tallies each side up to its own final count", () => {
     expect([0, 1, 2, 3, 4].map((step) => tallyAt(step, 2))).toEqual([0, 1, 2, 2, 2]);
+  });
+  it("marks Practice as no-reward and suppresses PvP settlement copy", () => {
+    const view = finaleView(end({ practice: { opponentKind: "bot", noReward: true } }), null, 0, { matchId: "m", status: "disabled" }, 10);
+    expect(view).toMatchObject({ practice: true, result: "win", title: "Victory", kicker: "Practice complete · AI Opponent", settlement: null, noRewards: "No rewards or progression are awarded in Practice." });
+    expect(opponentNameFor(practiceStart)).toBe("AI Opponent");
+    expect(opponentNameFor({ ...practiceStart, practiceOpponent: undefined })).toBe("AI Opponent");
+  });
+  it.each([
+    ["win", "Victory"],
+    ["loss", "Defeat"],
+    ["draw", "Draw"],
+  ] as const)("keeps the server result visible for Practice: %s", (result, title) => {
+    const view = finaleView(end({ result, practice: { opponentKind: "bot", noReward: true } }), null, 0, null, 10, "practice");
+    expect(view).toMatchObject({ result, title, practice: true, noRewards: expect.any(String) });
   });
 });
 
@@ -72,5 +94,16 @@ describe("battle finale render", () => {
     expect(html).toContain("Your opponent left.");
     expect(html).not.toContain("chud-finale-versus");
     expect(html).not.toContain("result confirmation");
+  });
+  it("renders Practice as AI Opponent with explicit no-reward copy and replay controls", () => {
+    const html = renderPractice();
+    expect(html).toContain("Practice complete");
+    expect(html).toContain("Victory");
+    expect(html).toContain("AI Opponent");
+    expect(html).toContain("No rewards or progression are awarded in Practice.");
+    expect(html).not.toContain("untrusted-bot-label");
+    expect(html).not.toContain("Result recording is unavailable");
+    expect(html).toContain(">Battle Again <");
+    expect(html).toContain(">Back to Battle Hall <");
   });
 });

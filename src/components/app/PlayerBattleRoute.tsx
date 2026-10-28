@@ -6,6 +6,10 @@ import { useSearchParams } from "next/navigation";
 import { BattlePanel } from "@/app/dev/battle/BattlePanel";
 import { RANKED_PUBLIC_MATCHMAKING_ENABLED } from "@/lib/ranked";
 import { useMyOnboardingState, useOnboardingRedirect } from "@/components/app/use-onboarding-redirect";
+import { resolvePlayerBattleMode } from "./player-battle-route-model";
+
+export { resolvePlayerBattleMode } from "./player-battle-route-model";
+export type { PlayerBattleMode } from "./player-battle-route-model";
 
 export default function PlayerBattleRoute() {
   const params = useSearchParams();
@@ -38,6 +42,6 @@ export default function PlayerBattleRoute() {
       <Link href="/app/play" className="app-btn app-btn--ghost">Back to battle hall</Link>
     </section></div></main>;
   }
-  const initialMode = raw === "private" ? "private" : raw === "ranked" ? "ranked" : "unranked";
+  const initialMode = resolvePlayerBattleMode(raw);
   return <BattlePanel key={`${initialMode}:${params.get("room") ?? ""}`} publicMode initialMode={initialMode} initialRoom={room} invalidInvite={params.has("room") && !room} setupReady={onboarding === "complete"} />;
 }

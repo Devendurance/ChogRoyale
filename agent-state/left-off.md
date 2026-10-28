@@ -1,3 +1,18 @@
+## V2.1b Practice Mode UI (2026-10-28, branch codex/v2.1b-practice-ui)
+
+- Doing: reviewed and integrated the player-facing Practice Mode on top of V2.1a `54c3ad6`. Main integration and Production promotion are next after the scoped commit and PR checks.
+- Done: Practice Arena hub card and route, Medium-only entry, real `battle_practice` creation with Privy Authorization, bot ready-room copy, AI HUD identity badge, player-relative result reuse, no-reward result state, Battle Again, Battle Hall exit, and mode-safe resume storage.
+- Checks: focused UI/identity/result suites 37/37, Practice server contract 8/8, TypeScript clean, scoped ESLint clean, production build clean. No authenticated owner Privy match was run.
+- Next: stage only scoped files, commit and push feature branch, open PR to `main`, verify checks and Vercel Production, then integrate with owner-authorized merge. Preserve unrelated `.fast-build/STATE.md`, `DESIGN.md`, `demo-production/`, messaging doc and V2 plan.
+
+## V2.1a Live Practice Bot Foundation (2026-10-28, branch v2.1a-practice-foundation c54f2dc, pushed, deployed scoped to endy-vps)
+
+- Doing: shipped bounded human-vs-AI practice slice, STOP after handoff, no V2.1b/fallback/XP/Ranked.
+- Done: protocol BATTLE_PRACTICE_ROOM + MatchMode practice + bot opponent kind; practice.ts MEDIUM smartMove with turret/free-Bulwark deck; PracticeRoom single-human auth, internal bot seat, no settlement, no rewards; server registers practice room, PvP unchanged.
+- Checks: practice 8/8, session/matchmaking/room regressions green (35+14), tsc clean, scoped lint clean, production build pass.
+- Deploy: endy-vps user service restarted, health ok local + https://battle.endyos.xyz/healthz, secrets/proxy/tunnel untouched, single instance, ranked closed, settlement enabled for PvP only.
+- Next: Codex V2.1b UI per handoff; live authenticated Practice acceptance needs a real Privy sign-in (not faked).
+
 ## Final audio overhaul (2026-10-28, delivery)
 
 - Doing: delivered PR #9, https://github.com/Devendurance/ChogRoyale/pull/9, on codex/final-audio-overhaul from main 6907259. No merge or production promotion authorized.

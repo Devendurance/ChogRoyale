@@ -54,6 +54,7 @@ export interface BattleHudProps {
   notice?: string | null;
   onGiveUp?: () => void;
   onExit?: () => void;
+  onBattleAgain?: () => void;
   start: StartMessage;
   frame: BattleFrame | null;
   me: number;
@@ -395,6 +396,14 @@ export default function BattleHud(props: BattleHudProps) {
     </span>
   );
 
+  const isPractice = start.mode === "practice" || start.opponentKind === "bot";
+  const opponentName = isPractice
+    ? start.practiceOpponent?.displayName ?? "AI Opponent"
+    : start.opponent;
+  const practiceBadge = isPractice
+    ? `AI OPPONENT · ${(start.practiceOpponent?.difficulty ?? "medium").toUpperCase()}`
+    : null;
+
   const abilityControls = frame && (
     <>
       {frame.abilities.length === 0 && <span className="chud-ability-empty">Deploy your commander to use its ability.</span>}
@@ -434,7 +443,7 @@ export default function BattleHud(props: BattleHudProps) {
               {tv.mult > 1 && <span className="chud-mult chud-clock-mult">{tv.mult}x</span>}
             </span>
             <span className="chud-side-tag" data-side="foe">
-              <span className="chud-player">{start.opponent}</span>
+              <span className="chud-player">{opponentName}</span>
               <span className="chud-crown-num" ref={theirsScoreRef}>
                 {score.theirs} <GameIcon kind="crown" size={25} />
               </span>
@@ -453,6 +462,7 @@ export default function BattleHud(props: BattleHudProps) {
           </div>}
           <div className="chud-subrow">
             {patronChip}
+            {practiceBadge && <span className="chud-pill chud-practice-badge" data-opponent-kind="bot">{practiceBadge}</span>}
             {presence && (
               <span className="chud-pill" style={{ color: presence.opponentConnected ? "#86efac" : "#fbbf24" }}>
                 {presence.opponentConnected ? "Opponent back" : `Opp. offline ${Math.max(0, Math.ceil(((presence.reconnectDeadlineAt ?? 0) - now) / 1000))}s`}
@@ -558,7 +568,7 @@ export default function BattleHud(props: BattleHudProps) {
       {!start.resumed && !end && !abort && <div className="chud-start" aria-hidden="true">
         <div className="chud-start-band chud-start-band--foe">
           <span className="chud-start-emblem"><GameIcon kind="crown" size={46} /></span>
-          <span className="chud-start-who"><small>Opponent</small><b>{start.opponent}</b></span>
+          <span className="chud-start-who"><small>{practiceBadge ?? "Opponent"}</small><b>{opponentName}</b></span>
         </div>
         <span className="chud-start-vs">VS</span>
         <div className="chud-start-band chud-start-band--you">
@@ -571,7 +581,7 @@ export default function BattleHud(props: BattleHudProps) {
         <span className="chud-start-go">Battle!</span>
         <span className="chud-start-patron">Arena Patron · {start.patron.name ?? `CHOG #${start.patron.tokenId}`}</span>
       </div>}
-      {(end || abort) && <BattleResult start={start} end={end} abort={abort} settlement={settlement} me={me} playerName={props.playerName} onExit={props.onExit} onAudioCue={props.onAudioCue} rankedAward={props.rankedAward} rankedAwardStatus={props.rankedAwardStatus} />}
+      {(end || abort) && <BattleResult start={start} end={end} abort={abort} settlement={settlement} me={me} playerName={props.playerName} onExit={props.onExit} onAgain={props.onBattleAgain} onAudioCue={props.onAudioCue} rankedAward={props.rankedAward} rankedAwardStatus={props.rankedAwardStatus} />}
       {dragging && (
         <div
           ref={(el) => {

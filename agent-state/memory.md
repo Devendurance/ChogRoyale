@@ -1,3 +1,9 @@
+# Practice Mode V2.1b
+
+- `BattlePanel` creates `BATTLE_PRACTICE_ROOM` only for `mode=practice`, with the existing Privy bearer header. Practice never enters a queue and never sends credentials in URLs.
+- Practice resume uses `b3.practice.resume`; PvP resume remains `b3.resume` with the stored server `MatchMode`, so a refresh cannot cross-resume a Practice or private room.
+- `BattleLobby`, `BattleHud` and `BattleResult` label the bot as `AI Opponent`; `BattleResult` suppresses disabled settlement copy and shows no rewards/progression. Battle Again resets the room and creates a new Practice room.
+
 # Memory
 
 - Unassigned production battle music is intentional silence through both active play and results. Preserve null track choices, keep result track identity across mute/visibility source stops, and resume a previously unlocked suspended context once on a genuine visibility return. New shared AudioContexts must clear old cue-clock throttle timestamps.

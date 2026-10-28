@@ -1,5 +1,13 @@
 # Project State
 
+# V2.1b Practice Mode UI (2026-10-28)
+
+- Frontend branch `codex/v2.1b-practice-ui` starts from V2.1a `54c3ad6` and preserves the live `battle_practice` backend.
+- Player flow: `/app/play` Practice Arena card -> `/app/play/battle?mode=practice` -> Medium-only real Colyseus practice room -> existing deck/commander ready room -> existing battle HUD/result.
+- Practice is no-reward and bot identity is server-owned `AI Opponent`. Resume storage is separated from PvP, and Battle Again creates a fresh room.
+- Verified: focused UI/identity/result 37/37, Practice server 8/8, TypeScript, scoped ESLint and production build pass. Live authenticated Privy match remains unverified.
+- Next: commit/push, PR to main, verify Vercel Production and integrate after checks.
+
 ## Final audio overhaul (2026-10-28, delivery)
 
 - Doing: delivered PR #9, https://github.com/Devendurance/ChogRoyale/pull/9, on codex/final-audio-overhaul from main 6907259. No merge or production promotion authorized.

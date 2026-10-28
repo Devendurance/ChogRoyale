@@ -14,6 +14,7 @@ import { useOnboardingRedirect } from "./use-onboarding-redirect";
 import { RANKED_SEASON } from "@/lib/ranked";
 import { resolvePlayer, type ProfilePayload } from "./lobby-model";
 import type { LobbyPlayer } from "./lobby-types";
+import { PLAYER_BATTLE_HREFS, PRACTICE_ENTRY } from "./play-hub-model";
 
 function Gate({ onSignIn }: { onSignIn: () => void }) {
   return (
@@ -105,13 +106,25 @@ export function PlayHubView({ player, onSignOut }: { player: LobbyPlayer | null;
 
           <section className="app-play-modes" aria-labelledby="app-play-modes-title">
             <h2 id="app-play-modes-title" className="app-sr">Battle modes</h2>
+            <article className="app-play-card app-play-card--practice">
+              <div className="app-play-card__icon app-play-card__icon--practice" aria-hidden="true"><Icon name="guide" size={28} /></div>
+              <div className="app-play-card__body">
+                <p className="app-play-card__eyebrow">TRAIN AGAINST AI</p>
+                <h2>{PRACTICE_ENTRY.label}</h2>
+                <p>Train your strategy against a real AI-controlled Chog opponent. Build your deck, deploy troops, and sharpen your skills without affecting competitive progression.</p>
+                <span className="app-play-card__detail">AI Opponent · Medium difficulty · Solo battle · No rewards</span>
+                <Link href={PLAYER_BATTLE_HREFS.practice} className="app-btn app-btn--battle">{PRACTICE_ENTRY.action}</Link>
+              </div>
+              <span className="app-play-card__status app-play-card__status--live">Available</span>
+            </article>
+
             <article className="app-play-card app-play-card--featured">
               <div className="app-play-card__icon" aria-hidden="true"><Icon name="swords" size={28} /></div>
               <div className="app-play-card__body">
                 <p className="app-play-card__eyebrow">Casual matchmaking</p>
                 <h2>Unranked</h2>
                 <p>Join the live queue and face a genuine opponent. Your result follows the current server ruleset.</p>
-                <Link href="/app/play/battle?mode=unranked" className="app-btn app-btn--battle">Find Opponent</Link>
+                <Link href={PLAYER_BATTLE_HREFS.unranked} className="app-btn app-btn--battle">Find Opponent</Link>
               </div>
               <span className="app-play-card__status app-play-card__status--live">Available</span>
             </article>
@@ -122,7 +135,7 @@ export function PlayHubView({ player, onSignOut }: { player: LobbyPlayer | null;
                 <p className="app-play-card__eyebrow">Invite a friend</p>
                 <h2>Private room</h2>
                 <p>Create a room and share its code, or join a room your opponent has already opened.</p>
-                <Link href="/app/play/battle?mode=private" className="app-btn app-btn--ghost">Create or join</Link>
+                <Link href={PLAYER_BATTLE_HREFS.private} className="app-btn app-btn--ghost">Create or join</Link>
               </div>
               <span className="app-play-card__status app-play-card__status--live">Available</span>
             </article>
@@ -141,7 +154,7 @@ export function PlayHubView({ player, onSignOut }: { player: LobbyPlayer | null;
             </article>
           </section>
 
-          <p className="app-play-truth">Unranked and private rooms use the existing authoritative battle flow. No ranked rating or rewards are shown here.</p>
+          <p className="app-play-truth">Practice uses the same authoritative battle flow against an AI opponent. Unranked and private rooms face real players. Ranked matchmaking remains closed.</p>
           <AppNav activeId="lobby" />
         </div>
       </main>

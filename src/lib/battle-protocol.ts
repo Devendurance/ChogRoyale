@@ -7,11 +7,21 @@ import { z } from "zod";
 export const BATTLE_ROOM = "battle";
 export const BATTLE_QUEUE_ROOM = "battle_queue";
 export const BATTLE_RANKED_QUEUE_ROOM = "battle_queue_ranked";
+export const BATTLE_PRACTICE_ROOM = "battle_practice";
 
 /** Authoritative match identity: server-chosen, never a client label. */
-export type MatchMode = "private" | "matchmaking" | "ranked";
+export type MatchMode = "private" | "matchmaking" | "ranked" | "practice";
 /** Which queue a ticket waits in. Unranked tickets use the casual queue. */
 export type QueueMode = "unranked" | "ranked";
+/** Practice bot difficulty. V2.1a ships MEDIUM only; HARD/ULTIMATE are typed but unimplemented. */
+export type PracticeDifficulty = "medium" | "hard" | "ultimate";
+/** Server-owned Practice opponent. Never a human username, never a players row. */
+export interface PracticeOpponent {
+  kind: "bot";
+  botId: string;
+  difficulty: PracticeDifficulty;
+  displayName: "AI Opponent";
+}
 export const BATTLE_PROTOCOL_VERSION = "b3.1" as const;
 
 /** Structural copy of a Colyseus seat reservation (client-safe). */
@@ -113,6 +123,8 @@ export interface LobbyMessage {
   locked: boolean;
   /** Ready flags only. Opponent deck and commander are never exposed. */
   players: Array<{ username: string; ready: boolean }>;
+  /** Present only in Practice rooms. The bot is never a players row. */
+  practice?: { opponent: PracticeOpponent };
   /** The ordinary (non-commander, deckable) cards. */
   catalog: CardInfo[];
   /** Suggested loadouts, convenience only. */
@@ -137,6 +149,9 @@ export interface StartMessage {
   protocol: typeof BATTLE_PROTOCOL_VERSION;
   /** Authoritative match identity chosen by the server at room creation. */
   mode: MatchMode;
+  /** Present only in Practice rooms. Human-vs-AI provenance, preserved through reconnect. */
+  opponentKind?: "human" | "bot";
+  practiceOpponent?: PracticeOpponent;
   ruleset: string;
   arena: string;
   seat: Seat;
@@ -278,6 +293,8 @@ export interface EndMessage {
   commands: number;
   /** Server-issued durable match id, present whether or not settlement runs. */
   matchId: string | null;
+  /** Present only in Practice rooms. No rewards, no settlement, no progression writes. */
+  practice?: { opponentKind: "bot"; noReward: true };
 }
 
 /** Durable settlement status, sent after `end` once the service reports back. */
