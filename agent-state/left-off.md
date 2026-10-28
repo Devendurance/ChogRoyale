@@ -3,7 +3,8 @@
 - Doing: reviewed and integrated the player-facing Practice Mode on top of V2.1a `54c3ad6`. Main integration and Production promotion are next after the scoped commit and PR checks.
 - Done: Practice Arena hub card and route, Medium-only entry, real `battle_practice` creation with Privy Authorization, bot ready-room copy, AI HUD identity badge, player-relative result reuse, no-reward result state, Battle Again, Battle Hall exit, and mode-safe resume storage.
 - Checks: focused UI/identity/result suites 37/37, Practice server contract 8/8, TypeScript clean, scoped ESLint clean, production build clean. No authenticated owner Privy match was run.
-- Next: stage only scoped files, commit and push feature branch, open PR to `main`, verify checks and Vercel Production, then integrate with owner-authorized merge. Preserve unrelated `.fast-build/STATE.md`, `DESIGN.md`, `demo-production/`, messaging doc and V2 plan.
+- Done: commit `fb7fe0387b4528e5ffd0bf72b01b3979301d4e9`, PR #11 merged to `main` as `da0c456dc9e8f400db99c7da942251e7db7d392f`, and Vercel Production deployment `dpl_3jmjtNx4PiFdBUivVNRr8G8Tb6WD` is READY at `https://chogroyale.vercel.app`.
+- Limits: no real authenticated owner Privy Practice match was run. Production route and battle health probes returned 200. Preserve unrelated `.fast-build/STATE.md`, `DESIGN.md`, `demo-production/`, messaging doc and V2 plan.
 
 ## V2.1a Live Practice Bot Foundation (2026-10-28, branch v2.1a-practice-foundation c54f2dc, pushed, deployed scoped to endy-vps)
 

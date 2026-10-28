@@ -6,7 +6,8 @@
 - Player flow: `/app/play` Practice Arena card -> `/app/play/battle?mode=practice` -> Medium-only real Colyseus practice room -> existing deck/commander ready room -> existing battle HUD/result.
 - Practice is no-reward and bot identity is server-owned `AI Opponent`. Resume storage is separated from PvP, and Battle Again creates a fresh room.
 - Verified: focused UI/identity/result 37/37, Practice server 8/8, TypeScript, scoped ESLint and production build pass. Live authenticated Privy match remains unverified.
-- Next: commit/push, PR to main, verify Vercel Production and integrate after checks.
+- Delivered: commit `fb7fe0387b4528e5ffd0bf72b01b3979301d4e9`, PR #11 merged to `main` as `da0c456dc9e8f400db99c7da942251e7db7d392f`, and Vercel Production `dpl_3jmjtNx4PiFdBUivVNRr8G8Tb6WD` is READY at `https://chogroyale.vercel.app`.
+- Live probes: `/app/play`, `/app/play/battle?mode=practice`, and `https://battle.endyos.xyz/healthz` returned 200. Authenticated Privy Practice match remains unverified.
 
 ## Final audio overhaul (2026-10-28, delivery)
 
