@@ -268,3 +268,4 @@ Durable facts, conventions, and gotchas that should survive across sessions.
 
 - V2.1d uses the existing `PracticeDifficulty` and `PRACTICE_DIFFICULTIES` contract. The client sends the selected value when creating `battle_practice`, but the server-owned lobby/start descriptor is the display authority.
 - Keep `AI Opponent` fixed in Practice. Preserve the selected difficulty through reconnect and Battle Again, which must create a fresh room. Practice never shows rewards, XP, Gold, or trophies.
+- V2.1d delivered in PR #12. Main merge `e6e4c8f7dd275852fba6a1e93013073e9c765962` has a READY Vercel Production deployment. Production route and battle-host health smoke passed without owner Privy credentials.

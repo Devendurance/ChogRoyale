@@ -6,7 +6,7 @@
 - Added accessible Medium, Hard, and Ultimate radio cards on `/app/play/battle?mode=practice`. BattlePanel sends `{ difficulty }` only to `battle_practice`, adopts the lobby/start descriptor, and reuses it for reconnects and fresh Battle Again rooms.
 - Lobby, HUD, and result use fixed `AI Opponent` identity and server-confirmed difficulty. Practice remains no-reward and PvP/ranked paths are unchanged.
 - Focused UI/identity/result tests 49/49, Practice server tests 23/23, typecheck, scoped ESLint, and production build pass. Real authenticated matches remain owner-gated.
-- Next: commit and push the scoped branch, open the V2.1d PR, merge only through the approved GitHub workflow, and verify Vercel Production.
+- Delivered: PR #12 merged into `main` at `e6e4c8f7dd275852fba6a1e93013073e9c765962`. Vercel Production deployment `dpl_CjvQLaz1vsZ4T3pLo2iPHfGAGBpz` is READY and serves `chogroyale.vercel.app`. Authenticated owner matches remain unverified.
 
 # V2.1b Practice Mode UI (2026-10-28)
 

@@ -297,4 +297,4 @@ Last updated: 2026-10-24
 - Doing: finish delivery from `codex/v2.1d-practice-difficulties`, based on V2.1c `8385910`.
 - Done: accessible three-choice selector, typed `battle_practice` create options, server-authoritative difficulty display in lobby/HUD/result, reconnect and Battle Again retention, no-reward preservation.
 - Verified: focused UI/identity/result 49/49, Practice server 23/23, typecheck, scoped ESLint, production build. No authenticated owner Privy matches run.
-- Next: review explicit diff, commit/push, create and merge PR to `main` through GitHub, then confirm Vercel Production READY and smoke public routes.
+- Delivered: PR #12 merged into `main` at `e6e4c8f7dd275852fba6a1e93013073e9c765962`. Vercel Production is READY at `chogroyale.vercel.app`; public `/app/play`, Practice route, and battle host health checks returned 200. Authenticated owner matches remain unverified.
