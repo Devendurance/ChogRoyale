@@ -5,9 +5,11 @@
 
 import { hasMatchingInviteResume, roomJoinError, validRoomCode } from "@/lib/battle-invite";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useRouter } from "next/navigation";
 import { usePrivy, useLogin } from "@privy-io/react-auth";
 import { Client, type Room } from "@colyseus/sdk";
 import {
+  BATTLE_PRACTICE_ROOM,
   BATTLE_QUEUE_ROOM,
   BATTLE_RANKED_QUEUE_ROOM,
   BATTLE_ROOM,
@@ -17,6 +19,7 @@ import {
   type EndMessage,
   type LobbyMessage,
   type MatchFoundMessage,
+  type MatchMode,
   type PresenceMessage,
   type QueueStatusMessage,
   type SettlementMessage,
@@ -51,7 +54,34 @@ const DEV_ENABLED = process.env.NODE_ENV !== "production" || process.env.NEXT_PU
 
 type Stage = "idle" | "connecting" | "searching" | "lobby" | "active" | "reconnecting" | "ended" | "aborted" | "failed" | "closed";
 type RankedAwardStatus = "idle" | "checking" | "awarded" | "unavailable" | "timeout";
+export type BattleEntryMode = "unranked" | "ranked" | "private" | "practice";
 const RESUME_KEY = "b3.resume";
+const PRACTICE_RESUME_KEY = "b3.practice.resume";
+type ResumeInfo = { mode: MatchMode; roomId: string; resumeToken: string; graceMs: number };
+
+const resumeKeyForMode = (mode: BattleEntryMode | MatchMode) => mode === "practice" ? PRACTICE_RESUME_KEY : RESUME_KEY;
+const readResume = (mode: BattleEntryMode): ResumeInfo | null => {
+  try {
+    const value = JSON.parse(sessionStorage.getItem(resumeKeyForMode(mode)) ?? "null") as Partial<ResumeInfo> | null;
+    if (!value?.roomId || !value.resumeToken) return null;
+    if (value.mode && value.mode !== mode && !(mode === "unranked" && value.mode === "matchmaking")) return null;
+    const storedMode = value.mode === "matchmaking" ? "matchmaking" : mode === "unranked" ? "matchmaking" : mode;
+    return { mode: storedMode, roomId: value.roomId, resumeToken: value.resumeToken, graceMs: typeof value.graceMs === "number" ? value.graceMs : 30_000 };
+  } catch {
+    return null;
+  }
+};
+const writeResume = (info: ResumeInfo) => {
+  try { sessionStorage.setItem(resumeKeyForMode(info.mode), JSON.stringify(info)); } catch { /* session storage is optional */ }
+};
+const clearResume = (mode: BattleEntryMode | MatchMode) => {
+  try { sessionStorage.removeItem(resumeKeyForMode(mode)); } catch { /* session storage is optional */ }
+};
+
+/** The room name is the server-side mode authority. Practice never joins PvP. */
+export function battleRoomForMode(mode: BattleEntryMode): typeof BATTLE_ROOM | typeof BATTLE_PRACTICE_ROOM {
+  return mode === "practice" ? BATTLE_PRACTICE_ROOM : BATTLE_ROOM;
+}
 
 export function BattlePanel({
   publicMode = false,
@@ -66,8 +96,9 @@ export function BattlePanel({
   invalidInvite?: boolean;
   setupReady?: boolean;
   /** The hub can send the player here with an intended queue or room flow. */
-  initialMode?: "unranked" | "ranked" | "private";
+  initialMode?: BattleEntryMode;
 }) {
+  const router = useRouter();
   const { ready, authenticated, getAccessToken, logout } = usePrivy();
   const { login } = useLogin();
   const appAudio = useAppAudio();
@@ -95,7 +126,7 @@ export function BattlePanel({
   const [notice, setNotice] = useState<string | null>(null);
   const [now, setNow] = useState(0);
   /** Latest {roomId, resumeToken} for the active seat; cleared on end/abort/leave. */
-  const resumeInfo = useRef<{ roomId: string; resumeToken: string; graceMs: number } | null>(null);
+  const resumeInfo = useRef<ResumeInfo | null>(null);
   const resumeDeadline = useRef(0);
   const [resumeDeadlineAt, setResumeDeadlineAt] = useState(0);
   /** Bump to cancel any in-flight reconnect loop. */
@@ -212,12 +243,8 @@ export function BattlePanel({
       setSelected(null);
       setDragging(null);
       gesture.current = null;
-      resumeInfo.current = { roomId: r.roomId, resumeToken: m.resumeToken, graceMs: m.reconnectGraceMs };
-      try {
-        sessionStorage.setItem(RESUME_KEY, JSON.stringify(resumeInfo.current));
-      } catch {
-        /* storage may be unavailable */
-      }
+      resumeInfo.current = { mode: m.mode, roomId: r.roomId, resumeToken: m.resumeToken, graceMs: m.reconnectGraceMs };
+      writeResume(resumeInfo.current);
       if (m.resumed) setNotice("Match restored");
       setPresence(null);
       setRankedAward(null);
@@ -247,8 +274,9 @@ export function BattlePanel({
       setAcks((xs) => [{ ...a, label }, ...xs].slice(0, 5));
     });
     r.onMessage("end", (e: EndMessage) => {
+      const mode = resumeInfo.current?.mode ?? initialMode;
       resumeInfo.current = null;
-      sessionStorage.removeItem(RESUME_KEY);
+      clearResume(mode);
       const cue = cueForResult(e.result);
       if (audioResultSeen.current !== cue.key) {
         audioResultSeen.current = cue.key;
@@ -260,8 +288,9 @@ export function BattlePanel({
     });
     r.onMessage("settlement", (m: SettlementMessage) => setSettlement(m));
     r.onMessage("aborted", (a: { reason: string }) => {
+      const mode = resumeInfo.current?.mode ?? initialMode;
       resumeInfo.current = null;
-      sessionStorage.removeItem(RESUME_KEY);
+      clearResume(mode);
       setAbort(a.reason);
       setAudioPhase("lobby");
       setStage("aborted");
@@ -277,14 +306,15 @@ export function BattlePanel({
           setAudioPhase("reconnecting");
           return "reconnecting";
         }
+        const mode = resumeInfo.current?.mode ?? initialMode;
         resumeInfo.current = null;
-        sessionStorage.removeItem(RESUME_KEY);
+        clearResume(mode);
         setAudioPhase(s === "ended" ? "result" : "lobby");
         return s === "ended" || s === "aborted" ? s : "closed";
       });
     });
     setRoom(r);
-  }, [audio, setAudioPhase]);
+  }, [audio, initialMode, setAudioPhase]);
 
   // Ranked awards are read back only after the server confirms settlement.
   // This bounded read never infers a trophy delta from the battle result.
@@ -339,7 +369,7 @@ export function BattlePanel({
 
   const connecting = useRef(false);
   const connect = useCallback(
-    async (mode: "create" | "join", inviteCode?: string) => {
+    async (mode: "create" | "join" | "practice", inviteCode?: string) => {
       const joinCode = inviteCode ?? code;
       if (mode === "join" && !validRoomCode(joinCode)) {
         setError("Enter the complete 9-character room code. Codes are case-sensitive.");
@@ -354,12 +384,19 @@ export function BattlePanel({
         if (!token) throw new Error("No Privy access token. Log in first.");
         // Token goes only in the matchmaking request header, never the URL.
         const client = new Client(SERVER, { headers: { authorization: `Bearer ${token}` } });
-        const r = mode === "create" ? await client.create(BATTLE_ROOM) : await client.joinById(joinCode.trim());
+        const r = mode === "join"
+          ? await client.joinById(joinCode.trim())
+          : await client.create(mode === "practice" ? battleRoomForMode("practice") : BATTLE_ROOM);
         attachRoom(r);
         if (mode === "create") appAudioController?.playUi("invite");
+        if (mode === "practice") appAudioController?.playUi("ready");
         setStage("lobby");
       } catch (e) {
-        setError(mode === "join" ? roomJoinError(e) : "Couldn't create a room. Check your connection and try again.");
+        setError(mode === "join"
+          ? roomJoinError(e)
+          : mode === "practice"
+            ? "Couldn't start practice. Check your connection and try again."
+            : "Couldn't create a room. Check your connection and try again.");
         setStage("idle");
       } finally {
         connecting.current = false;
@@ -371,9 +408,8 @@ export function BattlePanel({
   const inviteTried = useRef(false);
   useEffect(() => {
     if (!publicMode || !initialRoom || !setupReady || !ready || !authenticated || stage !== "idle" || inviteTried.current) return;
-    try {
-      if (hasMatchingInviteResume(initialRoom, JSON.parse(sessionStorage.getItem(RESUME_KEY) ?? "null"))) return;
-    } catch { /* Without stored recovery, join the invitation normally. */ }
+    const stored = readResume(initialMode);
+    if (stored && hasMatchingInviteResume(initialRoom, stored)) return;
     // Mark inside the task so Strict Mode's cancelled first effect doesn't consume it.
     const timer = setTimeout(() => {
       if (inviteTried.current) return;
@@ -381,7 +417,7 @@ export function BattlePanel({
       void connect("join", initialRoom);
     }, 0);
     return () => clearTimeout(timer);
-  }, [publicMode, initialRoom, setupReady, ready, authenticated, stage, connect]);
+  }, [publicMode, initialMode, initialRoom, setupReady, ready, authenticated, stage, connect]);
 
   /** Join one queue. The room name is the server-side mode authority: the
    * ranked room only ever pairs ranked tickets, and the client label below
@@ -424,8 +460,9 @@ export function BattlePanel({
 
   const reset = useCallback(() => {
     reconnectGen.current += 1;
+    const mode = resumeInfo.current?.mode ?? initialMode;
     resumeInfo.current = null;
-    sessionStorage.removeItem(RESUME_KEY);
+    clearResume(mode);
     void room?.leave().catch(() => {});
     void queueRoom?.leave().catch(() => {});
     setRoom(null);
@@ -446,7 +483,22 @@ export function BattlePanel({
     audioResultSeen.current = null;
     audioPriming.current = false;
     setStage("idle");
-  }, [audio, room, queueRoom, setAudioPhase]);
+  }, [audio, initialMode, room, queueRoom, setAudioPhase]);
+
+  const battleAgainPending = useRef(false);
+  const battleAgain = useCallback(() => {
+    if (initialMode !== "practice" || connecting.current || battleAgainPending.current) return;
+    battleAgainPending.current = true;
+    reset();
+    setTimeout(() => {
+      battleAgainPending.current = false;
+      void connect("practice");
+    }, 0);
+  }, [connect, initialMode, reset]);
+  const exitBattle = useCallback(() => {
+    reset();
+    if (publicMode && initialMode === "practice") router.push("/app/play");
+  }, [initialMode, publicMode, reset, router]);
 
   useEffect(() => () => void room?.leave(), [room]);
   useEffect(() => () => void queueRoom?.leave(), [queueRoom]);
@@ -466,7 +518,7 @@ export function BattlePanel({
       }
       if (Date.now() >= resumeDeadline.current) {
         resumeInfo.current = null;
-        sessionStorage.removeItem(RESUME_KEY);
+        clearResume(info.mode);
         setError("Reconnect window expired");
         setStage("failed");
         return;
@@ -485,7 +537,7 @@ export function BattlePanel({
         const msg = e instanceof Error ? e.message : String(e);
         if (/over|authorized|not found|already started|expired|seat already connected/i.test(msg)) {
           resumeInfo.current = null;
-          sessionStorage.removeItem(RESUME_KEY);
+          clearResume(info.mode);
           setError(`Recovery failed: ${msg}`);
           setStage("failed");
           return;
@@ -501,12 +553,7 @@ export function BattlePanel({
   const autoResumeTried = useRef(false);
   useEffect(() => {
     if (invalidInvite || !setupReady || !ready || !authenticated || stage !== "idle" || autoResumeTried.current) return;
-    let stored: { roomId: string; resumeToken: string; graceMs: number } | null = null;
-    try {
-      stored = JSON.parse(sessionStorage.getItem(RESUME_KEY) ?? "null");
-    } catch {
-      stored = null;
-    }
+    const stored = readResume(initialMode);
     if (!stored?.roomId || !stored.resumeToken) return;
     if (initialRoom && !hasMatchingInviteResume(initialRoom, stored)) return;
     const info = stored;
@@ -519,7 +566,7 @@ export function BattlePanel({
       setStage("reconnecting");
     }, 0);
     return () => clearTimeout(t);
-  }, [ready, authenticated, stage, initialRoom, invalidInvite, setupReady]);
+  }, [ready, authenticated, stage, initialMode, initialRoom, invalidInvite, setupReady]);
 
   useEffect(() => {
     if (!notice) return;
@@ -673,7 +720,14 @@ export function BattlePanel({
       {publicMode && stage === "idle" && (
         <BattleEntry mode={initialMode} code={code} error={error} setupReady={setupReady} onCodeChange={setCode}
           onFind={() => { unlockAudio(); void findMatch(initialMode === "ranked" ? "ranked" : "unranked"); }}
+          onStartPractice={() => { unlockAudio(); void connect("practice"); }}
           onCreate={() => { unlockAudio(); void connect("create"); }} onJoin={() => { unlockAudio(); void connect("join"); }} />
+      )}
+
+      {stage === "connecting" && (
+        <section className={publicMode ? "app-play-battle-controls" : undefined} style={publicMode ? undefined : { display: "grid", gap: 6 }}>
+          <div role="status">{initialMode === "practice" ? "Starting practice against AI Opponent…" : "Connecting to the battle server…"}</div>
+        </section>
       )}
 
       {publicMode && stage !== "idle" && error && <div className="app-play-battle-error" role="alert">{error}</div>}
@@ -732,7 +786,8 @@ export function BattlePanel({
           error={error}
           notice={notice}
           onGiveUp={stage === "reconnecting" ? reset : undefined}
-          onExit={reset}
+          onExit={initialMode === "practice" && publicMode ? exitBattle : reset}
+          onBattleAgain={initialMode === "practice" ? battleAgain : undefined}
           start={start}
           playerName={identity?.self ?? undefined}
           frame={frame}
