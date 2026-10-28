@@ -1,3 +1,11 @@
+## V2.1g/h Bot Gold LIVE in Production (2026-10-28, owner-authorized rollout, no repo code change)
+
+- Did: verified PR #16 merged (4c82a91), created Neon restore branch pre-v21g-bot-gold-20261028 (br-odd-hall-b5u8e1e2), applied 0023+0024 to PROD only (journal 23 to 25), deployed merged main tree to endy-vps, set UNRANKED_BOT_GOLD_REWARDS_ENABLED=1, restarted with zero live matches.
+- Live: service active, NRestarts=0, single instance, local + public /healthz ok, log reads bot gold ENABLED (20/10/15, 5 per UTC day), fallback still enabled, ranked closed, settlement unchanged.
+- Verified: 14 players, 16 matches, 450/200 Gold identical to pre-migration baseline, 0 bot rows, no log errors, no fake participants.
+- Rollback: delete the one env line (backup battle.env.pre-v21g-bot-gold-20261028) + restart; leave migrations in place (empty additive tables).
+- Next: owner acceptance with a real Privy sign-in (human-first, 20s fallback, 60s plus 3 deploys, real result, Gold balance agrees, Find Opponent Again, separate Practice check).
+
 ## V2.1g/h Bot Gold Production Preflight (2026-10-28, PR #16 branch 4e9f636, pushed, no PROD changes)
 
 - Doing: preflight-only slice, STOP after verdict. No migrations applied, no flags flipped, no restarts, no synthetic tests.
