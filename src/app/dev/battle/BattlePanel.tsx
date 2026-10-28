@@ -529,7 +529,8 @@ export function BattlePanel({
       const context = botGoldContext.current;
       if (!context || context.roomId !== r.roomId || context.origin !== "unranked-fallback" || context.start.practiceOpponent?.source !== "unranked-fallback") return;
       const expectedMatchId = context.end?.matchId;
-      const merged = reduceBotGoldMessage(context.receipt, raw, expectedMatchId);
+      const previous = expectedMatchId && context.receipt?.matchId !== expectedMatchId ? null : context.receipt;
+      const merged = reduceBotGoldMessage(previous, raw, expectedMatchId);
       if (!merged.accepted) return;
       context.receipt = merged.receipt;
       publishBotGold(context);
