@@ -73,7 +73,7 @@ describe("V2.1a practice foundation", () => {
     expect(() => validateDeck(deckFor(loadout), loadout.grant.slot)).not.toThrow();
   });
 
-  it("MEDIUM policy is deterministic and HARD/ULTIMATE are typed but unimplemented", () => {
+  it("MEDIUM policy is deterministic and HARD/ULTIMATE are implemented (V2.1c)", () => {
     const s = startedPractice("71");
     const state = s.state!;
     const humanSeat = s.seatOfSlot[0]!;
@@ -82,8 +82,8 @@ describe("V2.1a practice foundation", () => {
     const second = mediumPolicy.choose(state, botSeat, state.tick);
     expect(first).toEqual(second);
     expect(policyFor("medium")).toBe(mediumPolicy);
-    expect(() => policyFor("hard").choose(state, botSeat, 0)).toThrow("not implemented");
-    expect(() => policyFor("ultimate").choose(state, botSeat, 0)).toThrow("not implemented");
+    expect(policyFor("hard").difficulty).toBe("hard");
+    expect(policyFor("ultimate").difficulty).toBe("ultimate");
   });
 
   it("bot commands go through the same legal session validation (no free energy bypass)", () => {
