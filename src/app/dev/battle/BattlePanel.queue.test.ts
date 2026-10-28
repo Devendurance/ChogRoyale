@@ -1,5 +1,9 @@
 import { describe, expect, it, beforeEach, vi } from "vitest";
+import type { LobbyMessage } from "@/lib/battle-protocol";
 import {
+  lobbyWaitingForMessage,
+  completeQueueHandoff,
+  createQueueHandoffGate,
   queueFallbackRemainingSeconds,
   readResume,
   resumeKeyForOrigin,
@@ -23,6 +27,12 @@ describe("BattlePanel queue handoff", () => {
         removeItem: (key: string) => values.delete(key),
       },
     });
+  });
+
+  it("keeps the lobby handoff visible while its first message is still pending", () => {
+    expect(lobbyWaitingForMessage("lobby", null)).toBe(true);
+    expect(lobbyWaitingForMessage("connecting", null)).toBe(false);
+    expect(lobbyWaitingForMessage("lobby", {} as LobbyMessage)).toBe(false);
   });
 
   it("shows a fallback countdown only when the server advertises one", () => {
@@ -57,5 +67,58 @@ describe("BattlePanel queue handoff", () => {
     sessionStorage.setItem(resumeKeyForOrigin("pvp"), JSON.stringify({ mode: "private", origin: "pvp", roomId: "room-p", resumeToken: "token-p" }));
     expect(readResume("unranked")).toMatchObject({ origin: "unranked-fallback", roomId: "room-f" });
     expect(readResume("private")).toMatchObject({ origin: "pvp", roomId: "room-p" });
+  });
+
+  it("keeps a fast queue close from invalidating a delayed handoff", async () => {
+    const current = true;
+    let resolveRoom!: (room: { id: string }) => void;
+    let attached = false;
+    let queueLeft = false;
+    let queueLeaveStarted = false;
+    const nextRoom = { id: "battle-1" };
+    const handoff = completeQueueHandoff({
+      consume: () => new Promise<{ id: string }>((resolve) => { resolveRoom = resolve; }),
+      // The queue's onLeave sees the handoff marker and leaves this generation
+      // current even though its socket closes before the reservation resolves.
+      isCurrent: () => current,
+      attach: () => { attached = true; },
+      leaveQueue: async () => {
+        queueLeaveStarted = true;
+        expect(attached).toBe(true);
+        await Promise.resolve();
+        queueLeft = true;
+      },
+      leaveRoom: async () => {},
+    });
+    resolveRoom(nextRoom);
+    const result = await handoff;
+    expect(result).toBe("attached");
+    expect(queueLeaveStarted).toBe(true);
+    expect(queueLeft).toBe(true);
+  });
+
+  it("claims only the first match_found delivery", () => {
+    const gate = createQueueHandoffGate();
+    expect(gate.claim()).toBe(true);
+    expect(gate.claim()).toBe(false);
+  });
+
+  it("disposes a reservation that resolves after cancellation", async () => {
+    let current = true;
+    let resolveRoom!: (room: { id: string }) => void;
+    let attached = 0;
+    let left = 0;
+    const handoff = completeQueueHandoff({
+      consume: () => new Promise<{ id: string }>((resolve) => { resolveRoom = resolve; }),
+      isCurrent: () => current,
+      attach: () => { attached += 1; },
+      leaveQueue: async () => {},
+      leaveRoom: async () => { left += 1; },
+    });
+    current = false;
+    resolveRoom({ id: "late-room" });
+    await expect(handoff).resolves.toBe("cancelled");
+    expect(attached).toBe(0);
+    expect(left).toBe(1);
   });
 });

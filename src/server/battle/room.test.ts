@@ -157,6 +157,23 @@ describe("B3.1 Colyseus battle room", () => {
     await ra.leave();
   });
 
+  it("replays an authenticated human lobby after the initial delivery was missed", async () => {
+    const ra = await client("tok-alice").create(BATTLE_ROOM);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    let deliveries = 0;
+    let lobby: LobbyMessage | null = null;
+    ra.onMessage("lobby", (m: LobbyMessage) => { deliveries += 1; lobby = m; });
+    const before = deliveries;
+    ra.send("lobby_sync");
+    await until(() => deliveries > before);
+    const replayedLobby = lobby as unknown as LobbyMessage;
+    expect(replayedLobby.phase).toBe("waiting");
+    expect(replayedLobby.players).toHaveLength(2);
+    expect(replayedLobby.players[0]?.username).toBe("alice");
+    expect(replayedLobby.players[1]?.username).toBe("");
+    await ra.leave();
+  });
+
   it("starts a server-seeded match, validates input and keeps both clients consistent", async () => {
     const { ra, rb, a, b } = await pair();
     expect(new Set([a.start!.seat, b.start!.seat])).toEqual(new Set([0, 1]));

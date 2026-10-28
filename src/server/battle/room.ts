@@ -178,6 +178,10 @@ export class BattleRoom extends Room {
     this.session = new BattleSession(BattleRoom.deps.rng);
     this.session.mode = this.matched ? this.matched.mode : "private";
     this.onMessage("ready", (client: BattleClient, msg: unknown) => void this.onReady(client, msg));
+    this.onMessage("lobby_sync", (client: BattleClient) => {
+      if (this.session.phase !== "waiting" || this.session.slotOf(client.auth.playerId) < 0) return;
+      this.sendLobby(client);
+    });
     this.onMessage("unready", (client: BattleClient) => {
       try {
         this.session.unready(client.auth.playerId);
@@ -327,10 +331,8 @@ export class BattleRoom extends Room {
     return (this.clients as unknown as BattleClient[]).find((c) => c.auth?.playerId === id);
   }
 
-  private sendLobby() {
-    this.session.slots.forEach((_, slot) => {
-      const c = this.clientFor(slot);
-      if (!c) return;
+  private sendLobby(client?: BattleClient) {
+    const send = (c: BattleClient, slot: number) => {
       const msg = this.session.lobby(slot);
       if (this.matched) {
         const me = this.session.slots[slot]?.playerId;
@@ -338,6 +340,15 @@ export class BattleRoom extends Room {
         msg.match = { opponent: (oppId && this.matched.usernames[oppId]) ?? null, deadlineAt: this.matched.deadlineAt, mode: this.matched.mode };
       }
       c.send("lobby", msg);
+    };
+    if (client) {
+      const slot = this.session.slotOf(client.auth.playerId);
+      if (slot >= 0) send(client, slot);
+      return;
+    }
+    this.session.slots.forEach((_, slot) => {
+      const c = this.clientFor(slot);
+      if (c) send(c, slot);
     });
   }
 

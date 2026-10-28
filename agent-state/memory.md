@@ -6,6 +6,8 @@
 
 # Memory
 
+- P0 queue handoff invariant: set the handoff marker before `consumeSeatReservation`, attach the returned room before awaiting `queue.leave()`, and keep queue `onLeave` from advancing the generation during an accepted handoff. `lobby_sync` is an authenticated waiting-phase snapshot request only.
+
 - Battle music uses Track B `/assets/audio/v001/music/battle-loop.mp3` in production, while Track A remains the lobby and ready-room loop. Keep result track identity through mute/visibility source stops, resume a previously unlocked suspended context once on a genuine visibility return, and never create overlapping sources. New shared AudioContexts must clear old cue-clock throttle timestamps.
 
 - App audio contract: `useAppAudio()` is nullable and exposes immutable preferences, `ready`, `needsUnlock`, `unlock`, `playUi`, `duck`, `setBattlePhase`, and `audio.getBattleOutput()`. `@/lib/audio/audio-core.ts` owns one context and v2 storage, while `/app` layout mounts one `AppAudioProvider`. Track A is production lobby music, Track B is the owner-supplied production battle music. `BattleAudio` must never close a shared context. Battle phase callbacks are gated to `/app/play/battle`, so cached hidden routes reset to lobby and cannot restart active audio.
