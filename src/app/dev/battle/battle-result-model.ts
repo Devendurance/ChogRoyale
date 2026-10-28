@@ -4,10 +4,13 @@ import type { EndMessage, MatchMode, PracticeDifficulty, SettlementMessage, Star
 
 export type FinaleResult = "win" | "loss" | "draw" | "abort";
 export type SettlementState = "waiting" | "recorded" | "pending" | "disabled" | "refused";
+export type FinaleOrigin = "human" | "practice" | "unranked-fallback";
 
 export interface FinaleView {
   result: FinaleResult;
-  /** Practice is a server-owned mode, not a PvP settlement variant. */
+  /** The server-owned source of this result, including the Unranked fallback. */
+  origin: FinaleOrigin;
+  /** True for either server-owned AI origin, not for human PvP. */
   practice: boolean;
   title: string;
   kicker: string;
@@ -17,13 +20,16 @@ export interface FinaleView {
   winner: "mine" | "theirs" | null;
   context: string;
   settlement: { state: SettlementState; text: string } | null;
-  /** Explicit copy for the no-reward Practice foundation slice. */
+  /** Explicit copy for either server-owned AI origin. */
   noRewards: string | null;
+  /** Result action copy. The caller still decides whether a callback exists. */
+  againLabel: "Battle Again" | "Find Opponent Again" | null;
   /** Lead-in before the finale appears, so a Core's crown flight lands first. */
   revealDelayMs: number;
 }
 
-const PRACTICE_NO_REWARDS = "No rewards or progression are awarded in Practice.";
+export const PRACTICE_NO_REWARDS = "No rewards or progression are awarded in Practice.";
+export const UNRANKED_FALLBACK_NO_REWARDS = "No rewards earned in this AI battle.";
 export const PRACTICE_OPPONENT = "AI Opponent";
 
 const PRACTICE_DIFFICULTY_NAMES: Record<PracticeDifficulty, string> = {
@@ -39,7 +45,10 @@ export function practiceDifficultyLabel(difficulty: PracticeDifficulty | null | 
 }
 
 /** Resolve the player-facing opponent identity without trusting a bot username. */
-export function opponentNameFor(start: Pick<StartMessage, "mode" | "opponent" | "practiceOpponent">, practice = start.mode === "practice"): string {
+export function opponentNameFor(
+  start: Pick<StartMessage, "mode" | "opponent" | "practiceOpponent">,
+  practice = start.mode === "practice" || start.practiceOpponent?.source === "practice" || start.practiceOpponent?.source === "unranked-fallback",
+): string {
   // The bot display name is a protocol identity, not a player-controlled
   // username. Keep the player-facing label stable even if an older or
   // malformed payload carries a different string.
@@ -58,6 +67,17 @@ export function settlementView(value: SettlementMessage | null): { state: Settle
 
 const clock = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 
+function finaleOriginFor(
+  end: EndMessage | null,
+  mode: MatchMode,
+  opponentSource?: "practice" | "unranked-fallback",
+): FinaleOrigin {
+  const source = end?.practice?.source ?? opponentSource;
+  if (source === "unranked-fallback") return "unranked-fallback";
+  if (source === "practice" || end?.practice?.noReward === true || mode === "practice") return "practice";
+  return "human";
+}
+
 export function finaleView(
   end: EndMessage | null,
   abort: string | null,
@@ -65,20 +85,26 @@ export function finaleView(
   settlement: SettlementMessage | null,
   ticksPerSecond: number,
   mode: MatchMode = "private",
+  opponentSource?: "practice" | "unranked-fallback",
 ): FinaleView {
-  const practice = mode === "practice" || end?.practice?.noReward === true;
+  const origin = finaleOriginFor(end, mode, opponentSource);
+  const practice = origin !== "human";
+  const noRewards = origin === "practice" ? PRACTICE_NO_REWARDS : origin === "unranked-fallback" ? UNRANKED_FALLBACK_NO_REWARDS : null;
+  const againLabel = origin === "practice" ? "Battle Again" : origin === "unranked-fallback" ? "Find Opponent Again" : null;
   if (!end) {
     return {
       result: "abort",
+      origin,
       practice,
       title: "Battle interrupted",
-      kicker: practice ? "Practice · AI Opponent" : "Connection ended",
+      kicker: origin === "practice" ? "Practice · AI Opponent" : origin === "unranked-fallback" ? "Unranked · AI Opponent" : "Connection ended",
       mine: 0,
       theirs: 0,
       winner: null,
       context: abort || "The match ended early.",
       settlement: null,
-      noRewards: practice ? PRACTICE_NO_REWARDS : null,
+      noRewards,
+      againLabel,
       revealDelayMs: 150,
     };
   }
@@ -87,15 +113,17 @@ export function finaleView(
   const seconds = Math.floor(end.ticks / Math.max(1, ticksPerSecond));
   return {
     result: end.result,
+    origin,
     practice,
     title: end.result === "win" ? "Victory" : end.result === "loss" ? "Defeat" : "Draw",
-    kicker: practice ? "Practice complete · AI Opponent" : "Battle complete",
+    kicker: origin === "practice" ? "Practice complete · AI Opponent" : origin === "unranked-fallback" ? "Unranked · AI Opponent" : "Battle complete",
     mine,
     theirs,
     winner: end.result === "win" ? "mine" : end.result === "loss" ? "theirs" : null,
     context: `${REASONS[end.reason ?? ""] ?? "Battle complete"} · ${clock(seconds)}`,
     settlement: practice ? null : settlementView(settlement),
-    noRewards: practice ? PRACTICE_NO_REWARDS : null,
+    noRewards,
+    againLabel,
     revealDelayMs: end.reason === "core" ? 1500 : 700,
   };
 }
