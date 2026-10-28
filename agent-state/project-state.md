@@ -6,6 +6,7 @@
 - Human-first queue now renders an advertised-only fallback countdown, validates the server fallback handoff before consuming its reservation, and keeps cancellation, timeout, and stale async work from handing off later.
 - Unranked fallback keeps route intent `unranked` separate from server room mode `practice`, uses `practiceOpponent.source === "unranked-fallback"`, and stores resume credentials in `b3.unranked-fallback.resume` separately from solo Practice and PvP.
 - Lobby, HUD, result, and Find Opponent Again copy identify the server-owned AI and preserve no-reward behavior. The backend fallback flag remains OFF. Live authenticated fallback acceptance is intentionally unverified.
+- Delivery: PR #14 merged to `main` at `4409cd9d03ca0c348f898f9d0512dd07b64c05f1`; Vercel Production deployment `dpl_9SgUnx4RpGgsiN2fM11o3gmae7T7` is READY.
 
 # Owner-supplied battle music production release (2026-10-28)
 

@@ -315,5 +315,6 @@ Last updated: 2026-10-24
 
 - Done: reviewed worker commits for queue handoff, lobby/HUD identity, result origin, separate resume slots, stale queue cancellation, and fallback result actions.
 - Done: added coordinator fixes for explicit queue copy, timeout/handoff race protection, and fallback Back to Battle Hall navigation.
-- Next: finish dependency-backed focused tests, typecheck, scoped lint, production build, then stage only V2.1f files plus state/rules docs, commit, push, open/merge PR, and verify Vercel Production. Keep backend fallback flag OFF.
+- Done: focused Vitest 60/60, TypeScript, scoped ESLint, and production build passed. PR #14 merged into `main` at `4409cd9d03ca0c348f898f9d0512dd07b64c05f1`; Vercel Production is READY and public battle routes return 200.
+- Next: owner-controlled activation and authenticated acceptance only. Keep `UNRANKED_AI_FALLBACK_ENABLED` OFF until the owner schedules activation.
 - Preserve unrelated `.fast-build/STATE.md`, `DESIGN.md`, `demo-production/`, and the docs files already present in the worktree.
