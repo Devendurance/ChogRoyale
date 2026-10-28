@@ -1,12 +1,12 @@
 ## Final audio overhaul (2026-10-28, delivery)
 
-- Doing: final verification and PR delivery on codex/final-audio-overhaul from main 6907259. No merge or production promotion authorized.
+- Doing: delivered PR #9, https://github.com/Devendurance/ChogRoyale/pull/9, on codex/final-audio-overhaul from main 6907259. No merge or production promotion authorized.
 - Done: persistent shared music/UI/battle mixer, 16 original procedural UI cues, server-confirmed interaction mappings, settings, legacy silence migration, cancellable music transitions and recovery. Track A is CC0 production lobby music. Track B remains CC BY-NC development-only.
-- Checkpoints: 0190ec5 scope/state and b2d9c1f credited assets pushed. Coordinator reviewed core, UI and assets from GPT-5.6 Luna/xhigh workers.
+- Checkpoints: 0190ec5 scope/state, b2d9c1f credited assets and 4ee0d88 reviewed integration pushed. Coordinator reviewed core, UI and assets from GPT-5.6 Luna/xhigh workers.
 - Acceptance: 110 tests passed, clean production build passed. App browser checks 6/6, UI checks 15/15, real-provider audio phase assertions 7/7. Production smoke 17 assets 200, dev battle endpoint 404, no restricted bytes in 93 traces or injected QA strings in production chunks.
 - Multiplayer: actual local engine, injected auth, shuffled seats 1/0, same-room refresh recovery, Endychog 2-1 Phantom result at 3:07. Playback remained unproven in that match; separate real-WebAudio phase fixture proves transitions. Final return assertion in the match harness used the wrong URL expectation.
 - Limits: physical iOS/Android/PWA and subjective speaker/headphone listening remain unverified. ElevenLabs account is Free tier, no ElevenLabs output generated. Full lint retains 24 inherited errors/one warning.
-- Checks: standalone typecheck and scoped lint passed. Next: commit reviewed integration/evidence, push and open PR. Details in docs/audio/acceptance.md. QA aliases/routes removed, own 3100/2568 services stopped, original 2567 untouched.
+- Checks: standalone typecheck and scoped lint passed. Next: owner review of PR #9, commercial permission before production Track B, physical-device/listening acceptance. Details in docs/audio/acceptance.md. QA aliases/routes removed, own 3100/2568/3101 services stopped, original 2567 untouched.
 - Preserve unrelated .fast-build/STATE.md, DESIGN.md, demo-production/, messaging doc and V2 improvement plan. External source/QA evidence is under ChogRoyale-Assets/audio-overhaul-20261027.
 
 ## Gameplay improvement V1 README bookmark (2026-10-27)
