@@ -128,7 +128,7 @@ export function cueForDragTarget(target: EventTarget | null): UiCue | null {
  * Neither path changes mute or volume preferences.
  */
 export function unlockAndPlay(audio: Pick<AppAudioController, "unlock" | "playUi" | "getSnapshot">, cue: UiCue): void {
-  const pending = audio.unlock();
+  const pending = audio.unlock({ fromGesture: true });
   if (audio.getSnapshot().ready) {
     audio.playUi(cue);
     return;

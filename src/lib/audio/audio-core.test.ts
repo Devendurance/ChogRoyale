@@ -114,6 +114,51 @@ describe("persistent app audio", () => {
     release();
   });
 
+  it("replaces an unresolved autoplay resume from a real gesture", async () => {
+    const first = new MockAudioContext();
+    first.resume = vi.fn(() => new Promise<void>(() => {}));
+    const second = new MockAudioContext();
+    const contexts = [first, second];
+    vi.stubGlobal("window", {
+      AudioContext: function () { return contexts.shift()!; },
+      localStorage: { getItem: () => null, setItem: vi.fn() },
+    });
+    const audio = getAppAudio();
+    const release = audio.mount();
+    audio.setPageHidden(false);
+    void audio.attemptAutoplay();
+    await Promise.resolve();
+    expect(first.resume).toHaveBeenCalledOnce();
+    expect(audio.getSnapshot().needsUnlock).toBe(true);
+    expect(await audio.unlock({ fromGesture: true })).toBe(true);
+    expect(first.close).toHaveBeenCalledOnce();
+    expect(second.resume).toHaveBeenCalledOnce();
+    expect(audio.getSnapshot().ready).toBe(true);
+    release();
+  });
+
+  it("does not replace the same gesture resume when multiple handlers share one event", async () => {
+    const autoplayContext = new MockAudioContext();
+    autoplayContext.resume = vi.fn(() => new Promise<void>(() => {}));
+    const gestureContext = new MockAudioContext();
+    gestureContext.resume = vi.fn(() => new Promise<void>(() => {}));
+    const contexts = [autoplayContext, gestureContext];
+    vi.stubGlobal("window", {
+      AudioContext: function () { return contexts.shift()!; },
+      localStorage: { getItem: () => null, setItem: vi.fn() },
+    });
+    const audio = getAppAudio();
+    const release = audio.mount();
+    audio.setPageHidden(false);
+    void audio.attemptAutoplay();
+    await Promise.resolve();
+    void audio.unlock({ fromGesture: true });
+    void audio.unlock({ fromGesture: true });
+    expect(autoplayContext.close).toHaveBeenCalledOnce();
+    expect(gestureContext.resume).toHaveBeenCalledOnce();
+    release();
+  });
+
   it("cancels StrictMode teardown when the provider remounts", async () => {
     const context = new MockAudioContext();
     vi.stubGlobal("window", { AudioContext: function () { return context; }, localStorage: { getItem: () => null, setItem: vi.fn() } });

@@ -15,6 +15,7 @@ export type {
   AppAudioContextValue,
 } from "@/components/audio/AppAudioProvider";
 export type {
+  AudioUnlockOptions,
   AppAudioController,
   AppAudioPreferences,
   AppAudioSnapshot,

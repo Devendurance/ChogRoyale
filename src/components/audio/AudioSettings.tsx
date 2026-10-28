@@ -53,14 +53,14 @@ export default function AudioSettings() {
           onClick={() => {
             if (masterMuted) {
               context.setPreferences({ masterMuted: false });
-              void context.unlock();
+              void context.unlock({ fromGesture: true });
               return;
             }
             // A zero-volume or all-channel-muted mix is an intentional silent
             // choice. The top affordance must not silently rewrite it.
             if (soundOff) return;
             if (!context.ready) {
-              void context.unlock();
+              void context.unlock({ fromGesture: true });
               return;
             }
             context.setPreferences({ masterMuted: !masterMuted });
@@ -86,7 +86,7 @@ export default function AudioSettings() {
                     aria-label={`${muted ? "Unmute" : "Mute"} ${channel.label}`}
                     onClick={() => {
                       context.setPreferences({ [channel.mutedKey]: !muted });
-                      if (muted) void context.unlock();
+                      if (muted) void context.unlock({ fromGesture: true });
                     }}
                   >
                     {muted ? "Muted" : "On"}

@@ -364,3 +364,9 @@ Last updated: 2026-10-24
 - Production audio assets are in `public/assets/audio/v001`: Track A is a 49.55 s cyclic wrap-crossfaded CC0 MP3, and the 16 authored local procedural UI cues use the shared `primary` through `reveal` keys. Existing authoritative battle Web Audio cues remain unchanged.
 - Track B is a 33.409093 s CC BY-NC development loop at `.audio-dev/battle-loop.mp3`, served only through `/api/dev-audio/battle`; its production manifest path is null and `.audio-dev/**` is excluded from Next tracing.
 - Source rights, hashes, waveform/boundary QA and ElevenLabs Free-tier noncommercial decision are recorded in `docs/audio/credits.md`, `docs/audio/quality-report.md` and `docs/audio/audio-manifest.json`. External masters and raw derivatives live in `C:/Users/USER/Documents/ChogRoyale-Assets/audio-overhaul-20261027`.
+## Audio refresh autoplay recovery (2026-10-28)
+
+- The shared app audio controller persists preferences in local storage and is mounted by the `/app` layout.
+- Refresh recovery now tries autoplay once, then uses temporary capture listeners for the first real pointer or keyboard gesture. The listeners stop on success, provider cleanup, mute, or silent volume.
+- `unlock({ fromGesture: true })` can replace a stale autoplay resume, but repeated handlers during the same gesture reuse the in-flight gesture promise. The floating provider-level Enable Sound control was removed. Settings remains the intentional fallback.
+- Focused audio tests cover listener lifecycle, mute behavior, unresolved autoplay, and duplicate gesture handlers. Full suite has inherited public-site copy failures unrelated to this fix.
