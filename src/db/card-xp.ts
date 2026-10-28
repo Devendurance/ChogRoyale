@@ -232,7 +232,10 @@ export async function getMyCardXp(playerId: string): Promise<{
   const [rows, gold] = await Promise.all([
     db.select().from(cardXpProgress).where(eq(cardXpProgress.playerId, playerId)),
     db.execute(sql`
-      select coalesce((select sum(amount) from gold_earn_ledger where player_id = ${playerId}::uuid), 0)::int
+      select (coalesce((select sum(amount) from gold_earn_ledger where player_id = ${playerId}::uuid), 0)::int
+        + case when to_regclass('public.bot_gold_awards') is not null
+          then coalesce((select sum(amount) from bot_gold_awards where player_id = ${playerId}::uuid), 0)::int
+          else 0 end)
         - coalesce((select sum(cost) from gold_spend_ledger where player_id = ${playerId}::uuid), 0)::int as balance
     `),
   ]);

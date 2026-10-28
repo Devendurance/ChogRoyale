@@ -700,6 +700,66 @@ export const goldSpendLedger = pgTable(
 export type GoldEarnRow = typeof goldEarnLedger.$inferSelect;
 export type GoldSpendRow = typeof goldSpendLedger.$inferSelect;
 
+// V2.1g Unranked AI fallback Gold. One human plus one server-owned bot:
+// no matches or match_participants rows exist for these games, so bot
+// evidence and awards live in their own tables. Bot Gold is real
+// spendable Gold: every authoritative balance path adds the approved
+// bot sums to the PvP ledger sums. Solo Practice never writes here.
+export const botMatches = pgTable(
+  "bot_matches",
+  {
+    matchId: text("match_id").primaryKey(),
+    playerId: uuid("player_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "restrict" }),
+    difficulty: text("difficulty").notNull(),
+    source: text("source").notNull().default("unranked-fallback"),
+    policyVersion: integer("policy_version").notNull(),
+    config: jsonb("config").notNull(),
+    commands: jsonb("commands").notNull(),
+    humanSeat: smallint("human_seat").notNull(),
+    liveHash: text("live_hash").notNull(),
+    replayHash: text("replay_hash").notNull(),
+    replayIdentical: boolean("replay_identical").notNull(),
+    winnerSeat: smallint("winner_seat"),
+    ticks: integer("ticks").notNull(),
+    humanDeploys: integer("human_deploys").notNull(),
+    status: text("status").notNull().default("pending"),
+    startedAt: timestamp("started_at", { withTimezone: true }),
+    finishedAt: timestamp("finished_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("bot_matches_player_idx").on(t.playerId),
+    check("bot_matches_difficulty_check", sql`${t.difficulty} in ('medium','hard')`),
+    check("bot_matches_source_check", sql`${t.source} in ('practice','unranked-fallback')`),
+    check("bot_matches_status_check", sql`${t.status} in ('pending','awarded','refused','capped')`),
+  ]
+);
+
+export const botGoldAwards = pgTable(
+  "bot_gold_awards",
+  {
+    matchId: text("match_id").notNull(),
+    playerId: uuid("player_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "restrict" }),
+    amount: integer("amount").notNull(),
+    result: text("result").notNull(),
+    difficulty: text("difficulty").notNull(),
+    policyVersion: integer("policy_version").notNull(),
+    awardedAt: timestamp("awarded_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ name: "bot_gold_awards_pk", columns: [t.matchId, t.playerId] }),
+    index("bot_gold_awards_player_idx").on(t.playerId),
+    check("bot_gold_awards_amount_check", sql`${t.amount} >= 0`),
+    check("bot_gold_awards_result_check", sql`${t.result} in ('win','loss','draw')`),
+  ]
+);
+
+export type BotMatchRow = typeof botMatches.$inferSelect;
+export type BotGoldAwardRow = typeof botGoldAwards.$inferSelect;
+
 // P6c gift sponsorship receipts. One row per sponsored upgrade, keyed by
 // the client-supplied idempotency key. The sponsor's Gold debit lives in
 // gold_spend_ledger under the SAME idempotency key, so the two writes

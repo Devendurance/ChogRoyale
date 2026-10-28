@@ -119,7 +119,11 @@ void settlementService()
       console.log(`ranked public matchmaking: ${RANKED_PUBLIC_MATCHMAKING_ENABLED ? "OPEN" : "closed (release gate)"}`);
       const unrankedFallbackEnabled = process.env.UNRANKED_AI_FALLBACK_ENABLED === "1";
       console.log(`unranked ai fallback: ${unrankedFallbackEnabled ? "ENABLED (20s human-first, medium/hard only)" : "disabled (release gate)"}`);
-      return startBattleServer(hostConfig.port, { settlement, cardScaling, ...(unrankedFallbackEnabled ? { unrankedFallback: { enabled: true } } : {}) }, hostConfig.host, {
+      // V2.1g fallback Gold is a separate default-OFF release gate. It pays
+      // only server-verified Unranked fallback matches, never solo Practice.
+      const botGoldEnabled = process.env.UNRANKED_BOT_GOLD_REWARDS_ENABLED === "1";
+      console.log(`unranked bot gold rewards: ${botGoldEnabled ? "ENABLED (20/10/15, 5 per UTC day)" : "disabled (release gate)"}`);
+      return startBattleServer(hostConfig.port, { settlement, cardScaling, ...(unrankedFallbackEnabled ? { unrankedFallback: { enabled: true } } : {}), ...(botGoldEnabled ? { botGold: { enabled: true } } : {}) }, hostConfig.host, {
         enableShutdownHooks: hosting,
       });
     })

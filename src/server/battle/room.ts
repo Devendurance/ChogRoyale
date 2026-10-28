@@ -47,6 +47,10 @@ export interface BattleRoomDeps {
   matchLobbyMs?: number;
   /** Queue ticket expiry, consumed by the MatchCoordinator. */
   queueMaxWaitMs?: number;
+  /** Server-owned Unranked AI fallback Gold rewards. Absent or disabled
+   * means fallback matches stay no-reward and write no bot Gold.
+   * Gated OFF until the schema, frontend and verification are ready. */
+  botGold?: { enabled: boolean };
   /** Server-owned Unranked AI fallback, consumed by the MatchCoordinator.
    * Absent or disabled means human-only matchmaking. Gated OFF for public
    * clients until the V2.1f UI understands bot provenance and no-reward state. */

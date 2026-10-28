@@ -2,11 +2,12 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
-import type { EndMessage, SettlementMessage, StartMessage } from "@/lib/battle-protocol";
+import type { BotGoldMessage, EndMessage, SettlementMessage, StartMessage } from "@/lib/battle-protocol";
 import type { RankedAwardView } from "@/lib/ranked";
 import { GameIcon } from "@/components/game/GameIcon";
 import type { BattleCue } from "./battle-audio";
 import { finaleView, opponentNameFor, practiceDifficultyLabel, tallyAt } from "./battle-result-model";
+import { botGoldView } from "./bot-gold-model";
 import "./battle-result.css";
 
 interface Props {
@@ -14,6 +15,11 @@ interface Props {
   end: EndMessage | null;
   abort: string | null;
   settlement: SettlementMessage | null;
+  /** Server-authoritative reward outcome for an Unranked AI fallback. */
+  botGold?: BotGoldMessage | null;
+  /** Latest server-confirmed Gold balance, when the caller has reread it. */
+  goldBalance?: number | null;
+  goldBalanceStatus?: "idle" | "loading" | "ready" | "unavailable";
   me: number;
   playerName?: string;
   onExit?: () => void;
@@ -43,7 +49,7 @@ function Ribbon({ side, name, crowns, shown, winner, you }: { side: "foe" | "min
   );
 }
 
-export default function BattleResult({ start, end, abort, settlement, me, playerName, onExit, onAgain, onAudioCue, rankedAward, rankedAwardStatus }: Props) {
+export default function BattleResult({ start, end, abort, settlement, botGold, goldBalance, goldBalanceStatus, me, playerName, onExit, onAgain, onAudioCue, rankedAward, rankedAwardStatus }: Props) {
   const router = useRouter();
   const dialog = useRef<HTMLDivElement>(null);
   const exit = useRef<HTMLButtonElement>(null);
@@ -51,6 +57,15 @@ export default function BattleResult({ start, end, abort, settlement, me, player
   const view = finaleView(end, abort, me, settlement, start.ticksPerSecond, start.mode, start.practiceOpponent?.source);
   const opponent = opponentNameFor(start, view.practice);
   const practiceDifficulty = view.practice ? practiceDifficultyLabel(start.practiceOpponent?.difficulty) : null;
+  const reward = view.origin === "unranked-fallback" && end
+    ? botGoldView(botGold, end.matchId ?? undefined)
+    : null;
+  const rewardMessage = reward?.message;
+  const goldBalanceText = typeof goldBalance === "number" && Number.isFinite(goldBalance) && goldBalance >= 0
+    ? Math.trunc(goldBalance).toLocaleString("en-US")
+    : null;
+  const rewardHasAmount = reward?.state === "confirmed" || reward?.state === "duplicate";
+  const noRewardCopy = reward?.state === "no-message" ? reward.text : reward ? null : view.noRewards;
   const goBack = () => { onExit?.(); if (!onExit) router.push("/app/play"); };
   const hasAgainAction = view.origin === "practice" || (view.origin === "unranked-fallback" && Boolean(onAgain));
   const goAgain = () => {
@@ -127,8 +142,16 @@ export default function BattleResult({ start, end, abort, settlement, me, player
           <span className="chud-finale-vs" aria-hidden="true">VS</span>
           <Ribbon side="foe" name={opponent} crowns={view.theirs} shown={tallyAt(step, view.theirs)} winner={view.winner === "theirs"} />
         </div>}
-        {(view.settlement || view.noRewards) && <div className="chud-finale-details">
-          {view.noRewards && <p className="chud-finale-settle chud-finale-no-rewards" data-state="no-rewards" aria-live="polite"><i aria-hidden="true" />{view.noRewards}</p>}
+        {(view.settlement || noRewardCopy || (reward && reward.state !== "no-message")) && <div className="chud-finale-details">
+          {noRewardCopy && <p className="chud-finale-settle chud-finale-no-rewards" data-state="no-rewards" aria-live="polite"><i aria-hidden="true" />{noRewardCopy}</p>}
+          {reward && reward.state !== "no-message" && <div className="chud-finale-gold" data-state={reward.state} aria-live="polite">
+            <div className="chud-finale-gold-main"><span className="chud-finale-gold-mark" aria-hidden="true">G</span><span><strong>{reward.title}</strong><br /><span>{reward.text}</span></span></div>
+            {rewardHasAmount && rewardMessage && <p>Daily AI rewards: {rewardMessage.rewardedToday} / {rewardMessage.dailyCap}</p>}
+            {rewardHasAmount && goldBalanceText !== null && <p>Gold balance: {goldBalanceText}</p>}
+            {rewardHasAmount && goldBalanceText === null && goldBalanceStatus === "loading" && <p>Checking Gold balance...</p>}
+            {rewardHasAmount && goldBalanceText === null && goldBalanceStatus === "unavailable" && <p>Gold balance refresh unavailable.</p>}
+            {reward.state === "duplicate" && <p>Already recorded for this battle.</p>}
+          </div>}
           {view.settlement && <p className="chud-finale-settle" data-state={view.settlement.state} aria-live="polite"><i aria-hidden="true" />{view.settlement.text}</p>}
           {view.settlement && start.mode === "ranked" && <p className="chud-finale-ranked" aria-live="polite">
             {rankedAward ? <><GameIcon kind="trophy" size={22} /> {rankedAward.delta > 0 ? "+" : ""}{rankedAward.delta} trophies · Balance {rankedAward.balanceAfter}</> : rankedAwardStatus === "checking" || rankedAwardStatus === "idle" ? "Confirming the ranked award" : rankedAwardStatus === "timeout" ? "Ranked award pending. Check Progress later." : "No ranked award confirmed."}

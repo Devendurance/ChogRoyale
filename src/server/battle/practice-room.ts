@@ -22,7 +22,9 @@ import {
 import { BattleSession, deckFor, type SeatPlayer, type SessionRandom, type TrustedLoadout } from "@/server/battle/session";
 import { authenticateSeat, type BattleRoomDeps } from "@/server/battle/room";
 import { freeStarterSlot } from "@/lib/combat";
-import { commanderCardId, validateDeck } from "@/lib/combat";
+import { commanderCardId, isAbilityCommand, validateDeck } from "@/lib/combat";
+import { BOT_GOLD_POLICY_VERSION } from "@/lib/bot-gold";
+import { BotGoldService } from "@/server/battle/bot-gold";
 import { productionEntitlementDeps, resolveCommander, type EntitlementDeps } from "@/server/battle/entitlement";
 import { productionPatronSource, type PatronSource } from "@/server/battle/patron-source";
 import type { MatchCoordinator } from "@/server/battle/matchmaking";
@@ -37,6 +39,11 @@ const RECONNECT_GRACE_MS = 30_000;
 let productionPatrons: PatronSource | null = null;
 function patronSource(): PatronSource {
   return PracticeRoom.deps.patrons ?? (productionPatrons ??= productionPatronSource());
+}
+
+let botGoldService: BotGoldService | null = null;
+function botGold(): BotGoldService {
+  return (botGoldService ??= new BotGoldService());
 }
 
 let productionEntitlement: EntitlementDeps | null = null;
@@ -93,6 +100,7 @@ export class PracticeRoom extends Room {
   private choice: CommanderChoice | null = null;
   private checking = false;
   private matchId: string | null = null;
+  private startedAt: Date | null = null;
   private resumeToken = "";
   private drop: { deadlineAt: number; timer: { clear(): void } } | null = null;
   private botCid = 0;
@@ -248,6 +256,7 @@ export class PracticeRoom extends Room {
   private begin(client: PracticeClient) {
     this.lock();
     this.matchId = randomUUID();
+    this.startedAt = new Date();
     const grace = PracticeRoom.deps.reconnectGraceMs ?? RECONNECT_GRACE_MS;
     this.resumeToken = randomBytes(16).toString("hex");
     const msg = this.session.startMessage(0);
@@ -301,10 +310,83 @@ export class PracticeRoom extends Room {
       const end = { ...out.end[humanSeat], matchId: this.matchId, practice: { opponentKind: "bot" as const, noReward: true as const, source: this.origin } };
       client.send("end", end);
       client.send("settlement", { matchId: this.matchId, status: "disabled" });
+      const awardDelivered = this.maybeAwardBotGold();
       this.setSimulationInterval();
       this.releaseHuman();
-      this.clock.setTimeout(() => void this.disconnect(), PracticeRoom.deps.closeAfterMs ?? 5_000);
+      this.closeAfterEnd(awardDelivered);
     }
+  }
+
+  /**
+   * V2.1g fallback Gold, evaluated after the authoritative result. Only
+   * Unranked fallback rooms with the rewards flag enabled reach the
+   * service; solo Practice and flag-OFF rooms send nothing and write
+   * nothing. Never touches the PvP settlement writer.
+   */
+  private maybeAwardBotGold(): Promise<void> | null {
+    if (this.origin !== "unranked-fallback") return null;
+    if (!PracticeRoom.deps.botGold?.enabled) return null;
+    const replay = this.session.replay;
+    const human = this.session.slots[0];
+    const matchId = this.matchId;
+    if (!replay || !human || !matchId) return null;
+    const humanSeat = this.session.seatOfSlot[0]!;
+    const humanDeploys = replay.commands.filter(
+      (c) => !isAbilityCommand(c) && c.player === humanSeat
+    ).length;
+    return botGold()
+      .processEvidence({
+        matchId,
+        playerId: human.playerId,
+        difficulty: this.difficulty as "medium" | "hard",
+        source: "unranked-fallback",
+        policyVersion: BOT_GOLD_POLICY_VERSION,
+        config: replay.config,
+        commands: replay.commands,
+        humanSeat,
+        liveHash: replay.liveHash,
+        replayHash: replay.replayHash,
+        replayIdentical: replay.replayIdentical,
+        winnerSeat: replay.winner === "draw" ? null : replay.winner,
+        ticks: replay.ticks,
+        humanDeploys,
+        startedAt: this.startedAt?.toISOString() ?? null,
+      })
+      .then((r) => {
+        this.humanClient?.send("bot_gold", {
+          matchId: r.matchId,
+          source: r.source,
+          eligibility: r.eligibility,
+          policyVersion: r.policyVersion,
+          amount: r.amount,
+          status: r.status,
+          rewardedToday: r.rewardedToday,
+          dailyCap: r.dailyCap,
+        });
+      })
+      .catch((err) => logger.error("bot gold hook failed", { roomId: this.roomId, reason: err instanceof Error ? err.message : String(err) }));
+  }
+
+  /**
+   * Post-match disconnect. Solo Practice and flag-OFF rooms close on the
+   * existing short timer. A fallback room with rewards on holds the seat
+   * (bounded) until the authoritative bot_gold outcome is delivered, so a
+   * confirmed award cannot be missed by a client still on the result
+   * screen. Anything later is covered by reconcile and Gold history.
+   */
+  private closeAfterEnd(awardDelivered: Promise<void> | null) {
+    const minDelay = PracticeRoom.deps.closeAfterMs ?? 5_000;
+    if (!awardDelivered) {
+      this.clock.setTimeout(() => void this.disconnect(), minDelay);
+      return;
+    }
+    const cap = this.clock.setTimeout(() => void this.disconnect(), Math.max(minDelay, 15_000));
+    void awardDelivered.finally(() => {
+      this.clock.setTimeout(() => {
+        cap.clear();
+        void this.disconnect();
+      }, minDelay);
+    });
   }
 
   private resume(client: PracticeClient, token: unknown) {

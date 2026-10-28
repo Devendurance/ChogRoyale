@@ -11,6 +11,7 @@ import { sql } from "drizzle-orm";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { goldEarnLedger, matchParticipants, matches } from "@/db/schema";
+import { getBotGoldHistory } from "@/db/bot-gold";
 import { ordinaryCardIds } from "@/db/card-xp";
 import { CARD_XP_LEVEL_REQUIREMENTS, CARD_XP_MAX_LEVEL, goldCostForLevel } from "@/lib/card-xp";
 import {
@@ -110,7 +111,10 @@ export async function getGoldTotals(playerId: string): Promise<{ earned: number;
   const db = getDb();
   const res = await db.execute(sql`
     select
-      coalesce((select sum(amount) from gold_earn_ledger where player_id = ${playerId}::uuid), 0)::int as earned,
+      coalesce((select sum(amount) from gold_earn_ledger where player_id = ${playerId}::uuid), 0)::int
+      + case when to_regclass('public.bot_gold_awards') is not null
+        then coalesce((select sum(amount) from bot_gold_awards where player_id = ${playerId}::uuid), 0)::int
+        else 0 end as earned,
       coalesce((select sum(cost) from gold_spend_ledger where player_id = ${playerId}::uuid), 0)::int as spent
   `);
   const row = (res.rows as Array<{ earned: number; spent: number }>)[0] ?? { earned: 0, spent: 0 };
@@ -121,7 +125,7 @@ export async function getGoldTotals(playerId: string): Promise<{ earned: number;
 
 export async function getGoldBalance(playerId: string): Promise<GoldBalanceResponse> {
   const db = getDb();
-  const [totals, earn, spends] = await Promise.all([
+  const [totals, earn, botEarn, spends] = await Promise.all([
     getGoldTotals(playerId),
     db.execute(sql`
       select g.match_id, g.result, g.amount, m.match_type, m.finished_at
@@ -130,6 +134,7 @@ export async function getGoldBalance(playerId: string): Promise<GoldBalanceRespo
       order by m.finished_at desc, g.match_id desc
       limit 10
     `),
+    getBotGoldHistory(playerId, 10),
     db.execute(sql`
       select idempotency_key, card_id, from_level, to_level, cost, created_at
       from gold_spend_ledger
@@ -143,13 +148,24 @@ export async function getGoldBalance(playerId: string): Promise<GoldBalanceRespo
     balance: totals.balance,
     earned: totals.earned,
     spent: totals.spent,
-    recentEarn: (earn.rows as Array<Record<string, unknown>>).map((r) => ({
-      matchId: String(r.match_id),
-      matchType: String(r.match_type),
-      result: r.result as "win" | "loss" | "draw",
-      amount: Number(r.amount),
-      finishedAt: r.finished_at ? new Date(r.finished_at as string).toISOString() : null,
-    })),
+    recentEarn: [
+      ...(earn.rows as Array<Record<string, unknown>>).map((r) => ({
+        matchId: String(r.match_id),
+        matchType: String(r.match_type),
+        result: r.result as "win" | "loss" | "draw",
+        amount: Number(r.amount),
+        finishedAt: r.finished_at ? new Date(r.finished_at as string).toISOString() : null,
+      })),
+      ...botEarn.map((r) => ({
+        matchId: r.matchId,
+        matchType: "unranked-fallback",
+        result: r.result,
+        amount: r.amount,
+        finishedAt: r.finishedAt,
+      })),
+    ]
+      .sort((a, b) => (b.finishedAt ?? "").localeCompare(a.finishedAt ?? "") || (a.matchId < b.matchId ? -1 : 1))
+      .slice(0, 10),
     recentSpends: (spends.rows as Array<Record<string, unknown>>).map((r) => ({
       idempotencyKey: String(r.idempotency_key),
       cardId: String(r.card_id),
@@ -204,7 +220,10 @@ export async function upgradeCard(playerId: string, req: CardUpgradeRequest): Pr
     ),
     chk as (
       select
-        (select coalesce(sum(amount), 0) from gold_earn_ledger where player_id = ${playerId}::uuid)
+        ((select coalesce(sum(amount), 0) from gold_earn_ledger where player_id = ${playerId}::uuid)
+          + case when to_regclass('public.bot_gold_awards') is not null
+            then (select coalesce(sum(amount), 0) from bot_gold_awards where player_id = ${playerId}::uuid)
+            else 0 end)
         - (select coalesce(sum(cost), 0) from gold_spend_ledger where player_id = ${playerId}::uuid) as balance,
         (select purchased_level from card_xp_progress where player_id = ${playerId}::uuid and card_id = ${req.cardId}) as cur_level,
         (select xp from card_xp_progress where player_id = ${playerId}::uuid and card_id = ${req.cardId}) as cur_xp

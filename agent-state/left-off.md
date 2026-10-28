@@ -1,3 +1,29 @@
+## V2.1g/h Bot Gold Production Preflight (2026-10-28, PR #16 branch 4e9f636, pushed, no PROD changes)
+
+- Doing: preflight-only slice, STOP after verdict. No migrations applied, no flags flipped, no restarts, no synthetic tests.
+- CHECK 1: reproduced the flag-test isolation fault by inspection (two live servers share process-wide PracticeRoom.deps, so the second boot silently reconfigures the first). Fixed on the PR branch by using one server with per-test deps assignment; flag file passes 2/2 deterministically.
+- CHECK 2: confirmed a real delivery hole, a confirmed bot_gold can miss the browser when the award lands after the 50ms post-end disconnect. Fixed on the PR branch by holding the fallback room open until the receipt sends (15s cap); solo and flag-OFF timing unchanged.
+- CHECK 3: migrations 0023/0024 verified additive, FKs to real players only, no matches writes, no fake bots, safe with flag OFF. Not applied to PROD.
+- CHECK 4: economy paths unchanged in this slice; bot-gold unit 12/12, live flag ON/OFF 2/2, practice/unranked suites green, matchmaking plus room 26/26, tsc clean, scoped lint clean, production build pass.
+- Verdict: GO, conditional on PR checks passing and the coordinated rollout below. Remaining: owner merge of PR #16, apply 0023/0024 to PROD, deploy battle server, set UNRANKED_BOT_GOLD_REWARDS_ENABLED=1, live authenticated acceptance.
+
+# V2.1h Unranked AI Gold UI (2026-10-28, current)
+
+- Doing: finish review and delivery of `codex/v2.1h-unranked-ai-gold-ui`, based on `v2.1g-bot-gold` `95899c5`.
+- Done: Bot Gold validation/reducer, BattlePanel late-message lifecycle and balance refresh, BattleHud/BattleResult reward states, focused tests, scoped lint, typecheck and production build.
+- Done: branch head `4a19f41` is pushed on PR #16, https://github.com/Devendurance/ChogRoyale/pull/16. Vercel preview is building, while Production remains the prior main deployment. Do not apply migrations, deploy the battle server, enable the reward flag, merge or promote without owner approval.
+- Limitation: `src/server/battle/bot-gold-flag.test.ts` still has an existing isolation failure when its flag-off and flag-on servers run together. Static `PracticeRoom.deps` is overwritten by the second server, so the flag-off case receives a pending message. No backend code was changed in this UI slice.
+- Next: wait for PR/Vercel checks and owner approval. Preserve unrelated `.fast-build/STATE.md`, `DESIGN.md`, `demo-production/`, and docs files.
+
+## V2.1g Unranked AI Bot Gold (2026-10-28, branch v2.1g-bot-gold 312c226, pushed, TEST migration only, flag OFF)
+
+- Doing: shipped versioned fallback Gold backend slice, STOP after backend, no PROD migration/activation, no Card XP/Player XP/Chog Pass/Ranked/towers/$CHOG.
+- Done: policy v1 (20/10/15, 5 per UTC day, 60s + 3 accepted human deploys), bot_matches evidence + bot_gold_awards ledger (0023/0024 on TEST only), independent replay verify, atomic UTC-day cap, idempotent per-match award, no fake bot participants, no matches/participants writes.
+- Done: all balance/spend paths count approved bot Gold with missing-table guards; PracticeRoom pays only fallback origin with UNRANKED_BOT_GOLD_REWARDS_ENABLED=1; Codex bot_gold contract (eligibility, amount, cap status).
+- Checks: bot-gold unit 12/12 + live flag ON/OFF 2/2, V2.1e fallback suites green, PvP gold/sponsorship suites green, tsc clean, scoped lint clean, production build pass.
+- Known pre-existing TEST-branch residue failures, proven identical on pristine code: gold reconcile-short-ledger (136 short rows over limit 50), card-xp 2 reconcile tests. Needs owner-approved cleanup pass, never ad-hoc SQL.
+- Next: coordinated rollout (apply 0023/0024 to PROD, deploy, enable flag) plus Codex reward UI; live authenticated acceptance needs a real Privy sign-in.
+
 ## V2.1e Unranked AI Fallback (2026-10-28, branch v2.1e-unranked-fallback 1096734, pushed, deployed scoped to endy-vps with flag OFF)
 
 - Doing: shipped human-first Unranked queue with server-owned 20s bot assignment, STOP after backend, no UI/fallback-activation/Ranked/XP.

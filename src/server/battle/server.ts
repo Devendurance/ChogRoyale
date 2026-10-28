@@ -5,6 +5,7 @@ import { logger } from "@/lib/logger";
 import { MatchCoordinator, QueueRoom, RankedQueueRoom } from "@/server/battle/matchmaking";
 import { BattleRoom, type BattleRoomDeps } from "@/server/battle/room";
 import { PracticeRoom } from "@/server/battle/practice-room";
+import { botGoldService } from "@/server/battle/bot-gold";
 
 export interface BattleServerRuntimeOptions {
   /** Install SIGTERM/SIGINT handlers that drain rooms then exit. Hosting only. */
@@ -33,6 +34,7 @@ export async function startBattleServer(
   // Retries pending settlement records at startup and periodically. The
   // service (not the room) owns results, so room dispose can't drop them.
   deps.settlement?.startSweeper();
+  if (deps.botGold?.enabled) botGoldService().startSweeper();
   const transport = new WebSocketTransport();
   // Host health probe. Plain liveness only: no rooms, players, or secrets.
   transport.getExpressApp().get("/healthz", (_req: unknown, res: { json: (body: unknown) => void }) => {
@@ -57,10 +59,11 @@ export async function startBattleServer(
  */
 export async function drainBattleServer(
   server: Pick<Server, "gracefullyShutdown">,
-  deps: Pick<BattleRoomDeps, "settlement">
+  deps: Pick<BattleRoomDeps, "settlement" | "botGold">
 ): Promise<void> {
   try {
     deps.settlement?.stopSweeper();
+    if (deps.botGold?.enabled) botGoldService().stopSweeper();
   } catch {
     // Sweeper stop is best-effort; shutdown proceeds regardless.
   }
@@ -69,7 +72,7 @@ export async function drainBattleServer(
 
 export function installShutdownHooks(
   server: Pick<Server, "gracefullyShutdown">,
-  deps: Pick<BattleRoomDeps, "settlement">
+  deps: Pick<BattleRoomDeps, "settlement" | "botGold">
 ): void {
   let stopping = false;
   const shutdown = (signal: string) => {
@@ -78,6 +81,7 @@ export function installShutdownHooks(
     logger.info("battle server draining", { signal });
     try {
       deps.settlement?.stopSweeper();
+      if (deps.botGold?.enabled) botGoldService().stopSweeper();
     } catch {
       // Sweeper stop is best-effort; shutdown proceeds regardless.
     }

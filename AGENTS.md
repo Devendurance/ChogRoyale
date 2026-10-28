@@ -136,6 +136,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 - Battle identity comes only from a server-verified Privy token in the matchmaking Authorization header. Never put tokens in URLs, room options, logs or replicated state. Seats, seeds, decks and Chaos are server-chosen; clients send intents only.
 - The dev battle alpha writes nothing to the database. Settlement, legacy and leaderboard updates belong to later B3 slices.
+- Unranked AI Gold is displayed only from a validated `bot_gold` message whose fallback provenance and `matchId` match the ended room. Never infer Gold from the result, duration or `practice.noReward`, and refresh the authenticated balance only after a confirmed server message. Keep the V2.1g reward flag and production migrations owner-gated.
 - Practice UI uses the server-owned `battle_practice` room and `practice` mode, keeps the bot identity as `AI Opponent`, and must not resume or settle a PvP room as Practice.
 - Practice difficulty selection is a client request only. Send it to `battle_practice`, then display and retain the server-confirmed opponent difficulty through reconnects, results, and fresh Battle Again rooms.
 - Unranked AI fallback keeps the public route intent as Unranked while the server room reports `practice`; use `practiceOpponent.source === "unranked-fallback"` and a separate resume slot to preserve that origin through reconnects and results.
