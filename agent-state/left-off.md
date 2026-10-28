@@ -1,3 +1,12 @@
+## V2.1g Unranked AI Bot Gold (2026-10-28, branch v2.1g-bot-gold 312c226, pushed, TEST migration only, flag OFF)
+
+- Doing: shipped versioned fallback Gold backend slice, STOP after backend, no PROD migration/activation, no Card XP/Player XP/Chog Pass/Ranked/towers/$CHOG.
+- Done: policy v1 (20/10/15, 5 per UTC day, 60s + 3 accepted human deploys), bot_matches evidence + bot_gold_awards ledger (0023/0024 on TEST only), independent replay verify, atomic UTC-day cap, idempotent per-match award, no fake bot participants, no matches/participants writes.
+- Done: all balance/spend paths count approved bot Gold with missing-table guards; PracticeRoom pays only fallback origin with UNRANKED_BOT_GOLD_REWARDS_ENABLED=1; Codex bot_gold contract (eligibility, amount, cap status).
+- Checks: bot-gold unit 12/12 + live flag ON/OFF 2/2, V2.1e fallback suites green, PvP gold/sponsorship suites green, tsc clean, scoped lint clean, production build pass.
+- Known pre-existing TEST-branch residue failures, proven identical on pristine code: gold reconcile-short-ledger (136 short rows over limit 50), card-xp 2 reconcile tests. Needs owner-approved cleanup pass, never ad-hoc SQL.
+- Next: coordinated rollout (apply 0023/0024 to PROD, deploy, enable flag) plus Codex reward UI; live authenticated acceptance needs a real Privy sign-in.
+
 ## V2.1e Unranked AI Fallback (2026-10-28, branch v2.1e-unranked-fallback 1096734, pushed, deployed scoped to endy-vps with flag OFF)
 
 - Doing: shipped human-first Unranked queue with server-owned 20s bot assignment, STOP after backend, no UI/fallback-activation/Ranked/XP.
