@@ -57,6 +57,13 @@ const DEV_ENABLED = process.env.NODE_ENV !== "production" || process.env.NEXT_PU
 type Stage = "idle" | "connecting" | "searching" | "lobby" | "active" | "reconnecting" | "ended" | "aborted" | "failed" | "closed";
 type RankedAwardStatus = "idle" | "checking" | "awarded" | "unavailable" | "timeout";
 export type BattleEntryMode = "unranked" | "ranked" | "private" | "practice";
+
+/** A room can be attached before its first lobby message arrives. Keep that
+ * short handoff window visible instead of rendering an empty battle shell. */
+export function lobbyWaitingForMessage(stage: Stage, lobby: LobbyMessage | null): boolean {
+  return stage === "lobby" && lobby === null;
+}
+
 const RESUME_KEY = "b3.resume";
 const PRACTICE_RESUME_KEY = "b3.practice.resume";
 const UNRANKED_FALLBACK_RESUME_KEY = "b3.unranked-fallback.resume";
@@ -137,6 +144,34 @@ export function validateMatchFoundMessage(value: unknown, queue: "unranked" | "r
     return { ok: false, reason: "The matchmaking service returned an invalid AI handoff." };
   }
   return { ok: true, message: value as unknown as MatchFoundMessage, origin: "unranked-fallback" };
+}
+
+type QueueHandoffLifecycle<T> = {
+  consume: () => Promise<T>;
+  isCurrent: () => boolean;
+  attach: (room: T) => void;
+  leaveQueue: () => Promise<unknown> | unknown;
+  leaveRoom: (room: T) => Promise<unknown> | unknown;
+};
+
+/**
+ * Complete a queue handoff without letting the queue socket's close race the
+ * reserved room. The room becomes the active connection before queue leave
+ * is awaited, while cancellation still disposes a room that arrives too late.
+ */
+export async function completeQueueHandoff<T>(lifecycle: QueueHandoffLifecycle<T>): Promise<"attached" | "cancelled"> {
+  const nextRoom = await lifecycle.consume();
+  if (!lifecycle.isCurrent()) {
+    await Promise.resolve().then(() => lifecycle.leaveRoom(nextRoom)).catch(() => {});
+    return "cancelled";
+  }
+  lifecycle.attach(nextRoom);
+  await Promise.resolve().then(() => lifecycle.leaveQueue()).catch(() => {});
+  if (!lifecycle.isCurrent()) {
+    await Promise.resolve().then(() => lifecycle.leaveRoom(nextRoom)).catch(() => {});
+    return "cancelled";
+  }
+  return "attached";
 }
 
 /** The room name is the server-side mode authority. Practice never joins PvP. */
@@ -409,6 +444,10 @@ export function BattlePanel({
     });
     r.onMessage("presence", (m: PresenceMessage) => setPresence(m));
     r.onMessage("error", (e: { reason: string }) => setError(e.reason));
+    // The first lobby can arrive while the SDK is completing create/join,
+    // before this listener set is attached. One bounded sync request lets the
+    // authenticated seat hydrate without changing room or queue transport.
+    try { r.send("lobby_sync"); } catch { /* the room may close during attach */ }
     r.onLeave((code: number) => {
       setStage((s) => {
         if (originRejected) return "failed";
@@ -962,6 +1001,15 @@ export function BattlePanel({
           <div>Connection lost, reconnecting… {Math.max(0, Math.ceil((resumeDeadlineAt - now) / 1000))}s left</div>
           <div>
             <button className={publicMode ? "app-btn app-btn--ghost" : undefined} onClick={() => reset()}>Give up</button>
+          </div>
+        </section>
+      )}
+
+      {lobbyWaitingForMessage(stage, lobby) && (
+        <section className={publicMode ? "app-play-battle-controls" : undefined} style={publicMode ? undefined : { display: "grid", gap: 6 }} aria-live="polite" data-testid="battle-lobby-loading">
+          <div role="status">Preparing your battle...</div>
+          <div>
+            <button className={publicMode ? "app-btn app-btn--ghost" : undefined} onClick={() => reset()}>Back to Battle Hall</button>
           </div>
         </section>
       )}

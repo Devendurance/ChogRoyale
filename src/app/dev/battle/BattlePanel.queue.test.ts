@@ -1,5 +1,7 @@
 import { describe, expect, it, beforeEach, vi } from "vitest";
+import type { LobbyMessage } from "@/lib/battle-protocol";
 import {
+  lobbyWaitingForMessage,
   queueFallbackRemainingSeconds,
   readResume,
   resumeKeyForOrigin,
@@ -23,6 +25,12 @@ describe("BattlePanel queue handoff", () => {
         removeItem: (key: string) => values.delete(key),
       },
     });
+  });
+
+  it("keeps the lobby handoff visible while its first message is still pending", () => {
+    expect(lobbyWaitingForMessage("lobby", null)).toBe(true);
+    expect(lobbyWaitingForMessage("connecting", null)).toBe(false);
+    expect(lobbyWaitingForMessage("lobby", {} as LobbyMessage)).toBe(false);
   });
 
   it("shows a fallback countdown only when the server advertises one", () => {
