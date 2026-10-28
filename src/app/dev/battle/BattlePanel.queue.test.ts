@@ -70,7 +70,7 @@ describe("BattlePanel queue handoff", () => {
   });
 
   it("keeps a fast queue close from invalidating a delayed handoff", async () => {
-    let current = true;
+    const current = true;
     let resolveRoom!: (room: { id: string }) => void;
     let attached = false;
     let queueLeft = false;

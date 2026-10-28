@@ -139,4 +139,18 @@ describe("V2.1e fallback handoff", () => {
     expect(lobby!.practice?.opponent.source).toBe("practice");
     await r.leave().catch(() => {});
   });
+
+  it("replays an authenticated Practice lobby after the initial delivery was missed", async () => {
+    const r = await client("tok-carol").create(BATTLE_PRACTICE_ROOM);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    let deliveries = 0;
+    let lobby: LobbyMessage | null = null;
+    r.onMessage("lobby", (m: LobbyMessage) => { deliveries += 1; lobby = m; });
+    const before = deliveries;
+    r.send("lobby_sync");
+    await until(() => deliveries > before);
+    const replayedLobby = lobby as unknown as LobbyMessage;
+    expect(replayedLobby.practice?.opponent.source).toBe("practice");
+    await r.leave().catch(() => {});
+  });
 });

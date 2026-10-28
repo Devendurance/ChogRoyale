@@ -1,5 +1,12 @@
 # Project State
 
+# V2.1f P0 blank-screen hotfix (2026-10-28)
+
+- Current branch: `codex/p0-unranked-ai-handoff`, based on `origin/main` merge `4409cd9`.
+- Queue handoff now claims the match before awaits, attaches the reserved room before queue cleanup, ignores duplicate match_found and late queue closes, and disposes late reservations after cancellation.
+- Practice and PvP rooms support authenticated idempotent `lobby_sync` snapshots. The client retries hydration for 2.5 seconds, shows `Preparing your battle...`, and fails visibly with a Battle Hall recovery action instead of a blank shell.
+- Focused lifecycle and room tests pass 40/40. TypeScript and scoped lint pass. Backend sync code needs the matching VPS deployment before the server-side replay guarantee is live.
+
 # V2.1f Unranked AI fallback frontend (2026-10-28)
 
 - Current branch: `codex/v2.1f-unranked-fallback-ui`, based on `v2.1e-unranked-fallback` at `8a2befd` plus reviewed V2.1f commits.

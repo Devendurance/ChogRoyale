@@ -317,3 +317,8 @@ Last updated: 2026-10-24
 - Done: added coordinator fixes for explicit queue copy, timeout/handoff race protection, and fallback Back to Battle Hall navigation.
 - Next: finish dependency-backed focused tests, typecheck, scoped lint, production build, then stage only V2.1f files plus state/rules docs, commit, push, open/merge PR, and verify Vercel Production. Keep backend fallback flag OFF.
 - Preserve unrelated `.fast-build/STATE.md`, `DESIGN.md`, `demo-production/`, and the docs files already present in the worktree.
+## V2.1f P0 blank-screen hotfix (2026-10-28)
+
+- Doing: finish the hotfix on `codex/p0-unranked-ai-handoff`, then push, open and merge the scoped PR and verify Vercel.
+- Done: fixed reservation handoff ordering, duplicate/cancel races, visible lobby hydration state, bounded `lobby_sync` recovery, and Practice/PvP room snapshot tests. Focused lifecycle/room tests 40/40 and typecheck pass.
+- Next: run scoped lint and production build, commit only hotfix/state files, push and merge. Coordinate the exact `PracticeRoom`/`BattleRoom` VPS deployment because the remote server must include `lobby_sync` for replay recovery. No new gameplay or reward work.

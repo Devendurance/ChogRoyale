@@ -216,6 +216,7 @@ export function BattlePanel({
   const [code, setCode] = useState(initialRoom ?? "");
   const [room, setRoom] = useState<Room | null>(null);
   const [lobby, setLobby] = useState<LobbyMessage | null>(null);
+  const [lobbyHydrationFailed, setLobbyHydrationFailed] = useState(false);
   const [start, setStart] = useState<StartMessage | null>(null);
   const [frame, setFrame] = useState<BattleFrame | null>(null);
   const [acks, setAcks] = useState<Array<AckMessage & { label: string }>>([]);
@@ -350,14 +351,38 @@ export function BattlePanel({
   const attachRoom = useCallback((r: Room, origin: ResumeOrigin = resumeOriginForEntryMode(initialMode)) => {
     r.reconnection.enabled = false;
     let originRejected = false;
+    let lobbyHydrated = false;
+    let hydrationStale = false;
+    const hydrationTimers: Array<ReturnType<typeof setTimeout>> = [];
+    const clearLobbyHydration = () => {
+      hydrationStale = true;
+      while (hydrationTimers.length) {
+        const timer = hydrationTimers.pop();
+        if (timer) clearTimeout(timer);
+      }
+    };
+    const markLobbyHydrated = () => {
+      lobbyHydrated = true;
+      while (hydrationTimers.length) {
+        const timer = hydrationTimers.pop();
+        if (timer) clearTimeout(timer);
+      }
+      setLobbyHydrationFailed(false);
+    };
+    const requestLobbySync = () => {
+      if (lobbyHydrated || hydrationStale) return;
+      try { r.send("lobby_sync"); } catch { /* the room may close during attach */ }
+    };
     const rejectOrigin = (reason: string) => {
       if (originRejected) return;
       originRejected = true;
+      clearLobbyHydration();
       setError(reason);
       setStage("failed");
       void r.leave().catch(() => {});
     };
     r.onMessage("lobby", (m: LobbyMessage) => {
+      markLobbyHydrated();
       const serverSource = m.practice?.opponent.source;
       if (origin === "unranked-fallback" && serverSource !== "unranked-fallback") {
         rejectOrigin("The AI handoff could not be verified. Search again.");
@@ -377,6 +402,7 @@ export function BattlePanel({
       setStage((s) => (s === "connecting" || s === "searching" ? "lobby" : s));
     });
     r.onMessage("start", (m: StartMessage) => {
+      clearLobbyHydration();
       const serverSource = m.practiceOpponent?.source;
       const authoritativeOrigin = resumeOriginForStart(m, origin);
       if (!authoritativeOrigin) {
@@ -447,6 +473,7 @@ export function BattlePanel({
     });
     r.onMessage("settlement", (m: SettlementMessage) => setSettlement(m));
     r.onMessage("aborted", (a: { reason: string }) => {
+      clearLobbyHydration();
       const resumeOrigin = resumeInfo.current?.origin ?? resumeOriginForEntryMode(initialMode);
       resumeInfo.current = null;
       clearResume(resumeOrigin);
@@ -457,10 +484,19 @@ export function BattlePanel({
     r.onMessage("presence", (m: PresenceMessage) => setPresence(m));
     r.onMessage("error", (e: { reason: string }) => setError(e.reason));
     // The first lobby can arrive while the SDK is completing create/join,
-    // before this listener set is attached. One bounded sync request lets the
-    // authenticated seat hydrate without changing room or queue transport.
-    try { r.send("lobby_sync"); } catch { /* the room may close during attach */ }
+    // before this listener set is attached. A bounded series of idempotent
+    // sync requests lets the authenticated seat hydrate without changing room
+    // or queue transport. The timeout makes a failed hydration visible.
+    setLobbyHydrationFailed(false);
+    requestLobbySync();
+    for (const delay of [250, 1_000, 2_500]) {
+      hydrationTimers.push(setTimeout(requestLobbySync, delay));
+    }
+    hydrationTimers.push(setTimeout(() => {
+      if (!lobbyHydrated && !hydrationStale) setLobbyHydrationFailed(true);
+    }, 5_000));
     r.onLeave((code: number) => {
+      clearLobbyHydration();
       setStage((s) => {
         if (originRejected) return "failed";
         // Unconsented drop during a live match: try to resume the seat.
@@ -699,6 +735,7 @@ export function BattlePanel({
     setRoom(null);
     setQueueRoom(null);
     setLobby(null);
+    setLobbyHydrationFailed(false);
     setStart(null);
     setFrame(null);
     setEnd(null);
@@ -1018,7 +1055,7 @@ export function BattlePanel({
 
       {lobbyWaitingForMessage(stage, lobby) && (
         <section className={publicMode ? "app-play-battle-controls" : undefined} style={publicMode ? undefined : { display: "grid", gap: 6 }} aria-live="polite" data-testid="battle-lobby-loading">
-          <div role="status">Preparing your battle...</div>
+          <div role="status">{lobbyHydrationFailed ? "Couldn't load the battle lobby." : "Preparing your battle..."}</div>
           <div>
             <button className={publicMode ? "app-btn app-btn--ghost" : undefined} onClick={() => reset()}>Back to Battle Hall</button>
           </div>

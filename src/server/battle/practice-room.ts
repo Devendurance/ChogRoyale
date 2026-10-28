@@ -126,6 +126,10 @@ export class PracticeRoom extends Room {
     this.session.slots[1] = { playerId: this.botPlayerId, username: PRACTICE_BOT_DISPLAY_NAME };
     try { this.session.setReady(this.botPlayerId, botLoadout()); } catch (e) { logger.info("practice bot ready failed", { roomId: this.roomId, reason: e instanceof Error ? e.message : String(e) }); }
     this.onMessage("ready", (client: PracticeClient, msg: unknown) => void this.onReady(client, msg));
+    this.onMessage("lobby_sync", (client: PracticeClient) => {
+      if (this.session.phase !== "waiting" || this.session.slotOf(client.auth.playerId) < 0) return;
+      this.sendLobby(client);
+    });
     this.onMessage("unready", (client: PracticeClient) => {
       try {
         this.session.unready(client.auth.playerId);
@@ -168,7 +172,8 @@ export class PracticeRoom extends Room {
   }
 
   private sendLobby(client: PracticeClient) {
-    const slot = Math.max(0, this.session.slotOf(client.auth.playerId));
+    const slot = this.session.slotOf(client.auth.playerId);
+    if (slot < 0) return;
     const base = this.session.lobby(slot);
     client.send("lobby", {
       ...base,
