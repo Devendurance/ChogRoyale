@@ -1,8 +1,8 @@
 ## V2.2b Player Account Level UI (2026-10-29)
 
-- Doing: finish review and delivery of the frontend Account Level UI on `codex/v2.2b-player-account-level-ui`, based on V2.2a `ef32d97` plus model checkpoint `bafcd29`.
+- Doing: owner review of PR #18, https://github.com/Devendurance/ChogRoyale/pull/18, for the frontend Account Level UI on `codex/v2.2b-player-account-level-ui`, based on V2.2a `ef32d97` plus model checkpoint `bafcd29`.
 - Done: shared Account Level module for Profile and Progress, strict server response validation, authoritative level and threshold display, level milestones, recent Account XP awards, explicit disabled/auth/onboarding/migration/network/malformed states, 55 focused tests, lint, typecheck, build, and unauthenticated responsive gate screenshots.
-- Next: stage only scoped files and state notes, commit and push, open one PR to `main`, verify checks and Vercel preview. Do not merge, apply migration 0026, deploy, restart, enable `PLAYER_ACCOUNT_XP_ENABLED`, or begin V2.2c.
+- Next: owner approval is required before merging. Do not apply migration 0026, deploy, restart, enable `PLAYER_ACCOUNT_XP_ENABLED`, or begin V2.2c.
 
 ## V2.2a Player Account XP backend (2026-10-29, this session)
 
