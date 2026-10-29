@@ -2,9 +2,10 @@
 
 - Doing: finish the scoped backend handoff for `v2.1i-bot-card-xp`.
 - Done: recovered the existing local V2.1i code, fixed the current `xpEligible` TypeScript fixture error, kept the existing `stopSweeper` settlement wiring, added the shared XP ledger and progression recompute safety, chained XP after Gold, added terminal Gold refusal/cap handling, and wired the default-off release flag.
-- Done: `npm run db:generate` reports no schema drift. TEST migration 0025 applied through `scripts/migrate-test-run.ts`. Focused Bot Card XP tests pass 8/8, Bot Gold tests pass 12/12, typecheck and scoped ESLint pass.
-- Next: run the final scoped PvP/Gold checks, one production build, review and stage only V2.1i files, commit and push. Do not enable flags, migrate PROD, deploy or restart the battle host.
-- Known: the existing card-XP DB reconciliation test can fail on stale TEST rows ahead of the current fixture. Preserve and report this residue failure rather than running ad-hoc cleanup.
+- Done: `npm run db:generate` reports no schema drift. TEST migration 0025 applied through `scripts/migrate-test-run.ts`. Focused Bot Card XP tests pass 8/8, Bot Gold tests pass 12/12, live flag wiring passes 2/2, typecheck, scoped ESLint and production build pass. Code commit `59d675b` is pushed to `origin/v2.1i-bot-card-xp`.
+- Done: one fresh full-suite attempt was stopped by the 1,800 second timeout after inherited TEST-branch residue failures in `legacy.test.ts` (3), `clans.test.ts` (1), `gold.test.ts` (1), `card-xp.test.ts` (2), and server card-XP lifecycle (1).
+- Next: owner review and V2.1j UI handoff. Do not enable flags, migrate PROD, deploy or restart the battle host.
+- Known: preserve the TEST residue failures and do not run ad-hoc cleanup.
 
 ## V2.1g/h Bot Gold Production Preflight (2026-10-28, PR #16 branch 4e9f636, pushed, no PROD changes)
 

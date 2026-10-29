@@ -5,7 +5,7 @@
 - Current branch: `v2.1i-bot-card-xp`. Existing local V2.1i backend work preserved and completed without resetting unrelated changes.
 - Bot Card XP uses replay-verified `bot_matches` evidence, a separate idempotent ledger, shared Gold-confirmed eligibility, the existing card progression ladder, and a six XP per match cap. Solo Practice, pre-flag evidence, PvP settlement, and Gold behavior remain isolated.
 - Added the default-off `UNRANKED_BOT_CARD_XP_ENABLED` release gate, requiring the Gold flag. The service singleton now shares restart reconciliation and shutdown, and pending runs close when Gold reaches refusal or cap.
-- Verification so far: TypeScript passed, focused Bot Card XP tests 8/8 passed, Bot Gold tests 12/12 passed, scoped ESLint passed. One existing TEST-branch card-XP reconciliation failure remains caused by stale rows ahead of the fixture, matching prior recorded residue.
+- Verification so far: TypeScript passed, focused Bot Card XP tests 8/8 passed, Bot Gold tests 12/12 passed, live flag wiring 2/2 passed, scoped ESLint passed, and the production build passed. One fresh full-suite attempt timed out after inherited TEST-branch residue failures in legacy (3), clans (1), Gold reconciliation (1), and card-XP reconciliation (3).
 - TEST migration 0025 was applied with `scripts/migrate-test-run.ts`. No PROD migration, flag activation, deployment, restart, or player-data change was performed.
 
 # V2.1h Unranked AI Gold UI (2026-10-28)
