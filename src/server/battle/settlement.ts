@@ -285,6 +285,8 @@ export interface SettlementServiceDeps {
   cardXp?: CardXpProcessor | null;
   /** Optional P2b Gold earn pass. Same decoupling contract as trophies. */
   gold?: GoldProcessor | null;
+  /** Optional V2.2a Account XP pass. Same decoupling contract as Gold. */
+  accountXp?: AccountXpProcessor | null;
 }
 
 /** Structural contract for the card XP pass; keeps settlement.ts free of a
@@ -299,6 +301,13 @@ export interface CardXpProcessor {
 export interface GoldProcessor {
   processMatch(matchId: string): Promise<void>;
   reconcile(limit?: number): Promise<void>;
+}
+
+/** Structural contract for the Account XP pass; keeps settlement.ts free of a
+ * hard import on the account XP module. */
+export interface AccountXpProcessor {
+  processPvpMatch(matchId: string): Promise<unknown>;
+  reconcile(limit?: number): Promise<unknown>;
 }
 
 /** Structural contract for the trophy pass; keeps settlement.ts free of a
@@ -322,6 +331,7 @@ export class SettlementService {
   private readonly trophies: TrophyProcessor | null;
   private readonly cardXp: CardXpProcessor | null;
   private readonly gold: GoldProcessor | null;
+  private readonly accountXp: AccountXpProcessor | null;
   private sweeper: ReturnType<typeof setInterval> | null = null;
   private readonly inFlight = new Set<string>();
 
@@ -335,6 +345,7 @@ export class SettlementService {
     this.trophies = deps.trophies ?? null;
     this.cardXp = deps.cardXp ?? null;
     this.gold = deps.gold ?? null;
+    this.accountXp = deps.accountXp ?? null;
   }
 
   /** Legacy writes are decoupled: settlement is already durable, and a
@@ -389,6 +400,7 @@ export class SettlementService {
           await this.runTrophies(record.matchId);
           await this.runCardXp(record.matchId);
           await this.runGold(record.matchId);
+          await this.runAccountXp(record.matchId);
           return status;
         } catch (err) {
           if (err instanceof SettlementConflictError) {
@@ -486,6 +498,15 @@ export class SettlementService {
         logger.error("gold reconcile failed", { reason: err instanceof Error ? err.message : String(err) });
       }
     }
+    // Finishes settled eligible matches whose Account XP runs are pending.
+    // Award rows are idempotent, so this is always safe to rerun.
+    if (this.accountXp) {
+      try {
+        await this.accountXp.reconcile();
+      } catch (err) {
+        logger.error("account xp reconcile failed", { reason: err instanceof Error ? err.message : String(err) });
+      }
+    }
   }
 
   /** Trophy writes are decoupled: settlement is already durable, and an
@@ -518,6 +539,17 @@ export class SettlementService {
       await this.gold.processMatch(matchId);
     } catch (err) {
       logger.error("gold processing failed", { matchId, reason: err instanceof Error ? err.message : String(err) });
+    }
+  }
+
+  /** Account XP awards are idempotent ledger inserts; failures stay local
+   * to the XP pass and never change settlement status or other rewards. */
+  private async runAccountXp(matchId: string): Promise<void> {
+    if (!this.accountXp) return;
+    try {
+      await this.accountXp.processPvpMatch(matchId);
+    } catch (err) {
+      logger.error("account xp processing failed", { matchId, reason: err instanceof Error ? err.message : String(err) });
     }
   }
 

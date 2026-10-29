@@ -183,6 +183,13 @@
       "when": 1793228221247,
       "tag": "0025_crazy_red_ghost",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1793295272778,
+      "tag": "0026_legal_rockslide",
+      "breakpoints": true
     }
   ]
 }

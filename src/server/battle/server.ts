@@ -7,6 +7,7 @@ import { BattleRoom, type BattleRoomDeps } from "@/server/battle/room";
 import { PracticeRoom } from "@/server/battle/practice-room";
 import { botGoldService } from "@/server/battle/bot-gold";
 import { botCardXpService } from "@/server/battle/bot-card-xp";
+import { accountXpService } from "@/server/battle/account-xp";
 
 export interface BattleServerRuntimeOptions {
   /** Install SIGTERM/SIGINT handlers that drain rooms then exit. Hosting only. */
@@ -37,6 +38,7 @@ export async function startBattleServer(
   deps.settlement?.startSweeper();
   if (deps.botGold?.enabled) botGoldService().startSweeper();
   if (deps.botGold?.enabled && deps.botCardXp?.enabled) botCardXpService().startSweeper();
+  if (deps.accountXp?.enabled) accountXpService().startSweeper();
   const transport = new WebSocketTransport();
   // Host health probe. Plain liveness only: no rooms, players, or secrets.
   transport.getExpressApp().get("/healthz", (_req: unknown, res: { json: (body: unknown) => void }) => {
@@ -61,12 +63,13 @@ export async function startBattleServer(
  */
 export async function drainBattleServer(
   server: Pick<Server, "gracefullyShutdown">,
-  deps: Pick<BattleRoomDeps, "settlement" | "botGold" | "botCardXp">
+  deps: Pick<BattleRoomDeps, "settlement" | "botGold" | "botCardXp" | "accountXp">
 ): Promise<void> {
   try {
     deps.settlement?.stopSweeper();
     if (deps.botGold?.enabled) botGoldService().stopSweeper();
     if (deps.botGold?.enabled && deps.botCardXp?.enabled) botCardXpService().stopSweeper();
+    if (deps.accountXp?.enabled) accountXpService().stopSweeper();
   } catch {
     // Sweeper stop is best-effort; shutdown proceeds regardless.
   }
@@ -75,7 +78,7 @@ export async function drainBattleServer(
 
 export function installShutdownHooks(
   server: Pick<Server, "gracefullyShutdown">,
-  deps: Pick<BattleRoomDeps, "settlement" | "botGold" | "botCardXp">
+  deps: Pick<BattleRoomDeps, "settlement" | "botGold" | "botCardXp" | "accountXp">
 ): void {
   let stopping = false;
   const shutdown = (signal: string) => {
@@ -86,6 +89,7 @@ export function installShutdownHooks(
       deps.settlement?.stopSweeper();
       if (deps.botGold?.enabled) botGoldService().stopSweeper();
       if (deps.botGold?.enabled && deps.botCardXp?.enabled) botCardXpService().stopSweeper();
+      if (deps.accountXp?.enabled) accountXpService().stopSweeper();
     } catch {
       // Sweeper stop is best-effort; shutdown proceeds regardless.
     }

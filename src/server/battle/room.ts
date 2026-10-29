@@ -57,6 +57,11 @@ export interface BattleRoomDeps {
   unrankedFallback?: MatchCoordinatorFallbackDeps;
   /** Server-owned Unranked AI Card XP rewards. Absent or disabled means no bot Card XP writes and no bot_card_xp messages. Never enable without the bot Gold flag: XP is only awarded for Gold-confirmed matches. */
   botCardXp?: { enabled: boolean };
+  /** V2.2a Player Account XP (levels 1-100). Absent or disabled means no
+   * Account XP writes on any path. PvP awards flow through the settlement
+   * service, bot awards through the PracticeRoom hook; both re-check this
+   * flag plus Gold confirmation and the release boundary. Default OFF. */
+  accountXp?: { enabled: boolean };
   /** How long a dropped seat stays reservable during an active match. */
   reconnectGraceMs?: number;
   /** Durable settlement service; absent or null disables DB writes. */

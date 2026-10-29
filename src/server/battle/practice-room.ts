@@ -26,6 +26,7 @@ import { commanderCardId, isAbilityCommand, validateDeck } from "@/lib/combat";
 import { BOT_GOLD_POLICY_VERSION } from "@/lib/bot-gold";
 import { BotGoldService } from "@/server/battle/bot-gold";
 import { BotCardXpService } from "@/server/battle/bot-card-xp";
+import { AccountXpService } from "@/server/battle/account-xp";
 import { productionEntitlementDeps, resolveCommander, type EntitlementDeps } from "@/server/battle/entitlement";
 import { productionPatronSource, type PatronSource } from "@/server/battle/patron-source";
 import type { MatchCoordinator } from "@/server/battle/matchmaking";
@@ -50,6 +51,11 @@ function botGold(): BotGoldService {
 let botCardXpService: BotCardXpService | null = null;
 function botCardXp(): BotCardXpService {
   return (botCardXpService ??= new BotCardXpService());
+}
+
+let accountXpService: AccountXpService | null = null;
+function accountXp(): AccountXpService {
+  return (accountXpService ??= new AccountXpService());
 }
 
 let productionEntitlement: EntitlementDeps | null = null;
@@ -321,6 +327,10 @@ export class PracticeRoom extends Room {
       if (gold) receipts.push(gold);
       const xp = this.maybeAwardBotXp(gold);
       if (xp) receipts.push(xp);
+      // V2.2a Account XP is backend only in V1: no client message, no
+      // close delay. The service re-checks the flag, Gold confirmation
+      // and the release boundary, and never throws.
+      this.maybeAwardAccountXp(gold);
       const awardDelivered = receipts.length > 0 ? Promise.all(receipts).then(() => undefined) : null;
       this.setSimulationInterval();
       this.releaseHuman();
@@ -412,6 +422,24 @@ export class PracticeRoom extends Room {
       });
     return (afterGold ? afterGold.then(process) : process())
       .catch((err) => logger.error("bot card xp hook failed", { roomId: this.roomId, reason: err instanceof Error ? err.message : String(err) }));
+  }
+
+  /**
+   * V2.2a Player Account XP for verified fallback matches. Backend only in
+   * V1: no client message and no close delay. Only Unranked fallback rooms
+   * with the bot Gold flag and the Account XP flag enabled reach the
+   * service; solo Practice and flag-OFF rooms send nothing and write
+   * nothing. The service awards only Gold-confirmed matches begun after
+   * the durable release boundary. Never throws.
+   */
+  private maybeAwardAccountXp(afterGold: Promise<void> | null): void {
+    if (this.origin !== "unranked-fallback") return;
+    if (!PracticeRoom.deps.botGold?.enabled || !PracticeRoom.deps.accountXp?.enabled) return;
+    const matchId = this.matchId;
+    if (!matchId) return;
+    const run = () => accountXp().processBotMatch(matchId);
+    void (afterGold ? afterGold.then(run) : run())
+      .catch((err) => logger.error("account xp hook failed", { roomId: this.roomId, reason: err instanceof Error ? err.message : String(err) }));
   }
 
   /**

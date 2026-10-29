@@ -1,3 +1,24 @@
+## V2.2a Player Account XP backend (2026-10-29, this session)
+
+- Doing: backend-only Account XP levels 1-100 on branch `v2.2a-player-account-xp` from origin/main `d2b2460`. No merge, no PROD migration, no deploy, no flag activation, no frontend UI.
+- Done: pure policy `src/lib/account-xp.ts` (100/75/50 PvP, 40/30/20 fallback, 600 ticks, 3 deploys, PvP cap 20, curve 100n+25n(n-1)/2), additive ledger + runs + release tables (schema + migration 0026), `src/db/account-xp.ts`, `AccountXpService` (PvP via settlement hook, bot via PracticeRoom hook after Gold, transactional caps, idempotent runs, pre-release refusal, flag-OFF zero writes), settlement/practice/server/room wiring (all default OFF), `GET /api/players/me/account-xp` (503 when unmigrated).
+- Verified: policy 8/8, service 12/12, settlement regressions 19/19 (with policy), bot-gold 12/12, bot-card-xp 8/8, typecheck, scoped lint, production build (route listed).
+- Next: commit + push branch, owner review, Codex V2.2b frontend handoff. Do not merge, migrate PROD, deploy, restart endy-vps, enable Account XP, or backfill history.
+
+## V2.1i/j Production Activation (2026-10-29)
+
+- Doing: scoped production rollout authorized by owner. No new features, no synthetic matches, no fake players.
+- Done: prechecks green, restore branch `br-late-sky-b5qfkhi1` from PROD HEAD, baseline counts recorded, deployed merged main `d2b2460` to endy-vps, applied only migration 0025, restarted with flag OFF for verification then set `UNRANKED_BOT_CARD_XP_ENABLED=1` and restarted. Health local/public 200, ranked closed, fallback/Gold/XP all ENABLED.
+- Next: owner real Privy player acceptance. Do not claim acceptance passed. Rollback is flag-OFF plus restart if needed.
+
+## V2.1i/j Release Preflight (2026-10-29)
+
+- Doing: focused release-safety check on PR #17 before owner merge. No feature rebuild, merge, migration, deploy, flag change, or production writes.
+- Done: reproduced a real lost-update hazard in `applyCardXpTotals` with deterministic Pool sessions (plain stale 5 overwrote fresh 7). Fixed with a monotonic `WHERE xp <= excluded.xp` guard, no locks, no deadlocks, purchased intact. New `src/db/card-xp-concurrency.test.ts` covers PvP vs bot, two bots, duplicate, interrupted+reconcile, downgrade block, and stale-session guard (6/6).
+- Done: committed minimal fix `6061220` to `codex/v2.1j-bot-card-xp-ui` and pushed. Updated PR head is `6061220` (was `08ac6ed`).
+- Verified: bot XP 8/8, bot Gold 12/12, concurrency 6/6, Practice suites 26/26, typecheck, scoped lint, and production build pass. Known TEST residue remains in `card-xp.test.ts` (2) and `gold.test.ts` (1), identical before the fix.
+- Next: owner GO/NO-GO for PR #17. Do not merge, migrate PROD, deploy, enable flags, or clean TEST residue without approval.
+
 ## V2.1j Unranked AI Card XP UI (2026-10-29)
 
 - Doing: owner review of PR #17, https://github.com/Devendurance/ChogRoyale/pull/17.
