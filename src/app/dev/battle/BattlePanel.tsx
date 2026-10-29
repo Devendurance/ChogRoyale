@@ -16,6 +16,7 @@ import {
   PRACTICE_DIFFICULTIES,
   type AckMessage,
   type BattleFrame,
+  type BotCardXpMessage,
   type BotGoldMessage,
   type CommanderChoice,
   type EndMessage,
@@ -52,7 +53,9 @@ import {
 } from "./battle-audio";
 import { battleServerUrl, isPublicBattleAvailable } from "@/components/app/battle-availability";
 import { reduceBotGoldMessage, validateBotGoldMessage } from "./bot-gold-model";
+import { reduceBotCardXpMessage, validateBotCardXpMessage } from "./bot-card-xp-model";
 export { validateBotGoldMessage } from "./bot-gold-model";
+export { validateBotCardXpMessage } from "./bot-card-xp-model";
 const APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID ?? "";
 const SERVER = battleServerUrl() ?? "http://127.0.0.1:2567";
 const DEV_ENABLED = process.env.NODE_ENV !== "production" || process.env.NEXT_PUBLIC_ENABLE_DEV_BATTLE === "1";
@@ -79,6 +82,14 @@ type BotGoldContext = {
   end: EndMessage | null;
   receipt: BotGoldMessage | null;
   balanceRefreshStarted: boolean;
+};
+type BotCardXpContext = {
+  roomId: string;
+  origin: ResumeOrigin;
+  start: StartMessage;
+  end: EndMessage | null;
+  receipt: BotCardXpMessage | null;
+  progressionRefreshStarted: boolean;
 };
 
 /** The server's Practice room is also used by an Unranked AI fallback. The
@@ -241,8 +252,10 @@ export function BattlePanel({
   const [end, setEnd] = useState<EndMessage | null>(null);
   const [settlement, setSettlement] = useState<SettlementMessage | null>(null);
   const [botGold, setBotGold] = useState<BotGoldMessage | null>(null);
+  const [botCardXp, setBotCardXp] = useState<BotCardXpMessage | null>(null);
   const [goldBalance, setGoldBalance] = useState<number | null>(null);
   const [goldBalanceStatus, setGoldBalanceStatus] = useState<"idle" | "loading" | "ready" | "unavailable">("idle");
+  const [cardXpReadbackStatus, setCardXpReadbackStatus] = useState<"idle" | "loading" | "ready" | "unavailable">("idle");
   const [rankedAward, setRankedAward] = useState<RankedAwardView | null>(null);
   const [rankedAwardStatus, setRankedAwardStatus] = useState<RankedAwardStatus>("idle");
   const [abort, setAbort] = useState<string | null>(null);
@@ -261,6 +274,7 @@ export function BattlePanel({
   const resumeInfo = useRef<ResumeInfo | null>(null);
   /** Room/match provenance survives React callback closures and late reward frames. */
   const botGoldContext = useRef<BotGoldContext | null>(null);
+  const botCardXpContext = useRef<BotCardXpContext | null>(null);
   const resumeDeadline = useRef(0);
   const [resumeDeadlineAt, setResumeDeadlineAt] = useState(0);
   /** Bump to cancel any in-flight reconnect loop. */
@@ -300,6 +314,12 @@ export function BattlePanel({
     setGoldBalanceStatus("idle");
   }, []);
 
+  const clearBotCardXpState = useCallback(() => {
+    botCardXpContext.current = null;
+    setBotCardXp(null);
+    setCardXpReadbackStatus("idle");
+  }, []);
+
   const refreshGoldBalance = useCallback(async (roomId: string, matchId: string) => {
     const context = botGoldContext.current;
     if (!context || context.roomId !== roomId || context.end?.matchId !== matchId) return;
@@ -320,6 +340,30 @@ export function BattlePanel({
       if (!latest || latest.roomId !== roomId || latest.end?.matchId !== matchId) return;
       setGoldBalance(null);
       setGoldBalanceStatus("unavailable");
+    }
+  }, [getAccessToken]);
+
+  /** Read progression only after the room confirms a fallback XP award. */
+  const refreshCardXp = useCallback(async (roomId: string, matchId: string) => {
+    const context = botCardXpContext.current;
+    if (!context || context.roomId !== roomId || context.end?.matchId !== matchId || context.progressionRefreshStarted) return;
+    // Claim the one refresh before awaiting auth or fetch. Replayed confirmed
+    // receipts must never fan out multiple progression reads.
+    context.progressionRefreshStarted = true;
+    setCardXpReadbackStatus("loading");
+    try {
+      const token = await getAccessToken();
+      if (!token) throw new Error("No authenticated session");
+      const response = await fetch("/api/players/me/card-xp", { headers: { authorization: `Bearer ${token}` } });
+      const body = await response.json() as unknown;
+      const latest = botCardXpContext.current;
+      if (!latest || latest.roomId !== roomId || latest.end?.matchId !== matchId) return;
+      if (!response.ok || !isRecord(body) || body.success !== true || !isRecord(body.data) || !isRecord(body.data.cards) || !Array.isArray(body.data.cards.cards)) throw new Error("Card XP readback unavailable");
+      setCardXpReadbackStatus("ready");
+    } catch {
+      const latest = botCardXpContext.current;
+      if (!latest || latest.roomId !== roomId || latest.end?.matchId !== matchId) return;
+      setCardXpReadbackStatus("unavailable");
     }
   }, [getAccessToken]);
 
@@ -473,7 +517,9 @@ export function BattlePanel({
       }
       if (m.mode === "practice") adoptPracticeDifficulty(m.practiceOpponent?.difficulty);
       clearBotGoldState();
+      clearBotCardXpState();
       botGoldContext.current = { roomId: r.roomId, origin: authoritativeOrigin, start: m, end: null, receipt: null, balanceRefreshStarted: false };
+      botCardXpContext.current = { roomId: r.roomId, origin: authoritativeOrigin, start: m, end: null, receipt: null, progressionRefreshStarted: false };
       feed.current = { start: m, frame: null, prev: null, receivedAt: performance.now(), selected: null, ghost: null };
       audioSeen.current.clear();
       audioResultSeen.current = null;
@@ -535,11 +581,37 @@ export function BattlePanel({
       context.receipt = merged.receipt;
       publishBotGold(context);
     };
+    const publishBotCardXp = (context: BotCardXpContext) => {
+      const endMessage = context.end;
+      const receipt = context.receipt;
+      if (!endMessage || !receipt || endMessage.practice?.source !== "unranked-fallback" || !endMessage.matchId) return;
+      const validated = validateBotCardXpMessage(receipt, endMessage.matchId);
+      if (!validated.ok) return;
+      setBotCardXp(validated.message);
+      if (validated.message.status === "confirmed" && !context.progressionRefreshStarted) {
+        void refreshCardXp(r.roomId, endMessage.matchId);
+      }
+    };
+    const applyBotCardXp = (raw: unknown) => {
+      const context = botCardXpContext.current;
+      if (!context || context.roomId !== r.roomId || context.origin !== "unranked-fallback" || context.start.practiceOpponent?.source !== "unranked-fallback") return;
+      const expectedMatchId = context.end?.matchId;
+      const previous = expectedMatchId && context.receipt?.matchId !== expectedMatchId ? null : context.receipt;
+      const merged = reduceBotCardXpMessage(previous, raw, expectedMatchId);
+      if (!merged.accepted) return;
+      context.receipt = merged.receipt;
+      publishBotCardXp(context);
+    };
     r.onMessage("end", (e: EndMessage) => {
       const context = botGoldContext.current;
       if (context?.roomId === r.roomId) {
         context.end = e;
         publishBotGold(context);
+      }
+      const cardXpContext = botCardXpContext.current;
+      if (cardXpContext?.roomId === r.roomId) {
+        cardXpContext.end = e;
+        publishBotCardXp(cardXpContext);
       }
       const resumeOrigin = resumeInfo.current?.origin ?? resumeOriginForEntryMode(initialMode);
       resumeInfo.current = null;
@@ -557,10 +629,15 @@ export function BattlePanel({
       const parsed = validateBotGoldMessage(raw);
       if (parsed.ok) applyBotGold(parsed.message);
     });
+    r.onMessage("bot_card_xp", (raw: unknown) => {
+      const parsed = validateBotCardXpMessage(raw);
+      if (parsed.ok) applyBotCardXp(parsed.message);
+    });
     r.onMessage("settlement", (m: SettlementMessage) => setSettlement(m));
     r.onMessage("aborted", (a: { reason: string }) => {
       clearLobbyHydration();
       clearBotGoldState();
+      clearBotCardXpState();
       const resumeOrigin = resumeInfo.current?.origin ?? resumeOriginForEntryMode(initialMode);
       resumeInfo.current = null;
       clearResume(resumeOrigin);
@@ -601,7 +678,7 @@ export function BattlePanel({
       });
     });
     setRoom(r);
-  }, [adoptPracticeDifficulty, audio, clearBotGoldState, initialMode, refreshGoldBalance, setAudioPhase]);
+  }, [adoptPracticeDifficulty, audio, clearBotCardXpState, clearBotGoldState, initialMode, refreshCardXp, refreshGoldBalance, setAudioPhase]);
 
   // Ranked awards are read back only after the server confirms settlement.
   // This bounded read never infers a trophy delta from the battle result.
@@ -666,6 +743,7 @@ export function BattlePanel({
       connecting.current = true;
       setError(null);
       clearBotGoldState();
+      clearBotCardXpState();
       setStage("connecting");
       try {
         if (mode === "practice" && requestedPracticeDifficulty && PRACTICE_DIFFICULTIES.includes(requestedPracticeDifficulty)) {
@@ -697,7 +775,7 @@ export function BattlePanel({
         connecting.current = false;
       }
     },
-    [appAudioController, attachRoom, clearBotGoldState, code, getAccessToken]
+    [appAudioController, attachRoom, clearBotCardXpState, clearBotGoldState, code, getAccessToken]
   );
 
   const inviteTried = useRef(false);
@@ -720,6 +798,7 @@ export function BattlePanel({
   const findMatch = useCallback(async (queue: "unranked" | "ranked" = "unranked") => {
     const gen = ++queueGen.current;
     clearBotGoldState();
+    clearBotCardXpState();
     setError(null);
     setStage("searching");
     setQueueStatus(null);
@@ -803,21 +882,23 @@ export function BattlePanel({
       setError(e instanceof Error ? e.message : String(e));
       setStage("idle");
     }
-  }, [getAccessToken, attachRoom, appAudioController, clearBotGoldState]);
+  }, [getAccessToken, attachRoom, appAudioController, clearBotCardXpState, clearBotGoldState]);
 
   const cancelSearch = useCallback(() => {
     queueGen.current += 1;
     clearBotGoldState();
+    clearBotCardXpState();
     setQueueStatus(null);
     setQueueRoom(null);
     setStage("idle");
     void queueRoom?.leave().catch(() => {});
-  }, [clearBotGoldState, queueRoom]);
+  }, [clearBotCardXpState, clearBotGoldState, queueRoom]);
 
   const reset = useCallback(() => {
     reconnectGen.current += 1;
     queueGen.current += 1;
     clearBotGoldState();
+    clearBotCardXpState();
     const resumeOrigin = resumeInfo.current?.origin ?? resumeOriginForEntryMode(initialMode);
     resumeInfo.current = null;
     clearResume(resumeOrigin);
@@ -842,7 +923,7 @@ export function BattlePanel({
     audioResultSeen.current = null;
     audioPriming.current = false;
     setStage("idle");
-  }, [audio, clearBotGoldState, initialMode, room, queueRoom, setAudioPhase]);
+  }, [audio, clearBotCardXpState, clearBotGoldState, initialMode, room, queueRoom, setAudioPhase]);
 
   const battleAgainPending = useRef(false);
   const battleAgain = useCallback(() => {
@@ -1077,7 +1158,7 @@ export function BattlePanel({
   const me = identity?.selfSeat ?? 0;
 
   return (
-    <div className={publicMode ? "app-play-battle-shell" : undefined} data-mode={publicMode ? initialMode : undefined} data-stage={publicMode ? stage : undefined} data-bot-gold-status={botGold?.status ?? "none"} data-gold-balance-status={goldBalanceStatus} data-gold-balance={goldBalance === null ? undefined : goldBalance}>
+    <div className={publicMode ? "app-play-battle-shell" : undefined} data-mode={publicMode ? initialMode : undefined} data-stage={publicMode ? stage : undefined} data-bot-gold-status={botGold?.status ?? "none"} data-bot-card-xp-status={botCardXp?.status ?? "none"} data-gold-balance-status={goldBalanceStatus} data-gold-balance={goldBalance === null ? undefined : goldBalance} data-card-xp-readback-status={cardXpReadbackStatus}>
       {!publicMode && <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", fontSize: 13 }}>
         <span>stage: {stage}</span>
         {room && <span>room code: <b>{room.roomId}</b></span>}
@@ -1179,6 +1260,8 @@ export function BattlePanel({
           botGold={botGold}
           goldBalance={goldBalance}
           goldBalanceStatus={goldBalanceStatus}
+          botCardXp={botCardXp}
+          cardXpReadbackStatus={cardXpReadbackStatus}
           rankedAward={rankedAward}
           rankedAwardStatus={rankedAwardStatus}
           presence={presence}

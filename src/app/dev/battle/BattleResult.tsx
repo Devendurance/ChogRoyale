@@ -2,12 +2,15 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
-import type { BotGoldMessage, EndMessage, SettlementMessage, StartMessage } from "@/lib/battle-protocol";
+import type { BotCardXpMessage, BotGoldMessage, EndMessage, SettlementMessage, StartMessage } from "@/lib/battle-protocol";
 import type { RankedAwardView } from "@/lib/ranked";
 import { GameIcon } from "@/components/game/GameIcon";
 import type { BattleCue } from "./battle-audio";
 import { finaleView, opponentNameFor, practiceDifficultyLabel, tallyAt } from "./battle-result-model";
 import { botGoldView } from "./bot-gold-model";
+import { botCardXpView } from "./bot-card-xp-model";
+import { Portrait } from "./portrait";
+import { portraitCandidatesForCard, type SpriteManifest } from "./sprite-registry";
 import "./battle-result.css";
 
 interface Props {
@@ -20,6 +23,12 @@ interface Props {
   /** Latest server-confirmed Gold balance, when the caller has reread it. */
   goldBalance?: number | null;
   goldBalanceStatus?: "idle" | "loading" | "ready" | "unavailable";
+  /** Server-authoritative Card XP outcome for an Unranked AI fallback. */
+  botCardXp?: BotCardXpMessage | null;
+  /** Status of the authenticated Card XP progression readback. */
+  cardXpReadbackStatus?: "idle" | "loading" | "ready" | "unavailable";
+  /** Loaded card-art manifest. Missing art falls back to the card name tile. */
+  spriteManifest?: SpriteManifest | null;
   me: number;
   playerName?: string;
   onExit?: () => void;
@@ -49,7 +58,7 @@ function Ribbon({ side, name, crowns, shown, winner, you }: { side: "foe" | "min
   );
 }
 
-export default function BattleResult({ start, end, abort, settlement, botGold, goldBalance, goldBalanceStatus, me, playerName, onExit, onAgain, onAudioCue, rankedAward, rankedAwardStatus }: Props) {
+export default function BattleResult({ start, end, abort, settlement, botGold, goldBalance, goldBalanceStatus, botCardXp, cardXpReadbackStatus, spriteManifest, me, playerName, onExit, onAgain, onAudioCue, rankedAward, rankedAwardStatus }: Props) {
   const router = useRouter();
   const dialog = useRef<HTMLDivElement>(null);
   const exit = useRef<HTMLButtonElement>(null);
@@ -60,11 +69,26 @@ export default function BattleResult({ start, end, abort, settlement, botGold, g
   const reward = view.origin === "unranked-fallback" && end
     ? botGoldView(botGold, end.matchId ?? undefined)
     : null;
+  const cardXpReward = view.origin === "unranked-fallback" && end
+    ? botCardXpView(botCardXp, end.matchId ?? undefined)
+    : null;
+  const cardXpState = cardXpReward?.eligibility === "awaiting-gold" && cardXpReward.state === "pending"
+    ? "awaiting-gold"
+    : cardXpReward?.eligibility === "not-xp-eligible"
+      ? "not-eligible"
+      : cardXpReward?.state;
+  const cardXpTitle = cardXpReward?.eligibility === "awaiting-gold"
+    ? "Card XP waiting for Gold confirmation"
+    : cardXpReward?.title;
+  const cardXpText = cardXpReward?.eligibility === "awaiting-gold"
+    ? "Card XP is recorded only after the server confirms Gold."
+    : cardXpReward?.text;
   const rewardMessage = reward?.message;
   const goldBalanceText = typeof goldBalance === "number" && Number.isFinite(goldBalance) && goldBalance >= 0
     ? Math.trunc(goldBalance).toLocaleString("en-US")
     : null;
   const rewardHasAmount = reward?.state === "confirmed" || reward?.state === "duplicate";
+  const cardXpHasAmount = cardXpReward?.state === "confirmed" || cardXpReward?.state === "duplicate";
   const noRewardCopy = reward?.state === "no-message" ? reward.text : reward ? null : view.noRewards;
   const goBack = () => { onExit?.(); if (!onExit) router.push("/app/play"); };
   const hasAgainAction = view.origin === "practice" || (view.origin === "unranked-fallback" && Boolean(onAgain));
@@ -142,7 +166,7 @@ export default function BattleResult({ start, end, abort, settlement, botGold, g
           <span className="chud-finale-vs" aria-hidden="true">VS</span>
           <Ribbon side="foe" name={opponent} crowns={view.theirs} shown={tallyAt(step, view.theirs)} winner={view.winner === "theirs"} />
         </div>}
-        {(view.settlement || noRewardCopy || (reward && reward.state !== "no-message")) && <div className="chud-finale-details">
+        {(view.settlement || noRewardCopy || (reward && reward.state !== "no-message") || cardXpReward) && <div className="chud-finale-details">
           {noRewardCopy && <p className="chud-finale-settle chud-finale-no-rewards" data-state="no-rewards" aria-live="polite"><i aria-hidden="true" />{noRewardCopy}</p>}
           {reward && reward.state !== "no-message" && <div className="chud-finale-gold" data-state={reward.state} aria-live="polite">
             <div className="chud-finale-gold-main"><span className="chud-finale-gold-mark" aria-hidden="true">G</span><span><strong>{reward.title}</strong><br /><span>{reward.text}</span></span></div>
@@ -151,6 +175,26 @@ export default function BattleResult({ start, end, abort, settlement, botGold, g
             {rewardHasAmount && goldBalanceText === null && goldBalanceStatus === "loading" && <p>Checking Gold balance...</p>}
             {rewardHasAmount && goldBalanceText === null && goldBalanceStatus === "unavailable" && <p>Gold balance refresh unavailable.</p>}
             {reward.state === "duplicate" && <p>Already recorded for this battle.</p>}
+          </div>}
+          {cardXpReward && <div className="chud-finale-card-xp" data-state={cardXpState} aria-live="polite">
+            <div className="chud-finale-card-xp-main"><span className="chud-finale-card-xp-mark" aria-hidden="true">XP</span><span><strong>{cardXpTitle}</strong><br /><span>{cardXpText}</span></span></div>
+            {cardXpHasAmount && cardXpReward.message && <p>Daily AI Card XP: {cardXpReward.message.rewardedToday} / {cardXpReward.message.dailyCap}</p>}
+            {cardXpHasAmount && cardXpReward.awardedCards.length > 0 && <ul className="chud-finale-card-xp-list" aria-label="Cards that earned Card XP">
+              {cardXpReward.awardedCards.map((award) => {
+                const card = start.catalog?.[award.cardId];
+                const cardName = card?.name ?? "Card";
+                const portrait = spriteManifest && card ? portraitCandidatesForCard(spriteManifest, award.cardId) : null;
+                return <li key={award.cardId}>
+                  <Portrait src={portrait} name={cardName} className="chud-finale-card-xp-portrait" />
+                  <span className="chud-finale-card-xp-card-name" title={cardName}>{cardName}</span>
+                  <span className="chud-finale-card-xp-card-value">+{award.xp} XP</span>
+                </li>;
+              })}
+            </ul>}
+            {cardXpHasAmount && cardXpReadbackStatus === "ready" && <p>Card progress readback confirmed.</p>}
+            {cardXpHasAmount && cardXpReadbackStatus === "loading" && <p>Checking Card XP progress...</p>}
+            {cardXpHasAmount && cardXpReadbackStatus === "unavailable" && <p>Card XP progress readback unavailable.</p>}
+            {cardXpReward.state === "duplicate" && <p>Already recorded for this battle.</p>}
           </div>}
           {view.settlement && <p className="chud-finale-settle" data-state={view.settlement.state} aria-live="polite"><i aria-hidden="true" />{view.settlement.text}</p>}
           {view.settlement && start.mode === "ranked" && <p className="chud-finale-ranked" aria-live="polite">
