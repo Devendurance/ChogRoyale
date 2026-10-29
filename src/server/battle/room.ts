@@ -29,6 +29,7 @@ import { productionPatronSource, type PatronSource } from "@/server/battle/patro
 import type { MatchCoordinator, MatchCoordinatorFallbackDeps, PendingMatch } from "@/server/battle/matchmaking";
 import type { MatchMode } from "@/lib/battle-protocol";
 import { recordFromReplay, type SettlementService } from "@/server/battle/settlement";
+import { accountXpService, buildAccountXpReceipt } from "@/server/battle/account-xp";
 import { getPurchasedLevels } from "@/db/card-xp";
 
 export interface BattleRoomDeps {
@@ -512,7 +513,30 @@ export class BattleRoom extends Room {
     void service.submit(record).then((status) => {
       const mapped = status === "settled" || status === "already-settled" ? status : status === "pending" ? "pending" : "refused";
       this.broadcast("settlement", { matchId: record.matchId, status: mapped });
+      // V2.2c-1 Account XP receipts: per-player, only after authoritative
+      // settlement, and never confused with it. The XP service re-checks
+      // the flag, gates and release boundary; a disabled flag yields no
+      // outcomes and no receipts. Missed receipts recover via the
+      // authenticated read API. Never throws.
+      if (mapped === "settled" || mapped === "already-settled") void this.sendAccountXpReceipts(record.matchId);
     });
+  }
+
+  /** Delivers one `account_xp` receipt to each real player's own client.
+   * Duplicate processing repeats the original confirmed receipt and never
+   * implies a second award. Disconnected players receive nothing here and
+   * recover through the authenticated read API. */
+  private async sendAccountXpReceipts(matchId: string): Promise<void> {
+    try {
+      const out = await accountXpService().processPvpMatch(matchId);
+      for (const outcome of out.players) {
+        const receipt = await buildAccountXpReceipt(outcome.playerId, "matchmaking", matchId, outcome);
+        const slot = this.session.slotOf(outcome.playerId);
+        if (slot >= 0) this.clientFor(slot)?.send("account_xp", receipt);
+      }
+    } catch (err) {
+      logger.error("account xp delivery failed", { roomId: this.roomId, reason: err instanceof Error ? err.message : String(err) });
+    }
   }
 
   private saveReplay() {

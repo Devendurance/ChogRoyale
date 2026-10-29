@@ -1,3 +1,10 @@
+## V2.2c-1 Authoritative Account XP battle receipts (2026-10-29, this session)
+
+- Doing: backend/protocol delivery of V2.2a Account XP outcomes on PR #18 branch `codex/v2.2b-player-account-level-ui` at `f68d58c` (remote HEAD verified, tree clean). No merge, no PROD migration, no deploy, no flag activation, no frontend UI.
+- Done: `AccountXpMessage` protocol (`account_xp` event) with result/amount/snapshots; `buildAccountXpReceipt` with counterfactual ledger snapshots (before excludes award, after includes; per-player serialization attributes each crossing once; duplicates repeat); strict `validateAccountXpReceipt`; per-player PvP delivery in `room.ts` after settlement; PracticeRoom `account_xp` send in bounded receipts; `GET /api/players/me/account-xp?matchId=&source=` lookup (confirmed/pending/refused/capped/unknown, caller-scoped). No migration changes (0026 untouched).
+- Verified: receipt suite 13/13, policy 8/8, settlement 11/11, bot-gold 12/12, bot-card-xp 8/8, V2.2a service 12/12, practice 11/11, typecheck, scoped lint, production build. Server card-xp lifecycle shows 1 failure in the draw-heal test, reproduced on pristine HEAD with changes stashed: pre-existing TEST residue, not this slice.
+- Next: commit + push on PR #18 branch, owner review, Codex V2.2c-2 frontend handoff. Do not merge, migrate PROD, deploy, restart, enable Account XP, or clean TEST residue without approval.
+
 ## V2.2b Player Account Level UI (2026-10-29)
 
 - Doing: owner review of PR #18, https://github.com/Devendurance/ChogRoyale/pull/18, for the frontend Account Level UI on `codex/v2.2b-player-account-level-ui`, based on V2.2a `ef32d97` plus model checkpoint `bafcd29`.

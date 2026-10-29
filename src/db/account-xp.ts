@@ -8,7 +8,7 @@
 import { sql } from "drizzle-orm";
 import { and, eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
-import { accountXpRelease, accountXpRuns } from "@/db/schema";
+import { accountXpAwards, accountXpRelease, accountXpRuns } from "@/db/schema";
 import { ACCOUNT_XP_POLICY_VERSION, ACCOUNT_XP_PVP_DAILY_CAP } from "@/lib/account-xp";
 
 /** True when the Account XP tables exist (TEST migrated; PROD only after 0026). */
@@ -65,6 +65,29 @@ export interface AccountXpAwardView {
   amount: number;
   policyVersion: number;
   createdAt: string | null;
+}
+
+/** Single award row for one player's match, null when not awarded. */
+export async function getAccountXpAward(
+  playerId: string,
+  source: "matchmaking" | "unranked-fallback",
+  matchId: string
+): Promise<{ amount: number; result: "win" | "loss" | "draw"; policyVersion: number; createdAt: string | null } | null> {
+  if (!(await accountXpTablesPresent())) return null;
+  const db = getDb();
+  const rows = await db
+    .select()
+    .from(accountXpAwards)
+    .where(and(eq(accountXpAwards.playerId, playerId), eq(accountXpAwards.source, source), eq(accountXpAwards.matchId, matchId)))
+    .limit(1);
+  const row = rows[0];
+  if (!row) return null;
+  return {
+    amount: Number(row.amount),
+    result: row.result as "win" | "loss" | "draw",
+    policyVersion: Number(row.policyVersion),
+    createdAt: row.createdAt ? new Date(row.createdAt).toISOString() : null,
+  };
 }
 
 /** Recent Account XP awards for one player, newest first. */

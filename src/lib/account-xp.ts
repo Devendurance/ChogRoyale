@@ -118,6 +118,73 @@ export function accountXpForResult(
 
 export type AccountXpSource = "matchmaking" | "unranked-fallback";
 
+/** Receipt delivery state for one player's award outcome. */
+export type AccountXpReceiptStatus = "confirmed" | "pending" | "refused" | "capped";
+
+/** Server-owned receipt shape mirroring `AccountXpMessage` (protocol).
+ * Snapshots are counterfactual against the additive ledger: levelBefore
+ * derives from lifetime XP excluding this award, levelAfter including it.
+ * Duplicates repeat identical snapshots and never imply a second award. */
+export interface AccountXpReceipt {
+  matchId: string;
+  source: AccountXpSource;
+  policyVersion: number;
+  status: AccountXpReceiptStatus;
+  eligibility: AccountXpEligibility | "unknown";
+  result: "win" | "loss" | "draw" | null;
+  amount: number;
+  playerId: string;
+  totalXp: number | null;
+  levelBefore: number | null;
+  levelAfter: number | null;
+  leveledUp: boolean | null;
+}
+
+/** Strict client-side validator for server-issued Account XP receipts.
+ * Rejects anything forged, locally computed, or internally inconsistent.
+ * Positive amounts are accepted only on confirmed receipts. */
+export function validateAccountXpReceipt(value: unknown): { ok: true; receipt: AccountXpReceipt } | { ok: false; reason: string } {
+  const fail = (reason: string) => ({ ok: false as const, reason });
+  if (typeof value !== "object" || value === null) return fail("not-an-object");
+  const v = value as Record<string, unknown>;
+  if (typeof v.matchId !== "string" || v.matchId.length === 0) return fail("bad-match-id");
+  if (v.source !== "matchmaking" && v.source !== "unranked-fallback") return fail("bad-source");
+  if (v.policyVersion !== ACCOUNT_XP_POLICY_VERSION) return fail("bad-policy-version");
+  if (v.status !== "confirmed" && v.status !== "pending" && v.status !== "refused" && v.status !== "capped") return fail("bad-status");
+  if (typeof v.eligibility !== "string" || v.eligibility.length === 0) return fail("bad-eligibility");
+  if (v.result !== null && v.result !== "win" && v.result !== "loss" && v.result !== "draw") return fail("bad-result");
+  if (!Number.isInteger(v.amount) || (v.amount as number) < 0) return fail("bad-amount");
+  // Confirmed-only positive reward amounts: no other status may carry XP.
+  if (v.status !== "confirmed" && v.amount !== 0) return fail("unconfirmed-amount");
+  if (typeof v.playerId !== "string" || v.playerId.length === 0) return fail("bad-player-id");
+  const nullableInt = (x: unknown): boolean => x === null || (Number.isInteger(x) && (x as number) >= 0);
+  if (!nullableInt(v.totalXp) || !nullableInt(v.levelBefore) || !nullableInt(v.levelAfter)) return fail("bad-snapshot");
+  if (v.leveledUp !== null && v.leveledUp !== true && v.leveledUp !== false) return fail("bad-leveled-up");
+  const snapshots = v.totalXp !== null && v.levelBefore !== null && v.levelAfter !== null;
+  if (!snapshots && (v.levelBefore !== null || v.levelAfter !== null || v.totalXp !== null || v.leveledUp !== null)) {
+    return fail("partial-snapshot");
+  }
+  if (snapshots && v.leveledUp !== ((v.levelAfter as number) > (v.levelBefore as number))) return fail("leveled-up-mismatch");
+  if (v.status === "confirmed" && !snapshots) return fail("confirmed-without-snapshot");
+  return {
+    ok: true,
+    receipt: {
+      matchId: v.matchId as string,
+      source: v.source as AccountXpSource,
+      policyVersion: ACCOUNT_XP_POLICY_VERSION,
+      status: v.status as AccountXpReceiptStatus,
+      eligibility: v.eligibility as AccountXpReceipt["eligibility"],
+      result: v.result as AccountXpReceipt["result"],
+      amount: v.amount as number,
+      playerId: v.playerId as string,
+      totalXp: v.totalXp as number | null,
+      levelBefore: v.levelBefore as number | null,
+      levelAfter: v.levelAfter as number | null,
+      leveledUp: v.leveledUp as boolean | null,
+    },
+  };
+}
+
 /** Why a match earned Account XP or did not. */
 export type AccountXpEligibility =
   | "eligible"

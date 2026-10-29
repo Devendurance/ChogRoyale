@@ -26,7 +26,9 @@ import {
   accountXpForResult,
   accountXpPvpGate,
   accountXpReleaseEnabled,
+  levelForTotalXp,
   type AccountXpEligibility,
+  type AccountXpReceipt,
 } from "@/lib/account-xp";
 import { getAwardableMatch } from "@/db/card-xp";
 import { getBotMatchEvidence, countBotGoldToday } from "@/db/bot-gold";
@@ -36,8 +38,10 @@ import {
   accountXpTablesPresent,
   claimAccountXpRun,
   countAccountXpPvpToday,
+  getAccountXpAward,
   getAccountXpRelease,
   getAccountXpRun,
+  getAccountXpTotal,
   markAccountXpRun,
   pendingAccountXpRuns,
   stageAccountXpBotAward,
@@ -362,6 +366,87 @@ let shared: AccountXpService | null = null;
 export function accountXpService(deps?: AccountXpServiceDeps): AccountXpService {
   if (deps) return new AccountXpService(deps);
   return (shared ??= new AccountXpService());
+}
+
+/** Outcome input for one player's receipt. Matches service outcome shapes. */
+export interface AccountXpOutcomeLike {
+  eligibility: AccountXpEligibility;
+  amount: number;
+  result: "win" | "loss" | "draw";
+  status: "confirmed" | "pending" | "refused" | "capped";
+}
+
+/** Builds the server-owned receipt for one player's award outcome.
+ * Snapshots are counterfactual against the additive ledger: levelBefore
+ * derives from lifetime XP excluding this award, levelAfter including it.
+ * Per-player staging serializes awards, so each threshold crossing is
+ * attributed exactly once; duplicates repeat identical snapshots and never
+ * imply a second award. Unproven states carry null snapshots. */
+export async function buildAccountXpReceipt(
+  playerId: string,
+  source: "matchmaking" | "unranked-fallback",
+  matchId: string,
+  outcome: AccountXpOutcomeLike
+): Promise<AccountXpReceipt> {
+  const unproven = (): AccountXpReceipt => ({
+    matchId,
+    source,
+    policyVersion: ACCOUNT_XP_POLICY_VERSION,
+    status: outcome.status,
+    eligibility: outcome.eligibility,
+    result: outcome.status === "pending" ? null : outcome.result,
+    amount: 0,
+    playerId,
+    totalXp: null,
+    levelBefore: null,
+    levelAfter: null,
+    leveledUp: null,
+  });
+  try {
+    if (outcome.status !== "confirmed") return unproven();
+    const [row, totalXp] = await Promise.all([
+      getAccountXpAward(playerId, source, matchId),
+      getAccountXpTotal(playerId),
+    ]);
+    // No award row despite a confirmed outcome (deleted or raced): report
+    // as not yet available, never fabricate snapshots from the outcome.
+    if (!row || row.amount < 0) {
+      return {
+        matchId,
+        source,
+        policyVersion: ACCOUNT_XP_POLICY_VERSION,
+        status: "pending",
+        eligibility: "unknown",
+        result: null,
+        amount: 0,
+        playerId,
+        totalXp: null,
+        levelBefore: null,
+        levelAfter: null,
+        leveledUp: null,
+      };
+    }
+    const before = Math.max(0, totalXp - row.amount);
+    const levelBefore = levelForTotalXp(before);
+    const levelAfter = levelForTotalXp(totalXp);
+    return {
+      matchId,
+      source,
+      policyVersion: ACCOUNT_XP_POLICY_VERSION,
+      status: "confirmed",
+      eligibility: "eligible",
+      result: row.result,
+      amount: row.amount,
+      playerId,
+      totalXp,
+      levelBefore,
+      levelAfter,
+      leveledUp: levelAfter > levelBefore,
+    };
+  } catch (err) {
+    logger.error("account xp receipt failed", { matchId, reason: err instanceof Error ? err.message : String(err) });
+    return unproven();
+  }
 }
 
 export { ACCOUNT_XP_POLICY_VERSION, ACCOUNT_XP_PVP_DAILY_CAP, countAccountXpPvpToday };

@@ -342,6 +342,37 @@ export interface BotCardXpMessage {
   dailyCap: number;
 }
 
+/** Server-authoritative Player Account XP outcome, sent after `end` once the
+ * durable award outcome is known. The frontend must never calculate rewards
+ * from victory or defeat alone. A duplicated confirmed receipt repeats the
+ * original award and never implies a second award. Solo Practice and private
+ * rooms never receive a confirmed receipt. Level snapshots are
+ * counterfactual against the additive ledger (total excluding this award
+ * versus total including it), so concurrent awards attribute each threshold
+ * crossing exactly once and duplicates repeat identical snapshots. */
+export interface AccountXpMessage {
+  matchId: string;
+  source: "matchmaking" | "unranked-fallback";
+  policyVersion: number;
+  status: "confirmed" | "pending" | "refused" | "capped";
+  /** Machine-readable award outcome. */
+  eligibility: string;
+  /** This player's own result, null unless the match verified. */
+  result: "win" | "loss" | "draw" | null;
+  /** Confirmed Account XP. Positive only when status is confirmed. */
+  amount: number;
+  /** The awarded player's id. Clients must ignore receipts for other players. */
+  playerId: string;
+  /** Lifetime Account XP after this award, null when unproven. */
+  totalXp: number | null;
+  /** Level derived from lifetime XP excluding this award, null when unproven. */
+  levelBefore: number | null;
+  /** Level derived from lifetime XP including this award, null when unproven. */
+  levelAfter: number | null;
+  /** True only when this award provably crossed a level threshold. */
+  leveledUp: boolean | null;
+}
+
 /** Durable settlement status, sent after `end` once the service reports back. */
 export interface SettlementMessage {
   matchId: string | null;
