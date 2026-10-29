@@ -72,7 +72,7 @@ export async function getAccountXpAward(
   playerId: string,
   source: "matchmaking" | "unranked-fallback",
   matchId: string
-): Promise<{ amount: number; result: "win" | "loss" | "draw"; policyVersion: number; createdAt: string | null } | null> {
+): Promise<{ amount: number; result: "win" | "loss" | "draw"; policyVersion: number; createdAt: string | null; xpBefore: number | null; xpAfter: number | null } | null> {
   if (!(await accountXpTablesPresent())) return null;
   const db = getDb();
   const rows = await db
@@ -87,6 +87,8 @@ export async function getAccountXpAward(
     result: row.result as "win" | "loss" | "draw",
     policyVersion: Number(row.policyVersion),
     createdAt: row.createdAt ? new Date(row.createdAt).toISOString() : null,
+    xpBefore: row.xpBefore === null ? null : Number(row.xpBefore),
+    xpAfter: row.xpAfter === null ? null : Number(row.xpAfter),
   };
 }
 
@@ -127,11 +129,113 @@ export async function countAccountXpPvpToday(playerId: string): Promise<number> 
 }
 
 /**
- * Exactly-one PvP award with a transactional UTC-day cap. Per-player
- * advisory lock plus duplicate check plus cap check plus insert run in one
- * statement, so concurrent matches cannot exceed the cap and retries never
- * duplicate payouts.
+ * Exactly-one award with durable award-time snapshots, in ONE statement.
+ *
+ * Neon HTTP has no interactive transactions, and a statement snapshot is
+ * fixed before advisory locks serialize, so the old lock + count + insert
+ * pattern could exceed the daily cap under concurrency (proven 21/20).
+ *
+ * This statement instead chains exact signals only:
+ * - `bl` (bump-log claim): the PK conflict is exact even under concurrency
+ *   (the loser waits out the winner via speculative insertion, then sees
+ *   the conflict), so only one processor per (player, source, match)
+ *   proceeds. No advisory locks, no cross-statement state.
+ * - `cnt` (PvP only): the daily counter UPDATE re-checks `n < cap` on the
+ *   newest row version after waiting on the row lock, so the cap is exact.
+ * - `h0`/`bump`: the per-player heads row serializes concurrent awards;
+ *   the UPDATE operates on the newest committed total, so `before`/`after`
+ *   snapshots are exact and chain without gaps or overlaps.
+ * - `ins`: the award PK dedupes; snapshots ride in from the bump pipe.
+ *
+ * Lock order is identical on every path (bump-log, then counter, then
+ * heads, then award), rows of different players never interact, and all
+ * waits resolve by commit/abort, so there are no deadlocks. Either the
+ * whole statement commits or nothing does: no lost awards, no doubles,
+ * no counter/head drift. Concurrent losers re-read the winner's committed
+ * row in a fresh statement.
  */
+async function stageAccountXpAwardAtomic(args: {
+  playerId: string;
+  source: "matchmaking" | "unranked-fallback";
+  matchId: string;
+  pvpMatchId: string | null;
+  botMatchId: string | null;
+  amount: number;
+  result: "win" | "loss" | "draw";
+  policyVersion: number;
+  /** PvP daily cap, or null for bot awards (Gold allowance gates those). */
+  cap: number | null;
+}): Promise<
+  | { fresh: true; xpBefore: number; xpAfter: number }
+  | { fresh: false }
+> {
+  const db = getDb();
+  const capGate = args.cap === null ? sql`` : sql`AND EXISTS (SELECT 1 FROM cnt)`;
+  const cntCte =
+    args.cap === null
+      ? sql``
+      : sql`,
+    cnt AS (
+      INSERT INTO account_xp_daily_counts(player_id, day, n)
+      SELECT ${args.playerId}::uuid, (now() AT TIME ZONE 'utc')::date, 1
+      WHERE EXISTS (SELECT 1 FROM bl)
+      ON CONFLICT (player_id, day) DO UPDATE SET n = account_xp_daily_counts.n + 1
+      WHERE account_xp_daily_counts.n < ${args.cap}
+      RETURNING n
+    )`;
+  const res = await db.execute(sql`
+    WITH bl AS (
+      INSERT INTO account_xp_award_claims(player_id, source, match_id)
+      VALUES (${args.playerId}::uuid, ${args.source}, ${args.matchId})
+      ON CONFLICT DO NOTHING
+      RETURNING 1
+    )${cntCte},
+    h0 AS (
+      INSERT INTO account_xp_heads(player_id, total_xp)
+      SELECT ${args.playerId}::uuid, ${args.amount}
+      WHERE EXISTS (SELECT 1 FROM bl) ${capGate}
+      ON CONFLICT DO NOTHING
+      RETURNING total_xp
+    ),
+    bump AS (
+      UPDATE account_xp_heads SET total_xp = account_xp_heads.total_xp + ${args.amount}
+      WHERE player_id = ${args.playerId}::uuid
+        AND EXISTS (SELECT 1 FROM bl) ${capGate}
+        AND NOT EXISTS (SELECT 1 FROM h0)
+      RETURNING total_xp - ${args.amount} AS b, total_xp AS a
+    ),
+    snap AS (
+      SELECT 0 AS b, total_xp AS a FROM h0
+      UNION ALL SELECT b, a FROM bump
+    ),
+    ins AS (
+      INSERT INTO account_xp_awards(player_id, source, match_id, pvp_match_id, bot_match_id, result, amount, policy_version, xp_before, xp_after)
+      SELECT ${args.playerId}::uuid, ${args.source}, ${args.matchId}, ${args.pvpMatchId}, ${args.botMatchId}, ${args.result}, ${args.amount}, ${args.policyVersion}, s.b, s.a FROM snap s
+      ON CONFLICT DO NOTHING
+      RETURNING xp_before, xp_after
+    )
+    SELECT xp_before, xp_after FROM ins
+  `);
+  const row = (res.rows as Array<{ xp_before: number; xp_after: number }>)[0];
+  if (!row) return { fresh: false };
+  return { fresh: true, xpBefore: Number(row.xp_before), xpAfter: Number(row.xp_after) };
+}
+
+/** Fresh award row when the atomic attempt lost a same-match race. */
+async function readFreshAward(args: { playerId: string; source: "matchmaking" | "unranked-fallback"; matchId: string }) {
+  return getAccountXpAward(args.playerId, args.source, args.matchId);
+}
+
+/** PvP daily counter for one player today (UTC), used only to tell a real
+ * cap refusal apart from a transient loser-of-a-race. */
+async function pvpDailyCount(playerId: string): Promise<number> {
+  const db = getDb();
+  const res = await db.execute(sql`
+    select n from account_xp_daily_counts
+    where player_id = ${playerId}::uuid and day = (now() AT TIME ZONE 'utc')::date
+  `);
+  return Number((res.rows as Array<{ n: number }>)[0]?.n ?? 0);
+}
 export async function stageAccountXpPvpAward(args: {
   matchId: string;
   playerId: string;
@@ -139,37 +243,29 @@ export async function stageAccountXpPvpAward(args: {
   result: "win" | "loss" | "draw";
   policyVersion?: number;
 }): Promise<{ status: "awarded" | "duplicate" | "capped"; rewardedToday: number }> {
-  const db = getDb();
   const policyVersion = args.policyVersion ?? ACCOUNT_XP_POLICY_VERSION;
-  const res = await db.execute(sql`
-    with locks as materialized (
-      select pg_advisory_xact_lock(hashtext('account-xp:' || ${args.playerId}::text)) as l
-    ),
-    prior as (
-      select match_id from account_xp_awards, locks
-      where player_id = ${args.playerId}::uuid and source = 'matchmaking' and match_id = ${args.matchId}
-    ),
-    used as (
-      select count(*)::int as n from account_xp_awards, locks
-      where player_id = ${args.playerId}::uuid
-        and source = 'matchmaking'
-        and created_at >= date_trunc('day', now() at time zone 'utc')
-    ),
-    ins as (
-      insert into account_xp_awards (player_id, source, match_id, pvp_match_id, bot_match_id, result, amount, policy_version)
-      select ${args.playerId}::uuid, 'matchmaking', ${args.matchId}, ${args.matchId}::uuid, null, ${args.result}, ${args.amount}, ${policyVersion}
-      from locks
-      where not exists (select 1 from prior)
-        and (select n from used) < ${ACCOUNT_XP_PVP_DAILY_CAP}
-      on conflict do nothing
-      returning match_id
-    )
-    select (select match_id from prior) as prior_match, (select match_id from ins) as awarded, (select n from used) as used_before
-  `);
-  const row = (res.rows as Array<{ prior_match: string | null; awarded: string | null; used_before: number }>)[0]!;
-  if (row.awarded) return { status: "awarded", rewardedToday: Number(row.used_before) + 1 };
-  if (row.prior_match) return { status: "duplicate", rewardedToday: Number(row.used_before) };
-  return { status: "capped", rewardedToday: Number(row.used_before) };
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const s1 = await stageAccountXpAwardAtomic({
+      playerId: args.playerId,
+      source: "matchmaking",
+      matchId: args.matchId,
+      pvpMatchId: args.matchId,
+      botMatchId: null,
+      amount: args.amount,
+      result: args.result,
+      policyVersion,
+      cap: ACCOUNT_XP_PVP_DAILY_CAP,
+    });
+    if (s1.fresh) return { status: "awarded", rewardedToday: await countAccountXpPvpToday(args.playerId) };
+    const row = await readFreshAward({ playerId: args.playerId, source: "matchmaking", matchId: args.matchId });
+    if (row) return { status: "duplicate", rewardedToday: await countAccountXpPvpToday(args.playerId) };
+    // No award committed: a real cap refusal is terminal, an aborted
+    // winner is retried once, anything else stays pending for reconcile.
+    if ((await pvpDailyCount(args.playerId)) >= ACCOUNT_XP_PVP_DAILY_CAP) {
+      return { status: "capped", rewardedToday: await countAccountXpPvpToday(args.playerId) };
+    }
+  }
+  return { status: "duplicate", rewardedToday: await countAccountXpPvpToday(args.playerId) };
 }
 
 /**
@@ -185,28 +281,23 @@ export async function stageAccountXpBotAward(args: {
   result: "win" | "loss" | "draw";
   policyVersion?: number;
 }): Promise<{ status: "awarded" | "duplicate"; rewardedToday: number }> {
-  const db = getDb();
   const policyVersion = args.policyVersion ?? ACCOUNT_XP_POLICY_VERSION;
-  const res = await db.execute(sql`
-    with locks as materialized (
-      select pg_advisory_xact_lock(hashtext('account-xp:' || ${args.playerId}::text)) as l
-    ),
-    prior as (
-      select match_id from account_xp_awards, locks
-      where player_id = ${args.playerId}::uuid and source = 'unranked-fallback' and match_id = ${args.matchId}
-    ),
-    ins as (
-      insert into account_xp_awards (player_id, source, match_id, pvp_match_id, bot_match_id, result, amount, policy_version)
-      select ${args.playerId}::uuid, 'unranked-fallback', ${args.matchId}, null, ${args.matchId}, ${args.result}, ${args.amount}, ${policyVersion}
-      from locks
-      where not exists (select 1 from prior)
-      on conflict do nothing
-      returning match_id
-    )
-    select (select match_id from prior) as prior_match, (select match_id from ins) as awarded
-  `);
-  const row = (res.rows as Array<{ prior_match: string | null; awarded: string | null }>)[0]!;
-  if (row.awarded) return { status: "awarded", rewardedToday: 0 };
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const s1 = await stageAccountXpAwardAtomic({
+      playerId: args.playerId,
+      source: "unranked-fallback",
+      matchId: args.matchId,
+      pvpMatchId: null,
+      botMatchId: args.matchId,
+      amount: args.amount,
+      result: args.result,
+      policyVersion,
+      cap: null,
+    });
+    if (s1.fresh) return { status: "awarded", rewardedToday: 0 };
+    const row = await readFreshAward({ playerId: args.playerId, source: "unranked-fallback", matchId: args.matchId });
+    if (row) return { status: "duplicate", rewardedToday: 0 };
+  }
   return { status: "duplicate", rewardedToday: 0 };
 }
 

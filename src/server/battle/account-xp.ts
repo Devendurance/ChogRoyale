@@ -377,11 +377,13 @@ export interface AccountXpOutcomeLike {
 }
 
 /** Builds the server-owned receipt for one player's award outcome.
- * Snapshots are counterfactual against the additive ledger: levelBefore
- * derives from lifetime XP excluding this award, levelAfter including it.
- * Per-player staging serializes awards, so each threshold crossing is
- * attributed exactly once; duplicates repeat identical snapshots and never
- * imply a second award. Unproven states carry null snapshots. */
+ * Snapshots come from the award row's durable (xp_before, xp_after),
+ * written atomically with the award insert in the same statement that
+ * serializes the per-player heads bump. They never derive from a later
+ * lifetime total, so later matches cannot rewrite history and concurrent
+ * awards cannot claim the same crossing twice. Duplicates repeat the
+ * stored snapshots and never imply a second award. Rows without snapshots
+ * (pre-0027) stay honestly unproven: no level-up claim is emitted. */
 export async function buildAccountXpReceipt(
   playerId: string,
   source: "matchmaking" | "unranked-fallback",
@@ -408,9 +410,10 @@ export async function buildAccountXpReceipt(
       getAccountXpAward(playerId, source, matchId),
       getAccountXpTotal(playerId),
     ]);
-    // No award row despite a confirmed outcome (deleted or raced): report
-    // as not yet available, never fabricate snapshots from the outcome.
-    if (!row || row.amount < 0) {
+    // No award row despite a confirmed outcome (deleted or raced), or a
+    // legacy row without durable snapshots: report as not yet available,
+    // never fabricate snapshots from the outcome or a later total.
+    if (!row || row.amount < 0 || row.xpBefore === null || row.xpAfter === null) {
       return {
         matchId,
         source,
@@ -426,9 +429,8 @@ export async function buildAccountXpReceipt(
         leveledUp: null,
       };
     }
-    const before = Math.max(0, totalXp - row.amount);
-    const levelBefore = levelForTotalXp(before);
-    const levelAfter = levelForTotalXp(totalXp);
+    const levelBefore = levelForTotalXp(row.xpBefore);
+    const levelAfter = levelForTotalXp(row.xpAfter);
     return {
       matchId,
       source,

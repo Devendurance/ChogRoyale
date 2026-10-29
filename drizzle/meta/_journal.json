@@ -190,6 +190,20 @@
       "when": 1793295272778,
       "tag": "0026_legal_rockslide",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1793304103086,
+      "tag": "0027_mute_morlun",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1793304368513,
+      "tag": "0028_true_owl",
+      "breakpoints": true
     }
   ]
 }

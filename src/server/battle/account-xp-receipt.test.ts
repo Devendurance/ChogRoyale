@@ -16,6 +16,9 @@ import { routeDalToTestDb, getDb, resetDbCache } from "@/db/client";
 import { provisionPlayer } from "@/db/players";
 import {
   accountXpAwards,
+  accountXpAwardClaims,
+  accountXpDailyCounts,
+  accountXpHeads,
   accountXpRuns,
   botCardXpAwards,
   botGoldAwards,
@@ -92,11 +95,15 @@ afterAll(async () => {
   const db = getDb();
   if (createdPlayerIds.length > 0) {
     await db.delete(accountXpAwards).where(inArray(accountXpAwards.playerId, createdPlayerIds));
+    await db.delete(accountXpAwardClaims).where(inArray(accountXpAwardClaims.playerId, createdPlayerIds));
     await db.delete(accountXpRuns).where(inArray(accountXpRuns.playerId, createdPlayerIds));
+    await db.delete(accountXpHeads).where(inArray(accountXpHeads.playerId, createdPlayerIds));
+    await db.delete(accountXpDailyCounts).where(inArray(accountXpDailyCounts.playerId, createdPlayerIds));
   }
   if (pvpMatchIds.length > 0) {
     await db.delete(cardXpAwards).where(inArray(cardXpAwards.matchId, pvpMatchIds));
     await db.delete(goldEarnLedger).where(inArray(goldEarnLedger.matchId, pvpMatchIds));
+    await db.delete(accountXpAwards).where(inArray(accountXpAwards.matchId, pvpMatchIds));
     await db.delete(matchParticipants).where(inArray(matchParticipants.matchId, pvpMatchIds));
     await db.delete(matchEvidence).where(inArray(matchEvidence.matchId, pvpMatchIds));
     await db.delete(matches).where(inArray(matches.id, pvpMatchIds));

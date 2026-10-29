@@ -1,3 +1,11 @@
+## V2.2c-1 Account XP level-up provenance fix (2026-10-29, this session)
+
+- Doing: release-critical fix for stable per-award snapshots on PR #18 branch `codex/v2.2b-player-account-level-ui` (base `3033e2a` verified against remote, tree clean). No merge, no PROD migration, no deploy, no flag activation, no frontend changes.
+- Root cause: receipts reconstructed `before = lifetimeTotal - amount` at read time, so any later award rewrote history and double-claimed crossings; the CTE snapshot predates the advisory lock, so 2/6 concurrent trials over-awarded the 20/day cap (21/20).
+- Done: durable `xp_before/xp_after` on the award row written atomically with the award; `account_xp_heads` per-player total (single statement serializes bumps, Update rechecks newest row); `account_xp_daily_counts` per-day counter with rechecked `n < 20`; `account_xp_award_claims` PK as the exact same-match serialization signal; single-statement atomic award (no advisory locks, no transactions, lock order fixed, no deadlocks); builder reads stored snapshots, NULL legacy rows stay unproven. Migrations 0027 (tables, columns, backfill) + 0028 (claims), additive, TEST-applied only.
+- Verified: pre-fix red captured (receipt A mutated 2->2/false into 2->3/true; cap race 2/6 over cap). Post-fix: snapshot 6/6, V2.2a service 12/12, receipt 13/13, policy+settlement 19/19, bot-gold+bot-card 20/20, practice 11/11, typecheck, scoped lint, production build. Server card-xp draw-heal failure re-verified on pristine HEAD: pre-existing TEST residue, unchanged. Full-file reruns occasionally flake under sustained TEST-branch load (fetch stalls) and pass on retry with no code change.
+- Next: commit + push on PR #18 branch, owner review, Codex V2.2c-2 GO (receipts are now stable and exactly-once). Do not merge, migrate PROD, deploy, restart, enable Account XP, or clean TEST residue without approval.
+
 ## V2.2c-1 Authoritative Account XP battle receipts (2026-10-29, this session)
 
 - Doing: backend/protocol delivery of V2.2a Account XP outcomes on PR #18 branch `codex/v2.2b-player-account-level-ui` at `f68d58c` (remote HEAD verified, tree clean). No merge, no PROD migration, no deploy, no flag activation, no frontend UI.
