@@ -1,5 +1,12 @@
 # Project State
 
+# V2.2b Player Account Level UI (2026-10-29)
+
+- Branch `codex/v2.2b-player-account-level-ui` is based on V2.2a `ef32d97` plus the reviewed account-XP client model checkpoint `bafcd29`. UI changes are local and unmerged.
+- Added strict authenticated Account XP response validation, shared Profile/Progress Account Level presentation, authoritative threshold progress, level milestones 1/10/25/50/75/100, and recent verified award rows.
+- Account XP states stay explicit for loading, disabled, auth, onboarding lock, migration/503, network, malformed, and unavailable reads. No production migration 0026, flag activation, deployment, or player-data write was performed.
+- Focused Account XP and Progress tests pass 55/55, scoped ESLint, TypeScript, production build, and diff checks pass. Authenticated Account XP UI acceptance remains owner-gated.
+
 # V2.1j Unranked AI Card XP UI (2026-10-29)
 
 - Branch `codex/v2.1j-bot-card-xp-ui`, commit `50d136c`, PR #17 is open against `main` and awaits owner approval. No merge, backend deployment, migration 0025, flag change, or balance change was performed.

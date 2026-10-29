@@ -7,6 +7,8 @@
 import { describe, it, expect } from "vitest";
 import {
   appendHistoryPage,
+  ACCOUNT_XP_MILESTONES,
+  accountXpMilestoneState,
   failureBoard,
   failureHistory,
   failureStats,
@@ -472,6 +474,15 @@ describe("resolveStanding and matchesToQualify", () => {
 });
 
 describe("state helpers", () => {
+  it("keeps the authored account-level checkpoints and never invents rewards", () => {
+    expect(ACCOUNT_XP_MILESTONES).toEqual([1, 10, 25, 50, 75, 100]);
+    expect(accountXpMilestoneState(25, 1)).toBe("reached");
+    expect(accountXpMilestoneState(25, 25)).toBe("reached");
+    expect(accountXpMilestoneState(25, 50)).toBe("upcoming");
+    expect(accountXpMilestoneState(null, 10)).toBe("unavailable");
+    expect(accountXpMilestoneState(100, 100)).toBe("reached");
+  });
+
   it("maps a failed route code to the honest panel state", () => {
     expect(panelStateForCode("UNAUTHORIZED")).toBe("auth");
     expect(panelStateForCode("FORBIDDEN")).toBe("locked");

@@ -5,6 +5,7 @@
 // test without pulling server-only code into the client bundle.
 
 import type { LobbyCommander, LobbyDeck, LobbyNotice, LobbyPlayer, LobbyStat } from "./lobby-types";
+import type { AccountXpLevelView } from "./account-xp-model";
 
 export type ProfilePhase = "booting" | "login" | "profile" | "ready";
 
@@ -38,6 +39,13 @@ export interface RecordSummary {
 }
 
 /**
+ * The authenticated Account XP read, already reduced to display-safe values.
+ * The level and thresholds come from the server ledger. A failed read never
+ * becomes level one or zero XP in the profile view.
+ */
+export type AccountLevelView = AccountXpLevelView;
+
+/**
  * Everything the view needs. Plain data only: the container owns the session
  * and the network, so the view can also be rendered from a preview or a test.
  */
@@ -58,6 +66,8 @@ export interface ProfileViewProps {
   record: RecordSummary;
   /** Why the record is unavailable, when the read failed. Null when it did not. */
   recordNote: string | null;
+  /** Server-authoritative Account XP projection for the account-level module. */
+  accountLevel: AccountLevelView;
   notices: LobbyNotice[];
   busy: boolean;
   calm: boolean;

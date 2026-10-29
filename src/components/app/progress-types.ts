@@ -6,6 +6,7 @@
 
 import type { LobbyNotice, LobbyPlayer } from "./lobby-types";
 import type { RankedBoardView, RankedSummaryView } from "./ranked-types";
+import type { AccountXpSummary } from "./account-xp-model";
 
 export type ProgressPhase = "booting" | "login" | "profile" | "ready";
 
@@ -117,6 +118,8 @@ export interface StandingView {
 export interface ProgressViewProps {
   phase: ProgressPhase;
   player: LobbyPlayer | null;
+  /** Server-authoritative account progression. Null means the read is in flight. */
+  accountXp: AccountXpSummary | null;
   stats: StatsSummary;
   history: MatchHistory;
   board: LeaderboardSummary;

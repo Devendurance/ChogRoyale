@@ -15,9 +15,21 @@ import type { ReactNode } from "react";
 import AppHud, { AppHudBackLink } from "./AppHud";
 import AppNav from "./AppNav";
 import AppNotice from "./AppNotice";
+import AccountLevelModule from "./AccountLevelModule";
 import { dedupeNotices } from "./feedback-model";
 import Icon from "./icons";
 import { winRateLabel } from "./profile-model";
+import {
+  accountXpLevelView,
+  accountXpResultLabel,
+  accountXpSourceLabel,
+  formatAccountXpAwardDate,
+  type AccountXpSummary,
+} from "./account-xp-model";
+import {
+  ACCOUNT_XP_MILESTONES,
+  accountXpMilestoneState,
+} from "./progress-model";
 import { formatRecordDate, matchesToQualify, resolveStanding } from "./progress-model";
 import type {
   BoardEntryView,
@@ -510,9 +522,115 @@ function RankedSummary({ ranked }: { ranked: RankedSummaryView }) {
   );
 }
 
+function accountXpStateCopy(summary: AccountXpSummary | null): { label: string; title: string; body: string } {
+  if (summary === null) {
+    return {
+      label: "Loading",
+      title: "Reading account progression",
+      body: "Your server-authoritative Account XP is loading.",
+    };
+  }
+  switch (summary.state) {
+    case "auth":
+      return { label: "Sign in required", title: "Account progression needs a fresh sign-in", body: "Your session expired before Account XP could be read." };
+    case "forbidden":
+      return { label: "Profile setup required", title: "Account progression is locked", body: "Finish profile setup before the server can read this account progression." };
+    case "migration":
+      return { label: "Service unavailable", title: "Account progression is not available yet", body: "The Account XP service returned 503, so no level or XP is inferred." };
+    case "network":
+      return { label: "Network issue", title: "Account progression could not be reached", body: "Check your connection and try again. No level or XP is inferred." };
+    case "malformed":
+      return { label: "Unreadable response", title: "Account progression could not be verified", body: "The Account XP response was malformed, so no level or XP is shown." };
+    case "unavailable":
+      return { label: "Unavailable", title: "Account progression is unavailable", body: "The Account XP service did not answer. No level or XP is inferred." };
+    case "disabled":
+      return { label: "Coming soon", title: "Account levels are paused", body: "Account XP is disabled. No progression is shown until the server enables it." };
+    default:
+      return { label: "Ready", title: "Account progression", body: "" };
+  }
+}
+
+function AccountXpStatePlate({ summary }: { summary: AccountXpSummary | null }) {
+  const copy = accountXpStateCopy(summary);
+  return (
+    <div className="app-progress-state app-progress-state--unavailable" role={summary === null ? "status" : "alert"}>
+      <p className="app-progress-state__label">{copy.label}</p>
+      <p className="app-progress-state__title">{copy.title}</p>
+      <p className="app-progress-state__body">{copy.body}</p>
+    </div>
+  );
+}
+
+function AccountProgress({ accountXp }: { accountXp: AccountXpSummary | null }) {
+  const ready = accountXp?.state === "ready";
+  const level = ready ? accountXp.level : null;
+  const accountLevel = accountXpLevelView(accountXp);
+
+  return (
+    <section
+      className="app-panel app-progress-record app-ranked-summary app-rise"
+      aria-labelledby="app-account-progress-title"
+    >
+      <PanelHead
+        eyebrow="Server-authoritative progression"
+        title="Account Progress"
+        titleId="app-account-progress-title"
+        aside={<span className="app-badge app-badge--gold">Account XP</span>}
+      />
+
+      {ready || accountXp === null || accountXp.state === "disabled" ? (
+        <AccountLevelModule accountLevel={accountLevel} />
+      ) : (
+        <AccountXpStatePlate summary={accountXp} />
+      )}
+
+      {ready && accountXp ? (
+        <>
+          <div className="app-ranked-recent" aria-labelledby="app-account-milestones-title">
+            <p className="app-progress-kicker" id="app-account-milestones-title">Level milestones</p>
+            <p className="app-progress-note">Level checkpoints only. The server has not reported rewards for these milestones.</p>
+            <dl className="app-progress-tiles" aria-label="Account level milestones">
+              {ACCOUNT_XP_MILESTONES.map((milestone) => {
+                const state = accountXpMilestoneState(level, milestone);
+                return (
+                  <div className={`app-progress-tile${state === "reached" ? " app-progress-tile--gold" : " app-progress-tile--muted"}`} key={milestone}>
+                    <dt>Level {milestone}</dt>
+                    <dd>{state === "reached" ? "Reached" : "Upcoming"}</dd>
+                  </div>
+                );
+              })}
+            </dl>
+          </div>
+
+          <div className="app-ranked-recent" aria-labelledby="app-account-awards-title">
+            <p className="app-progress-kicker" id="app-account-awards-title">Recent Account XP awards</p>
+            {accountXp.awards.length > 0 ? (
+              <ul className="app-ranked-recent__list">
+                {accountXp.awards.map((award) => (
+                  <li key={`${award.matchId}-${award.createdAt ?? "undated"}`}>
+                    <span>
+                      <strong>{accountXpResultLabel(award.result)}</strong>{" "}
+                      <small>{accountXpSourceLabel(award.source)}</small>
+                    </span>
+                    <strong className="app-ranked-delta app-ranked-delta--up">+{award.amount} XP</strong>
+                    <span>{formatAccountXpAwardDate(award.createdAt) ?? "Date unavailable"}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="app-progress-caption">No Account XP awards yet.</p>
+            )}
+          </div>
+        </>
+      ) : null}
+    </section>
+  );
+}
+
 export default function ProgressView({
   phase,
   player,
+  accountXp,
   stats,
   history,
   board,
@@ -795,6 +913,8 @@ export default function ProgressView({
                   />
                 )}
               </section>
+
+              <AccountProgress accountXp={accountXp} />
 
               <section
                 id="ranked-season"

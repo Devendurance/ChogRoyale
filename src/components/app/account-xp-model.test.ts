@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  accountXpLevelView,
   accountXpProgressPercent,
   accountXpReadStateForError,
   accountXpResultLabel,
@@ -108,6 +109,19 @@ describe("account XP payload validation", () => {
 });
 
 describe("account XP read view", () => {
+  it("shares the server projection between Profile and Progress without deriving a level", () => {
+    const summary = resolveAccountXp(payload({ totalXp: 162, xpIntoLevel: 62, xpToNext: 63 }));
+    expect(accountXpLevelView(summary)).toMatchObject({
+      state: "ready",
+      level: 2,
+      totalXp: 162,
+      nextLevelThreshold: 225,
+      xpToNext: 63,
+    });
+    expect(accountXpLevelView(null)).toMatchObject({ state: "loading", level: null, totalXp: null });
+    expect(accountXpLevelView(failureAccountXp("migration"))).toMatchObject({ state: "unavailable", level: null });
+  });
+
   it("returns ready only for an enabled, validated response", () => {
     const view = resolveAccountXp({ success: true, data: payload({ awards: [award({ source: "unranked-fallback", result: "loss", amount: 20 })] }) });
     expect(view).toMatchObject({ state: "ready", level: 2, totalXp: 100, xpToNext: 125, enabled: true });

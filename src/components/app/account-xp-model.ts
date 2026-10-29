@@ -126,6 +126,22 @@ export interface AccountXpSummary {
   data: AccountXpPayload | null;
 }
 
+export type AccountXpLevelState = "loading" | "ready" | "unavailable" | "disabled";
+
+/** Display-safe level projection shared by Profile and Progress. */
+export interface AccountXpLevelView {
+  state: AccountXpLevelState;
+  level: number | null;
+  totalXp: number | null;
+  currentLevelThreshold: number | null;
+  nextLevelThreshold: number | null;
+  xpIntoLevel: number | null;
+  xpToNext: number | null;
+  maxLevel: boolean;
+  maxAccountLevel: number;
+  message: string | null;
+}
+
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
@@ -274,6 +290,76 @@ function emptySummary(state: AccountXpReadState, reason: string | null): Account
 
 export function failureAccountXp(state: Exclude<AccountXpReadState, "ready" | "disabled">, reason: string | null = null): AccountXpSummary {
   return emptySummary(state, reason);
+}
+
+export function accountXpLevelView(summary: AccountXpSummary | null, loading = false): AccountXpLevelView {
+  if (loading || summary === null) {
+    return {
+      state: "loading",
+      level: null,
+      totalXp: null,
+      currentLevelThreshold: null,
+      nextLevelThreshold: null,
+      xpIntoLevel: null,
+      xpToNext: null,
+      maxLevel: false,
+      maxAccountLevel: ACCOUNT_XP_MAX_ACCOUNT_LEVEL,
+      message: null,
+    };
+  }
+
+  if (summary.state === "disabled") {
+    return {
+      state: "disabled",
+      level: null,
+      totalXp: null,
+      currentLevelThreshold: null,
+      nextLevelThreshold: null,
+      xpIntoLevel: null,
+      xpToNext: null,
+      maxLevel: false,
+      maxAccountLevel: summary.maxAccountLevel ?? ACCOUNT_XP_MAX_ACCOUNT_LEVEL,
+      message: "Account XP is not active yet. Your progression will appear when it opens.",
+    };
+  }
+
+  if (summary.state !== "ready") {
+    const message =
+      summary.state === "forbidden"
+        ? "Finish profile setup before account progression can be read."
+        : summary.state === "auth"
+          ? "Sign in again to load account progression."
+          : summary.state === "migration"
+            ? "Account progression is waiting for its server release. No level or XP is inferred."
+            : summary.state === "malformed"
+              ? "The account progression response was incomplete. No level or XP is inferred."
+              : "The account progression service did not answer. No level or XP is inferred.";
+    return {
+      state: "unavailable",
+      level: null,
+      totalXp: null,
+      currentLevelThreshold: null,
+      nextLevelThreshold: null,
+      xpIntoLevel: null,
+      xpToNext: null,
+      maxLevel: false,
+      maxAccountLevel: summary.maxAccountLevel ?? ACCOUNT_XP_MAX_ACCOUNT_LEVEL,
+      message,
+    };
+  }
+
+  return {
+    state: "ready",
+    level: summary.level,
+    totalXp: summary.totalXp,
+    currentLevelThreshold: summary.currentLevelThreshold,
+    nextLevelThreshold: summary.nextLevelThreshold,
+    xpIntoLevel: summary.xpIntoLevel,
+    xpToNext: summary.xpToNext,
+    maxLevel: summary.maxLevel === true,
+    maxAccountLevel: summary.maxAccountLevel ?? ACCOUNT_XP_MAX_ACCOUNT_LEVEL,
+    message: null,
+  };
 }
 
 function readySummary(payload: AccountXpPayload): AccountXpSummary {
