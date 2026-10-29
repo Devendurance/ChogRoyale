@@ -121,15 +121,21 @@ export async function stageCardXp(matchId: string, usage: CardUsageUnit[], statu
  * Canonical XP recompute shared by the PvP and bot award paths: absolute
  * per-(player, card) totals from BOTH the PvP ledger and the bot ledger,
  * upserted in one statement. Every apply re-derives from all committed
- * ledger rows, so concurrent PvP and bot applies converge instead of
- * double-counting or losing XP, and retries can only rewrite identical
- * totals. Missing bot tables (pre-0025 schema) degrade to PvP-only totals.
- * Progress levels follow the single policy ladder; purchased levels are
- * never touched here.
+ * ledger rows. Ledgers are append-only, so totals only move forward; the
+ * upsert keeps a row only when the recomputed total is at or ahead of the
+ * stored total. A stale snapshot therefore cannot overwrite a fresher total,
+ * and concurrent PvP and bot applies converge on the maximum committed
+ * total instead of losing XP. No advisory or row locks are taken, so
+ * multi-card batches cannot deadlock. Missing bot tables (pre-0025 schema)
+ * degrade to PvP-only totals. Progress levels follow the single policy
+ * ladder; purchased levels are never touched here.
  */
-export async function applyCardXpTotals(pairs: Array<{ playerId: string; cardId: string }>): Promise<{ units: number }> {
+export async function applyCardXpTotals(
+  pairs: Array<{ playerId: string; cardId: string }>,
+  dbOverride?: ReturnType<typeof getDb>
+): Promise<{ units: number }> {
   if (pairs.length === 0) return { units: 0 };
-  const db = getDb();
+  const db = dbOverride ?? getDb();
   const t = CARD_XP_LEVEL_REQUIREMENTS;
   // Keep the existing PvP ledger usable before the bot XP migration lands.
   // PostgreSQL resolves table names while parsing, so a CASE around a
@@ -165,6 +171,7 @@ export async function applyCardXpTotals(pairs: Array<{ playerId: string; cardId:
         xp = excluded.xp,
         level = excluded.level,
         updated_at = now()
+      where card_xp_progress.xp <= excluded.xp
       returning player_id
     )
     select (select count(*)::int from up) as units
