@@ -55,6 +55,8 @@ export interface BattleRoomDeps {
    * Absent or disabled means human-only matchmaking. Gated OFF for public
    * clients until the V2.1f UI understands bot provenance and no-reward state. */
   unrankedFallback?: MatchCoordinatorFallbackDeps;
+  /** Server-owned Unranked AI Card XP rewards. Absent or disabled means no bot Card XP writes and no bot_card_xp messages. Never enable without the bot Gold flag: XP is only awarded for Gold-confirmed matches. */
+  botCardXp?: { enabled: boolean };
   /** How long a dropped seat stays reservable during an active match. */
   reconnectGraceMs?: number;
   /** Durable settlement service; absent or null disables DB writes. */

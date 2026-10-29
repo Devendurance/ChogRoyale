@@ -125,6 +125,7 @@ function evidenceFor(matchId: string, playerId: string, s: BattleSession, humanS
     winnerSeat: r.winner === "draw" ? null : r.winner,
     ticks: r.ticks,
     humanDeploys: 99,
+    xpEligible: false,
     startedAt: new Date(Date.now() - r.ticks * 100).toISOString(),
   };
 }

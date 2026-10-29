@@ -30,6 +30,10 @@ export interface BotMatchEvidence {
   winnerSeat: 0 | 1 | null;
   ticks: number;
   humanDeploys: number;
+  /** Activation marker: only matches recorded while the Card XP flag is
+   * on may earn bot XP. Pre-flag historical rows stay permanently
+   * ineligible and are never backfilled. */
+  xpEligible: boolean;
   startedAt: string | null;
 }
 
@@ -94,6 +98,7 @@ export async function recordBotMatchEvidence(ev: BotMatchEvidence): Promise<{ st
       ticks: ev.ticks,
       humanDeploys: ev.humanDeploys,
       startedAt: ev.startedAt ? new Date(ev.startedAt) : null,
+      xpEligible: ev.xpEligible,
     })
     .onConflictDoNothing({ target: [botMatches.matchId] })
     .returning({ matchId: botMatches.matchId });

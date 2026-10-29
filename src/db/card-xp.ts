@@ -117,24 +117,36 @@ export async function stageCardXp(matchId: string, usage: CardUsageUnit[], statu
  * double-counting (no row locks needed: re-running can only rewrite the
  * same totals, and every run re-derives from all committed ledger rows).
  */
-export async function applyCardXp(matchId: string): Promise<{ applied: boolean; units: number }> {
+/**
+ * Canonical XP recompute shared by the PvP and bot award paths: absolute
+ * per-(player, card) totals from BOTH the PvP ledger and the bot ledger,
+ * upserted in one statement. Every apply re-derives from all committed
+ * ledger rows, so concurrent PvP and bot applies converge instead of
+ * double-counting or losing XP, and retries can only rewrite identical
+ * totals. Missing bot tables (pre-0025 schema) degrade to PvP-only totals.
+ * Progress levels follow the single policy ladder; purchased levels are
+ * never touched here.
+ */
+export async function applyCardXpTotals(pairs: Array<{ playerId: string; cardId: string }>): Promise<{ units: number }> {
+  if (pairs.length === 0) return { units: 0 };
   const db = getDb();
   const t = CARD_XP_LEVEL_REQUIREMENTS;
+  // Keep the existing PvP ledger usable before the bot XP migration lands.
+  // PostgreSQL resolves table names while parsing, so a CASE around a
+  // missing bot table would still fail. Only include the bot subquery after
+  // the relation has been confirmed present.
+  const botTable = await db.execute(sql`select to_regclass('public.bot_card_xp_awards') as table_name`);
+  const hasBotAwards = Boolean((botTable.rows as Array<{ table_name: string | null }>)[0]?.table_name);
   const res = await db.execute(sql`
-    with run as (
-      select r.match_id
-      from card_xp_runs r
-      where r.match_id = ${matchId}::uuid and r.applied = false
-    ),
-    affected as (
-      select distinct a.player_id, a.card_id
-      from card_xp_awards a join run on run.match_id = a.match_id
+    with affected(player_id, card_id) as (
+      values ${sql.join(pairs.map((p) => sql`(${p.playerId}::uuid, ${p.cardId})`), sql`, `)}
     ),
     totals as (
-      select a.player_id, a.card_id, coalesce(sum(a.xp), 0)::int as xp
-      from card_xp_awards a
-      where (a.player_id, a.card_id) in (select player_id, card_id from affected)
-      group by a.player_id, a.card_id
+      select v.player_id, v.card_id,
+        coalesce((select sum(a.xp) from card_xp_awards a where a.player_id = v.player_id and a.card_id = v.card_id), 0)::int
+        ${hasBotAwards ? sql`+ coalesce((select sum(b.xp) from bot_card_xp_awards b where b.player_id = v.player_id and b.card_id = v.card_id), 0)::int` : sql``} as xp
+      from affected v
+      group by v.player_id, v.card_id
     ),
     computed as (
       select
@@ -154,17 +166,31 @@ export async function applyCardXp(matchId: string): Promise<{ applied: boolean; 
         level = excluded.level,
         updated_at = now()
       returning player_id
-    ),
-    fin as (
-      update card_xp_runs r
-      set applied = true
-      where r.match_id = ${matchId}::uuid and r.applied = false
-      returning r.match_id
     )
-    select (select count(*)::int from fin) as runs, (select count(*)::int from affected) as units
+    select (select count(*)::int from up) as units
   `);
-  const row = (res.rows as Array<{ runs: number; units: number }>)[0] ?? { runs: 0, units: 0 };
-  return { applied: row.runs > 0, units: Number(row.units) };
+  const row = (res.rows as Array<{ units: number }>)[0] ?? { units: 0 };
+  return { units: Number(row.units) };
+}
+
+export async function applyCardXp(matchId: string): Promise<{ applied: boolean; units: number }> {
+  const db = getDb();
+  const affected = await db.execute(sql`
+    select distinct a.player_id, a.card_id
+    from card_xp_awards a
+    join card_xp_runs r on r.match_id = a.match_id
+    where r.match_id = ${matchId}::uuid and r.applied = false
+  `);
+  const pairs = (affected.rows as Array<{ player_id: string; card_id: string }>).map((r) => ({ playerId: String(r.player_id), cardId: String(r.card_id) }));
+  const { units } = await applyCardXpTotals(pairs);
+  const fin = await db.execute(sql`
+    update card_xp_runs r
+    set applied = true
+    where r.match_id = ${matchId}::uuid and r.applied = false
+    returning r.match_id
+  `);
+  const runs = (fin.rows as Array<{ match_id: string }>).length;
+  return { applied: runs > 0, units };
 }
 
 /**

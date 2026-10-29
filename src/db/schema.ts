@@ -724,6 +724,7 @@ export const botMatches = pgTable(
     winnerSeat: smallint("winner_seat"),
     ticks: integer("ticks").notNull(),
     humanDeploys: integer("human_deploys").notNull(),
+    xpEligible: boolean("xp_eligible").notNull().default(false),
     status: text("status").notNull().default("pending"),
     startedAt: timestamp("started_at", { withTimezone: true }),
     finishedAt: timestamp("finished_at", { withTimezone: true }).notNull().defaultNow(),
@@ -759,6 +760,60 @@ export const botGoldAwards = pgTable(
 
 export type BotMatchRow = typeof botMatches.$inferSelect;
 export type BotGoldAwardRow = typeof botGoldAwards.$inferSelect;
+
+// V2.1i Verified Unranked AI Card XP. Same one-human-plus-server-bot shape
+// as the Gold path: no matches/match_participants rows, no fake players.
+// Bot XP feeds the shared card_xp_progress ladder; there is no separate AI
+// level track. One award per (match, player, card); retries and restarts
+// resolve to the same rows.
+export const botCardXpAwards = pgTable(
+  "bot_card_xp_awards",
+  {
+    matchId: text("match_id")
+      .notNull()
+      .references(() => botMatches.matchId, { onDelete: "restrict" }),
+    playerId: uuid("player_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "restrict" }),
+    cardId: text("card_id").notNull(),
+    deployments: integer("deployments").notNull(),
+    xp: integer("xp").notNull(),
+    policyVersion: integer("policy_version").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ name: "bot_card_xp_awards_pk", columns: [t.matchId, t.playerId, t.cardId] }),
+    index("bot_card_xp_awards_player_idx").on(t.playerId),
+    check("bot_card_xp_awards_deployments_check", sql`${t.deployments} >= 0`),
+    check("bot_card_xp_awards_xp_check", sql`${t.xp} >= 0`),
+  ]
+);
+
+// Per-match bot XP processing marker. Reconcile picks up pending rows after
+// interruption or restart; terminal states never rerun.
+export const botCardXpRuns = pgTable(
+  "bot_card_xp_runs",
+  {
+    matchId: text("match_id")
+      .notNull()
+      .references(() => botMatches.matchId, { onDelete: "restrict" }),
+    playerId: uuid("player_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "restrict" }),
+    status: text("status").notNull().default("pending"),
+    applied: boolean("applied").notNull().default(false),
+    awardsCreated: integer("awards_created").notNull().default(0),
+    details: jsonb("details").notNull().default({}),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ name: "bot_card_xp_runs_pk", columns: [t.matchId, t.playerId] }),
+    check("bot_card_xp_runs_status_check", sql`${t.status} in ('pending','done','refused','capped')`),
+  ]
+);
+
+export type BotCardXpAwardRow = typeof botCardXpAwards.$inferSelect;
+export type BotCardXpRunRow = typeof botCardXpRuns.$inferSelect;
 
 // P6c gift sponsorship receipts. One row per sponsored upgrade, keyed by
 // the client-supplied idempotency key. The sponsor's Gold debit lives in

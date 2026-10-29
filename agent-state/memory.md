@@ -6,6 +6,8 @@
 
 # Memory
 
+- V2.1i bot Card XP is earned only from `xp_eligible` Unranked fallback `bot_matches` evidence with a confirmed `bot_gold_awards` row. The XP ledger is separate, the progression total recomputes from PvP plus bot ledgers, and `UNRANKED_BOT_CARD_XP_ENABLED` requires `UNRANKED_BOT_GOLD_REWARDS_ENABLED`. Pre-flag rows and Solo Practice earn zero. Pending XP must remain recoverable until Gold settles, then become terminal on Gold refusal or cap.
+
 - V2.1h bot Gold is a separate server receipt. Accept it only for `source: "unranked-fallback"` with the ended room's exact `matchId`. Apply monotonic precedence so a later confirmed receipt can replace pending/refused state, but lower-priority or duplicate messages cannot overwrite it. Solo Practice and human PvP ignore this channel.
 - Refresh `/api/players/me/gold` only after a confirmed receipt and never add the amount to stale local balance. A missing or failed balance read must leave the confirmed reward honest without inventing a balance. The deployed reward flag and migrations remain OFF and owner-gated.
 
