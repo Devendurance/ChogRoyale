@@ -6,6 +6,7 @@
 import dotenv from "dotenv";
 import { resolveBattleHostConfig, describeBattleHostConfig } from "@/server/battle/host-config";
 import { RANKED_PUBLIC_MATCHMAKING_ENABLED } from "@/lib/ranked";
+import { botCardXpReleaseEnabled } from "@/lib/bot-card-xp";
 
 dotenv.config({ path: ".env" });
 
@@ -123,7 +124,12 @@ void settlementService()
       // only server-verified Unranked fallback matches, never solo Practice.
       const botGoldEnabled = process.env.UNRANKED_BOT_GOLD_REWARDS_ENABLED === "1";
       console.log(`unranked bot gold rewards: ${botGoldEnabled ? "ENABLED (20/10/15, 5 per UTC day)" : "disabled (release gate)"}`);
-      return startBattleServer(hostConfig.port, { settlement, cardScaling, ...(unrankedFallbackEnabled ? { unrankedFallback: { enabled: true } } : {}), ...(botGoldEnabled ? { botGold: { enabled: true } } : {}) }, hostConfig.host, {
+      const botCardXpEnabled = botCardXpReleaseEnabled({
+        UNRANKED_BOT_CARD_XP_ENABLED: process.env.UNRANKED_BOT_CARD_XP_ENABLED,
+        UNRANKED_BOT_GOLD_REWARDS_ENABLED: process.env.UNRANKED_BOT_GOLD_REWARDS_ENABLED,
+      });
+      console.log(`unranked bot card xp: ${botCardXpEnabled ? "ENABLED (1 XP on first and third accepted deploy, max 6)" : "disabled (release gate)"}`);
+      return startBattleServer(hostConfig.port, { settlement, cardScaling, ...(unrankedFallbackEnabled ? { unrankedFallback: { enabled: true } } : {}), ...(botGoldEnabled ? { botGold: { enabled: true } } : {}), ...(botCardXpEnabled ? { botCardXp: { enabled: true } } : {}) }, hostConfig.host, {
         enableShutdownHooks: hosting,
       });
     })

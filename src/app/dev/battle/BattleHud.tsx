@@ -9,6 +9,7 @@ import type {
   AbilityView,
   AckMessage,
   BattleFrame,
+  BotCardXpMessage,
   BotGoldMessage,
   CardInfo,
   EndMessage,
@@ -66,6 +67,8 @@ export interface BattleHudProps {
   botGold?: BotGoldMessage | null;
   goldBalance?: number | null;
   goldBalanceStatus?: "idle" | "loading" | "ready" | "unavailable";
+  botCardXp?: BotCardXpMessage | null;
+  cardXpReadbackStatus?: "idle" | "loading" | "ready" | "unavailable";
   rankedAward?: RankedAwardView | null;
   rankedAwardStatus?: "idle" | "checking" | "awarded" | "unavailable" | "timeout";
   presence: PresenceMessage | null;
@@ -588,7 +591,7 @@ export default function BattleHud(props: BattleHudProps) {
         <span className="chud-start-go">Battle!</span>
         <span className="chud-start-patron">Arena Patron · {start.patron.name ?? `CHOG #${start.patron.tokenId}`}</span>
       </div>}
-      {(end || abort) && <BattleResult start={start} end={end} abort={abort} settlement={settlement} botGold={props.botGold} goldBalance={props.goldBalance} goldBalanceStatus={props.goldBalanceStatus} me={me} playerName={props.playerName} onExit={props.onExit} onAgain={props.onBattleAgain} onAudioCue={props.onAudioCue} rankedAward={props.rankedAward} rankedAwardStatus={props.rankedAwardStatus} />}
+      {(end || abort) && <BattleResult start={start} end={end} abort={abort} settlement={settlement} botGold={props.botGold} goldBalance={props.goldBalance} goldBalanceStatus={props.goldBalanceStatus} botCardXp={props.botCardXp} cardXpReadbackStatus={props.cardXpReadbackStatus} spriteManifest={manifest} me={me} playerName={props.playerName} onExit={props.onExit} onAgain={props.onBattleAgain} onAudioCue={props.onAudioCue} rankedAward={props.rankedAward} rankedAwardStatus={props.rankedAwardStatus} />}
       {dragging && (
         <div
           ref={(el) => {

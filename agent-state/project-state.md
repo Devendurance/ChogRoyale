@@ -1,5 +1,19 @@
 # Project State
 
+# V2.1j Unranked AI Card XP UI (2026-10-29)
+
+- Branch `codex/v2.1j-bot-card-xp-ui`, commit `50d136c`, PR #17 is open against `main` and awaits owner approval. No merge, backend deployment, migration 0025, flag change, or balance change was performed.
+- Added strict match-scoped `bot_card_xp` validation and monotonic lifecycle handling, confirmed-only result presentation, card reward rows, and authenticated `/api/players/me/card-xp` readback status.
+- Solo Practice remains reward-free, human PvP remains unchanged, and Gold UI remains authoritative. Battle tests 240/240, focused reward/result/queue tests 64/64, typecheck, scoped ESLint, and production build pass. Vercel preview for `50d136c` is READY.
+
+# V2.1i Recovery and completion (2026-10-29)
+
+- Current branch: `v2.1i-bot-card-xp`. Existing local V2.1i backend work preserved and completed without resetting unrelated changes.
+- Bot Card XP uses replay-verified `bot_matches` evidence, a separate idempotent ledger, shared Gold-confirmed eligibility, the existing card progression ladder, and a six XP per match cap. Solo Practice, pre-flag evidence, PvP settlement, and Gold behavior remain isolated.
+- Added the default-off `UNRANKED_BOT_CARD_XP_ENABLED` release gate, requiring the Gold flag. The service singleton now shares restart reconciliation and shutdown, and pending runs close when Gold reaches refusal or cap.
+- Verification so far: TypeScript passed, focused Bot Card XP tests 8/8 passed, Bot Gold tests 12/12 passed, live flag wiring 2/2 passed, scoped ESLint passed, and the production build passed. One fresh full-suite attempt timed out after inherited TEST-branch residue failures in legacy (3), clans (1), Gold reconciliation (1), and card-XP reconciliation (3).
+- TEST migration 0025 was applied with `scripts/migrate-test-run.ts`. No PROD migration, flag activation, deployment, restart, or player-data change was performed.
+
 # V2.1h Unranked AI Gold UI (2026-10-28)
 
 - Current branch: `codex/v2.1h-unranked-ai-gold-ui`, based on `v2.1g-bot-gold` at `95899c5`. Frontend-only, reward flag OFF, migrations 0023/0024 untouched.

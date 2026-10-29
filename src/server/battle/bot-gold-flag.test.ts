@@ -1,6 +1,6 @@
-// V2.1g live wiring: fallback rooms with the rewards flag OFF send no
-// bot_gold message and write nothing; with the flag ON a completed fallback
-// match pays confirmed Gold once. Real Colyseus server + TEST DB.
+// V2.1g and V2.1i live wiring: fallback rooms with the rewards flags OFF
+// send no reward messages and write nothing; with both flags ON a completed
+// fallback match pays confirmed Gold and Card XP once. Real Colyseus server + TEST DB.
 //
 // Isolation note: the battle server keeps room deps on process-wide statics,
 // so one server can only honor one flag state at a time. This file boots a
@@ -18,6 +18,7 @@ import type { Player } from "@/db/schema";
 import {
   BATTLE_QUEUE_ROOM,
   type BattleFrame,
+  type BotCardXpMessage,
   type BotGoldMessage,
   type EndMessage,
   type LobbyMessage,
@@ -104,12 +105,15 @@ afterEach(() => {
 afterAll(async () => {
   await server?.gracefullyShutdown(false);
   const db = getDb();
-  const { botGoldAwards, botMatches, players } = await import("@/db/schema");
+  const { botCardXpAwards, botCardXpRuns, botGoldAwards, botMatches, cardXpProgress, players } = await import("@/db/schema");
   if (liveMatchIds.length > 0) {
+    await db.delete(botCardXpAwards).where(inArray(botCardXpAwards.matchId, liveMatchIds));
+    await db.delete(botCardXpRuns).where(inArray(botCardXpRuns.matchId, liveMatchIds));
     await db.delete(botGoldAwards).where(inArray(botGoldAwards.matchId, liveMatchIds));
     await db.delete(botMatches).where(inArray(botMatches.matchId, liveMatchIds));
   }
   if (livePlayerIds.length > 0) {
+    await db.delete(cardXpProgress).where(inArray(cardXpProgress.playerId, livePlayerIds));
     await db.delete(players).where(inArray(players.id, livePlayerIds));
   }
   resetDbCache();
@@ -137,11 +141,13 @@ async function playFallbackGame(token: string) {
   let start: StartMessage | null = null;
   let end: EndMessage | null = null;
   let botGold: BotGoldMessage | null = null;
+  let botCardXp: BotCardXpMessage | null = null;
   let lastFrame: BattleFrame | null = null;
   room.onMessage("lobby", (m: LobbyMessage) => (lobby = m));
   room.onMessage("start", (m: StartMessage) => (start = m));
   room.onMessage("end", (m: EndMessage) => (end = m));
   room.onMessage("bot_gold", (m: BotGoldMessage) => (botGold = m));
+  room.onMessage("bot_card_xp", (m: BotCardXpMessage) => (botCardXp = m));
   room.onMessage("frame", (m: BattleFrame) => (lastFrame = m));
   await until(() => lobby !== null);
   room.send("ready", { cards: [...PRESETS.swarm!.cards], commander: { kind: "free", class: "scout" } });
@@ -157,7 +163,7 @@ async function playFallbackGame(token: string) {
     }
     return !!end;
   }, 170_000);
-  return { room, start: start!, end: end!, getBotGold: () => botGold };
+  return { room, start: start!, end: end!, getBotGold: () => botGold, getBotCardXp: () => botCardXp };
 }
 
 describe("V2.1g flag OFF fallback stays silent and writeless", () => {
@@ -177,10 +183,10 @@ describe("V2.1g flag OFF fallback stays silent and writeless", () => {
   }, 180_000);
 });
 
-describe("V2.1g flag ON fallback pays confirmed Gold once", () => {
-  it("sends bot_gold confirmed and stores one spendable award", async () => {
-    PracticeRoom.deps = { ...bootDeps!, botGold: { enabled: true } };
-    const { room, end, getBotGold } = await playFallbackGame("tok-flagon");
+describe("V2.1g and V2.1i flags ON fallback pays confirmed rewards once", () => {
+  it("sends confirmed Gold and Card XP and stores one award for each", async () => {
+    PracticeRoom.deps = { ...bootDeps!, botGold: { enabled: true }, botCardXp: { enabled: true } };
+    const { room, end, getBotGold, getBotCardXp } = await playFallbackGame("tok-flagon");
     expect(["win", "loss", "draw"]).toContain(end.result);
     liveMatchIds.push(end.matchId!);
     // The room holds the seat until the authoritative outcome is delivered.
@@ -192,8 +198,18 @@ describe("V2.1g flag ON fallback pays confirmed Gold once", () => {
     expect([20, 10, 15]).toContain(botGold.amount);
     expect(botGold.rewardedToday).toBe(1);
     expect(botGold.dailyCap).toBe(5);
+    await until(() => getBotCardXp() !== null, 30_000);
+    const botCardXp = getBotCardXp()!;
+    expect(botCardXp.source).toBe("unranked-fallback");
+    expect(botCardXp.status).toBe("confirmed");
+    expect(botCardXp.policyVersion).toBe(1);
+    expect(botCardXp.totalXp).toBeGreaterThan(0);
+    expect(botCardXp.totalXp).toBeLessThanOrEqual(6);
     const db = getDb();
-    const { botGoldAwards, botMatches } = await import("@/db/schema");
+    const { botCardXpAwards, botGoldAwards, botMatches } = await import("@/db/schema");
+    const xpAwards = await db.select().from(botCardXpAwards).where(eq(botCardXpAwards.matchId, end.matchId!));
+    expect(xpAwards.length).toBeGreaterThan(0);
+    expect(xpAwards.reduce((sum, row) => sum + Number(row.xp), 0)).toBe(botCardXp.totalXp);
     const awards = await db.select().from(botGoldAwards).where(eq(botGoldAwards.matchId, end.matchId!));
     expect(awards).toHaveLength(1);
     expect(Number(awards[0]!.amount)).toBe(botGold.amount);

@@ -329,6 +329,19 @@ export interface BotGoldMessage {
   dailyCap: number;
 }
 
+/** Server-authoritative Unranked fallback Card XP outcome, sent after end when evaluated. The frontend must never guess progression from victory or defeat alone. Solo Practice never receives this message and always earns zero. */
+export interface BotCardXpMessage {
+  matchId: string | null;
+  source: "unranked-fallback";
+  eligibility: "eligible" | "practice-earns-zero" | "not-xp-eligible" | "short-match" | "too-few-deploys" | "replay-mismatch" | "duplicate" | "awaiting-gold" | "capped";
+  policyVersion: number;
+  totalXp: number;
+  status: "confirmed" | "pending" | "refused" | "capped";
+  awardedCards: Array<{ cardId: string; deployments: number; xp: number }>;
+  rewardedToday: number;
+  dailyCap: number;
+}
+
 /** Durable settlement status, sent after `end` once the service reports back. */
 export interface SettlementMessage {
   matchId: string | null;

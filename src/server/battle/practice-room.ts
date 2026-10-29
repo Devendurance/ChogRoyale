@@ -25,6 +25,7 @@ import { freeStarterSlot } from "@/lib/combat";
 import { commanderCardId, isAbilityCommand, validateDeck } from "@/lib/combat";
 import { BOT_GOLD_POLICY_VERSION } from "@/lib/bot-gold";
 import { BotGoldService } from "@/server/battle/bot-gold";
+import { BotCardXpService } from "@/server/battle/bot-card-xp";
 import { productionEntitlementDeps, resolveCommander, type EntitlementDeps } from "@/server/battle/entitlement";
 import { productionPatronSource, type PatronSource } from "@/server/battle/patron-source";
 import type { MatchCoordinator } from "@/server/battle/matchmaking";
@@ -44,6 +45,11 @@ function patronSource(): PatronSource {
 let botGoldService: BotGoldService | null = null;
 function botGold(): BotGoldService {
   return (botGoldService ??= new BotGoldService());
+}
+
+let botCardXpService: BotCardXpService | null = null;
+function botCardXp(): BotCardXpService {
+  return (botCardXpService ??= new BotCardXpService());
 }
 
 let productionEntitlement: EntitlementDeps | null = null;
@@ -310,7 +316,12 @@ export class PracticeRoom extends Room {
       const end = { ...out.end[humanSeat], matchId: this.matchId, practice: { opponentKind: "bot" as const, noReward: true as const, source: this.origin } };
       client.send("end", end);
       client.send("settlement", { matchId: this.matchId, status: "disabled" });
-      const awardDelivered = this.maybeAwardBotGold();
+      const receipts: Array<Promise<void>> = [];
+      const gold = this.maybeAwardBotGold();
+      if (gold) receipts.push(gold);
+      const xp = this.maybeAwardBotXp(gold);
+      if (xp) receipts.push(xp);
+      const awardDelivered = receipts.length > 0 ? Promise.all(receipts).then(() => undefined) : null;
       this.setSimulationInterval();
       this.releaseHuman();
       this.closeAfterEnd(awardDelivered);
@@ -351,6 +362,10 @@ export class PracticeRoom extends Room {
         ticks: replay.ticks,
         humanDeploys,
         startedAt: this.startedAt?.toISOString() ?? null,
+        // Activation boundary: only matches completed with the Card XP
+        // flag on may earn bot XP. Stored on the evidence row so pre-flag
+        // history is permanently ineligible and never backfilled.
+        xpEligible: this.origin === "unranked-fallback" && !!PracticeRoom.deps.botCardXp?.enabled,
       })
       .then((r) => {
         this.humanClient?.send("bot_gold", {
@@ -368,11 +383,43 @@ export class PracticeRoom extends Room {
   }
 
   /**
+   * V2.1i fallback Card XP, evaluated after the authoritative result alongside
+   * Gold. Only Unranked fallback rooms with the Card XP flag enabled reach the
+   * service; solo Practice and flag-OFF rooms send nothing and write nothing.
+   * XP is only awarded for Gold-confirmed matches, so this shares the Gold
+   * daily allowance instead of creating a second cap. The closeAfterEnd wait
+   * below covers both receipts with the single existing timer.
+   */
+  private maybeAwardBotXp(afterGold: Promise<void> | null): Promise<void> | null {
+    if (this.origin !== "unranked-fallback") return null;
+    if (!PracticeRoom.deps.botGold?.enabled || !PracticeRoom.deps.botCardXp?.enabled) return null;
+    const matchId = this.matchId;
+    if (!matchId) return null;
+    const process = () => botCardXp()
+      .processMatch(matchId)
+      .then((r) => {
+        this.humanClient?.send("bot_card_xp", {
+          matchId: r.matchId,
+          source: r.source,
+          eligibility: r.eligibility,
+          policyVersion: r.policyVersion,
+          totalXp: r.totalXp,
+          status: r.status,
+          awardedCards: r.awardedCards,
+          rewardedToday: r.rewardedToday,
+          dailyCap: r.dailyCap,
+        });
+      });
+    return (afterGold ? afterGold.then(process) : process())
+      .catch((err) => logger.error("bot card xp hook failed", { roomId: this.roomId, reason: err instanceof Error ? err.message : String(err) }));
+  }
+
+  /**
    * Post-match disconnect. Solo Practice and flag-OFF rooms close on the
    * existing short timer. A fallback room with rewards on holds the seat
-   * (bounded) until the authoritative bot_gold outcome is delivered, so a
-   * confirmed award cannot be missed by a client still on the result
-   * screen. Anything later is covered by reconcile and Gold history.
+   * (bounded) until the authoritative bot_gold and bot_card_xp outcomes are
+   * delivered, so a confirmed award cannot be missed by a client still on
+   * the result screen. Anything later is covered by reconcile and history.
    */
   private closeAfterEnd(awardDelivered: Promise<void> | null) {
     const minDelay = PracticeRoom.deps.closeAfterMs ?? 5_000;

@@ -1,3 +1,19 @@
+## V2.1j Unranked AI Card XP UI (2026-10-29)
+
+- Doing: owner review of PR #17, https://github.com/Devendurance/ChogRoyale/pull/17.
+- Done: commit `50d136c` pushed on `codex/v2.1j-bot-card-xp-ui`; strict receipt validation, asynchronous/reordered message handling, confirmed-only Card XP presentation, card progress readback status, and Practice/PvP isolation are complete.
+- Verified: 240 battle tests, 64 focused Card XP/result/queue tests, typecheck, scoped ESLint, and production build pass. Vercel preview is READY for `50d136c`.
+- Next: owner reviews and merges only after approval. Then coordinate the separate V2.1i backend rollout, migration 0025, and default-off Card XP flag activation. Do not perform those production actions in this session.
+
+## V2.1i Recovery and completion (2026-10-29)
+
+- Doing: finish the scoped backend handoff for `v2.1i-bot-card-xp`.
+- Done: recovered the existing local V2.1i code, fixed the current `xpEligible` TypeScript fixture error, kept the existing `stopSweeper` settlement wiring, added the shared XP ledger and progression recompute safety, chained XP after Gold, added terminal Gold refusal/cap handling, and wired the default-off release flag.
+- Done: `npm run db:generate` reports no schema drift. TEST migration 0025 applied through `scripts/migrate-test-run.ts`. Focused Bot Card XP tests pass 8/8, Bot Gold tests pass 12/12, live flag wiring passes 2/2, typecheck, scoped ESLint and production build pass. Code commit `59d675b` is pushed to `origin/v2.1i-bot-card-xp`.
+- Done: one fresh full-suite attempt was stopped by the 1,800 second timeout after inherited TEST-branch residue failures in `legacy.test.ts` (3), `clans.test.ts` (1), `gold.test.ts` (1), `card-xp.test.ts` (2), and server card-XP lifecycle (1).
+- Next: owner review and V2.1j UI handoff. Do not enable flags, migrate PROD, deploy or restart the battle host.
+- Known: preserve the TEST residue failures and do not run ad-hoc cleanup.
+
 ## V2.1g/h Bot Gold Production Preflight (2026-10-28, PR #16 branch 4e9f636, pushed, no PROD changes)
 
 - Doing: preflight-only slice, STOP after verdict. No migrations applied, no flags flipped, no restarts, no synthetic tests.

@@ -176,6 +176,13 @@
       "when": 1793210365113,
       "tag": "0024_wonderful_iron_fist",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1793228221247,
+      "tag": "0025_crazy_red_ghost",
+      "breakpoints": true
     }
   ]
 }

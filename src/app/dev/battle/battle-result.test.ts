@@ -1,7 +1,7 @@
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import type { BotGoldMessage, EndMessage, StartMessage } from "@/lib/battle-protocol";
+import type { BotCardXpMessage, BotGoldMessage, EndMessage, StartMessage } from "@/lib/battle-protocol";
 import BattleResult from "./BattleResult";
 import { finaleView, opponentNameFor, practiceDifficultyLabel, settlementView, tallyAt, UNRANKED_FALLBACK_NO_REWARDS } from "./battle-result-model";
 
@@ -17,6 +17,10 @@ const practiceStart = {
 } as StartMessage;
 const fallbackStart = {
   ...practiceStart,
+  catalog: {
+    choglings: { id: "choglings", name: "Choglings", cost: 2, kind: "troop", air: false, radius: 0, description: "" },
+    rift_snare: { id: "rift_snare", name: "Rift Snare", cost: 2, kind: "spell", air: false, radius: 3, description: "" },
+  },
   practiceOpponent: { ...practiceStart.practiceOpponent!, source: "unranked-fallback" },
 } as StartMessage;
 const botGold = (over: Partial<BotGoldMessage> = {}): BotGoldMessage => ({
@@ -26,6 +30,21 @@ const botGold = (over: Partial<BotGoldMessage> = {}): BotGoldMessage => ({
   policyVersion: 1,
   amount: 20,
   status: "confirmed",
+  rewardedToday: 1,
+  dailyCap: 5,
+  ...over,
+});
+const botCardXp = (over: Partial<BotCardXpMessage> = {}): BotCardXpMessage => ({
+  matchId: "private-match-id",
+  source: "unranked-fallback",
+  eligibility: "eligible",
+  policyVersion: 1,
+  totalXp: 3,
+  status: "confirmed",
+  awardedCards: [
+    { cardId: "choglings", deployments: 3, xp: 2 },
+    { cardId: "rift_snare", deployments: 1, xp: 1 },
+  ],
   rewardedToday: 1,
   dailyCap: 5,
   ...over,
@@ -198,6 +217,52 @@ describe("battle finale render", () => {
     expect(html).toContain(`data-state="${state}"`);
     expect(html).not.toContain("Gold earned");
   });
+  it("renders confirmed Card XP below Gold with safe card identity and readback", () => {
+    const html = renderFallback({ botGold: botGold(), botCardXp: botCardXp(), cardXpReadbackStatus: "ready" });
+    expect(html).toContain("Card XP earned");
+    expect(html).toContain("+3 Card XP earned");
+    expect(html).toContain("Daily AI Card XP: 1 / 5");
+    expect(html).toContain("Card progress readback confirmed.");
+    expect(html).toContain("Choglings");
+    expect(html).toContain("Rift Snare");
+    expect(html.indexOf("chud-finale-gold")).toBeLessThan(html.indexOf("chud-finale-card-xp"));
+    expect(html).toContain('data-state="confirmed"');
+  });
+  it("keeps duplicate, pending and awaiting-Gold Card XP honest", () => {
+    const duplicate = renderFallback({ botCardXp: botCardXp({ eligibility: "duplicate", totalXp: 2, rewardedToday: 4, awardedCards: [{ cardId: "choglings", deployments: 3, xp: 2 }] }) });
+    expect(duplicate).toContain("+2 Card XP already recorded");
+    expect(duplicate).toContain("Already recorded for this battle.");
+    expect(duplicate).toContain('data-state="duplicate"');
+
+    const pending = renderFallback({ botCardXp: botCardXp({ status: "pending", eligibility: "replay-mismatch", totalXp: 0, awardedCards: [] }) });
+    expect(pending).toContain("Card XP verification pending");
+    expect(pending).toContain("Check your card progress later.");
+    expect(pending).not.toContain("+3 Card XP earned");
+    expect(pending).toContain('data-state="pending"');
+
+    const awaiting = renderFallback({ botCardXp: botCardXp({ status: "pending", eligibility: "awaiting-gold", totalXp: 0, awardedCards: [] }) });
+    expect(awaiting).toContain("Card XP waiting for Gold confirmation");
+    expect(awaiting).toContain("only after the server confirms Gold");
+    expect(awaiting).toContain('data-state="awaiting-gold"');
+  });
+  it.each([
+    ["capped", "capped", "Daily AI Card XP limit reached", "capped"],
+    ["not-xp-eligible", "refused", "No Card XP awarded for this battle.", "not-eligible"],
+    ["short-match", "refused", "Card XP requires at least 60 seconds of combat.", "short-match"],
+    ["too-few-deploys", "refused", "Deploy accepted ordinary cards to earn Card XP.", "too-few-deploys"],
+    ["replay-mismatch", "refused", "No Card XP awarded because the battle could not be verified.", "replay-mismatch"],
+  ] as const)("renders the authoritative Card XP refusal state: %s", (eligibility, status, copy, state) => {
+    const html = renderFallback({ botCardXp: botCardXp({ eligibility, status, totalXp: 0, awardedCards: [] }) });
+    expect(html).toContain(copy);
+    expect(html).toContain(`data-state="${state}"`);
+    expect(html).not.toContain("Card XP earned");
+  });
+  it("shows an explicit no-message Card XP state without fabricating a balance", () => {
+    const html = renderFallback({ cardXpReadbackStatus: "ready" });
+    expect(html).toContain("No AI Card XP reward confirmed.");
+    expect(html).toContain('data-state="no-message"');
+    expect(html).not.toContain("Card XP balance:");
+  });
   it("keeps no-message fallback, Practice, and PvP reward presentation safe", () => {
     const fallback = renderFallback();
     expect(fallback).toContain("No AI Gold reward confirmed.");
@@ -211,6 +276,7 @@ describe("battle finale render", () => {
     expect(pvp).toContain("Waiting for result confirmation");
     expect(pvp).not.toContain("Gold earned");
     expect(pvp).not.toContain("Balance 120");
+    expect(pvp).not.toContain("Card XP earned");
   });
   it.each([
     ["medium", "Medium"],
