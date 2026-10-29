@@ -1,3 +1,10 @@
+## V2.1j Unranked AI Card XP UI (2026-10-29)
+
+- Doing: owner review of PR #17, https://github.com/Devendurance/ChogRoyale/pull/17.
+- Done: commit `50d136c` pushed on `codex/v2.1j-bot-card-xp-ui`; strict receipt validation, asynchronous/reordered message handling, confirmed-only Card XP presentation, card progress readback status, and Practice/PvP isolation are complete.
+- Verified: 240 battle tests, 64 focused Card XP/result/queue tests, typecheck, scoped ESLint, and production build pass. Vercel preview is READY for `50d136c`.
+- Next: owner reviews and merges only after approval. Then coordinate the separate V2.1i backend rollout, migration 0025, and default-off Card XP flag activation. Do not perform those production actions in this session.
+
 ## V2.1i Recovery and completion (2026-10-29)
 
 - Doing: finish the scoped backend handoff for `v2.1i-bot-card-xp`.
