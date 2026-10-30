@@ -200,18 +200,26 @@ export class AccountXpService {
         const existing = await getAccountXpRun(playerId, "matchmaking", matchId);
         if (existing && existing.status !== "pending") {
           if (existing.status === "done") {
-            outcomes.push({ playerId, eligibility: "duplicate", amount: 0, result, status: "confirmed" });
+            // A done run must coincide with a durable award row. If the row
+            // is missing (impossible through the atomic stager, only via
+            // legacy residue), fall through and reprocess instead of
+            // confirming a phantom award.
+            const priorAward = await getAccountXpAward(playerId, "matchmaking", matchId);
+            if (priorAward) {
+              outcomes.push({ playerId, eligibility: "duplicate", amount: 0, result, status: "confirmed" });
+              continue;
+            }
+          } else {
+            const prior = (existing.details as { reason?: unknown } | null)?.reason;
+            const eligibility = typeof prior === "string"
+              ? (prior as AccountXpEligibility)
+              : existing.status === "capped"
+                ? ("capped" as const)
+                : ("replay-mismatch" as const);
+            const status = existing.status === "capped" ? ("capped" as const) : ("refused" as const);
+            outcomes.push({ playerId, eligibility, amount: 0, result, status });
             continue;
           }
-          const prior = (existing.details as { reason?: unknown } | null)?.reason;
-          const eligibility = typeof prior === "string"
-            ? (prior as AccountXpEligibility)
-            : existing.status === "capped"
-              ? ("capped" as const)
-              : ("replay-mismatch" as const);
-          const status = existing.status === "capped" ? ("capped" as const) : ("refused" as const);
-          outcomes.push({ playerId, eligibility, amount: 0, result, status });
-          continue;
         }
         await claimAccountXpRun(playerId, "matchmaking", matchId, { result, deploys });
         const amount = accountXpForResult("matchmaking", result);
@@ -219,6 +227,13 @@ export class AccountXpService {
         if (staged.status === "capped") {
           await markAccountXpRun(playerId, "matchmaking", matchId, "capped", 0, { reason: "capped" });
           outcomes.push({ playerId, eligibility: "capped", amount: 0, result, status: "capped" });
+          continue;
+        }
+        if (staged.status === "contended") {
+          // Unresolved after a bounded retry: leave the run pending so
+          // reconciliation finishes it. Never mark done without an award.
+          await claimAccountXpRun(playerId, "matchmaking", matchId, { reason: "contended" });
+          outcomes.push({ playerId, eligibility: "eligible", amount: 0, result, status: "pending" });
           continue;
         }
         await markAccountXpRun(playerId, "matchmaking", matchId, "done", 1, { result, amount });
@@ -255,12 +270,19 @@ export class AccountXpService {
       const existing = await getAccountXpRun(playerId, "unranked-fallback", matchId);
       if (existing && existing.status !== "pending") {
         if (existing.status === "done") {
-          return { ...base, eligibility: "duplicate", amount: 0, result: "loss", status: "confirmed", rewardedToday: await countBotGoldToday(playerId).catch(() => 0) };
+          // A done run must coincide with a durable award row. Fall through
+          // and reprocess when the row is missing instead of confirming
+          // a phantom award.
+          const priorAward = await getAccountXpAward(playerId, "unranked-fallback", matchId);
+          if (priorAward) {
+            return { ...base, eligibility: "duplicate", amount: 0, result: "loss", status: "confirmed", rewardedToday: await countBotGoldToday(playerId).catch(() => 0) };
+          }
+        } else {
+          const prior = (existing.details as { reason?: unknown } | null)?.reason;
+          const eligibility = typeof prior === "string" ? (prior as AccountXpEligibility) : "replay-mismatch";
+          const status = existing.status === "capped" ? "capped" : "refused";
+          return { ...base, eligibility, amount: 0, result: "loss", status, rewardedToday: await countBotGoldToday(playerId).catch(() => 0) };
         }
-        const prior = (existing.details as { reason?: unknown } | null)?.reason;
-        const eligibility = typeof prior === "string" ? (prior as AccountXpEligibility) : "replay-mismatch";
-        const status = existing.status === "capped" ? "capped" : "refused";
-        return { ...base, eligibility, amount: 0, result: "loss", status, rewardedToday: await countBotGoldToday(playerId).catch(() => 0) };
       }
       // Trustworthy start boundary first: history earns zero even with Gold.
       if (!ev.startedAt || new Date(ev.startedAt) < release.activatedAt) {

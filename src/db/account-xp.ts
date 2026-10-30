@@ -8,7 +8,7 @@
 import { sql } from "drizzle-orm";
 import { and, eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
-import { accountXpAwards, accountXpRelease, accountXpRuns } from "@/db/schema";
+import { accountXpAwardClaims, accountXpAwards, accountXpHeads, accountXpRelease, accountXpRuns } from "@/db/schema";
 import { ACCOUNT_XP_POLICY_VERSION, ACCOUNT_XP_PVP_DAILY_CAP } from "@/lib/account-xp";
 
 /** True when the Account XP tables exist (TEST migrated; PROD only after 0026). */
@@ -226,6 +226,42 @@ async function readFreshAward(args: { playerId: string; source: "matchmaking" | 
   return getAccountXpAward(args.playerId, args.source, args.matchId);
 }
 
+/** Ensures the per-player heads row exists before the atomic award runs.
+ * A plain idempotent insert in a separate committed statement: concurrent
+ * callers collapse onto one row, and every later statement snapshot sees
+ * it. This removes the only snapshot-visibility hazard in S1 (bump
+ * updating a row created after its snapshot began): with the row
+ * pre-existing, the bump UPDATE always finds a visible version or waits
+ * on an in-flight updater, then re-checks on the newest committed total.
+ * A zero-total row with no awards keeps heads == ledger sum either way. */
+async function ensureAccountXpHead(playerId: string): Promise<void> {
+  const db = getDb();
+  await db
+    .insert(accountXpHeads)
+    .values({ playerId, totalXp: 0 })
+    .onConflictDoNothing({ target: [accountXpHeads.playerId] });
+}
+
+/** Deletes a claim row that provably owns no award and no live processor.
+ * Called only after S1 returned empty AND a fresh award read found nothing:
+ * S1's speculative wait guarantees every conflicting transaction resolved
+ * before S1 returned, so no live owner can exist and the row is garbage
+ * (planted fixture, aborted-winner residue, or a previous capped attempt
+ * on a day with capacity again). Bounded callers only; both deletes and
+ * retries are idempotent. */
+async function deleteStaleClaim(args: { playerId: string; source: "matchmaking" | "unranked-fallback"; matchId: string }): Promise<void> {
+  const db = getDb();
+  await db
+    .delete(accountXpAwardClaims)
+    .where(
+      and(
+        eq(accountXpAwardClaims.playerId, args.playerId),
+        eq(accountXpAwardClaims.source, args.source),
+        eq(accountXpAwardClaims.matchId, args.matchId)
+      )
+    );
+}
+
 /** PvP daily counter for one player today (UTC), used only to tell a real
  * cap refusal apart from a transient loser-of-a-race. */
 async function pvpDailyCount(playerId: string): Promise<number> {
@@ -242,8 +278,13 @@ export async function stageAccountXpPvpAward(args: {
   amount: number;
   result: "win" | "loss" | "draw";
   policyVersion?: number;
-}): Promise<{ status: "awarded" | "duplicate" | "capped"; rewardedToday: number }> {
+}): Promise<{ status: "awarded" | "duplicate" | "capped" | "contended"; rewardedToday: number }> {
   const policyVersion = args.policyVersion ?? ACCOUNT_XP_POLICY_VERSION;
+  // The heads row must exist before S1 runs: with it committed, S1's bump
+  // UPDATE always finds a visible row version (or waits on a live updater
+  // and re-checks the newest total), so a concurrent first award cannot
+  // slip past into an awardless claim.
+  await ensureAccountXpHead(args.playerId);
   for (let attempt = 0; attempt < 2; attempt += 1) {
     const s1 = await stageAccountXpAwardAtomic({
       playerId: args.playerId,
@@ -258,21 +299,31 @@ export async function stageAccountXpPvpAward(args: {
     });
     if (s1.fresh) return { status: "awarded", rewardedToday: await countAccountXpPvpToday(args.playerId) };
     const row = await readFreshAward({ playerId: args.playerId, source: "matchmaking", matchId: args.matchId });
+    // A present award row is the only proof of a duplicate. Never classify
+    // a missing row as a confirmed duplicate: that would mark the run done
+    // and lose the award forever.
     if (row) return { status: "duplicate", rewardedToday: await countAccountXpPvpToday(args.playerId) };
-    // No award committed: a real cap refusal is terminal, an aborted
-    // winner is retried once, anything else stays pending for reconcile.
+    // No award committed: a real cap refusal is terminal. Otherwise the
+    // claim row is provably ownerless (S1's speculative wait resolved every
+    // conflicting transaction before S1 returned), so remove it and retry
+    // once rather than stranding it.
     if ((await pvpDailyCount(args.playerId)) >= ACCOUNT_XP_PVP_DAILY_CAP) {
       return { status: "capped", rewardedToday: await countAccountXpPvpToday(args.playerId) };
     }
+    await deleteStaleClaim({ playerId: args.playerId, source: "matchmaking", matchId: args.matchId });
   }
-  return { status: "duplicate", rewardedToday: await countAccountXpPvpToday(args.playerId) };
+  // Still unresolved after a bounded retry: stay pending so reconciliation
+  // (which re-runs this same idempotent path) finishes the work. Never
+  // report a duplicate without a verified award row.
+  await claimAccountXpRun(args.playerId, "matchmaking", args.matchId, { reason: "contended" });
+  return { status: "contended", rewardedToday: await countAccountXpPvpToday(args.playerId) };
 }
 
 /**
  * Exactly-one bot award. No second Account XP cap: the shared bot Gold
  * allowance already gates eligibility (only Gold-confirmed matches reach
- * here, at most 5 per UTC day). Advisory lock plus duplicate guard keep
- * concurrent completions and retries to a single row.
+ * here, at most 5 per UTC day). The atomic core keeps concurrent
+ * completions and retries to a single row with exact stored snapshots.
  */
 export async function stageAccountXpBotAward(args: {
   matchId: string;
@@ -280,8 +331,9 @@ export async function stageAccountXpBotAward(args: {
   amount: number;
   result: "win" | "loss" | "draw";
   policyVersion?: number;
-}): Promise<{ status: "awarded" | "duplicate"; rewardedToday: number }> {
+}): Promise<{ status: "awarded" | "duplicate" | "contended"; rewardedToday: number }> {
   const policyVersion = args.policyVersion ?? ACCOUNT_XP_POLICY_VERSION;
+  await ensureAccountXpHead(args.playerId);
   for (let attempt = 0; attempt < 2; attempt += 1) {
     const s1 = await stageAccountXpAwardAtomic({
       playerId: args.playerId,
@@ -297,8 +349,10 @@ export async function stageAccountXpBotAward(args: {
     if (s1.fresh) return { status: "awarded", rewardedToday: 0 };
     const row = await readFreshAward({ playerId: args.playerId, source: "unranked-fallback", matchId: args.matchId });
     if (row) return { status: "duplicate", rewardedToday: 0 };
+    await deleteStaleClaim({ playerId: args.playerId, source: "unranked-fallback", matchId: args.matchId });
   }
-  return { status: "duplicate", rewardedToday: 0 };
+  await claimAccountXpRun(args.playerId, "unranked-fallback", args.matchId, { reason: "contended" });
+  return { status: "contended", rewardedToday: 0 };
 }
 
 /** Claim (or re-claim) a per-player processing marker. True when fresh. */
