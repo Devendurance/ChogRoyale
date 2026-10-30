@@ -430,7 +430,8 @@ Last updated: 2026-10-24
 
 - Doing: polish the shared mobile shell, Account XP presentation, installed-app opening, and audio recovery on a new scoped branch from the merged V2.2 main content.
 - Done: architecture review and candidate synthesis recorded in `agent-state/mobile-ux-plan.md` and `agent-state/mobile-ux-synthesis.md`; Account Level now supports a reusable embedded presentation without nested Progress panels; mobile HUD actions use a native overflow disclosure; Friends maps to Profile in the fixed five-tab nav; `/app` has a short branded opening; safe-area viewport-fit and HUD top inset are scoped to the app shell; gesture audio recovery re-arms after suspension/visibility changes.
-- Next: review visual behavior in browser at 390x844 and 1366x768, run focused tests/typecheck/lint/build, clean the diff, update AGENTS/state rules, commit and push only this slice. Do not merge or deploy.
+- Done: browser checks, focused tests, TypeScript, scoped ESLint, production build, state/rules updates, commit `480625d`, and push to `origin/codex/mobile-ux-pwa-polish`.
+- Next: owner review of the pushed feature branch. Do not merge or deploy without approval.
 - Limits: authenticated Privy, installed iOS PWA, and Snap Mini Browser cannot be claimed without a real device/session. Report browser-emulation evidence separately.
 
 - Done: reviewed worker commits for queue handoff, lobby/HUD identity, result origin, separate resume slots, stale queue cancellation, and fallback result actions.
