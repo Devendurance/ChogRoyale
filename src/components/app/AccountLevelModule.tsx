@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Icon from "./icons";
+import { accountXpProgressPercent } from "./account-xp-model";
 import type { AccountLevelView } from "./profile-types";
 import styles from "./AccountLevelModule.module.css";
 
@@ -13,20 +14,6 @@ interface AccountLevelModuleProps {
 
 function formatXp(value: number | null): string {
   return value === null ? "n/a" : value.toLocaleString("en-US");
-}
-
-function progressPercent(accountLevel: AccountLevelView): number {
-  if (
-    accountLevel.state !== "ready" ||
-    accountLevel.xpIntoLevel === null ||
-    accountLevel.currentLevelThreshold === null ||
-    accountLevel.nextLevelThreshold === null
-  ) {
-    return 0;
-  }
-  const span = accountLevel.nextLevelThreshold - accountLevel.currentLevelThreshold;
-  if (span <= 0) return 0;
-  return Math.min(100, Math.max(0, (accountLevel.xpIntoLevel / span) * 100));
 }
 
 function stateCopy(accountLevel: AccountLevelView): { label: string; title: string; body: string } {
@@ -58,7 +45,9 @@ export default function AccountLevelModule({
 }: AccountLevelModuleProps) {
   const headingId = "app-account-level-title";
   const isCard = presentation === "card";
-  const percent = progressPercent(accountLevel);
+  const percent = accountLevel.state === "ready"
+    ? accountXpProgressPercent({ ...accountLevel, state: "ready" }) ?? 0
+    : 0;
   const stateClass =
     accountLevel.state === "disabled"
       ? styles.disabled
@@ -131,34 +120,52 @@ export default function AccountLevelModule({
   }
 
   const level = accountLevel.level;
-  const nextLevel = accountLevel.maxLevel ? null : Math.min(accountLevel.maxAccountLevel, level + 1);
-  const progressLabel = accountLevel.maxLevel
-    ? `Level ${level} is the current maximum.`
-    : `${formatXp(accountLevel.xpIntoLevel)} XP in Level ${level}`;
-  const nextCopy = accountLevel.maxLevel
+  const levelSpan =
+    accountLevel.currentLevelThreshold !== null && accountLevel.nextLevelThreshold !== null
+      ? accountLevel.nextLevelThreshold - accountLevel.currentLevelThreshold
+      : null;
+  const targetLabel = accountLevel.maxLevel
     ? "Lifetime XP keeps counting after the level cap."
-    : `${formatXp(accountLevel.xpToNext)} XP to Level ${nextLevel}`;
+    : "Next level target";
 
   const content = (
     <>
-      <div className={styles.metrics}>
-        <div className={styles.levelMetric}>
+      <div className={styles.overview}>
+        <div className={styles.levelSummary}>
           <span className={styles.levelCrest} aria-hidden="true">
-            <span>LV</span>
-            <strong>{level}</strong>
+            <span className={styles.crestInner}>
+              <span>LVL</span>
+              <strong>{level}</strong>
+            </span>
           </span>
-          <span className={styles.metricCaption}>Current level</span>
+          <div className={styles.levelDetails}>
+            <span className={styles.metricCaption}>Current level</span>
+          </div>
         </div>
-        <div className={styles.xpMetric}>
-          <strong>{formatXp(accountLevel.totalXp)}</strong>
+        <div className={styles.lifetimeMetric}>
           <span>Lifetime XP</span>
+          <strong>{formatXp(accountLevel.totalXp)}</strong>
+          <span>Total earned</span>
         </div>
       </div>
 
       <div className={`${styles.progressBlock} ${accountLevel.maxLevel ? styles.progressMax : ""}`}>
         <div className={styles.progressMeta}>
-          <span>{progressLabel}</span>
-          <span>{accountLevel.maxLevel ? "MAX" : `${Math.round(percent)}%`}</span>
+          <div className={styles.progressReadout}>
+            <span>{accountLevel.maxLevel ? "Maximum level" : "Level XP"}</span>
+            <strong>
+              {accountLevel.maxLevel ? (
+                "MAX"
+              ) : (
+                <>
+                  {formatXp(accountLevel.xpIntoLevel)} <span>/</span> {formatXp(levelSpan)} <small>XP</small>
+                </>
+              )}
+            </strong>
+          </div>
+          <span className={styles.progressTag}>
+            {accountLevel.maxLevel ? "MAX" : `${formatXp(accountLevel.xpToNext)} XP to go`}
+          </span>
         </div>
         <div
           className={styles.progressTrack}
@@ -170,12 +177,21 @@ export default function AccountLevelModule({
           aria-valuetext={
             accountLevel.maxLevel
               ? "Maximum account level"
-              : `${formatXp(accountLevel.xpIntoLevel)} XP in Level ${level}, ${formatXp(accountLevel.xpToNext)} XP to the next level`
+              : `${formatXp(accountLevel.xpIntoLevel)} of ${formatXp(levelSpan)} XP in Level ${level}, ${formatXp(accountLevel.xpToNext)} XP to the next level`
           }
         >
           <span style={{ width: `${accountLevel.maxLevel ? 100 : percent}%` }} />
         </div>
-        <p className={styles.nextCopy}>{nextCopy}</p>
+        <div className={styles.thresholds}>
+          <span>
+            <strong>{formatXp(accountLevel.currentLevelThreshold)}</strong>
+            <small>Level start</small>
+          </span>
+          <span className={styles.nextTarget}>
+            <strong>{accountLevel.maxLevel ? "MAX" : formatXp(accountLevel.nextLevelThreshold)}</strong>
+            <small>{targetLabel}</small>
+          </span>
+        </div>
       </div>
     </>
   );

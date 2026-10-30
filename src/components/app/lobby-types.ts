@@ -1,8 +1,10 @@
 // Plain prop contracts for the authenticated lobby (A1).
 //
-// This module holds types only and imports nothing, so the view can be
-// rendered from the authenticated container, from a static preview, or from a
-// test without pulling server-only code into the client bundle.
+// This module holds plain prop contracts, with type-only imports, so the view
+// can be rendered from the authenticated container or a static preview without
+// pulling server-only code into the client bundle.
+
+import type { HomeSummaryProps } from "./home-summary-model";
 
 export type LobbyCommanderOrigin = "free" | "nft" | "preview";
 
@@ -149,6 +151,8 @@ export interface LobbyViewProps {
   deck: LobbyDeck | null;
   /** Copy for the deck strip when there is no deck to show. */
   deckEmpty?: { title: string; body: string };
+  /** Optional verified account summary. Omitted by older preview fixtures. */
+  summary?: HomeSummaryProps;
   notices: LobbyNotice[];
   /** False when the battle route is closed in this build. */
   battleEnabled: boolean;

@@ -298,6 +298,9 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## MOBILE APP SHELL POLISH
 
+- Keep the Tailwind Turbopack loader away from `.module.css` files. Rewriting them as ordinary CSS loses exported class names and turns progression components into raw text. Confirm browser class names and visual styling, not only static markup tests.
+- Lobby resources read authenticated Gold balance, settled earned crowns, and validated Account XP independently of core lobby readiness. Unavailable reads never become zero. Gold purchases remain unavailable, and the plus action may only guide players to existing earning flows.
+
 - Startup opening is once per shared app-layout entry, never per lobby route return. Consume non-lobby direct entries without showing it. Use native modal isolation plus keyboard containment while active, and mark the attempted ref inside the scheduled callback for StrictMode safety.
 
 - The authenticated `/app` layout owns the short branded opening overlay. It is shown only on the `/app` entry path so direct battle, invite, and recovery routes stay unobstructed. Shared providers remain mounted across route changes.

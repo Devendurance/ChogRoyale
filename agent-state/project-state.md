@@ -2,6 +2,8 @@
 
 # Mobile UX / app-shell / PWA polish pass (2026-10-30)
 
+- Home follow-up on `codex/lobby-resources-xp-polish` from merged main `a67c7ac` adds a nonblocking authenticated resource summary, Gold earning disclosure, clickable Account XP bar, stronger shared expanded level module, and scoped two-column desktop lobby. CSS Modules now bypass the Tailwind loader so their visual classes reach the browser. Labeled fixture screenshots and acceptance notes are in `docs/home-progression-polish.md`. Checks: 108 tests, TypeScript, scoped lint and build passed. PR #19 is already owner-merged, so this slice has a new review branch.
+
 - PR #19 follow-up synchronizes current main and limits AppOpening to the initial layout entry. Native modal isolation and forward/reverse keyboard containment replace the previous visual-only dialog overlay. Browser checks cover fresh entry, client navigation return, direct invite bypass, Skip and Escape.
 
 - Working tree contains a scoped mobile shell pass based on the merged V2.2 content. No merge or deployment performed.

@@ -9,11 +9,13 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePrivy, useLogin } from "@privy-io/react-auth";
+import { usePathname } from "next/navigation";
 import LobbyView from "./LobbyView";
 import { sessionNotice } from "./feedback-model";
 import { isPublicBattleAvailable } from "./battle-availability";
 import { useOnboardingRedirect } from "./use-onboarding-redirect";
 import { useLobbyCatalog } from "./catalog-context";
+import { accountXpLevelView, resolveAccountXp } from "./account-xp-model";
 import {
   resolveCommander,
   resolveDeck,
@@ -23,6 +25,7 @@ import {
   type LoadoutPayload,
   type ProfilePayload,
 } from "./lobby-model";
+import { resolveHomeCrowns, resolveHomeGold } from "./home-summary-model";
 import type { LobbyCommander, LobbyDeck, LobbyNotice, LobbyPlayer, LobbyPhase } from "./lobby-types";
 import { useMedia, useSaveData } from "@/components/site/use-media";
 
@@ -31,26 +34,30 @@ const ENABLED = isPublicBattleAvailable();
 interface ApiError {
   code: string;
   message: string;
+  status?: number;
   /** Present on a 404 that means the verified identity has no player row. */
   bootstrap?: boolean;
 }
 
-type Result<T> = { ok: true; data: T } | { ok: false; code: string; message: string; bootstrap?: boolean };
+type Result<T> =
+  | { ok: true; data: T }
+  | { ok: false; code: string; message: string; status?: number; bootstrap?: boolean };
 
 async function getJson<T>(path: string, token: string): Promise<Result<T>> {
   try {
     const res = await fetch(path, { headers: { authorization: `Bearer ${token}` } });
-    const body = (await res.json()) as {
+    const body = (await res.json().catch(() => null)) as {
       success: boolean;
       data?: T;
       error?: { code?: string; message?: string; details?: { bootstrap?: boolean } };
-    };
-    if (body.success && body.data !== undefined) return { ok: true, data: body.data };
+    } | null;
+    if (res.ok && body?.success && body.data !== undefined) return { ok: true, data: body.data };
     return {
       ok: false,
-      code: body.error?.code ?? "REQUEST_FAILED",
-      message: body.error?.message ?? `The server answered ${res.status}.`,
-      bootstrap: body.error?.details?.bootstrap === true,
+      code: body?.error?.code ?? "REQUEST_FAILED",
+      message: body?.error?.message ?? `The server answered ${res.status}.`,
+      status: res.status,
+      bootstrap: body?.error?.details?.bootstrap === true,
     };
   } catch {
     return { ok: false, code: "NETWORK", message: "The lobby could not reach the server." };
@@ -75,6 +82,7 @@ async function postJson<T>(path: string, token: string): Promise<Result<T>> {
       ok: false,
       code: body.error?.code ?? "REQUEST_FAILED",
       message: body.error?.message ?? `The server answered ${res.status}.`,
+      status: res.status,
       bootstrap: body.error?.details?.bootstrap === true,
     };
   } catch {
@@ -133,7 +141,14 @@ interface Reads {
   commanders: Result<CommandersPayload>;
 }
 
+interface HomeSummaryReads {
+  gold: Result<unknown>;
+  stats: Result<unknown>;
+  accountXp: Result<unknown>;
+}
+
 function LobbyShell() {
+  const pathname = usePathname();
   const catalog = useLobbyCatalog();
   const { ready, authenticated, getAccessToken, logout, user } = usePrivy();
   const { login } = useLogin();
@@ -144,12 +159,15 @@ function LobbyShell() {
   const [loadoutError, setLoadoutError] = useState<ApiError | null>(null);
   const [commanders, setCommanders] = useState<CommandersPayload | null>(null);
   const [commandersError, setCommandersError] = useState<ApiError | null>(null);
+  const [homeSummaryReads, setHomeSummaryReads] = useState<{ sessionKey: string; reads: HomeSummaryReads } | null>(null);
   const [busy, setBusy] = useState(false);
   /** The Privy user the current reads belong to. The lobby is only "loaded"
    *  when the finished reads belong to the session that is on screen, so a
    *  stale profile never leaks into a new sign-in. */
   const sessionKey = user?.id ?? null;
   const [loadedFor, setLoadedFor] = useState<string | null>(null);
+  /** Any newer refresh, account switch, or sign-out invalidates older reads. */
+  const readGeneration = useRef(0);
   /** The bootstrap call is idempotent, but it still runs at most once a session. */
   const bootstrapTried = useRef(false);
 
@@ -166,6 +184,15 @@ function LobbyShell() {
       getJson<CommandersPayload>("/api/players/me/commanders", token),
     ]);
     return { profile: profileResult, loadout: loadoutResult, commanders: commandersResult };
+  }, []);
+
+  const readHomeSummary = useCallback(async (token: string): Promise<HomeSummaryReads> => {
+    const [gold, stats, accountXp] = await Promise.all([
+      getJson<unknown>("/api/players/me/gold", token),
+      getJson<unknown>("/api/players/me/stats", token),
+      getJson<unknown>("/api/players/me/account-xp", token),
+    ]);
+    return { gold, stats, accountXp };
   }, []);
 
   const apply = useCallback((reads: Reads) => {
@@ -195,11 +222,16 @@ function LobbyShell() {
   }, []);
 
   const load = useCallback(async () => {
+    const generation = ++readGeneration.current;
+    const requestedSession = sessionKey;
+    const isCurrent = () => generation === readGeneration.current;
     // The first await keeps every state update out of the synchronous part of
     // the call, so the loader can be started straight from an effect.
     const token = await getAccessToken();
+    if (!isCurrent()) return;
     setBusy(true);
     try {
+      setHomeSummaryReads(null);
       if (!token) {
         setProfile(null);
         setProfileError({ code: "UNAUTHORIZED", message: "Sign in to open the lobby." });
@@ -207,6 +239,7 @@ function LobbyShell() {
       }
 
       let reads = await readAll(token);
+      if (!isCurrent()) return;
 
       // A verified identity with no player row yet: the bootstrap endpoint is
       // the documented first-login entry point, so provision and read again.
@@ -214,8 +247,10 @@ function LobbyShell() {
         if (!bootstrapTried.current) {
           bootstrapTried.current = true;
           const created = await postJson<unknown>("/api/auth/bootstrap", token);
+          if (!isCurrent()) return;
           if (created.ok) {
             reads = await readAll(token);
+            if (!isCurrent()) return;
           } else {
             setProfile(null);
             setProfileError({ code: "BOOTSTRAP_FAILED", message: created.message });
@@ -229,19 +264,36 @@ function LobbyShell() {
       }
 
       apply(reads);
+      if (reads.profile.ok) {
+        // These resource reads run in the background so a slow progression or
+        // economy service cannot hold the lobby's commander and deck behind it.
+        void readHomeSummary(token).then((summaryReads) => {
+          if (isCurrent() && requestedSession !== null) {
+            setHomeSummaryReads({ sessionKey: requestedSession, reads: summaryReads });
+          }
+        });
+      }
     } finally {
-      setBusy(false);
-      setLoadedFor(sessionKey);
+      if (isCurrent()) {
+        setBusy(false);
+        setLoadedFor(requestedSession);
+      }
     }
-  }, [getAccessToken, readAll, apply, sessionKey]);
+  }, [getAccessToken, readAll, readHomeSummary, apply, sessionKey]);
 
   useEffect(() => {
-    if (!ready || !authenticated) return;
+    // Session identity changes invalidate every outstanding request, including
+    // the nonblocking summary reads started by an earlier lobby load.
+    readGeneration.current += 1;
+  }, [ready, authenticated, sessionKey]);
+
+  useEffect(() => {
+    if (!ready || !authenticated || pathname !== "/app") return;
     // The reads start on the next tick, so the effect body itself never sets
     // state and the first render of a new session stays on the loading gate.
     const timer = setTimeout(() => void load(), 0);
     return () => clearTimeout(timer);
-  }, [ready, authenticated, load]);
+  }, [ready, authenticated, pathname, load]);
 
   const player: LobbyPlayer | null = useMemo(() => (profile ? resolvePlayer(profile) : null), [profile]);
 
@@ -265,6 +317,28 @@ function LobbyShell() {
         : null,
     [deckResult.deck, loadout?.loadout?.revision, loadout?.loadout?.updatedAt]
   );
+
+  const currentHomeSummaryReads =
+    authenticated && sessionKey !== null && homeSummaryReads?.sessionKey === sessionKey
+      ? homeSummaryReads.reads
+      : null;
+
+  const summary = useMemo(() => {
+    const accountXp = currentHomeSummaryReads === null
+      ? null
+      : currentHomeSummaryReads.accountXp.ok
+        ? resolveAccountXp(currentHomeSummaryReads.accountXp.data)
+        : resolveAccountXp(null, {
+            code: currentHomeSummaryReads.accountXp.code,
+            message: currentHomeSummaryReads.accountXp.message,
+            status: currentHomeSummaryReads.accountXp.status,
+          });
+    return {
+      gold: resolveHomeGold(currentHomeSummaryReads?.gold ?? null),
+      crowns: resolveHomeCrowns(currentHomeSummaryReads?.stats ?? null),
+      accountLevel: accountXpLevelView(accountXp),
+    };
+  }, [currentHomeSummaryReads]);
 
   const notices = useMemo(() => {
     const list: LobbyNotice[] = [];
@@ -359,6 +433,16 @@ function LobbyShell() {
   }, [login]);
 
   const onSignOut = useCallback(() => {
+    readGeneration.current += 1;
+    setHomeSummaryReads(null);
+    setProfile(null);
+    setProfileError(null);
+    setLoadout(null);
+    setLoadoutError(null);
+    setCommanders(null);
+    setCommandersError(null);
+    setLoadedFor(null);
+    setBusy(false);
     void logout();
   }, [logout]);
 
@@ -368,6 +452,7 @@ function LobbyShell() {
       player={player}
       commander={commander}
       deck={deck}
+      summary={summary}
       deckEmpty={deckEmpty}
       notices={notices}
       battleEnabled={ENABLED}

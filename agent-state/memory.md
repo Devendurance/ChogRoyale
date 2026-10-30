@@ -2,6 +2,8 @@
 
 # Mobile shell and PWA polish (2026-10-30)
 
+- HomeSummary reads only real authenticated Gold/crowns/Account XP values and links the compact XP bar to Progress. Gold plus exposes earning navigation with purchases explicitly unavailable. The generic Tailwind Turbopack loader must exclude CSS Modules or their exported classes become undefined.
+
 - PR #19 follow-up: opening is initial-layout-entry only. The attempted ref is marked inside the scheduled callback for StrictMode safety. Non-lobby initial routes consume the entry without showing the overlay. Native modal dialog provides inert background isolation, with explicit Tab containment on Skip.
 
 - `AppOpening` belongs in the shared `/app` layout, outside `AppSession`, and only activates on the exact `/app` pathname so auth gates remain visible and direct battle/invite recovery is not delayed. `prefers-reduced-motion` closes without a blocking delay.
