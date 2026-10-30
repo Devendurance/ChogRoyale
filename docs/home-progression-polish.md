@@ -1,5 +1,7 @@
 # Lobby resources and Account XP polish
 
+Review PR: https://github.com/Devendurance/ChogRoyale/pull/20. Implementation commit: `3bfbd16`.
+
 - Branch: `codex/lobby-resources-xp-polish`, based on merged main `a67c7ac`. PR #19 was already merged by the owner, so this follow-up has its own review branch. No merge or production deployment performed for this slice.
 - Lobby summary reads existing authenticated Gold, stats and Account XP endpoints. Balance and earned crowns require nonnegative integers. Level and XP reuse the existing Account XP validator. Failed reads never become zero or Level 1.
 - Returning to `/app` refreshes the resource reads, including returns from battle. Late reads are generation-guarded and scoped to the authenticated identity. HTTP failure status survives non-JSON error responses.
