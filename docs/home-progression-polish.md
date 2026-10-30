@@ -24,9 +24,12 @@ These are presentation fixtures using sample account values and real game artwor
 - Mobile checks found no horizontal overflow in the lobby or expanded Account XP panel. The Gold disclosure stayed within the viewport and opened using Enter.
 - Desktop at 1366 x 768 showed Battle ending at y=661 and bottom navigation ending at y=748. These bounds are from the labeled fixture, not an authenticated account.
 - The opening component, audio manager, battle rules, backend endpoints, reward rules, and stored preferences were not edited.
+- The red `1 Issue` badge in the earlier mobile fixture capture was Next's development indicator reporting a hydration mismatch caused by the Grammarly browser extension adding `data-new-gr-c-s-check-loaded` and `data-gr-ext-installed` to `<body>` before hydration. A clean in-app browser reproduced no issue badge, and the source tree contains no matching fixture route or markup. The local Privy `Origin not allowed` message is a separate unauthenticated localhost setup limitation. No product regression was found.
+- Final local app evidence was recaptured in a clean in-app browser without the development issue badge. The view remains an unauthenticated opening shell because no Privy session is available in this workspace.
 
 ## Verification
 
 - Focused summary, account/progression/profile, audio and media tests: 108 passed.
 - TypeScript, scoped ESLint, production build and diff checks passed before final review. The focused suite was rerun after the cached-route freshness correction.
+- The compact XP fill now transitions its width over 560ms when the server-confirmed Account XP view changes. `prefers-reduced-motion: reduce` disables that transition. No XP calculation or fetch path changed.
 - Next owner acceptance: use a real authenticated session to verify current Gold/crowns/level values and follow the compact summary into Progress on a physical phone.
