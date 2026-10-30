@@ -6,6 +6,7 @@
 - Added match-scoped `account_xp` receipt handling in BattlePanel, exact source/player/match validation, monotonic pending-to-confirmed reduction, room isolation, bounded authenticated readback with cancellation, and explicit unavailable handling.
 - Added shared Account XP reward presentation model/tests, distinct result panel, server-snapshot level-up celebration with max-level copy, ARIA status, and reduced-motion styling. Gold, Card XP, settlement, Practice, Private, and Ranked behavior remain isolated.
 - Verification: focused reward/result/queue suite 105/105, TypeScript, scoped ESLint, production build, and diff checks pass. Authenticated live result and responsive screenshots remain owner-gated because no Privy session is available in this workspace.
+- Delivery: commit `1ab5a58d4e0d173bc35785660110dbf2cb9d4863` is pushed to PR #18. Vercel preview `dpl_EXGimjEZmvHsUucMwoeECyWqHfb2` is READY and serves `/app/play`, `/app/play/battle?mode=practice`, `/app/play/battle?mode=unranked`, and `/app/progress` with HTTP 200. PR remains open and unmerged.
 
 # V2.2b Player Account Level UI (2026-10-29)
 

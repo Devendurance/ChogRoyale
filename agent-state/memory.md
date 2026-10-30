@@ -4,6 +4,7 @@
 - `AccountXpMessage` delivery may precede or follow `end`. Buffer per room until the exact end match is known, reduce monotonically so confirmed cannot downgrade, reject stale room events, and clear on new match, reset, abort, auth loss, and unmount.
 - Recovery uses `/api/players/me/account-xp?matchId=&source=` with the existing bearer token and a short cancellable attempt budget. 401, 403, and 503 are terminal unavailable states. Missing or unresolved receipts never become zero XP.
 - Level-up copy uses only confirmed receipt snapshots (`leveledUp`, `levelBefore`, `levelAfter`) and never derives levels from current lifetime XP. Solo Practice, Private, Ranked, Gold, Card XP, and settlement policies remain separate. Account XP production stays flag/migration gated.
+- V2.2c-2 delivery checkpoint: PR #18 head `1ab5a58d4e0d173bc35785660110dbf2cb9d4863`; Vercel preview deployment `dpl_EXGimjEZmvHsUucMwoeECyWqHfb2` is READY. Public preview route smoke returned 200 without authenticated claims.
 
 # Practice Mode V2.1b
 
