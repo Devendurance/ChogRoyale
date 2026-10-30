@@ -18,7 +18,7 @@ export default function AppOpening() {
       return () => window.clearTimeout(close);
     }
 
-    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
     const open = window.setTimeout(() => setActive(true), 0);
     const timeout = window.setTimeout(() => setActive(false), reducedMotion ? 0 : OPENING_MS);
     return () => {
