@@ -19,6 +19,19 @@ import type {
   TypeSplit,
 } from "./progress-types";
 
+/** Authored account-level checkpoints. They carry no invented rewards. */
+export const ACCOUNT_XP_MILESTONES = [1, 10, 25, 50, 75, 100] as const;
+
+export type AccountXpMilestoneState = "reached" | "upcoming" | "unavailable";
+
+/** Display-only milestone state. The account-XP endpoint remains authoritative. */
+export function accountXpMilestoneState(level: number | null, milestone: number): AccountXpMilestoneState {
+  if (typeof level !== "number" || !Number.isInteger(level) || level < 1 || !Number.isInteger(milestone) || milestone < 1) {
+    return "unavailable";
+  }
+  return level >= milestone ? "reached" : "upcoming";
+}
+
 /** The stats payload as it arrives: optional objects of optional values. */
 export interface StatsPayloadLike {
   username?: unknown;

@@ -1,3 +1,11 @@
+# V2.2c-2 Account XP battle rewards
+
+- Accept Account XP only from a validated `account_xp` receipt for the active room's exact UUID `matchId`, expected source (`matchmaking` or `unranked-fallback`), and authenticated server player UUID. Never compare against a Privy DID or infer XP from result/crowns.
+- `AccountXpMessage` delivery may precede or follow `end`. Buffer per room until the exact end match is known, reduce monotonically so confirmed cannot downgrade, reject stale room events, and clear on new match, reset, abort, auth loss, and unmount.
+- Recovery uses `/api/players/me/account-xp?matchId=&source=` with the existing bearer token and a short cancellable attempt budget. 401, 403, and 503 are terminal unavailable states. Missing or unresolved receipts never become zero XP.
+- Level-up copy uses only confirmed receipt snapshots (`leveledUp`, `levelBefore`, `levelAfter`) and never derives levels from current lifetime XP. Solo Practice, Private, Ranked, Gold, Card XP, and settlement policies remain separate. Account XP production stays flag/migration gated.
+- V2.2c-2 delivery checkpoint: PR #18 head `1ab5a58d4e0d173bc35785660110dbf2cb9d4863`; Vercel preview deployment `dpl_EXGimjEZmvHsUucMwoeECyWqHfb2` is READY. Public preview route smoke returned 200 without authenticated claims.
+
 # Practice Mode V2.1b
 
 - `BattlePanel` creates `BATTLE_PRACTICE_ROOM` only for `mode=practice`, with the existing Privy bearer header. Practice never enters a queue and never sends credentials in URLs.
@@ -5,6 +13,8 @@
 - `BattleLobby`, `BattleHud` and `BattleResult` label the bot as `AI Opponent`; `BattleResult` suppresses disabled settlement copy and shows no rewards/progression. Battle Again resets the room and creates a new Practice room.
 
 # Memory
+
+- V2.2b Account Level UI reads only `/api/players/me/account-xp`. Server-provided level, lifetime XP, thresholds, max state, daily counters, and award rows remain authoritative. The client validates shape and uses thresholds only for a bounded display bar. Disabled, migration, auth, onboarding, network, malformed, and unavailable states never fall back to Level 1.
 
 - V2.1i bot Card XP is earned only from `xp_eligible` Unranked fallback `bot_matches` evidence with a confirmed `bot_gold_awards` row. The XP ledger is separate, the progression total recomputes from PvP plus bot ledgers, and `UNRANKED_BOT_CARD_XP_ENABLED` requires `UNRANKED_BOT_GOLD_REWARDS_ENABLED`. Pre-flag rows and Solo Practice earn zero. Pending XP must remain recoverable until Gold settles, then become terminal on Gold refusal or cap.
 

@@ -18,6 +18,7 @@ import { sessionNotice } from "./feedback-model";
 import { useLobbyCatalog } from "./catalog-context";
 import { resolvePlayer, type ProfilePayload } from "./lobby-model";
 import type { LobbyNotice, LobbyPlayer } from "./lobby-types";
+import { resolveAccountXp, failureAccountXp, type AccountXpSummary } from "./account-xp-model";
 import {
   appendHistoryPage,
   failureBoard,
@@ -32,6 +33,7 @@ import {
   type MatchesPayloadLike,
   type StatsPayloadLike,
 } from "./progress-model";
+import type { AccountXpRequestError } from "./account-xp-model";
 import type { LeaderboardSummary, MatchHistory, ProgressPhase, StatsSummary } from "./progress-types";
 import { failureRanked, failureRankedBoard, resolveRankedBoard, resolveRankedSummary } from "./ranked-model";
 import type { RankedBoardPayload, RankedBoardView, RankedProgressPayload, RankedSummaryView } from "./ranked-types";
@@ -156,6 +158,7 @@ interface Reads {
   board: Result<BoardPayloadLike>;
   ranked: Result<RankedProgressPayload>;
   rankedBoard: Result<RankedBoardPayload>;
+  accountXp: Result<unknown>;
 }
 
 /** A verified stats payload as the identity fallback when the profile read fails. */
@@ -197,6 +200,9 @@ export default function ProgressScreen() {
   const [rankedBoardData, setRankedBoardData] = useState<RankedBoardView | null>(null);
   const [rankedError, setRankedError] = useState<ApiError | null>(null);
   const [rankedBoardError, setRankedBoardError] = useState<ApiError | null>(null);
+  /** Null is an explicit in-flight state. A failed read becomes a summary with
+   * its honest auth, onboarding, migration, network or malformed state. */
+  const [accountXp, setAccountXp] = useState<AccountXpSummary | null>(null);
   const [boardPageError, setBoardPageError] = useState<string | null>(null);
   const [boardBusy, setBoardBusy] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -218,13 +224,14 @@ export default function ProgressScreen() {
   }, [catalog]);
 
   const readAll = useCallback(async (token: string): Promise<Reads> => {
-    const [profileResult, statsResult, matchesResult, boardResult, rankedResult, rankedBoardResult] = await Promise.all([
+    const [profileResult, statsResult, matchesResult, boardResult, rankedResult, rankedBoardResult, accountXpResult] = await Promise.all([
       getJson<{ player: ProfilePayload }>("/api/players/me", token),
       getJson<StatsPayloadLike>("/api/players/me/stats", token),
       getJson<MatchesPayloadLike>(`/api/players/me/matches?limit=${MATCH_PAGE_SIZE}`, token),
       getJson<BoardPayloadLike>(`/api/leaderboard/casual?limit=${BOARD_PAGE_SIZE}&offset=0`, token),
       getJson<RankedProgressPayload>("/api/players/me/ranked", token),
       getJson<RankedBoardPayload>("/api/leaderboard/ranked?limit=10&offset=0", token),
+      getJson<unknown>("/api/players/me/account-xp", token),
     ]);
     return {
       profile: profileResult,
@@ -233,6 +240,7 @@ export default function ProgressScreen() {
       board: boardResult,
       ranked: rankedResult,
       rankedBoard: rankedBoardResult,
+      accountXp: accountXpResult,
     };
   }, []);
 
@@ -285,6 +293,17 @@ export default function ProgressScreen() {
         setRankedBoardData(null);
         setRankedBoardError(toApiError(reads.rankedBoard));
       }
+
+      if (reads.accountXp.ok) {
+        setAccountXp(resolveAccountXp(reads.accountXp.data));
+      } else {
+        const failure: AccountXpRequestError = {
+          code: reads.accountXp.code,
+          message: reads.accountXp.message,
+          status: reads.accountXp.status,
+        };
+        setAccountXp(resolveAccountXp(null, failure));
+      }
     },
     [lookup]
   );
@@ -294,12 +313,14 @@ export default function ProgressScreen() {
     // the call, so the loader can be started straight from an effect.
     const token = await getAccessToken();
     setBusy(true);
+    setAccountXp(null);
     setHistoryPageError(null);
     setBoardPageError(null);
     try {
       if (!token) {
         setProfile(null);
         setProfileError({ code: "UNAUTHORIZED", message: "Sign in to open your progress.", status: 401 });
+        setAccountXp(failureAccountXp("auth", "UNAUTHORIZED"));
         return;
       }
 
@@ -326,6 +347,7 @@ export default function ProgressScreen() {
             setRankedBoardData(null);
             setRankedError(null);
             setRankedBoardError(null);
+            setAccountXp(failureAccountXp("forbidden", "BOOTSTRAP_FAILED"));
             return;
           }
         }
@@ -538,12 +560,32 @@ export default function ProgressScreen() {
       } else {
         parts.push("The ranked leaderboard is unavailable.");
       }
+
+      if (accountXp === null) {
+        parts.push("Account progression is loading.");
+      } else if (accountXp.state === "ready") {
+        parts.push(`Account Level ${accountXp.level ?? "unknown"} with ${accountXp.totalXp ?? "unknown"} XP.`);
+      } else if (accountXp.state === "disabled") {
+        parts.push("Account progression is disabled.");
+      } else if (accountXp.state === "forbidden") {
+        parts.push("Account progression is locked until profile setup is complete.");
+      } else if (accountXp.state === "auth") {
+        parts.push("Account progression needs a fresh sign-in.");
+      } else if (accountXp.state === "migration") {
+        parts.push("Account progression is waiting for its service migration.");
+      } else if (accountXp.state === "network") {
+        parts.push("Account progression could not reach the service.");
+      } else if (accountXp.state === "malformed") {
+        parts.push("Account progression returned an unreadable response.");
+      } else {
+        parts.push("Account progression is unavailable.");
+      }
     }
     if (busy) parts.push("Refreshing your progress.");
     if (historyBusy) parts.push("Loading more matches.");
     if (boardBusy) parts.push("Loading another page of standings.");
     return parts.join(" ");
-  }, [phase, stats, history, board, ranked, rankedBoard, busy, historyBusy, boardBusy]);
+  }, [phase, stats, history, board, ranked, rankedBoard, accountXp, busy, historyBusy, boardBusy]);
 
   const onSignIn = useCallback(() => {
     void login();
@@ -557,6 +599,7 @@ export default function ProgressScreen() {
     <ProgressView
       phase={phase}
       player={player}
+      accountXp={accountXp}
       stats={stats}
       history={history}
       board={board}

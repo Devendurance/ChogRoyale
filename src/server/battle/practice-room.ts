@@ -26,6 +26,7 @@ import { commanderCardId, isAbilityCommand, validateDeck } from "@/lib/combat";
 import { BOT_GOLD_POLICY_VERSION } from "@/lib/bot-gold";
 import { BotGoldService } from "@/server/battle/bot-gold";
 import { BotCardXpService } from "@/server/battle/bot-card-xp";
+import { AccountXpService, buildAccountXpReceipt } from "@/server/battle/account-xp";
 import { productionEntitlementDeps, resolveCommander, type EntitlementDeps } from "@/server/battle/entitlement";
 import { productionPatronSource, type PatronSource } from "@/server/battle/patron-source";
 import type { MatchCoordinator } from "@/server/battle/matchmaking";
@@ -50,6 +51,11 @@ function botGold(): BotGoldService {
 let botCardXpService: BotCardXpService | null = null;
 function botCardXp(): BotCardXpService {
   return (botCardXpService ??= new BotCardXpService());
+}
+
+let accountXpService: AccountXpService | null = null;
+function accountXp(): AccountXpService {
+  return (accountXpService ??= new AccountXpService());
 }
 
 let productionEntitlement: EntitlementDeps | null = null;
@@ -321,6 +327,11 @@ export class PracticeRoom extends Room {
       if (gold) receipts.push(gold);
       const xp = this.maybeAwardBotXp(gold);
       if (xp) receipts.push(xp);
+      // V2.2c-1 Account XP receipt joins the same bounded delivery wait.
+      // Gold/Card XP sends already resolved upstream, so a slow XP
+      // processor cannot delay them; the close cap still bounds shutdown.
+      const axp = this.maybeAwardAccountXp(gold);
+      if (axp) receipts.push(axp);
       const awardDelivered = receipts.length > 0 ? Promise.all(receipts).then(() => undefined) : null;
       this.setSimulationInterval();
       this.releaseHuman();
@@ -412,6 +423,38 @@ export class PracticeRoom extends Room {
       });
     return (afterGold ? afterGold.then(process) : process())
       .catch((err) => logger.error("bot card xp hook failed", { roomId: this.roomId, reason: err instanceof Error ? err.message : String(err) }));
+  }
+
+  /**
+   * V2.2c-1 Player Account XP for verified fallback matches. Backend-owned
+   * receipt sent only to the real player's client, chained after Gold so a
+   * slow XP processor can never delay Gold/Card XP delivery; room shutdown
+   * stays bounded by the existing close cap. Only Unranked fallback rooms
+   * with the bot Gold flag and the Account XP flag enabled reach the
+   * service; solo Practice and flag-OFF rooms send nothing and write
+   * nothing. The service awards only Gold-confirmed matches begun after
+   * the durable release boundary. Never throws.
+   */
+  private maybeAwardAccountXp(afterGold: Promise<void> | null): Promise<void> | null {
+    if (this.origin !== "unranked-fallback") return null;
+    if (!PracticeRoom.deps.botGold?.enabled || !PracticeRoom.deps.accountXp?.enabled) return null;
+    const matchId = this.matchId;
+    const human = this.session.slots[0];
+    if (!matchId || !human) return null;
+    const run = () =>
+      accountXp()
+        .processBotMatch(matchId)
+        .then(async (r) => {
+          const receipt = await buildAccountXpReceipt(human.playerId, "unranked-fallback", matchId, {
+            eligibility: r.eligibility,
+            amount: r.amount,
+            result: r.result,
+            status: r.status,
+          });
+          this.humanClient?.send("account_xp", receipt);
+        });
+    return (afterGold ? afterGold.then(run) : run())
+      .catch((err) => logger.error("account xp hook failed", { roomId: this.roomId, reason: err instanceof Error ? err.message : String(err) }));
   }
 
   /**

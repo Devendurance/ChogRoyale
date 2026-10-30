@@ -5,6 +5,7 @@ import {
   varchar,
   boolean,
   timestamp,
+  date,
   jsonb,
   integer,
   smallint,
@@ -1172,3 +1173,145 @@ export const dmMessages = pgTable(
 );
 
 export type DmMessage = typeof dmMessages.$inferSelect;
+
+// V2.2a Player Account XP (levels 1-100). Permanent account progression,
+// separate from Card XP, Gold, trophies and combat stats. The awards ledger
+// is authoritative and additive: one row per (player, source, match).
+// PvP rows reference matches, bot rows reference bot_matches; exactly one
+// FK is set per row so no fake PvP rows exist for AI fallback. Totals and
+// levels are derived from the ledger sum, so no cached XP can disagree.
+// Runs markers make awarding idempotent across retries and restarts.
+// The release row is the durable activation boundary: only matches begun
+// after activated_at may earn. It is inserted once and never moved.
+export const accountXpRelease = pgTable(
+  "account_xp_release",
+  {
+    id: smallint("id").primaryKey(),
+    activatedAt: timestamp("activated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [check("account_xp_release_singleton_check", sql`${t.id} = 1`) ]
+);
+
+export type AccountXpReleaseRow = typeof accountXpRelease.$inferSelect;
+
+export const accountXpAwards = pgTable(
+  "account_xp_awards",
+  {
+    playerId: uuid("player_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "restrict" }),
+    source: text("source").notNull(),
+    matchId: text("match_id").notNull(),
+    pvpMatchId: uuid("pvp_match_id").references(() => matches.id, { onDelete: "restrict" }),
+    botMatchId: text("bot_match_id").references(() => botMatches.matchId, { onDelete: "restrict" }),
+    result: text("result").notNull(),
+    amount: integer("amount").notNull(),
+    policyVersion: integer("policy_version").notNull(),
+    // V2.2c-1 durable award-time snapshots. Set atomically with the award
+    // insert in the same statement that serializes the per-player head
+    // bump, so they never derive from a later lifetime total. NULL marks
+    // pre-0027 rows, which stay honestly unproven (no level-up claim).
+    xpBefore: integer("xp_before"),
+    xpAfter: integer("xp_after"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ name: "account_xp_awards_pk", columns: [t.playerId, t.source, t.matchId] }),
+    index("account_xp_awards_player_idx").on(t.playerId, t.createdAt),
+    check("account_xp_awards_source_check", sql`${t.source} in ('matchmaking','unranked-fallback')`),
+    check("account_xp_awards_result_check", sql`${t.result} in ('win','loss','draw')`),
+    check("account_xp_awards_amount_check", sql`${t.amount} >= 0`),
+    check(
+      "account_xp_awards_source_fk_check",
+      sql`(${t.source} = 'matchmaking' and ${t.pvpMatchId} is not null and ${t.botMatchId} is null) or (${t.source} = 'unranked-fallback' and ${t.botMatchId} is not null and ${t.pvpMatchId} is null)`
+    ),
+  ]
+);
+
+export type AccountXpAwardRow = typeof accountXpAwards.$inferSelect;
+
+export const accountXpRuns = pgTable(
+  "account_xp_runs",
+  {
+    playerId: uuid("player_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "restrict" }),
+    source: text("source").notNull(),
+    matchId: text("match_id").notNull(),
+    status: text("status").notNull().default("pending"),
+    awardsCreated: integer("awards_created").notNull().default(0),
+    details: jsonb("details").notNull().default({}),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ name: "account_xp_runs_pk", columns: [t.playerId, t.source, t.matchId] }),
+    index("account_xp_runs_pending_idx").on(t.status, t.createdAt),
+    check("account_xp_runs_source_check", sql`${t.source} in ('matchmaking','unranked-fallback')`),
+    check("account_xp_runs_status_check", sql`${t.status} in ('pending','done','refused','capped')`),
+  ]
+);
+
+export type AccountXpRunRow = typeof accountXpRuns.$inferSelect;
+
+// V2.2c-1 per-player progression head. The single heads row serializes
+// concurrent award inserts for one player: each bump adds exactly one
+// award amount on the newest committed total, so per-award before/after
+// snapshots are exact without multi-statement transactions (which the
+// Neon HTTP adapter does not support). heads.total_xp always equals the
+// ledger sum of that player's award amounts.
+export const accountXpHeads = pgTable(
+  "account_xp_heads",
+  {
+    playerId: uuid("player_id")
+      .primaryKey()
+      .references(() => players.id, { onDelete: "restrict" }),
+    totalXp: integer("total_xp").notNull().default(0),
+  },
+  (t) => [check("account_xp_heads_total_check", sql`${t.totalXp} >= 0`)]
+);
+
+export type AccountXpHeadRow = typeof accountXpHeads.$inferSelect;
+
+// V2.2c-1 PvP daily-cap counter. Bumped in the same atomic award
+// statement and re-checked on the newest row version after the row lock,
+// so concurrent completions cannot exceed 20 awards per UTC day. Bot
+// awards never touch this table (the confirmed-Gold allowance gates them).
+export const accountXpDailyCounts = pgTable(
+  "account_xp_daily_counts",
+  {
+    playerId: uuid("player_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "restrict" }),
+    day: date("day").notNull(),
+    n: integer("n").notNull().default(1),
+  },
+  (t) => [
+    primaryKey({ name: "account_xp_daily_counts_pk", columns: [t.playerId, t.day] }),
+    check("account_xp_daily_counts_n_check", sql`${t.n} >= 0`),
+  ]
+);
+
+export type AccountXpDailyCountRow = typeof accountXpDailyCounts.$inferSelect;
+
+// V2.2c-1 award-claim log. One row per attempted award; the PK conflict is
+// the exact same-match serialization signal inside the atomic award
+// statement (the loser waits out the winner, then re-reads the committed
+// row). Unlike runs rows, claims are never pre-created or adopted, so a
+// conflict always means another processor owns this award.
+export const accountXpAwardClaims = pgTable(
+  "account_xp_award_claims",
+  {
+    playerId: uuid("player_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "restrict" }),
+    source: text("source").notNull(),
+    matchId: text("match_id").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ name: "account_xp_award_claims_pk", columns: [t.playerId, t.source, t.matchId] }),
+    check("account_xp_award_claims_source_check", sql`${t.source} in ('matchmaking','unranked-fallback')`),
+  ]
+);
+
+export type AccountXpAwardClaimRow = typeof accountXpAwardClaims.$inferSelect;

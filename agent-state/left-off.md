@@ -1,3 +1,62 @@
+# Current task: V2.2c-2 Account XP battle result UI
+
+- Done: reviewed PR #18 at expected head `7b9a480`; implemented Account XP receipt validation and monotonic lifecycle, room-scoped buffering, authenticated bounded readback, result reward panel, level-up snapshots, max-level state, accessibility and reduced-motion styling. Existing Gold/Card XP/result actions remain intact.
+- Verified: focused Account XP, result, Gold, Card XP, and queue tests 105/105; TypeScript; scoped ESLint; production build. Coordinator review tightened UUID and room checks and clears cached player identity on each reward context.
+- Done: commit `1ab5a58d4e0d173bc35785660110dbf2cb9d4863` is pushed to PR #18. Vercel preview deployment `dpl_EXGimjEZmvHsUucMwoeECyWqHfb2` is READY for the exact commit. Preview smoke requests returned HTTP 200 for Battle Hall, Practice, Unranked, and Progress routes.
+- Next: owner review and merge decision. Do not merge, apply migrations 0026-0028, enable `PLAYER_ACCOUNT_XP_ENABLED`, deploy the battle server, or modify production data.
+
+## V2.2 FINAL Account XP release preflight (2026-10-29, this session)
+
+- Doing: narrowly scoped release-safety preflight on PR #18 branch `codex/v2.2b-player-account-level-ui` (base `3033e2a` verified against remote, tree clean). No merge, no PROD migration, no deploy, no flag change, no frontend work.
+- Cold-start verdict: NO RACE in the current staging. Empirical proof (TEST, genuinely concurrent independent sessions): repeated cold-start PvP-vs-PvP, PvP-vs-AI and 3-match bursts award exactly once per match, zero orphan claims, heads == ledger sum, snapshots form gapless chains, daily counts match awarded rows. The feared blind-bump cannot occur because S1's bump UPDATE either waits on a live inserter (then re-checks the newest total) or, when the row is committed, that commit predates S1's snapshot — plus an explicit ensure-heads insert now serializes first awards before S1 runs.
+- Fix applied anyway (defense in depth + exact task demand): ensure-heads pre-insert; stale-claim delete with bounded retry inside the stagers; new `contended` outcome instead of a terminal `duplicate` without an award row; service maps contended to pending (claim pending, never mark done); done runs re-verify the award row before confirming duplicates; route lookup unchanged.
+- Migration review: 0026/0027/0028 sequential and additive (FKs, checks, no destructive ops). 0027 ends with a duplicated idempotent backfill pair (harmless: ON CONFLICT DO NOTHING, same recomputed sums); left untouched, no history rewrite. Claim rows cannot strand awards: every committed claim either has a committed award (atomic S1), is terminal-capped, or is deleted by the bounded retry; service never marks done without a verified row.
+- Release boundary: activation is a single explicit `ensureAccountXpRelease()` INSERT (singleton, idempotent, never moves) plus `PLAYER_ACCOUNT_XP_ENABLED=1`; both gates are re-checked on every award path (service enabled flag, table presence, release row, per-match started_at). Flag alone cannot backfill history; pre-release matches stay refused for PvP and fallback.
+- Verified: cold-start 5/5, snapshot 6/6, V2.2a service 12/12, receipt 13/13, policy+settlement 19/19, bot-gold+bot-card+practice 31/31, typecheck, scoped lint, production build. Server card-xp draw-heal failure remains pre-existing TEST residue (reproduced on pristine HEAD earlier). Full-file reruns occasionally flake under sustained TEST-branch load and pass on retry with no code change.
+- Next: commit + push on PR #18 branch, owner review and merge decision. Do not merge, migrate PROD, deploy, restart, enable Account XP, or clean TEST residue without approval.
+
+## V2.2c-1 Account XP level-up provenance fix (2026-10-29, this session)
+
+- Doing: release-critical fix for stable per-award snapshots on PR #18 branch `codex/v2.2b-player-account-level-ui` (base `3033e2a` verified against remote, tree clean). No merge, no PROD migration, no deploy, no flag activation, no frontend changes.
+- Root cause: receipts reconstructed `before = lifetimeTotal - amount` at read time, so any later award rewrote history and double-claimed crossings; the CTE snapshot predates the advisory lock, so 2/6 concurrent trials over-awarded the 20/day cap (21/20).
+- Done: durable `xp_before/xp_after` on the award row written atomically with the award; `account_xp_heads` per-player total (single statement serializes bumps, Update rechecks newest row); `account_xp_daily_counts` per-day counter with rechecked `n < 20`; `account_xp_award_claims` PK as the exact same-match serialization signal; single-statement atomic award (no advisory locks, no transactions, lock order fixed, no deadlocks); builder reads stored snapshots, NULL legacy rows stay unproven. Migrations 0027 (tables, columns, backfill) + 0028 (claims), additive, TEST-applied only.
+- Verified: pre-fix red captured (receipt A mutated 2->2/false into 2->3/true; cap race 2/6 over cap). Post-fix: snapshot 6/6, V2.2a service 12/12, receipt 13/13, policy+settlement 19/19, bot-gold+bot-card 20/20, practice 11/11, typecheck, scoped lint, production build. Server card-xp draw-heal failure re-verified on pristine HEAD: pre-existing TEST residue, unchanged. Full-file reruns occasionally flake under sustained TEST-branch load (fetch stalls) and pass on retry with no code change.
+- Next: commit + push on PR #18 branch, owner review, Codex V2.2c-2 GO (receipts are now stable and exactly-once). Do not merge, migrate PROD, deploy, restart, enable Account XP, or clean TEST residue without approval.
+
+## V2.2c-1 Authoritative Account XP battle receipts (2026-10-29, this session)
+
+- Doing: backend/protocol delivery of V2.2a Account XP outcomes on PR #18 branch `codex/v2.2b-player-account-level-ui` at `f68d58c` (remote HEAD verified, tree clean). No merge, no PROD migration, no deploy, no flag activation, no frontend UI.
+- Done: `AccountXpMessage` protocol (`account_xp` event) with result/amount/snapshots; `buildAccountXpReceipt` with counterfactual ledger snapshots (before excludes award, after includes; per-player serialization attributes each crossing once; duplicates repeat); strict `validateAccountXpReceipt`; per-player PvP delivery in `room.ts` after settlement; PracticeRoom `account_xp` send in bounded receipts; `GET /api/players/me/account-xp?matchId=&source=` lookup (confirmed/pending/refused/capped/unknown, caller-scoped). No migration changes (0026 untouched).
+- Verified: receipt suite 13/13, policy 8/8, settlement 11/11, bot-gold 12/12, bot-card-xp 8/8, V2.2a service 12/12, practice 11/11, typecheck, scoped lint, production build. Server card-xp lifecycle shows 1 failure in the draw-heal test, reproduced on pristine HEAD with changes stashed: pre-existing TEST residue, not this slice.
+- Next: commit + push on PR #18 branch, owner review, Codex V2.2c-2 frontend handoff. Do not merge, migrate PROD, deploy, restart, enable Account XP, or clean TEST residue without approval.
+
+## V2.2b Player Account Level UI (2026-10-29)
+
+- Doing: owner review of PR #18, https://github.com/Devendurance/ChogRoyale/pull/18, for the frontend Account Level UI on `codex/v2.2b-player-account-level-ui`, based on V2.2a `ef32d97` plus model checkpoint `bafcd29`.
+- Done: shared Account Level module for Profile and Progress, strict server response validation, authoritative level and threshold display, level milestones, recent Account XP awards, explicit disabled/auth/onboarding/migration/network/malformed states, 55 focused tests, lint, typecheck, build, and unauthenticated responsive gate screenshots.
+- Next: owner approval is required before merging. Do not apply migration 0026, deploy, restart, enable `PLAYER_ACCOUNT_XP_ENABLED`, or begin V2.2c.
+
+## V2.2a Player Account XP backend (2026-10-29, this session)
+
+- Doing: backend-only Account XP levels 1-100 on branch `v2.2a-player-account-xp` from origin/main `d2b2460`. No merge, no PROD migration, no deploy, no flag activation, no frontend UI.
+- Done: pure policy `src/lib/account-xp.ts` (100/75/50 PvP, 40/30/20 fallback, 600 ticks, 3 deploys, PvP cap 20, curve 100n+25n(n-1)/2), additive ledger + runs + release tables (schema + migration 0026), `src/db/account-xp.ts`, `AccountXpService` (PvP via settlement hook, bot via PracticeRoom hook after Gold, transactional caps, idempotent runs, pre-release refusal, flag-OFF zero writes), settlement/practice/server/room wiring (all default OFF), `GET /api/players/me/account-xp` (503 when unmigrated).
+- Verified: policy 8/8, service 12/12, settlement regressions 19/19 (with policy), bot-gold 12/12, bot-card-xp 8/8, typecheck, scoped lint, production build (route listed).
+- Next: commit + push branch, owner review, Codex V2.2b frontend handoff. Do not merge, migrate PROD, deploy, restart endy-vps, enable Account XP, or backfill history.
+
+## V2.1i/j Production Activation (2026-10-29)
+
+- Doing: scoped production rollout authorized by owner. No new features, no synthetic matches, no fake players.
+- Done: prechecks green, restore branch `br-late-sky-b5qfkhi1` from PROD HEAD, baseline counts recorded, deployed merged main `d2b2460` to endy-vps, applied only migration 0025, restarted with flag OFF for verification then set `UNRANKED_BOT_CARD_XP_ENABLED=1` and restarted. Health local/public 200, ranked closed, fallback/Gold/XP all ENABLED.
+- Next: owner real Privy player acceptance. Do not claim acceptance passed. Rollback is flag-OFF plus restart if needed.
+
+## V2.1i/j Release Preflight (2026-10-29)
+
+- Doing: focused release-safety check on PR #17 before owner merge. No feature rebuild, merge, migration, deploy, flag change, or production writes.
+- Done: reproduced a real lost-update hazard in `applyCardXpTotals` with deterministic Pool sessions (plain stale 5 overwrote fresh 7). Fixed with a monotonic `WHERE xp <= excluded.xp` guard, no locks, no deadlocks, purchased intact. New `src/db/card-xp-concurrency.test.ts` covers PvP vs bot, two bots, duplicate, interrupted+reconcile, downgrade block, and stale-session guard (6/6).
+- Done: committed minimal fix `6061220` to `codex/v2.1j-bot-card-xp-ui` and pushed. Updated PR head is `6061220` (was `08ac6ed`).
+- Verified: bot XP 8/8, bot Gold 12/12, concurrency 6/6, Practice suites 26/26, typecheck, scoped lint, and production build pass. Known TEST residue remains in `card-xp.test.ts` (2) and `gold.test.ts` (1), identical before the fix.
+- Next: owner GO/NO-GO for PR #17. Do not merge, migrate PROD, deploy, enable flags, or clean TEST residue without approval.
+
 ## V2.1j Unranked AI Card XP UI (2026-10-29)
 
 - Doing: owner review of PR #17, https://github.com/Devendurance/ChogRoyale/pull/17.

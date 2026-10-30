@@ -1,5 +1,20 @@
 # Project State
 
+# V2.2c-2 Account XP battle result UI (2026-10-30)
+
+- Working on existing PR #18 branch `codex/v2.2b-player-account-level-ui`, starting from reviewed head `7b9a480`. No merge, production deployment, migration, flag change, or battle-server action performed.
+- Added match-scoped `account_xp` receipt handling in BattlePanel, exact source/player/match validation, monotonic pending-to-confirmed reduction, room isolation, bounded authenticated readback with cancellation, and explicit unavailable handling.
+- Added shared Account XP reward presentation model/tests, distinct result panel, server-snapshot level-up celebration with max-level copy, ARIA status, and reduced-motion styling. Gold, Card XP, settlement, Practice, Private, and Ranked behavior remain isolated.
+- Verification: focused reward/result/queue suite 105/105, TypeScript, scoped ESLint, production build, and diff checks pass. Authenticated live result and responsive screenshots remain owner-gated because no Privy session is available in this workspace.
+- Delivery: commit `1ab5a58d4e0d173bc35785660110dbf2cb9d4863` is pushed to PR #18. Vercel preview `dpl_EXGimjEZmvHsUucMwoeECyWqHfb2` is READY and serves `/app/play`, `/app/play/battle?mode=practice`, `/app/play/battle?mode=unranked`, and `/app/progress` with HTTP 200. PR remains open and unmerged.
+
+# V2.2b Player Account Level UI (2026-10-29)
+
+- Branch `codex/v2.2b-player-account-level-ui` is based on V2.2a `ef32d97` plus the reviewed account-XP client model checkpoint `bafcd29`. Implementation commit `ffaf65a` is pushed on PR #18 and remains unmerged.
+- Added strict authenticated Account XP response validation, shared Profile/Progress Account Level presentation, authoritative threshold progress, level milestones 1/10/25/50/75/100, and recent verified award rows.
+- Account XP states stay explicit for loading, disabled, auth, onboarding lock, migration/503, network, malformed, and unavailable reads. No production migration 0026, flag activation, deployment, or player-data write was performed.
+- Focused Account XP and Progress tests pass 55/55, scoped ESLint, TypeScript, production build, and diff checks pass. Vercel preview `dpl_989ChNPA2oudZ5ggd4htYp17wPp7` is READY. Authenticated Account XP UI acceptance remains owner-gated.
+
 # V2.1j Unranked AI Card XP UI (2026-10-29)
 
 - Branch `codex/v2.1j-bot-card-xp-ui`, commit `50d136c`, PR #17 is open against `main` and awaits owner approval. No merge, backend deployment, migration 0025, flag change, or balance change was performed.

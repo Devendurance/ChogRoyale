@@ -43,8 +43,7 @@ async function settlementService() {
     console.log("card scaling disabled");
     return { settlement: null, cardScaling: false };
   }
-  const { SettlementService } = await import("@/server/battle/settlement");
-  // B3.3b NFT legacy is opt-in via BATTLE_LEGACY=1 and requires both
+  const { SettlementService } = await import("@/server/battle/settlement");  // B3.3b NFT legacy is opt-in via BATTLE_LEGACY=1 and requires both
   // settlement and the match_legacy_runs migration on the same database.
   let legacy = null;
   if (process.env.BATTLE_LEGACY === "1") {
@@ -103,6 +102,27 @@ async function settlementService() {
     }
   }
   console.log("settlement enabled");
+  // V2.2a Player Account XP rides on the settlement lifecycle behind its
+  // own default-OFF flag. It stays disabled unless the flag is on AND the
+  // account XP migration is applied, so an unmigrated database (including
+  // PROD) can never take Account XP writes. Historical matches earn zero
+  // via the durable release boundary. Never activate in this script run
+  // without an explicit owner-approved flag change.
+  let accountXp = null;
+  {
+    const { accountXpReleaseEnabled } = await import("@/lib/account-xp");
+    const enabled = accountXpReleaseEnabled({ PLAYER_ACCOUNT_XP_ENABLED: process.env.PLAYER_ACCOUNT_XP_ENABLED });
+    const check = await sql`select to_regclass('public.account_xp_awards') as t`;
+    if (!enabled) {
+      console.log("account xp disabled (release gate)");
+    } else if (!check[0]?.t) {
+      console.log("account xp disabled (account_xp_awards missing)");
+    } else {
+      const { AccountXpService } = await import("@/server/battle/account-xp");
+      accountXp = new AccountXpService({ enabled: true });
+      console.log("account xp enabled");
+    }
+  }
   // P2c card stat scaling is an explicit per-environment activation, off
   // by default. Without it every match simulates at Level 1, exactly the
   // pre-scaling baseline, even where the card XP migration is applied.
@@ -110,12 +130,12 @@ async function settlementService() {
   // or rows are missing, so PROD behavior cannot change by accident.
   const cardScaling = process.env.CARD_LEVEL_SCALING === "1";
   console.log(`card scaling ${cardScaling ? "enabled" : "disabled"}`);
-  return { settlement: new SettlementService({ legacy, trophies, cardXp, gold }), cardScaling };
+  return { settlement: new SettlementService({ legacy, trophies, cardXp, gold, accountXp }), cardScaling };
 }
 
 void settlementService()
   .then(({ settlement, cardScaling }) =>
-    import("@/server/battle/server").then(({ startBattleServer }) => {
+    import("@/server/battle/server").then(async ({ startBattleServer }) => {
       console.log(describeBattleHostConfig(hostConfig));
       console.log(`ranked public matchmaking: ${RANKED_PUBLIC_MATCHMAKING_ENABLED ? "OPEN" : "closed (release gate)"}`);
       const unrankedFallbackEnabled = process.env.UNRANKED_AI_FALLBACK_ENABLED === "1";
@@ -129,7 +149,13 @@ void settlementService()
         UNRANKED_BOT_GOLD_REWARDS_ENABLED: process.env.UNRANKED_BOT_GOLD_REWARDS_ENABLED,
       });
       console.log(`unranked bot card xp: ${botCardXpEnabled ? "ENABLED (1 XP on first and third accepted deploy, max 6)" : "disabled (release gate)"}`);
-      return startBattleServer(hostConfig.port, { settlement, cardScaling, ...(unrankedFallbackEnabled ? { unrankedFallback: { enabled: true } } : {}), ...(botGoldEnabled ? { botGold: { enabled: true } } : {}), ...(botCardXpEnabled ? { botCardXp: { enabled: true } } : {}) }, hostConfig.host, {
+      // V2.2a Account XP stays OFF unless the owner explicitly enables it.
+      // The settlement wiring above already refuses without the flag and
+      // the migration; this dep only opens the PracticeRoom bot hook.
+      const { accountXpReleaseEnabled } = await import("@/lib/account-xp");
+      const accountXpEnabled = accountXpReleaseEnabled({ PLAYER_ACCOUNT_XP_ENABLED: process.env.PLAYER_ACCOUNT_XP_ENABLED });
+      console.log(`player account xp: ${accountXpEnabled ? "ENABLED (100/75/50 PvP, 40/30/20 fallback)" : "disabled (release gate)"}`);
+      return startBattleServer(hostConfig.port, { settlement, cardScaling, ...(unrankedFallbackEnabled ? { unrankedFallback: { enabled: true } } : {}), ...(botGoldEnabled ? { botGold: { enabled: true } } : {}), ...(botCardXpEnabled ? { botCardXp: { enabled: true } } : {}), ...(accountXpEnabled ? { accountXp: { enabled: true } } : {}) }, hostConfig.host, {
         enableShutdownHooks: hosting,
       });
     })

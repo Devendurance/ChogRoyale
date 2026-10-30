@@ -14,6 +14,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePrivy, useLogin } from "@privy-io/react-auth";
 import ProfileView from "./ProfileView";
+import {
+  accountXpLevelView,
+  resolveAccountXp,
+  type AccountXpPayload,
+  type AccountXpSummary,
+} from "./account-xp-model";
 import { sessionNotice } from "./feedback-model";
 import { useLobbyCatalog } from "./catalog-context";
 import { formatMemberSince, resolveRecord, type StatsPayloadLike } from "./profile-model";
@@ -114,6 +120,7 @@ interface Reads {
   loadout: Result<LoadoutPayload>;
   commanders: Result<CommandersPayload>;
   stats: Result<StatsPayloadLike>;
+  accountXp: Result<AccountXpPayload>;
 }
 
 /** Why the deck panel has no deck, in the order the reads can fail. */
@@ -156,6 +163,8 @@ function ProfileShell() {
   const [commandersError, setCommandersError] = useState<ApiError | null>(null);
   const [stats, setStats] = useState<StatsPayloadLike | null>(null);
   const [statsError, setStatsError] = useState<ApiError | null>(null);
+  const [accountXp, setAccountXp] = useState<AccountXpSummary | null>(null);
+  const [accountXpError, setAccountXpError] = useState<ApiError | null>(null);
   const [busy, setBusy] = useState(false);
   /** The Privy user the current reads belong to. The screen is only "loaded"
    *  when the finished reads belong to the session that is on screen, so a
@@ -170,7 +179,7 @@ function ProfileShell() {
   const calm = reducedMotion || saveData;
 
   const readAll = useCallback(async (token: string): Promise<Reads> => {
-    const [profileResult, loadoutResult, commandersResult, statsResult] = await Promise.all([
+    const [profileResult, loadoutResult, commandersResult, statsResult, accountXpResult] = await Promise.all([
       // GET /api/players/me nests the profile under data.player, unlike the
       // loadout, commander and stats reads which answer with their payload
       // directly.
@@ -178,12 +187,14 @@ function ProfileShell() {
       getJson<LoadoutPayload>("/api/players/me/loadout", token),
       getJson<CommandersPayload>("/api/players/me/commanders", token),
       getJson<StatsPayloadLike>("/api/players/me/stats", token),
+      getJson<AccountXpPayload>("/api/players/me/account-xp", token),
     ]);
     return {
       profile: profileResult,
       loadout: loadoutResult,
       commanders: commandersResult,
       stats: statsResult,
+      accountXp: accountXpResult,
     };
   }, []);
 
@@ -219,6 +230,14 @@ function ProfileShell() {
       setStats(null);
       setStatsError({ code: reads.stats.code, message: reads.stats.message });
     }
+
+    if (reads.accountXp.ok) {
+      setAccountXp(resolveAccountXp(reads.accountXp.data));
+      setAccountXpError(null);
+    } else {
+      setAccountXp(resolveAccountXp(null, { code: reads.accountXp.code, message: reads.accountXp.message }));
+      setAccountXpError({ code: reads.accountXp.code, message: reads.accountXp.message });
+    }
   }, []);
 
   const load = useCallback(async () => {
@@ -252,6 +271,8 @@ function ProfileShell() {
             setCommandersError(null);
             setStats(null);
             setStatsError(null);
+            setAccountXp(null);
+            setAccountXpError(null);
             return;
           }
         }
@@ -334,6 +355,11 @@ function ProfileShell() {
       ? "Not available until profile setup is complete."
       : "The match record is not available right now.";
   }, [statsError]);
+
+  const accountLevel = useMemo(
+    () => accountXpLevelView(accountXp ?? (accountXpError ? resolveAccountXp(null, accountXpError) : null), busy),
+    [accountXp, accountXpError, busy]
+  );
 
   const notices = useMemo(() => {
     const list: LobbyNotice[] = [];
@@ -418,6 +444,7 @@ function ProfileShell() {
       deckNote={deckNote}
       record={record}
       recordNote={recordNote}
+      accountLevel={accountLevel}
       notices={notices}
       busy={busy}
       calm={calm}

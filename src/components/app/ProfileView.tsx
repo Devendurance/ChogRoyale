@@ -4,12 +4,14 @@
 // plain prop, so this component renders the same way from the authenticated
 // container and from a static preview with sample data.
 //
-// The screen reports only what the account endpoints returned. It carries no
-// leaderboard, trophies, XP, levels, currencies, streaks or rankings, and it
-// never shows a wallet address, a player id or a raw role list.
+// The screen reports only what the account endpoints returned. Account XP is a
+// separate server-authoritative read, while leaderboard, trophies, currencies
+// and rankings remain outside this screen. It never shows a wallet address,
+// player id or raw role list.
 
 import Link from "next/link";
 import Image from "next/image";
+import AccountLevelModule from "./AccountLevelModule";
 import AppHud, { AppHudBackLink } from "./AppHud";
 import AppNav from "./AppNav";
 import AppNotice from "./AppNotice";
@@ -31,6 +33,7 @@ export default function ProfileView({
   deckNote,
   record,
   recordNote,
+  accountLevel,
   notices,
   busy,
   calm,
@@ -226,6 +229,8 @@ export default function ProfileView({
             </div>
 
             <div className="app-profile__side">
+              <AccountLevelModule accountLevel={accountLevel} />
+
               <section
                 className="app-panel app-profile-deck app-rise"
                 aria-labelledby="app-profile-deck-title"
