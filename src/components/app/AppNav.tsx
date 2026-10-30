@@ -28,10 +28,12 @@ const TABS: Tab[] = [
 ];
 
 export default function AppNav({ activeId = "lobby" }: { activeId?: string }) {
+  const selectedId = activeId === "friends" ? "profile" : activeId;
+
   return (
     <nav className="app-nav" aria-label="Game sections">
       {TABS.map((tab) => {
-        const isActive = tab.id === activeId;
+        const isActive = tab.id === selectedId;
 
         if (!tab.available || !tab.href) {
           return (

@@ -142,6 +142,10 @@ export default function ProfileView({
           {noticeList.length > 0 && <div className="app-column__notices">{noticeList}</div>}
 
           <div className="app-profile">
+            <div className="app-profile__account-level">
+              <AccountLevelModule accountLevel={accountLevel} />
+            </div>
+
             <div className="app-profile__main">
               <section className="app-panel app-profile-id app-rise" aria-labelledby="app-profile-name">
                 <span className="app-profile-id__avatar">
@@ -229,8 +233,6 @@ export default function ProfileView({
             </div>
 
             <div className="app-profile__side">
-              <AccountLevelModule accountLevel={accountLevel} />
-
               <section
                 className="app-panel app-profile-deck app-rise"
                 aria-labelledby="app-profile-deck-title"

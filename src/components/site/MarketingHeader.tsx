@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
+import { subscribeMediaQuery } from "./use-media";
 
 export interface SiteNavLink {
   href: string;
@@ -37,13 +38,15 @@ export default function MarketingHeader({ links, play }: Props) {
       setOpen(false);
       toggle.current?.focus();
     };
-    const wide = window.matchMedia("(min-width: 768px)");
-    const onWide = () => wide.matches && setOpen(false);
+    const onWide = () => {
+      const media = window.matchMedia?.("(min-width: 768px)");
+      if (media?.matches) setOpen(false);
+    };
     document.addEventListener("keydown", onKey);
-    wide.addEventListener("change", onWide);
+    const stopWide = subscribeMediaQuery("(min-width: 768px)", onWide);
     return () => {
       document.removeEventListener("keydown", onKey);
-      wide.removeEventListener("change", onWide);
+      stopWide();
     };
   }, [open]);
 

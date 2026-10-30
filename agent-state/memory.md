@@ -1,5 +1,15 @@
 # V2.2c-2 Account XP battle rewards
 
+# Mobile shell and PWA polish (2026-10-30)
+
+- PR #19 follow-up: opening is initial-layout-entry only. The attempted ref is marked inside the scheduled callback for StrictMode safety. Non-lobby initial routes consume the entry without showing the overlay. Native modal dialog provides inert background isolation, with explicit Tab containment on Skip.
+
+- `AppOpening` belongs in the shared `/app` layout, outside `AppSession`, and only activates on the exact `/app` pathname so auth gates remain visible and direct battle/invite recovery is not delayed. `prefers-reduced-motion` closes without a blocking delay.
+- `AppHud` keeps desktop utility actions inline and uses a native `<details>` disclosure on narrow screens. Keep action targets at least 44px, label the mobile rows, and preserve the fixed five-tab nav by mapping Friends to Profile.
+- `AccountLevelModule` supports `card` and `content` presentations. Profile uses the full card, while Progress embeds one content module inside its existing Account Progress panel. All level and XP values remain server-derived.
+- `installAudioGestureUnlock` must subscribe for the lifetime of the provider and re-arm pointer/keyboard recovery after a visible-page AudioContext suspension. Never auto-unmute or use hidden-player autoplay workarounds.
+- `use-media` and site header media listeners guard absent `matchMedia` and support legacy `addListener`/`removeListener` for embedded browsers such as Snap Mini Browser.
+
 - Accept Account XP only from a validated `account_xp` receipt for the active room's exact UUID `matchId`, expected source (`matchmaking` or `unranked-fallback`), and authenticated server player UUID. Never compare against a Privy DID or infer XP from result/crowns.
 - `AccountXpMessage` delivery may precede or follow `end`. Buffer per room until the exact end match is known, reduce monotonically so confirmed cannot downgrade, reject stale room events, and clear on new match, reset, abort, auth loss, and unmount.
 - Recovery uses `/api/players/me/account-xp?matchId=&source=` with the existing bearer token and a short cancellable attempt budget. 401, 403, and 503 are terminal unavailable states. Missing or unresolved receipts never become zero XP.

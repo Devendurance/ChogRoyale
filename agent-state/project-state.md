@@ -1,5 +1,16 @@
 # Project State
 
+# Mobile UX / app-shell / PWA polish pass (2026-10-30)
+
+- PR #19 follow-up synchronizes current main and limits AppOpening to the initial layout entry. Native modal isolation and forward/reverse keyboard containment replace the previous visual-only dialog overlay. Browser checks cover fresh entry, client navigation return, direct invite bypass, Skip and Escape.
+
+- Working tree contains a scoped mobile shell pass based on the merged V2.2 content. No merge or deployment performed.
+- Account Level now has reusable card and embedded presentations. Profile puts the module near the top on mobile and in the desktop side column. Progress keeps one coherent Account Progress panel.
+- App shell adds safe-area viewport support, a compact native mobile overflow menu, Friends-to-Profile nav mapping, and a short branded opening overlay on exact `/app` entry. Direct battle/invite routes are not blocked. Reduced-motion users skip the blocking delay.
+- Audio gesture recovery re-arms after visibility changes or later AudioContext suspension without changing mute or zero-volume preferences. Snap-like media-query guards support missing `matchMedia` and legacy listener APIs.
+- Verification: focused UI/audio/media tests 73/73, scoped ESLint has no errors (CSS is intentionally ignored), TypeScript and production build pass. Browser checks at 390x844 and 1366x768 confirmed the opening route, direct battle route bypass, and no horizontal overflow under the local unauthenticated gate.
+- Limits: no authenticated Privy session, installed iOS PWA, physical Safari, or Snap Mini Browser was available. Report those as unverified rather than live acceptance.
+
 # V2.2c-2 Account XP battle result UI (2026-10-30)
 
 - Working on existing PR #18 branch `codex/v2.2b-player-account-level-ui`, starting from reviewed head `7b9a480`. No merge, production deployment, migration, flag change, or battle-server action performed.

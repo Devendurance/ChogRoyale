@@ -25,7 +25,8 @@ export type IconName =
   | "back"
   | "check"
   | "swap"
-  | "close";
+  | "close"
+  | "menu";
 
 const PATHS: Record<IconName, ReactNode> = {
   messages: <path d="M4 4h16v12H9l-5 4V4Zm4 5h8M8 12h5" />,
@@ -167,6 +168,13 @@ const PATHS: Record<IconName, ReactNode> = {
     <>
       <path d="M6.4 6.4l11.2 11.2" />
       <path d="M17.6 6.4L6.4 17.6" />
+    </>
+  ),
+  menu: (
+    <>
+      <path d="M4.5 6.8h15" />
+      <path d="M4.5 12h15" />
+      <path d="M4.5 17.2h15" />
     </>
   ),
 };

@@ -7,7 +7,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import type { ReactNode } from "react";
+import { useRef, type MouseEvent, type ReactNode } from "react";
 import Icon from "./icons";
 import type { LobbyPlayer } from "./lobby-types";
 
@@ -22,6 +22,45 @@ export default function AppHud({
   extra?: ReactNode;
 }) {
   const identityName = player?.displayName ?? player?.username ?? "";
+  const mobileActions = useRef<HTMLDetailsElement>(null);
+
+  const actions = (
+    <>
+      {extra}
+      <Link href="/app/messages" className="app-iconbtn" aria-label="Messages" title="Messages">
+        <Icon name="messages" />
+        <span className="app-hud__action-label">Messages</span>
+      </Link>
+      <Link
+        href="/app/settings"
+        className="app-iconbtn"
+        aria-label="Settings"
+        title="Settings"
+      >
+        <Icon name="settings" />
+        <span className="app-hud__action-label">Settings</span>
+      </Link>
+      <Link
+        href="/app/profile"
+        className="app-iconbtn"
+        aria-label="Profile"
+        title="Profile"
+      >
+        <Icon name="user" />
+        <span className="app-hud__action-label">Profile</span>
+      </Link>
+      <button type="button" className="app-iconbtn" onClick={onSignOut} aria-label="Sign out" title="Sign out">
+        <Icon name="logout" />
+        <span className="app-hud__action-label">Sign out</span>
+      </button>
+    </>
+  );
+
+  const closeMobileActions = (event: MouseEvent<HTMLDivElement>) => {
+    if (event.target instanceof Element && event.target.closest("a, button")) {
+      mobileActions.current?.removeAttribute("open");
+    }
+  };
 
   return (
     <header className="app-hud">
@@ -53,27 +92,15 @@ export default function AppHud({
       </div>
 
       <div className="app-hud__utils">
-        {extra}
-        <Link href="/app/messages" className="app-iconbtn" aria-label="Messages" title="Messages"><Icon name="messages" /></Link>
-        <Link
-          href="/app/settings"
-          className="app-iconbtn"
-          aria-label="Settings"
-          title="Settings"
-        >
-          <Icon name="settings" />
-        </Link>
-        <Link
-          href="/app/profile"
-          className="app-iconbtn"
-          aria-label="Profile"
-          title="Profile"
-        >
-          <Icon name="user" />
-        </Link>
-        <button type="button" className="app-iconbtn" onClick={onSignOut} aria-label="Sign out" title="Sign out">
-          <Icon name="logout" />
-        </button>
+        <div className="app-hud__desktop-actions">{actions}</div>
+        <details className="app-hud__mobile-menu" ref={mobileActions}>
+          <summary className="app-iconbtn app-hud__mobile-trigger" aria-label="More account actions" title="More account actions">
+            <Icon name="menu" />
+          </summary>
+          <div className="app-hud__mobile-panel" onClick={closeMobileActions}>
+            <div className="app-hud__mobile-actions">{actions}</div>
+          </div>
+        </details>
       </div>
     </header>
   );
@@ -84,6 +111,7 @@ export function AppHudBackLink() {
   return (
     <Link href="/app" className="app-iconbtn" aria-label="Back to the lobby" title="Back to the lobby">
       <Icon name="back" />
+      <span className="app-hud__action-label">Back to the lobby</span>
     </Link>
   );
 }

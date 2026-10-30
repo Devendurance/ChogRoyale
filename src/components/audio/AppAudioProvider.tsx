@@ -32,27 +32,38 @@ type GestureAudio = Pick<AppAudioController, "unlock" | "getSnapshot" | "subscri
 
 /**
  * Keeps autoplay recovery gesture-driven without painting a persistent
- * affordance over every app route. The capture listener runs before React's
- * handler and removes itself after the shared context is actually running.
+ * affordance over every app route. Capture listeners run before React's
+ * handler, then return if the shared context is suspended again later.
  */
 export function installAudioGestureUnlock(audio: GestureAudio, target: GestureTarget = document): () => void {
-  let listening = true;
-  let unsubscribeAudio: (() => void) | null = null;
-  const stop = () => {
+  let listening = false;
+  let disposed = false;
+  const removeGestureListeners = () => {
     if (!listening) return;
     listening = false;
     target.removeEventListener("pointerdown", onPointer, { capture: true });
     target.removeEventListener("keydown", onKeyDown, { capture: true });
-    unsubscribeAudio?.();
-    unsubscribeAudio = null;
+  };
+  const addGestureListeners = () => {
+    if (listening || disposed) return;
+    listening = true;
+    target.addEventListener("pointerdown", onPointer, { capture: true, passive: true });
+    target.addEventListener("keydown", onKeyDown, { capture: true });
+  };
+  const reconcile = () => {
+    if (disposed) return;
+    const snapshot = audio.getSnapshot();
+    if (!snapshot.ready && snapshot.needsUnlock && !snapshot.pageHidden && !snapshot.preferences.masterMuted) {
+      addGestureListeners();
+    } else {
+      removeGestureListeners();
+    }
   };
   const attempt = () => {
-    if (!listening) return;
+    if (!listening || disposed) return;
     const snapshot = audio.getSnapshot();
-    if (!snapshot.needsUnlock || snapshot.preferences.masterMuted) return;
-    void audio.unlock({ fromGesture: true }).then((ready) => {
-      if (ready) stop();
-    }).catch(() => undefined);
+    if (snapshot.pageHidden || !snapshot.needsUnlock || snapshot.preferences.masterMuted) return;
+    void audio.unlock({ fromGesture: true }).then(reconcile).catch(reconcile);
   };
   const onPointer = () => attempt();
   const onKeyDown = (event: Event) => {
@@ -60,15 +71,16 @@ export function installAudioGestureUnlock(audio: GestureAudio, target: GestureTa
     if (keyboard.isComposing || keyboard.repeat) return;
     attempt();
   };
-  const initial = audio.getSnapshot();
-  if (initial.ready || !initial.needsUnlock || initial.preferences.masterMuted) return () => undefined;
-  target.addEventListener("pointerdown", onPointer, { capture: true, passive: true });
-  target.addEventListener("keydown", onKeyDown, { capture: true });
-  unsubscribeAudio = audio.subscribe(() => {
-    const next = audio.getSnapshot();
-    if (next.ready || !next.needsUnlock || next.preferences.masterMuted) stop();
-  });
-  return stop;
+  const onVisibility = () => reconcile();
+  const unsubscribeAudio = audio.subscribe(reconcile);
+  target.addEventListener("visibilitychange", onVisibility);
+  reconcile();
+  return () => {
+    disposed = true;
+    removeGestureListeners();
+    target.removeEventListener("visibilitychange", onVisibility);
+    unsubscribeAudio();
+  };
 }
 
 /**

@@ -7,6 +7,8 @@ import styles from "./AccountLevelModule.module.css";
 
 interface AccountLevelModuleProps {
   accountLevel: AccountLevelView;
+  presentation?: "card" | "content";
+  showViewProgress?: boolean;
 }
 
 function formatXp(value: number | null): string {
@@ -49,15 +51,54 @@ function stateCopy(accountLevel: AccountLevelView): { label: string; title: stri
   };
 }
 
-export default function AccountLevelModule({ accountLevel }: AccountLevelModuleProps) {
+export default function AccountLevelModule({
+  accountLevel,
+  presentation = "card",
+  showViewProgress = true,
+}: AccountLevelModuleProps) {
   const headingId = "app-account-level-title";
+  const isCard = presentation === "card";
   const percent = progressPercent(accountLevel);
+  const stateClass =
+    accountLevel.state === "disabled"
+      ? styles.disabled
+      : accountLevel.state === "unavailable"
+        ? styles.unavailable
+        : "";
+  const contentClass = `${styles.content} ${isCard ? "" : styles.embedded} ${stateClass}`;
 
   if (accountLevel.state !== "ready" || accountLevel.level === null || accountLevel.totalXp === null) {
     const copy = stateCopy(accountLevel);
+    const content = (
+      <div className={styles.state} role={accountLevel.state === "unavailable" ? "status" : undefined}>
+        <span className={styles.stateMark} aria-hidden="true">
+          <Icon name={accountLevel.state === "loading" ? "refresh" : "lock"} size={20} />
+        </span>
+        <div className={styles.stateCopy}>
+          {!isCard && <p className={styles.stateLabel}>{copy.label}</p>}
+          <p className={styles.stateTitle}>{copy.title}</p>
+          <p className={styles.stateBody}>{copy.body}</p>
+        </div>
+      </div>
+    );
+
+    if (!isCard) {
+      return (
+        <div className={contentClass} aria-busy={accountLevel.state === "loading"}>
+          {content}
+          {showViewProgress && (
+            <Link href="/app/progress" className={`app-btn app-btn--ghost ${styles.action}`}>
+              <Icon name="progress" size={16} />
+              View Progress
+            </Link>
+          )}
+        </div>
+      );
+    }
+
     return (
       <section
-        className={`app-panel ${styles.module} ${styles[accountLevel.state]}`}
+        className={`app-panel ${styles.module} ${styles.content} ${stateClass}`}
         aria-labelledby={headingId}
         aria-busy={accountLevel.state === "loading"}
       >
@@ -68,19 +109,19 @@ export default function AccountLevelModule({ accountLevel }: AccountLevelModuleP
               Account Level
             </h2>
           </div>
-          <span className={styles.badge}>{copy.label}</span>
-        </div>
-
-        <div className={styles.state} role={accountLevel.state === "unavailable" ? "status" : undefined}>
-          <span className={styles.stateMark} aria-hidden="true">
-            <Icon name={accountLevel.state === "loading" ? "refresh" : "lock"} size={20} />
+          <span
+            className={`${styles.badge} ${
+              accountLevel.state === "loading"
+                ? styles.badgeLoading
+                : accountLevel.state === "disabled"
+                  ? styles.badgeDisabled
+                  : styles.badgeUnavailable
+            }`}
+          >
+            {copy.label}
           </span>
-          <div>
-            <p className={styles.stateTitle}>{copy.title}</p>
-            <p className={styles.stateBody}>{copy.body}</p>
-          </div>
         </div>
-
+        {content}
         <Link href="/app/progress" className={`app-btn app-btn--ghost ${styles.action}`}>
           <Icon name="progress" size={16} />
           View Progress
@@ -90,9 +131,7 @@ export default function AccountLevelModule({ accountLevel }: AccountLevelModuleP
   }
 
   const level = accountLevel.level;
-  const nextLevel = accountLevel.maxLevel
-    ? null
-    : Math.min(accountLevel.maxAccountLevel, level + 1);
+  const nextLevel = accountLevel.maxLevel ? null : Math.min(accountLevel.maxAccountLevel, level + 1);
   const progressLabel = accountLevel.maxLevel
     ? `Level ${level} is the current maximum.`
     : `${formatXp(accountLevel.xpIntoLevel)} XP in Level ${level}`;
@@ -100,23 +139,13 @@ export default function AccountLevelModule({ accountLevel }: AccountLevelModuleP
     ? "Lifetime XP keeps counting after the level cap."
     : `${formatXp(accountLevel.xpToNext)} XP to Level ${nextLevel}`;
 
-  return (
-    <section className={`app-panel ${styles.module} ${styles.ready}`} aria-labelledby={headingId}>
-      <div className={styles.header}>
-        <div>
-          <p className={styles.eyebrow}>Account progression</p>
-          <h2 className={styles.title} id={headingId}>
-            Account Level
-          </h2>
-        </div>
-        <span className={`${styles.badge} ${styles.badgeReady}`}>Level {accountLevel.level}</span>
-      </div>
-
+  const content = (
+    <>
       <div className={styles.metrics}>
         <div className={styles.levelMetric}>
           <span className={styles.levelCrest} aria-hidden="true">
             <span>LV</span>
-            <strong>{accountLevel.level}</strong>
+            <strong>{level}</strong>
           </span>
           <span className={styles.metricCaption}>Current level</span>
         </div>
@@ -126,7 +155,7 @@ export default function AccountLevelModule({ accountLevel }: AccountLevelModuleP
         </div>
       </div>
 
-      <div className={styles.progressBlock}>
+      <div className={`${styles.progressBlock} ${accountLevel.maxLevel ? styles.progressMax : ""}`}>
         <div className={styles.progressMeta}>
           <span>{progressLabel}</span>
           <span>{accountLevel.maxLevel ? "MAX" : `${Math.round(percent)}%`}</span>
@@ -148,7 +177,37 @@ export default function AccountLevelModule({ accountLevel }: AccountLevelModuleP
         </div>
         <p className={styles.nextCopy}>{nextCopy}</p>
       </div>
+    </>
+  );
 
+  if (!isCard) {
+    return (
+      <div className={contentClass}>
+        {content}
+        {showViewProgress && (
+          <Link href="/app/progress" className={`app-btn app-btn--ghost ${styles.action}`}>
+            <Icon name="progress" size={16} />
+            View Progress
+          </Link>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <section className={`app-panel ${styles.module} ${styles.content}`} aria-labelledby={headingId}>
+      <div className={styles.header}>
+        <div>
+          <p className={styles.eyebrow}>Account progression</p>
+          <h2 className={styles.title} id={headingId}>
+            Account Level
+          </h2>
+        </div>
+        <span className={`${styles.badge} ${styles.badgeReady} ${accountLevel.maxLevel ? styles.badgeMax : ""}`}>
+          {accountLevel.maxLevel ? "Max level" : `Level ${level}`}
+        </span>
+      </div>
+      {content}
       <Link href="/app/progress" className={`app-btn app-btn--ghost ${styles.action}`}>
         <Icon name="progress" size={16} />
         View Progress

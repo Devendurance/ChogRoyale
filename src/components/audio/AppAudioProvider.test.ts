@@ -37,14 +37,19 @@ function makeAudio() {
     pageHidden: false,
     battlePhase: "idle",
   };
+  const listeners = new Set<() => void>();
+  const setSnapshot = (next: AppAudioSnapshot) => {
+    snapshot = next;
+    for (const listener of listeners) listener();
+  };
   const unlock = vi.fn(async () => {
-    snapshot = { ...snapshot, ready: true, needsUnlock: false };
+    setSnapshot({ ...snapshot, ready: true, needsUnlock: false });
     return true;
   });
-  const listeners = new Set<() => void>();
   return {
     getSnapshot: () => snapshot,
     unlock,
+    setSnapshot,
     subscribe: (listener: () => void) => {
       listeners.add(listener);
       return () => listeners.delete(listener);
@@ -89,5 +94,36 @@ describe("audio gesture recovery", () => {
     target.dispatch("pointerdown");
     expect(mutedAudio.unlock).not.toHaveBeenCalled();
     stop();
+  });
+
+  it("re-arms gesture recovery after a later context suspension", async () => {
+    const target = makeTarget();
+    const audio = makeAudio();
+    const dispose = installAudioGestureUnlock(audio, target);
+
+    target.dispatch("pointerdown", new Event("pointerdown"));
+    await Promise.resolve();
+    expect(audio.unlock).toHaveBeenCalledTimes(1);
+    expect(target.count("pointerdown")).toBe(0);
+
+    audio.setSnapshot({ ...audio.getSnapshot(), ready: false, needsUnlock: true });
+    expect(target.count("pointerdown")).toBe(1);
+    target.dispatch("pointerdown", new Event("pointerdown"));
+    await Promise.resolve();
+    expect(audio.unlock).toHaveBeenCalledTimes(2);
+    expect(target.count("pointerdown")).toBe(0);
+    dispose();
+  });
+
+  it("waits for a visible page before arming gesture recovery", () => {
+    const target = makeTarget();
+    const audio = makeAudio();
+    audio.setSnapshot({ ...audio.getSnapshot(), pageHidden: true });
+    const dispose = installAudioGestureUnlock(audio, target);
+    expect(target.count("pointerdown")).toBe(0);
+
+    audio.setSnapshot({ ...audio.getSnapshot(), pageHidden: false });
+    expect(target.count("pointerdown")).toBe(1);
+    dispose();
   });
 });
