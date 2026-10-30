@@ -579,7 +579,7 @@ function AccountProgress({ accountXp }: { accountXp: AccountXpSummary | null }) 
       />
 
       {ready || accountXp === null || accountXp.state === "disabled" ? (
-        <AccountLevelModule accountLevel={accountLevel} />
+        <AccountLevelModule accountLevel={accountLevel} presentation="content" showViewProgress={false} />
       ) : (
         <AccountXpStatePlate summary={accountXp} />
       )}

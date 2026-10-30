@@ -99,6 +99,21 @@ describe("persistent app audio", () => {
     release();
   });
 
+  it("exposes a later browser suspension as a fresh unlock need", async () => {
+    const context = new MockAudioContext();
+    vi.stubGlobal("window", { AudioContext: function () { return context; }, localStorage: { getItem: () => null, setItem: vi.fn() } });
+    const audio = getAppAudio();
+    const release = audio.mount();
+
+    expect(await audio.unlock()).toBe(true);
+    expect(audio.getSnapshot().ready).toBe(true);
+
+    context.state = "suspended";
+    context.onstatechange?.();
+    expect(audio.getSnapshot()).toMatchObject({ ready: false, needsUnlock: true });
+    release();
+  });
+
   it("does not keep retrying an autoplay block on visibility changes", async () => {
     const context = new MockAudioContext();
     context.resume = vi.fn(async () => { throw new Error("blocked"); });

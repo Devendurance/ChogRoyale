@@ -1,4 +1,18 @@
-# Current task: V2.2c-2 Account XP battle result UI
+# Current task: V2.2 Account XP VPS ACTIVATION COMPLETE (2026-10-30)
+
+- Vercel side (owner-completed): deployment dpl_4s2oTAtxLmwbhQM8CRmZRMKoE5Gw at f816eff, Production PLAYER_ACCOUNT_XP_ENABLED=1, READY, health/Profile/Progress 200.
+- VPS side (this session): reverified f816eff deployed, migrations 0026-0028 intact, boundary id=1 @ 2026-10-30T02:09:05.976Z unchanged, DB time later, 0 conns, empty outbox. Backed up battle.env, flipped ONLY PLAYER_ACCOUNT_XP_ENABLED=0->1, restarted with zero activity. New MainPID 1974755, ACTIVE, NRestarts=0, no restart loop, no exceptions, local+public /healthz 200.
+- Boot log: account xp enabled; player account xp ENABLED (100/75/50 PvP, 40/30/20 fallback); fallback/Gold/Card XP still ENABLED; ranked CLOSED; scaling disabled. DEPLOYED_SHA updated to scoped-v22-accountxp-ACTIVE. Reconciler starts with the enabled service (quiet with zero pending work).
+- Next: owner TEST A-D real-player acceptance (fallback, human PvP, Practice zero, level-up). Do not claim pass without doing them. Rollback = flag flips + restarts only; boundary/migrations/safety branch preserved.
+
+# Previous: V2.2 Account XP PRODUCTION ACTIVATION (STOPPED before Phase 7, Vercel gate)
+
+- Done through Phase 6 on owner authorization: origin/main f816eff verified; PROD safety branch br-bitter-surf-b5qvez (parent br-snowy-star-b5ftxkro, LSN 0/4ECA608); baselines recorded (14/16/2/10/2/2/50/30); migrations 0026-0028 applied (+3 journal entries, all tables/constraints/indexes verified, ledger zeros, history preserved); f816eff deployed to endy-vps with PLAYER_ACCOUNT_XP_ENABLED=0 (ACTIVE, NRestarts=0, healthz 200, V1 flags intact, ranked closed); release boundary id=1 at 2026-10-30T02:09:05.976Z, all 16+2 historical matches predate it.
+- BLOCKED: Vercel project access unavailable from this environment (CLI identity sees only kaelah-s-projects/thesma; no chogroyale project, no token). Per mission rule the VPS flag stays OFF. No gap matches can earn (flag-off writes/claims nothing). Rollback: flip flags off + restart either side; boundary + migrations + safety branch preserved.
+- Owner actions remaining: (1) Vercel dashboard chogroyale: set Production PLAYER_ACCOUNT_XP_ENABLED=1, redeploy Production from f816eff, verify READY + enabled:true with a real Privy session; (2) endy-vps battle.env: set =1 (600, backup first), confirm 0 active matches, restart service, verify ENABLED + healthz; (3) TEST A-D acceptances.
+- Next: owner decision. No merge/deploy/restart/flag/test-residue work without direction. Note kept uncommitted (post-merge branch is stale).
+
+# Previous: V2.2c-2 Account XP battle result UI
 
 - Done: reviewed PR #18 at expected head `7b9a480`; implemented Account XP receipt validation and monotonic lifecycle, room-scoped buffering, authenticated bounded readback, result reward panel, level-up snapshots, max-level state, accessibility and reduced-motion styling. Existing Gold/Card XP/result actions remain intact.
 - Verified: focused Account XP, result, Gold, Card XP, and queue tests 105/105; TypeScript; scoped ESLint; production build. Coordinator review tightened UUID and room checks and clears cached player identity on each reward context.
@@ -412,7 +426,12 @@ Last updated: 2026-10-24
 - Doing: integrate the verified owner-supplied `.audio-dev/battle-loop.mp3` as production Track B from latest `origin/main` on `codex/owner-battle-music`.
 - Done: exact checksum verified and copied to `public/assets/audio/v001/music/battle-loop.mp3`; Track B manifest/config and audio lifecycle tests updated; credits, manifest, quality report, acceptance report and AGENTS rules record owner-asserted purchased rights without claiming CC0. Focused audio tests 27/27, typecheck, scoped ESLint and production build pass.
 - Next: stage only scoped files, commit and push, open the PR, merge with owner authorization already given in this request, verify Vercel Production READY and public asset 200. Report real browser playback as unverified unless an authorized session is available. Preserve unrelated dirty files.
-# Current task: V2.1f Unranked AI fallback frontend
+# Current task: Mobile UX / app-shell / PWA polish pass
+
+- Doing: polish the shared mobile shell, Account XP presentation, installed-app opening, and audio recovery on a new scoped branch from the merged V2.2 main content.
+- Done: architecture review and candidate synthesis recorded in `agent-state/mobile-ux-plan.md` and `agent-state/mobile-ux-synthesis.md`; Account Level now supports a reusable embedded presentation without nested Progress panels; mobile HUD actions use a native overflow disclosure; Friends maps to Profile in the fixed five-tab nav; `/app` has a short branded opening; safe-area viewport-fit and HUD top inset are scoped to the app shell; gesture audio recovery re-arms after suspension/visibility changes.
+- Next: review visual behavior in browser at 390x844 and 1366x768, run focused tests/typecheck/lint/build, clean the diff, update AGENTS/state rules, commit and push only this slice. Do not merge or deploy.
+- Limits: authenticated Privy, installed iOS PWA, and Snap Mini Browser cannot be claimed without a real device/session. Report browser-emulation evidence separately.
 
 - Done: reviewed worker commits for queue handoff, lobby/HUD identity, result origin, separate resume slots, stale queue cancellation, and fallback result actions.
 - Done: added coordinator fixes for explicit queue copy, timeout/handoff race protection, and fallback Back to Battle Hall navigation.

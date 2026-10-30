@@ -295,3 +295,10 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - ElevenLabs Free tier does not establish commercial entitlement. Until a paid/commercial account is verified, use the original local procedural fallback and make no ElevenLabs-generated claim.
 - Track A must remain a true cyclic production loop with a measured wrap seam. Track B is the owner-supplied processed battle loop at `/assets/audio/v001/music/battle-loop.mp3`. Keep the original CC BY-NC 4.0 attribution, owner-asserted purchased-rights status and missing purchase documentation explicit. Do not substitute another soundtrack or place the original WAV in `public/`.
 - Audio utility entry points remain intentional `.cjs` CommonJS scripts. Keep their `require()` lint exception file-scoped and remove unused analyzer imports or counters without changing generated formats or assets.
+
+## MOBILE APP SHELL POLISH
+
+- The authenticated `/app` layout owns the short branded opening overlay. It is shown only on the `/app` entry path so direct battle, invite, and recovery routes stay unobstructed. Shared providers remain mounted across route changes.
+- Mobile HUD utility actions live in a native disclosure surface with touch targets of at least 44px. Desktop keeps the existing inline utility controls. Friends maps to the Profile tab because the fixed navigation has five supported sections.
+- Account Level presentation has a card wrapper for Profile and a content-only mode for Progress. Both modes consume the same server-derived view and never infer level or XP locally.
+- Audio gesture recovery may re-arm after a suspended context or page visibility change, but only for audible, unmuted preferences on a visible page. It never silently changes mute or zero-volume choices.
