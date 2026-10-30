@@ -10,6 +10,7 @@
 - `AppHud` keeps desktop utility actions inline and uses a native `<details>` disclosure on narrow screens. Keep action targets at least 44px, label the mobile rows, and preserve the fixed five-tab nav by mapping Friends to Profile.
 - `AccountLevelModule` supports `card` and `content` presentations. Profile uses the full card, while Progress embeds one content module inside its existing Account Progress panel. All level and XP values remain server-derived.
 - `installAudioGestureUnlock` must subscribe for the lifetime of the provider and re-arm pointer/keyboard recovery after a visible-page AudioContext suspension. Never auto-unmute or use hidden-player autoplay workarounds.
+- HomeSummary's XP fill is a CSS width transition only. It animates changes to the validated server-confirmed percentage and disables the transition under `prefers-reduced-motion`. A red Next `1 Issue` badge in old fixture captures came from Grammarly injecting body attributes before hydration, not from app markup.
 - `use-media` and site header media listeners guard absent `matchMedia` and support legacy `addListener`/`removeListener` for embedded browsers such as Snap Mini Browser.
 
 - Accept Account XP only from a validated `account_xp` receipt for the active room's exact UUID `matchId`, expected source (`matchmaking` or `unranked-fallback`), and authenticated server player UUID. Never compare against a Privy DID or infer XP from result/crowns.
