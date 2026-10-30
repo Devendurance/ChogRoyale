@@ -2,13 +2,14 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
-import type { BotCardXpMessage, BotGoldMessage, EndMessage, SettlementMessage, StartMessage } from "@/lib/battle-protocol";
+import type { AccountXpMessage, BotCardXpMessage, BotGoldMessage, EndMessage, SettlementMessage, StartMessage } from "@/lib/battle-protocol";
 import type { RankedAwardView } from "@/lib/ranked";
 import { GameIcon } from "@/components/game/GameIcon";
 import type { BattleCue } from "./battle-audio";
 import { finaleView, opponentNameFor, practiceDifficultyLabel, tallyAt } from "./battle-result-model";
 import { botGoldView } from "./bot-gold-model";
 import { botCardXpView } from "./bot-card-xp-model";
+import { accountXpRewardView, validateAccountXpReward, type AccountXpRewardPresentation } from "./account-xp-reward-model";
 import { Portrait } from "./portrait";
 import { portraitCandidatesForCard, type SpriteManifest } from "./sprite-registry";
 import "./battle-result.css";
@@ -27,6 +28,12 @@ interface Props {
   botCardXp?: BotCardXpMessage | null;
   /** Status of the authenticated Card XP progression readback. */
   cardXpReadbackStatus?: "idle" | "loading" | "ready" | "unavailable";
+  /** Server-authoritative Account XP receipt for this result. */
+  accountXp?: AccountXpMessage | null;
+  /** Reconnect lookup state when the receipt itself is not available. */
+  accountXpStatus?: AccountXpMessage["status"] | "unknown";
+  /** Authenticated Account XP readback state, used to keep missing receipts neutral. */
+  accountXpReadbackStatus?: "idle" | "loading" | "ready" | "unavailable";
   /** Loaded card-art manifest. Missing art falls back to the card name tile. */
   spriteManifest?: SpriteManifest | null;
   me: number;
@@ -41,6 +48,44 @@ interface Props {
 /** Ribbons land 0.75s after the reveal starts, then each crown step takes 0.34s. */
 const TALLY_LEAD_MS = 750;
 const TALLY_STEP_MS = 340;
+
+type AccountXpDisplayState = AccountXpRewardPresentation["state"] | "unknown";
+interface AccountXpDisplay {
+  state: AccountXpDisplayState;
+  title: string;
+  text: string;
+  amount: number | null;
+  totalXp: number | null;
+  levelBefore: number | null;
+  levelAfter: number | null;
+  leveledUp: boolean;
+}
+
+function accountXpDisplay(
+  value: AccountXpMessage | null | undefined,
+  statusHint: AccountXpDisplayState | undefined,
+  matchId: string | null | undefined,
+  source: "matchmaking" | "unranked-fallback",
+): AccountXpDisplay {
+  if (!value) {
+    if (statusHint === "pending") {
+      return { state: "pending", title: "Account XP verification pending", text: "Check your account progression later.", amount: null, totalXp: null, levelBefore: null, levelAfter: null, leveledUp: false };
+    }
+    if (statusHint === "refused") {
+      return { state: "refused", title: "No Account XP awarded", text: "The server did not award Account XP for this battle.", amount: null, totalXp: null, levelBefore: null, levelAfter: null, leveledUp: false };
+    }
+    if (statusHint === "capped") {
+      return { state: "capped", title: "Account XP limit reached", text: "The Account XP daily limit has been reached.", amount: null, totalXp: null, levelBefore: null, levelAfter: null, leveledUp: false };
+    }
+    return { state: "unknown", title: "Account XP outcome unknown", text: "No server receipt arrived, so no Account XP amount is shown.", amount: null, totalXp: null, levelBefore: null, levelAfter: null, leveledUp: false };
+  }
+
+  if (!matchId) return { state: "unknown", title: "Account XP outcome unknown", text: "The Account XP receipt could not be verified for this battle.", amount: null, totalXp: null, levelBefore: null, levelAfter: null, leveledUp: false };
+  const validation = validateAccountXpReward(value, { matchId, source });
+  if (!validation.ok) return { state: "unknown", title: "Account XP outcome unknown", text: "The Account XP receipt could not be verified for this battle.", amount: null, totalXp: null, levelBefore: null, levelAfter: null, leveledUp: false };
+  const reward = accountXpRewardView(validation.receipt, { matchId, source });
+  return reward.state === "no-message" ? { ...reward, state: "unknown" } : reward;
+}
 
 function Ribbon({ side, name, crowns, shown, winner, you }: { side: "foe" | "mine"; name: string | null; crowns: number; shown: number; winner: boolean; you?: boolean }) {
   return (
@@ -58,7 +103,7 @@ function Ribbon({ side, name, crowns, shown, winner, you }: { side: "foe" | "min
   );
 }
 
-export default function BattleResult({ start, end, abort, settlement, botGold, goldBalance, goldBalanceStatus, botCardXp, cardXpReadbackStatus, spriteManifest, me, playerName, onExit, onAgain, onAudioCue, rankedAward, rankedAwardStatus }: Props) {
+export default function BattleResult({ start, end, abort, settlement, botGold, goldBalance, goldBalanceStatus, botCardXp, cardXpReadbackStatus, accountXp, accountXpStatus, accountXpReadbackStatus, spriteManifest, me, playerName, onExit, onAgain, onAudioCue, rankedAward, rankedAwardStatus }: Props) {
   const router = useRouter();
   const dialog = useRef<HTMLDivElement>(null);
   const exit = useRef<HTMLButtonElement>(null);
@@ -83,6 +128,13 @@ export default function BattleResult({ start, end, abort, settlement, botGold, g
   const cardXpText = cardXpReward?.eligibility === "awaiting-gold"
     ? "Card XP is recorded only after the server confirms Gold."
     : cardXpReward?.text;
+  const showAccountXp = Boolean(end && (view.origin === "unranked-fallback" || (view.origin === "human" && start.mode === "matchmaking")));
+  const accountXpRewardBase = showAccountXp
+    ? accountXpDisplay(accountXp, accountXpStatus, end?.matchId, view.origin === "unranked-fallback" ? "unranked-fallback" : "matchmaking")
+    : null;
+  const accountXpReward = accountXpRewardBase && accountXpRewardBase.state === "unknown" && accountXpReadbackStatus === "unavailable"
+    ? { ...accountXpRewardBase, title: "Account XP unavailable", text: "Account progression is not available yet. Check Progress later." }
+    : accountXpRewardBase;
   const rewardMessage = reward?.message;
   const goldBalanceText = typeof goldBalance === "number" && Number.isFinite(goldBalance) && goldBalance >= 0
     ? Math.trunc(goldBalance).toLocaleString("en-US")
@@ -166,8 +218,25 @@ export default function BattleResult({ start, end, abort, settlement, botGold, g
           <span className="chud-finale-vs" aria-hidden="true">VS</span>
           <Ribbon side="foe" name={opponent} crowns={view.theirs} shown={tallyAt(step, view.theirs)} winner={view.winner === "theirs"} />
         </div>}
-        {(view.settlement || noRewardCopy || (reward && reward.state !== "no-message") || cardXpReward) && <div className="chud-finale-details">
+        {(view.settlement || noRewardCopy || (reward && reward.state !== "no-message") || cardXpReward || accountXpReward) && <div className="chud-finale-details">
           {noRewardCopy && <p className="chud-finale-settle chud-finale-no-rewards" data-state="no-rewards" aria-live="polite"><i aria-hidden="true" />{noRewardCopy}</p>}
+          {accountXpReward && <section className="chud-finale-account-xp" data-state={accountXpReward.state} aria-labelledby="chud-finale-account-xp-title">
+            <div className="chud-finale-account-xp-main">
+              <span className="chud-finale-account-xp-mark" aria-hidden="true">LV</span>
+              <span>
+                <strong id="chud-finale-account-xp-title">{accountXpReward.title}</strong><br />
+                <span>{accountXpReward.text}</span>
+              </span>
+            </div>
+            {accountXpReward.state === "confirmed" && accountXpReward.totalXp !== null && <p>Lifetime Account XP: {accountXpReward.totalXp.toLocaleString("en-US")}</p>}
+            {accountXpReward.state === "confirmed" && accountXpReward.leveledUp && accountXpReward.levelBefore !== null && accountXpReward.levelAfter !== null && <div className="chud-finale-account-xp-levelup" role="status" aria-live="polite" aria-atomic="true">
+              <span aria-hidden="true">✦</span>
+              <strong>Level up!</strong>
+              <span>Account Level {accountXpReward.levelBefore} → {accountXpReward.levelAfter}</span>
+              {accountXpReward.levelAfter === 100 && <strong>MAX LEVEL</strong>}
+              <span aria-hidden="true">✦</span>
+            </div>}
+          </section>}
           {reward && reward.state !== "no-message" && <div className="chud-finale-gold" data-state={reward.state} aria-live="polite">
             <div className="chud-finale-gold-main"><span className="chud-finale-gold-mark" aria-hidden="true">G</span><span><strong>{reward.title}</strong><br /><span>{reward.text}</span></span></div>
             {rewardHasAmount && rewardMessage && <p>Daily AI rewards: {rewardMessage.rewardedToday} / {rewardMessage.dailyCap}</p>}

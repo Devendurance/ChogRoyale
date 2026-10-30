@@ -1,3 +1,9 @@
+# Current task: V2.2c-2 Account XP battle result UI
+
+- Done: reviewed PR #18 at expected head `7b9a480`; implemented Account XP receipt validation and monotonic lifecycle, room-scoped buffering, authenticated bounded readback, result reward panel, level-up snapshots, max-level state, accessibility and reduced-motion styling. Existing Gold/Card XP/result actions remain intact.
+- Verified: focused Account XP, result, Gold, Card XP, and queue tests 105/105; TypeScript; scoped ESLint; production build. Coordinator review tightened UUID and room checks and clears cached player identity on each reward context.
+- Next: inspect final diff, stage only scoped V2.2c-2 files plus state docs, commit, push the existing PR #18 branch, recheck PR head/checks and Vercel preview. Do not merge, apply migrations 0026-0028, enable `PLAYER_ACCOUNT_XP_ENABLED`, deploy the battle server, or modify production data.
+
 ## V2.2c-1 Account XP level-up provenance fix (2026-10-29, this session)
 
 - Doing: release-critical fix for stable per-award snapshots on PR #18 branch `codex/v2.2b-player-account-level-ui` (base `3033e2a` verified against remote, tree clean). No merge, no PROD migration, no deploy, no flag activation, no frontend changes.

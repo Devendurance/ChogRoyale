@@ -1,3 +1,10 @@
+# V2.2c-2 Account XP battle rewards
+
+- Accept Account XP only from a validated `account_xp` receipt for the active room's exact UUID `matchId`, expected source (`matchmaking` or `unranked-fallback`), and authenticated server player UUID. Never compare against a Privy DID or infer XP from result/crowns.
+- `AccountXpMessage` delivery may precede or follow `end`. Buffer per room until the exact end match is known, reduce monotonically so confirmed cannot downgrade, reject stale room events, and clear on new match, reset, abort, auth loss, and unmount.
+- Recovery uses `/api/players/me/account-xp?matchId=&source=` with the existing bearer token and a short cancellable attempt budget. 401, 403, and 503 are terminal unavailable states. Missing or unresolved receipts never become zero XP.
+- Level-up copy uses only confirmed receipt snapshots (`leveledUp`, `levelBefore`, `levelAfter`) and never derives levels from current lifetime XP. Solo Practice, Private, Ranked, Gold, Card XP, and settlement policies remain separate. Account XP production stays flag/migration gated.
+
 # Practice Mode V2.1b
 
 - `BattlePanel` creates `BATTLE_PRACTICE_ROOM` only for `mode=practice`, with the existing Privy bearer header. Practice never enters a queue and never sends credentials in URLs.

@@ -15,6 +15,7 @@ import {
   BATTLE_ROOM,
   PRACTICE_DIFFICULTIES,
   type AckMessage,
+  type AccountXpMessage,
   type BattleFrame,
   type BotCardXpMessage,
   type BotGoldMessage,
@@ -54,6 +55,8 @@ import {
 import { battleServerUrl, isPublicBattleAvailable } from "@/components/app/battle-availability";
 import { reduceBotGoldMessage, validateBotGoldMessage } from "./bot-gold-model";
 import { reduceBotCardXpMessage, validateBotCardXpMessage } from "./bot-card-xp-model";
+import { reduceAccountXpReward } from "./account-xp-reward-model";
+import { validateAccountXpReceipt, type AccountXpReceipt } from "@/lib/account-xp";
 export { validateBotGoldMessage } from "./bot-gold-model";
 export { validateBotCardXpMessage } from "./bot-card-xp-model";
 const APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID ?? "";
@@ -91,6 +94,44 @@ type BotCardXpContext = {
   receipt: BotCardXpMessage | null;
   progressionRefreshStarted: boolean;
 };
+type AccountXpSource = AccountXpMessage["source"];
+type AccountXpContext = {
+  roomId: string;
+  origin: ResumeOrigin;
+  start: StartMessage;
+  end: EndMessage | null;
+  receipt: AccountXpReceipt | null;
+  recoveryStarted: boolean;
+  recoveryAbort: AbortController | null;
+  pendingReceipts: AccountXpMessage[];
+};
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const isUuid = (value: unknown): value is string => typeof value === "string" && UUID_PATTERN.test(value);
+
+/** Account XP only applies to public Unranked sources. Private, Practice and
+ * Ranked rooms deliberately have no source and therefore no reward lookup. */
+export function accountXpSourceForStart(start: Pick<StartMessage, "mode" | "practiceOpponent">, origin: ResumeOrigin): AccountXpSource | null {
+  if (origin === "unranked-fallback" && start.mode === "practice" && start.practiceOpponent?.source === "unranked-fallback") return "unranked-fallback";
+  if (origin === "pvp" && start.mode === "matchmaking" && !start.practiceOpponent) return "matchmaking";
+  return null;
+}
+
+type AccountXpLookup = {
+  matchId: string;
+  source: AccountXpSource;
+  status: "confirmed" | "pending" | "refused" | "capped" | "unknown";
+  receipt: unknown;
+};
+
+function parseAccountXpLookup(value: unknown): AccountXpLookup | null {
+  if (!isRecord(value) || value.success !== true || !isRecord(value.data)) return null;
+  const data = value.data;
+  if (!isUuid(data.matchId) || (data.source !== "matchmaking" && data.source !== "unranked-fallback")) return null;
+  if (data.status !== "confirmed" && data.status !== "pending" && data.status !== "refused" && data.status !== "capped" && data.status !== "unknown") return null;
+  if (!("receipt" in data)) return null;
+  return { matchId: data.matchId, source: data.source, status: data.status, receipt: data.receipt };
+}
 
 /** The server's Practice room is also used by an Unranked AI fallback. The
  * entry origin, rather than the room mode alone, decides which resume slot is
@@ -253,6 +294,9 @@ export function BattlePanel({
   const [settlement, setSettlement] = useState<SettlementMessage | null>(null);
   const [botGold, setBotGold] = useState<BotGoldMessage | null>(null);
   const [botCardXp, setBotCardXp] = useState<BotCardXpMessage | null>(null);
+  const [accountXp, setAccountXp] = useState<AccountXpMessage | null>(null);
+  const [accountXpStatus, setAccountXpStatus] = useState<AccountXpMessage["status"] | "unknown">("unknown");
+  const [accountXpReadbackStatus, setAccountXpReadbackStatus] = useState<"idle" | "loading" | "ready" | "unavailable">("idle");
   const [goldBalance, setGoldBalance] = useState<number | null>(null);
   const [goldBalanceStatus, setGoldBalanceStatus] = useState<"idle" | "loading" | "ready" | "unavailable">("idle");
   const [cardXpReadbackStatus, setCardXpReadbackStatus] = useState<"idle" | "loading" | "ready" | "unavailable">("idle");
@@ -275,6 +319,10 @@ export function BattlePanel({
   /** Room/match provenance survives React callback closures and late reward frames. */
   const botGoldContext = useRef<BotGoldContext | null>(null);
   const botCardXpContext = useRef<BotCardXpContext | null>(null);
+  const accountXpContext = useRef<AccountXpContext | null>(null);
+  /** Profile identity is the server player UUID, never the Privy DID. */
+  const ownPlayerId = useRef<string | null>(null);
+  const ownPlayerIdRequest = useRef<Promise<string | null> | null>(null);
   const resumeDeadline = useRef(0);
   const [resumeDeadlineAt, setResumeDeadlineAt] = useState(0);
   /** Bump to cancel any in-flight reconnect loop. */
@@ -319,6 +367,157 @@ export function BattlePanel({
     setBotCardXp(null);
     setCardXpReadbackStatus("idle");
   }, []);
+
+  const clearAccountXpState = useCallback(() => {
+    const context = accountXpContext.current;
+    context?.recoveryAbort?.abort();
+    accountXpContext.current = null;
+    ownPlayerId.current = null;
+    setAccountXp(null);
+    setAccountXpStatus("unknown");
+    setAccountXpReadbackStatus("idle");
+  }, []);
+
+  /** Resolve the server player UUID through the existing authenticated profile
+   * path. Privy identifiers are deliberately never compared to receipts. */
+  const ensureOwnPlayerId = useCallback(async (): Promise<string | null> => {
+    if (isUuid(ownPlayerId.current)) return ownPlayerId.current;
+    if (ownPlayerIdRequest.current) return ownPlayerIdRequest.current;
+    const request = (async () => {
+      try {
+        const token = await getAccessToken();
+        if (!token) return null;
+        const response = await fetch("/api/players/me", { headers: { authorization: `Bearer ${token}` } });
+        const body = await response.json() as unknown;
+        if (!response.ok || !isRecord(body) || body.success !== true || !isRecord(body.data) || !isRecord(body.data.player)) return null;
+        const playerId = body.data.player.id;
+        if (!isUuid(playerId)) return null;
+        ownPlayerId.current = playerId;
+        return playerId;
+      } catch {
+        return null;
+      }
+    })();
+    ownPlayerIdRequest.current = request;
+    try {
+      return await request;
+    } finally {
+      if (ownPlayerIdRequest.current === request) ownPlayerIdRequest.current = null;
+    }
+  }, [getAccessToken]);
+
+  /** Accept only a server receipt for this room's exact authoritative end.
+   * Lower-priority late messages cannot erase a confirmed award. */
+  const acceptAccountXpReceipt = useCallback((raw: unknown, roomId: string): boolean => {
+    const context = accountXpContext.current;
+    const endMatchId = context?.end?.matchId;
+    const source = context ? accountXpSourceForStart(context.start, context.origin) : null;
+    const playerId = ownPlayerId.current;
+    if (!context || context.roomId !== roomId || !isUuid(endMatchId) || !source || !isUuid(playerId)) return false;
+    const parsed = validateAccountXpReceipt(raw);
+    if (!parsed.ok) return false;
+    const receipt = parsed.receipt;
+    if (!isUuid(receipt.matchId) || receipt.matchId !== endMatchId || receipt.source !== source || receipt.playerId !== playerId) return false;
+    const reduced = reduceAccountXpReward(context.receipt, receipt, { matchId: endMatchId, source, playerId });
+    if (!reduced.accepted || !reduced.receipt) return false;
+    context.receipt = reduced.receipt;
+    setAccountXp(reduced.receipt);
+    setAccountXpStatus(reduced.receipt.status);
+    setAccountXpReadbackStatus("ready");
+    context.recoveryAbort?.abort();
+    context.recoveryAbort = null;
+    return true;
+  }, []);
+
+  /** A receipt may arrive before the end frame on a reconnect. Validate its
+   * shape and source, buffer it per-room, then accept it only after end binds
+   * the exact match UUID. */
+  const handleAccountXpReceipt = useCallback(async (raw: unknown, roomId: string): Promise<boolean> => {
+    const parsed = validateAccountXpReceipt(raw);
+    if (!parsed.ok || !isUuid(parsed.receipt.matchId) || !isUuid(parsed.receipt.playerId)) return false;
+    const context = accountXpContext.current;
+    const source = context ? accountXpSourceForStart(context.start, context.origin) : null;
+    if (!context || context.roomId !== roomId || !source || parsed.receipt.source !== source) return false;
+    if (!context.end?.matchId) {
+      if (context.pendingReceipts.length < 4) context.pendingReceipts.push(parsed.receipt);
+      return false;
+    }
+    const playerId = await ensureOwnPlayerId();
+    if (!playerId || accountXpContext.current !== context || context.roomId !== roomId || playerId !== parsed.receipt.playerId) return false;
+    return acceptAccountXpReceipt(parsed.receipt, roomId);
+  }, [acceptAccountXpReceipt, ensureOwnPlayerId]);
+
+  /** Recover a missed WebSocket receipt through the authenticated, caller-
+   * scoped lookup. Four bounded attempts cover delayed settlement without
+   * leaving a request alive after reset or a new match. */
+  const recoverAccountXp = useCallback(async (roomId: string, matchId: string, source: AccountXpSource) => {
+    const context = accountXpContext.current;
+    if (!context || context.roomId !== roomId || context.end?.matchId !== matchId || context.recoveryStarted) return;
+    context.recoveryStarted = true;
+    const controller = new AbortController();
+    context.recoveryAbort = controller;
+    setAccountXpReadbackStatus("loading");
+    const waits = [0, 500, 1_500, 3_000];
+    const wait = (ms: number) => new Promise<boolean>((resolve) => {
+      if (controller.signal.aborted) {
+        resolve(false);
+        return;
+      }
+      const timer = setTimeout(() => {
+        controller.signal.removeEventListener("abort", onAbort);
+        resolve(true);
+      }, ms);
+      const onAbort = () => {
+        clearTimeout(timer);
+        resolve(false);
+      };
+      controller.signal.addEventListener("abort", onAbort, { once: true });
+    });
+    const current = () => accountXpContext.current === context && context.end?.matchId === matchId && !controller.signal.aborted;
+    try {
+      for (let attempt = 0; attempt < waits.length; attempt += 1) {
+        if (!(await wait(waits[attempt]!)) || !current()) return;
+        const playerId = await ensureOwnPlayerId();
+        if (!playerId || !current()) {
+          if (attempt === waits.length - 1 && current()) setAccountXpReadbackStatus("unavailable");
+          continue;
+        }
+        try {
+          const token = await getAccessToken();
+          if (!token) throw new Error("No authenticated session");
+          const response = await fetch(`/api/players/me/account-xp?matchId=${encodeURIComponent(matchId)}&source=${encodeURIComponent(source)}`, {
+            headers: { authorization: `Bearer ${token}` },
+            signal: controller.signal,
+          });
+          if (response.status === 401 || response.status === 403 || response.status === 503) {
+            if (current()) setAccountXpReadbackStatus("unavailable");
+            return;
+          }
+          const body = await response.json() as unknown;
+          const lookup = parseAccountXpLookup(body);
+          if (!lookup || lookup.matchId !== matchId || lookup.source !== source) throw new Error("Account XP lookup unavailable");
+          if (lookup.status === "confirmed" && lookup.receipt !== null) {
+            if (await handleAccountXpReceipt(lookup.receipt, roomId)) return;
+          } else if (lookup.status === "refused" || lookup.status === "capped") {
+            if (current()) {
+              setAccountXpStatus(lookup.status);
+              setAccountXpReadbackStatus("ready");
+            }
+            return;
+          } else if (lookup.status === "pending" && current()) {
+            setAccountXpStatus("pending");
+          } else if (lookup.status === "unknown" && current()) {
+            setAccountXpStatus("unknown");
+          }
+        } catch {
+          if (controller.signal.aborted || !current()) return;
+        }
+      }
+      if (current()) setAccountXpReadbackStatus("unavailable");
+    } finally {
+      if (accountXpContext.current === context) context.recoveryAbort = null;
+    }
+  }, [ensureOwnPlayerId, getAccessToken, handleAccountXpReceipt]);
 
   const refreshGoldBalance = useCallback(async (roomId: string, matchId: string) => {
     const context = botGoldContext.current;
@@ -432,7 +631,16 @@ export function BattlePanel({
     return () => clearTimeout(timer);
   }, [appAudio, audio]);
 
+  useEffect(() => {
+    if (!authenticated) ownPlayerId.current = null;
+  }, [authenticated]);
+
   useEffect(() => () => audio.dispose(), [audio]);
+
+  useEffect(() => () => {
+    accountXpContext.current?.recoveryAbort?.abort();
+    accountXpContext.current = null;
+  }, []);
 
   useEffect(() => {
     if (appAudio) return;
@@ -518,8 +726,10 @@ export function BattlePanel({
       if (m.mode === "practice") adoptPracticeDifficulty(m.practiceOpponent?.difficulty);
       clearBotGoldState();
       clearBotCardXpState();
+      clearAccountXpState();
       botGoldContext.current = { roomId: r.roomId, origin: authoritativeOrigin, start: m, end: null, receipt: null, balanceRefreshStarted: false };
       botCardXpContext.current = { roomId: r.roomId, origin: authoritativeOrigin, start: m, end: null, receipt: null, progressionRefreshStarted: false };
+      accountXpContext.current = { roomId: r.roomId, origin: authoritativeOrigin, start: m, end: null, receipt: null, recoveryStarted: false, recoveryAbort: null, pendingReceipts: [] };
       feed.current = { start: m, frame: null, prev: null, receivedAt: performance.now(), selected: null, ghost: null };
       audioSeen.current.clear();
       audioResultSeen.current = null;
@@ -613,6 +823,14 @@ export function BattlePanel({
         cardXpContext.end = e;
         publishBotCardXp(cardXpContext);
       }
+      const accountContext = accountXpContext.current;
+      if (accountContext?.roomId === r.roomId) {
+        accountContext.end = e;
+        const pending = accountContext.pendingReceipts.splice(0);
+        for (const raw of pending) void handleAccountXpReceipt(raw, r.roomId);
+        const source = accountXpSourceForStart(accountContext.start, accountContext.origin);
+        if (isUuid(e.matchId) && source) void recoverAccountXp(r.roomId, e.matchId, source);
+      }
       const resumeOrigin = resumeInfo.current?.origin ?? resumeOriginForEntryMode(initialMode);
       resumeInfo.current = null;
       clearResume(resumeOrigin);
@@ -633,11 +851,15 @@ export function BattlePanel({
       const parsed = validateBotCardXpMessage(raw);
       if (parsed.ok) applyBotCardXp(parsed.message);
     });
+    r.onMessage("account_xp", (raw: unknown) => {
+      void handleAccountXpReceipt(raw, r.roomId);
+    });
     r.onMessage("settlement", (m: SettlementMessage) => setSettlement(m));
     r.onMessage("aborted", (a: { reason: string }) => {
       clearLobbyHydration();
       clearBotGoldState();
       clearBotCardXpState();
+      clearAccountXpState();
       const resumeOrigin = resumeInfo.current?.origin ?? resumeOriginForEntryMode(initialMode);
       resumeInfo.current = null;
       clearResume(resumeOrigin);
@@ -678,7 +900,7 @@ export function BattlePanel({
       });
     });
     setRoom(r);
-  }, [adoptPracticeDifficulty, audio, clearBotCardXpState, clearBotGoldState, initialMode, refreshCardXp, refreshGoldBalance, setAudioPhase]);
+  }, [adoptPracticeDifficulty, audio, clearAccountXpState, clearBotCardXpState, clearBotGoldState, handleAccountXpReceipt, initialMode, recoverAccountXp, refreshCardXp, refreshGoldBalance, setAudioPhase]);
 
   // Ranked awards are read back only after the server confirms settlement.
   // This bounded read never infers a trophy delta from the battle result.
@@ -744,6 +966,7 @@ export function BattlePanel({
       setError(null);
       clearBotGoldState();
       clearBotCardXpState();
+      clearAccountXpState();
       setStage("connecting");
       try {
         if (mode === "practice" && requestedPracticeDifficulty && PRACTICE_DIFFICULTIES.includes(requestedPracticeDifficulty)) {
@@ -775,7 +998,7 @@ export function BattlePanel({
         connecting.current = false;
       }
     },
-    [appAudioController, attachRoom, clearBotCardXpState, clearBotGoldState, code, getAccessToken]
+    [appAudioController, attachRoom, clearAccountXpState, clearBotCardXpState, clearBotGoldState, code, getAccessToken]
   );
 
   const inviteTried = useRef(false);
@@ -799,6 +1022,7 @@ export function BattlePanel({
     const gen = ++queueGen.current;
     clearBotGoldState();
     clearBotCardXpState();
+    clearAccountXpState();
     setError(null);
     setStage("searching");
     setQueueStatus(null);
@@ -882,23 +1106,25 @@ export function BattlePanel({
       setError(e instanceof Error ? e.message : String(e));
       setStage("idle");
     }
-  }, [getAccessToken, attachRoom, appAudioController, clearBotCardXpState, clearBotGoldState]);
+  }, [getAccessToken, attachRoom, appAudioController, clearAccountXpState, clearBotCardXpState, clearBotGoldState]);
 
   const cancelSearch = useCallback(() => {
     queueGen.current += 1;
     clearBotGoldState();
     clearBotCardXpState();
+    clearAccountXpState();
     setQueueStatus(null);
     setQueueRoom(null);
     setStage("idle");
     void queueRoom?.leave().catch(() => {});
-  }, [clearBotCardXpState, clearBotGoldState, queueRoom]);
+  }, [clearAccountXpState, clearBotCardXpState, clearBotGoldState, queueRoom]);
 
   const reset = useCallback(() => {
     reconnectGen.current += 1;
     queueGen.current += 1;
     clearBotGoldState();
     clearBotCardXpState();
+    clearAccountXpState();
     const resumeOrigin = resumeInfo.current?.origin ?? resumeOriginForEntryMode(initialMode);
     resumeInfo.current = null;
     clearResume(resumeOrigin);
@@ -923,7 +1149,7 @@ export function BattlePanel({
     audioResultSeen.current = null;
     audioPriming.current = false;
     setStage("idle");
-  }, [audio, clearBotCardXpState, clearBotGoldState, initialMode, room, queueRoom, setAudioPhase]);
+  }, [audio, clearAccountXpState, clearBotCardXpState, clearBotGoldState, initialMode, room, queueRoom, setAudioPhase]);
 
   const battleAgainPending = useRef(false);
   const battleAgain = useCallback(() => {
@@ -1158,7 +1384,7 @@ export function BattlePanel({
   const me = identity?.selfSeat ?? 0;
 
   return (
-    <div className={publicMode ? "app-play-battle-shell" : undefined} data-mode={publicMode ? initialMode : undefined} data-stage={publicMode ? stage : undefined} data-bot-gold-status={botGold?.status ?? "none"} data-bot-card-xp-status={botCardXp?.status ?? "none"} data-gold-balance-status={goldBalanceStatus} data-gold-balance={goldBalance === null ? undefined : goldBalance} data-card-xp-readback-status={cardXpReadbackStatus}>
+    <div className={publicMode ? "app-play-battle-shell" : undefined} data-mode={publicMode ? initialMode : undefined} data-stage={publicMode ? stage : undefined} data-bot-gold-status={botGold?.status ?? "none"} data-bot-card-xp-status={botCardXp?.status ?? "none"} data-account-xp-status={accountXp?.status ?? accountXpStatus} data-gold-balance-status={goldBalanceStatus} data-gold-balance={goldBalance === null ? undefined : goldBalance} data-card-xp-readback-status={cardXpReadbackStatus} data-account-xp-readback-status={accountXpReadbackStatus}>
       {!publicMode && <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", fontSize: 13 }}>
         <span>stage: {stage}</span>
         {room && <span>room code: <b>{room.roomId}</b></span>}
@@ -1262,6 +1488,9 @@ export function BattlePanel({
           goldBalanceStatus={goldBalanceStatus}
           botCardXp={botCardXp}
           cardXpReadbackStatus={cardXpReadbackStatus}
+          accountXp={accountXp}
+          accountXpStatus={accountXpStatus}
+          accountXpReadbackStatus={accountXpReadbackStatus}
           rankedAward={rankedAward}
           rankedAwardStatus={rankedAwardStatus}
           presence={presence}

@@ -1,7 +1,7 @@
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import type { BotCardXpMessage, BotGoldMessage, EndMessage, StartMessage } from "@/lib/battle-protocol";
+import type { AccountXpMessage, BotCardXpMessage, BotGoldMessage, EndMessage, StartMessage } from "@/lib/battle-protocol";
 import BattleResult from "./BattleResult";
 import { finaleView, opponentNameFor, practiceDifficultyLabel, settlementView, tallyAt, UNRANKED_FALLBACK_NO_REWARDS } from "./battle-result-model";
 
@@ -47,6 +47,21 @@ const botCardXp = (over: Partial<BotCardXpMessage> = {}): BotCardXpMessage => ({
   ],
   rewardedToday: 1,
   dailyCap: 5,
+  ...over,
+});
+const accountXp = (over: Partial<AccountXpMessage> = {}): AccountXpMessage => ({
+  matchId: "private-match-id",
+  source: "unranked-fallback",
+  policyVersion: 1,
+  status: "confirmed",
+  eligibility: "eligible",
+  result: "win",
+  amount: 40,
+  playerId: "player-1",
+  totalXp: 250,
+  levelBefore: 2,
+  levelAfter: 3,
+  leveledUp: true,
   ...over,
 });
 const render = (props: Partial<React.ComponentProps<typeof BattleResult>> = {}) =>
@@ -184,6 +199,55 @@ describe("battle finale render", () => {
     const withCallback = renderFallback({ onAgain: () => {} });
     expect(withCallback).toContain(">Find Opponent Again <");
     expect(withCallback).toContain(">Back to Battle Hall <");
+  });
+  it("renders a distinct confirmed Account XP section from the server snapshot", () => {
+    const html = renderFallback({ accountXp: accountXp(), botGold: botGold() });
+    expect(html).toContain("Account XP earned");
+    expect(html).toContain("+40 Account XP earned.");
+    expect(html).toContain("Lifetime Account XP: 250");
+    expect(html).toContain("Level up!");
+    expect(html).toContain("Account Level 2 → 3");
+    expect(html).toMatch(/chud-finale-account-xp" data-state="confirmed"/);
+    expect(html).toContain('role="status" aria-live="polite" aria-atomic="true"');
+    expect(html.indexOf("chud-finale-account-xp")).toBeLessThan(html.indexOf("chud-finale-gold"));
+  });
+  it("keeps missing, mismatched and malformed Account XP receipts unknown", () => {
+    const missing = renderFallback();
+    expect(missing).toContain("Account XP outcome unknown");
+    expect(missing).toContain('chud-finale-account-xp" data-state="unknown"');
+
+    const mismatched = renderFallback({ accountXp: accountXp({ matchId: "another-match" }) });
+    expect(mismatched).toContain("The Account XP receipt could not be verified");
+    expect(mismatched).not.toContain("+40 Account XP earned.");
+
+    const malformed = renderFallback({ accountXp: accountXp({ status: "confirmed", totalXp: null, levelBefore: null, levelAfter: null, leveledUp: null }) });
+    expect(malformed).toContain("Account XP outcome unknown");
+    expect(malformed).not.toContain("Account XP earned");
+
+    const unavailable = renderFallback({ accountXpReadbackStatus: "unavailable" });
+    expect(unavailable).toContain("Account XP unavailable");
+    expect(unavailable).toContain("Account progression is not available yet. Check Progress later.");
+  });
+  it.each([
+    ["pending", "Account XP verification pending", "Check your account progression later."],
+    ["refused", "No Account XP awarded", "No Account XP was awarded for this battle."],
+    ["capped", "Account XP limit reached", "The Account XP daily limit has been reached."],
+  ] as const)("renders the Account XP %s state without inventing an amount", (status, title, copy) => {
+    const html = renderFallback({ accountXp: accountXp({ status, amount: 0, result: null, totalXp: null, levelBefore: null, levelAfter: null, leveledUp: null }) });
+    expect(html).toContain(title);
+    expect(html).toContain(copy);
+    expect(html).toContain(`chud-finale-account-xp" data-state="${status}"`);
+    expect(html).not.toContain("+40 Account XP earned.");
+    expect(html).not.toContain("Level up!");
+  });
+  it("does not add Account XP to Practice, which has no progression", () => {
+    const html = renderPractice();
+    expect(html).not.toContain("chud-finale-account-xp");
+  });
+  it("labels a server-confirmed level 100 crossing as max level", () => {
+    const html = renderFallback({ accountXp: accountXp({ levelBefore: 99, levelAfter: 100, totalXp: 131215 }) });
+    expect(html).toContain("Account Level 99 → 100");
+    expect(html).toContain("MAX LEVEL");
   });
   it("renders only a server-confirmed fallback Gold reward and balance", () => {
     const html = renderFallback({ botGold: botGold(), goldBalance: 120 });

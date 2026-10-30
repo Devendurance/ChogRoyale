@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import type {
   AbilityView,
   AckMessage,
+  AccountXpMessage,
   BattleFrame,
   BotCardXpMessage,
   BotGoldMessage,
@@ -69,6 +70,9 @@ export interface BattleHudProps {
   goldBalanceStatus?: "idle" | "loading" | "ready" | "unavailable";
   botCardXp?: BotCardXpMessage | null;
   cardXpReadbackStatus?: "idle" | "loading" | "ready" | "unavailable";
+  accountXp?: AccountXpMessage | null;
+  accountXpStatus?: AccountXpMessage["status"] | "unknown";
+  accountXpReadbackStatus?: "idle" | "loading" | "ready" | "unavailable";
   rankedAward?: RankedAwardView | null;
   rankedAwardStatus?: "idle" | "checking" | "awarded" | "unavailable" | "timeout";
   presence: PresenceMessage | null;
@@ -591,7 +595,7 @@ export default function BattleHud(props: BattleHudProps) {
         <span className="chud-start-go">Battle!</span>
         <span className="chud-start-patron">Arena Patron · {start.patron.name ?? `CHOG #${start.patron.tokenId}`}</span>
       </div>}
-      {(end || abort) && <BattleResult start={start} end={end} abort={abort} settlement={settlement} botGold={props.botGold} goldBalance={props.goldBalance} goldBalanceStatus={props.goldBalanceStatus} botCardXp={props.botCardXp} cardXpReadbackStatus={props.cardXpReadbackStatus} spriteManifest={manifest} me={me} playerName={props.playerName} onExit={props.onExit} onAgain={props.onBattleAgain} onAudioCue={props.onAudioCue} rankedAward={props.rankedAward} rankedAwardStatus={props.rankedAwardStatus} />}
+      {(end || abort) && <BattleResult start={start} end={end} abort={abort} settlement={settlement} botGold={props.botGold} goldBalance={props.goldBalance} goldBalanceStatus={props.goldBalanceStatus} botCardXp={props.botCardXp} cardXpReadbackStatus={props.cardXpReadbackStatus} accountXp={props.accountXp} accountXpStatus={props.accountXpStatus} accountXpReadbackStatus={props.accountXpReadbackStatus} spriteManifest={manifest} me={me} playerName={props.playerName} onExit={props.onExit} onAgain={props.onBattleAgain} onAudioCue={props.onAudioCue} rankedAward={props.rankedAward} rankedAwardStatus={props.rankedAwardStatus} />}
       {dragging && (
         <div
           ref={(el) => {

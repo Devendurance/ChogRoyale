@@ -2,6 +2,7 @@ import { describe, expect, it, beforeEach, vi } from "vitest";
 import type { LobbyMessage } from "@/lib/battle-protocol";
 import {
   lobbyWaitingForMessage,
+  accountXpSourceForStart,
   completeQueueHandoff,
   createQueueHandoffGate,
   parseGoldBalanceResponse,
@@ -53,6 +54,13 @@ describe("BattlePanel queue handoff", () => {
     expect(resumeOriginForStart({ mode: "practice", practiceOpponent: { kind: "bot", botId: "practice-hard-v1", difficulty: "hard", displayName: "AI Opponent", source: "unranked-fallback" } }, "practice")).toBeNull();
     expect(resumeOriginForStart({ mode: "practice", practiceOpponent: { kind: "bot", botId: "practice-medium-v1", difficulty: "medium", displayName: "AI Opponent", source: "practice" } }, "practice")).toBe("practice");
     expect(resumeOriginForStart({ mode: "matchmaking", practiceOpponent: undefined }, "pvp")).toBe("pvp");
+  });
+
+  it("keeps Account XP source separate from the internal Practice room mode", () => {
+    expect(accountXpSourceForStart({ mode: "practice", practiceOpponent: { kind: "bot", botId: "practice-hard-v1", difficulty: "hard", displayName: "AI Opponent", source: "unranked-fallback" } }, "unranked-fallback")).toBe("unranked-fallback");
+    expect(accountXpSourceForStart({ mode: "practice", practiceOpponent: { kind: "bot", botId: "practice-medium-v1", difficulty: "medium", displayName: "AI Opponent", source: "practice" } }, "practice")).toBeNull();
+    expect(accountXpSourceForStart({ mode: "matchmaking", practiceOpponent: undefined }, "pvp")).toBe("matchmaking");
+    expect(accountXpSourceForStart({ mode: "private", practiceOpponent: undefined }, "pvp")).toBeNull();
   });
 
   it("rejects an invalid fallback before its reservation can be consumed", () => {
