@@ -2,6 +2,8 @@
 
 # Mobile UX / app-shell / PWA polish pass (2026-10-30)
 
+- PR #19 follow-up synchronizes current main and limits AppOpening to the initial layout entry. Native modal isolation and forward/reverse keyboard containment replace the previous visual-only dialog overlay. Browser checks cover fresh entry, client navigation return, direct invite bypass, Skip and Escape.
+
 - Working tree contains a scoped mobile shell pass based on the merged V2.2 content. No merge or deployment performed.
 - Account Level now has reusable card and embedded presentations. Profile puts the module near the top on mobile and in the desktop side column. Progress keeps one coherent Account Progress panel.
 - App shell adds safe-area viewport support, a compact native mobile overflow menu, Friends-to-Profile nav mapping, and a short branded opening overlay on exact `/app` entry. Direct battle/invite routes are not blocked. Reduced-motion users skip the blocking delay.

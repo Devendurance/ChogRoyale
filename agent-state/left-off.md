@@ -1,4 +1,10 @@
-# Current task: V2.2 Account XP VPS ACTIVATION COMPLETE (2026-10-30)
+# Current task: PR #19 opening follow-up (2026-10-30)
+
+- Done: synchronized `codex/mobile-ux-pwa-polish` with origin/main through merge `f12d6fd`. Opening consumes only the initial shared-layout entry, never a return to the lobby. Native modal dialog makes the background inert, with explicit forward/reverse Tab containment, Skip and Escape.
+- Browser checks: fresh `/app` opens, Decks -> Lobby stays closed, direct private invite and subsequent Lobby stay closed, Skip/Escape close, Tab/Shift+Tab remain within dialog. Local QA navigation was removed. Privy origin is unavailable, so these are unauthenticated shell checks, not a live PWA/device acceptance.
+- Checks: 73 focused tests, TypeScript, scoped ESLint, production build (67 pages), and diff-check passed. Next: commit/push and update PR #19 for owner review. No merge or deployment authorized.
+
+# Previous task: V2.2 Account XP VPS ACTIVATION COMPLETE (2026-10-30)
 
 - Vercel side (owner-completed): deployment dpl_4s2oTAtxLmwbhQM8CRmZRMKoE5Gw at f816eff, Production PLAYER_ACCOUNT_XP_ENABLED=1, READY, health/Profile/Progress 200.
 - VPS side (this session): reverified f816eff deployed, migrations 0026-0028 intact, boundary id=1 @ 2026-10-30T02:09:05.976Z unchanged, DB time later, 0 conns, empty outbox. Backed up battle.env, flipped ONLY PLAYER_ACCOUNT_XP_ENABLED=0->1, restarted with zero activity. New MainPID 1974755, ACTIVE, NRestarts=0, no restart loop, no exceptions, local+public /healthz 200.

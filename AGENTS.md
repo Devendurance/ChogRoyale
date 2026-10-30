@@ -298,6 +298,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## MOBILE APP SHELL POLISH
 
+- Startup opening is once per shared app-layout entry, never per lobby route return. Consume non-lobby direct entries without showing it. Use native modal isolation plus keyboard containment while active, and mark the attempted ref inside the scheduled callback for StrictMode safety.
+
 - The authenticated `/app` layout owns the short branded opening overlay. It is shown only on the `/app` entry path so direct battle, invite, and recovery routes stay unobstructed. Shared providers remain mounted across route changes.
 - Mobile HUD utility actions live in a native disclosure surface with touch targets of at least 44px. Desktop keeps the existing inline utility controls. Friends maps to the Profile tab because the fixed navigation has five supported sections.
 - Account Level presentation has a card wrapper for Profile and a content-only mode for Progress. Both modes consume the same server-derived view and never infer level or XP locally.

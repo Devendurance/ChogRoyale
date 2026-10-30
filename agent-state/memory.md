@@ -2,6 +2,8 @@
 
 # Mobile shell and PWA polish (2026-10-30)
 
+- PR #19 follow-up: opening is initial-layout-entry only. The attempted ref is marked inside the scheduled callback for StrictMode safety. Non-lobby initial routes consume the entry without showing the overlay. Native modal dialog provides inert background isolation, with explicit Tab containment on Skip.
+
 - `AppOpening` belongs in the shared `/app` layout, outside `AppSession`, and only activates on the exact `/app` pathname so auth gates remain visible and direct battle/invite recovery is not delayed. `prefers-reduced-motion` closes without a blocking delay.
 - `AppHud` keeps desktop utility actions inline and uses a native `<details>` disclosure on narrow screens. Keep action targets at least 44px, label the mobile rows, and preserve the fixed five-tab nav by mapping Friends to Profile.
 - `AccountLevelModule` supports `card` and `content` presentations. Profile uses the full card, while Progress embeds one content module inside its existing Account Progress panel. All level and XP values remain server-derived.
