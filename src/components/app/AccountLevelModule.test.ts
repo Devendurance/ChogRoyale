@@ -39,6 +39,10 @@ describe("AccountLevelModule presentation boundary", () => {
     expect(html).toContain("Account Level");
     expect(html).toContain("925");
     expect(html).toContain("Lifetime XP");
+    expect(html).toContain("125");
+    expect(html).toContain("200");
+    expect(html).toContain("1,000");
+    expect(html).toContain("Next level target");
     expect(html).toContain('href="/app/progress"');
   });
 
@@ -49,6 +53,9 @@ describe("AccountLevelModule presentation boundary", () => {
     expect(html).not.toContain("Account Level");
     expect(html).toContain("Current level");
     expect(html).toContain("Lifetime XP");
+    expect(html).toContain("125");
+    expect(html).toContain("200");
+    expect(html).toContain("Next level target");
     expect(html).toContain('role="progressbar"');
     expect(html).toContain('href="/app/progress"');
   });
@@ -79,6 +86,7 @@ describe("AccountLevelModule presentation boundary", () => {
     expect(html).toContain(">MAX</span>");
     expect(html).toContain('aria-valuenow="100"');
     expect(html).toContain("Lifetime XP keeps counting after the level cap.");
+    expect(html).not.toContain("Next level target");
   });
 
   it("keeps disabled progression explicit without showing inferred level or XP", () => {

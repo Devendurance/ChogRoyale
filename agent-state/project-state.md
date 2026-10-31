@@ -2,6 +2,8 @@
 
 # Mobile UX / app-shell / PWA polish pass (2026-10-30)
 
+- Home follow-up on `codex/lobby-resources-xp-polish` from merged main `a67c7ac` adds a nonblocking authenticated resource summary, Gold earning disclosure, clickable Account XP bar, stronger shared expanded level module, and scoped two-column desktop lobby. CSS Modules now bypass the Tailwind loader so their visual classes reach the browser. Labeled fixture screenshots and acceptance notes are in `docs/home-progression-polish.md`. Checks: 108 tests, TypeScript, scoped lint and build passed. PR #19 is already owner-merged, so this slice has a new review branch.
+
 - PR #19 follow-up synchronizes current main and limits AppOpening to the initial layout entry. Native modal isolation and forward/reverse keyboard containment replace the previous visual-only dialog overlay. Browser checks cover fresh entry, client navigation return, direct invite bypass, Skip and Escape.
 
 - Working tree contains a scoped mobile shell pass based on the merged V2.2 content. No merge or deployment performed.
@@ -10,6 +12,7 @@
 - Audio gesture recovery re-arms after visibility changes or later AudioContext suspension without changing mute or zero-volume preferences. Snap-like media-query guards support missing `matchMedia` and legacy listener APIs.
 - Verification: focused UI/audio/media tests 73/73, scoped ESLint has no errors (CSS is intentionally ignored), TypeScript and production build pass. Browser checks at 390x844 and 1366x768 confirmed the opening route, direct battle route bypass, and no horizontal overflow under the local unauthenticated gate.
 - Limits: no authenticated Privy session, installed iOS PWA, physical Safari, or Snap Mini Browser was available. Report those as unverified rather than live acceptance.
+- PR #20 follow-up `2d448c9` adds a 560ms confirmed-XP width transition with a reduced-motion opt-out. The earlier red `1 Issue` badge was a Grammarly body-attribute hydration warning in the development browser. Clean in-app and production-shell captures show no badge. PR #20 remains open and unmerged.
 
 # V2.2c-2 Account XP battle result UI (2026-10-30)
 

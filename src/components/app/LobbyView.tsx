@@ -11,6 +11,7 @@ import AppNav from "./AppNav";
 import AppNotice from "./AppNotice";
 import { dedupeNotices } from "./feedback-model";
 import CommanderStage from "./CommanderStage";
+import HomeSummary from "./HomeSummary";
 import Icon from "./icons";
 import type { LobbyArt, LobbyViewProps } from "./lobby-types";
 
@@ -51,6 +52,7 @@ export default function LobbyView({
   commander,
   deck,
   deckEmpty,
+  summary,
   notices,
   battleEnabled,
   busy,
@@ -142,9 +144,11 @@ export default function LobbyView({
     <>
       <AppHud player={player} onSignOut={onSignOut} />
 
-      <main className={`app-stage${calm ? " app-calm" : ""}`}>
+      <main className={`app-stage app-home${calm ? " app-calm" : ""}`}>
         <div className="app-column">
           {noticeList.length > 0 && <div className="app-column__notices">{noticeList}</div>}
+
+          {summary && <HomeSummary {...summary} />}
 
           <CommanderStage commander={commander} priority />
 
