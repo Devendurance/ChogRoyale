@@ -4,7 +4,7 @@
 
 - Desktop `/app` keeps its existing four-column, two-row Battle Deck rail. Cards now give art a fixed flex box and keep proportional full art separate from a fixed two-line name/type footer. The cost badge remains at the top-left. Overrides stay scoped to `.app-home`; mobile and A2 Decks styling are preserved.
 - Verification: focused LobbyView structure test 1/1, TypeScript, scoped ESLint and production build pass. Full ESLint still reports existing errors in review `.cjs` scripts and clan/messages route tests.
-- Delivery: local commit complete. No push or deployment.
+- Delivery: commit `b5eb0d63f36dde0f8fb4092ec4e5f33e5aea50d0` pushed as `codex/desktop-battle-deck-fix`; PR #22 is open. Vercel preview is Ready. No production deployment.
 
 # Mobile UX / app-shell / PWA polish pass (2026-10-30)
 

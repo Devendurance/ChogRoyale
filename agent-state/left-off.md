@@ -1,8 +1,8 @@
 # Current task: Desktop lobby Battle Deck card layout
 
-- Doing: hand off the desktop-only card art/footer fix from `codex/desktop-battle-deck-fix` for coordinator review.
-- Done: fixed the 4x2 lobby grid with a fixed flex art box and a fixed independent footer; preserved proportional art and the top-left cost badge; added a focused LobbyView structure test. Test 1/1, TypeScript, scoped ESLint and production build pass. Local commit is complete.
-- Next: coordinator review. Do not push. Full ESLint reports pre-existing `.cjs` review script errors and `any` errors in clan/messages route tests.
+- Doing: review PR #22 for the desktop-only card art/footer fix.
+- Done: fixed the 4x2 lobby grid with a fixed flex art box and a fixed independent footer; preserved proportional art and the top-left cost badge; added a focused LobbyView structure test. Test 1/1, TypeScript, scoped ESLint and production build pass. Full ESLint reports pre-existing `.cjs` review script errors and `any` errors in clan/messages route tests. Branch pushed at `b5eb0d6`; PR #22 is open and Vercel preview is Ready.
+- Next: owner review. Do not merge or deploy.
 
 # Previous task: Lobby resources / Account XP polish
 
