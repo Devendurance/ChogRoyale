@@ -4,6 +4,7 @@
 - Checks: 108 focused tests, TypeScript, scoped lint and production build passed after review fixed cached-route freshness and non-JSON HTTP error status. Temporary QA route removed. Live Privy/device acceptance unavailable.
 - Delivered: implementation `3bfbd16` on `codex/lobby-resources-xp-polish` from main `a67c7ac`, because PR #19 was already owner-merged. PR #20 is open: https://github.com/Devendurance/ChogRoyale/pull/20. Next: owner visual/authenticated review. No merge or production deployment.
 - Review follow-up: the red `1 Issue` badge was a Grammarly-injected body-attribute hydration warning in the development browser, not a product regression. Clean in-app evidence has no issue badge. Added a 560ms confirmed-XP width transition with reduced-motion opt-out in `HomeSummary.module.css`. Checks are rerunning before the PR update.
+- Follow-up request: `HomeSummary.tsx` now closes the Gold options disclosure when pointer input lands outside it. HomeSummary tests, typecheck, scoped lint, production build, and diff checks pass. Commit and PR update are next. No merge or deployment.
 
 # Previous task: PR #19 opening follow-up (2026-10-30)
 
