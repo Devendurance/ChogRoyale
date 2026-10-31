@@ -159,6 +159,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## GAME APP SHELL
 
+- Desktop lobby Battle Deck stays a four-column, two-row grid at 1024px and above. Each card has a fixed art box with proportional `object-fit: contain` artwork and a separate fixed name/type footer. Keep the elixir badge anchored top-left, scope these layout overrides to `.app-home`, and preserve the mobile rail and A2 Decks styles.
 - Plain app CSS needs runtime `--font-site`, `--font-data` and `--font-game` aliases inside `.app-root`. Tailwind inline theme entries only substitute utilities, so relying on them for CSS `font` shorthands silently drops both font family and size.
 - The Privy provider lives in the shared `/app` layout. A route inside `/app` must never mount its own provider, or a route change tears the session down and starts a second one.
 - Card names, costs, type labels, traits, descriptions and stat rows come from `src/lib/card-details.ts` and the ruleset tables. Never write card copy by hand and never read a card cost from anywhere else.

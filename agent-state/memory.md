@@ -28,6 +28,7 @@
 
 # Memory
 
+- Desktop lobby Battle Deck uses four columns by two rows at desktop widths. Its art box and fixed name/type footer are separate layout tracks; preserve `object-fit: contain`, the top-left cost badge, and `.app-home` scoping so the mobile rail and A2 `.app-slot` cards are unaffected.
 - V2.2b Account Level UI reads only `/api/players/me/account-xp`. Server-provided level, lifetime XP, thresholds, max state, daily counters, and award rows remain authoritative. The client validates shape and uses thresholds only for a bounded display bar. Disabled, migration, auth, onboarding, network, malformed, and unavailable states never fall back to Level 1.
 
 - V2.1i bot Card XP is earned only from `xp_eligible` Unranked fallback `bot_matches` evidence with a confirmed `bot_gold_awards` row. The XP ledger is separate, the progression total recomputes from PvP plus bot ledgers, and `UNRANKED_BOT_CARD_XP_ENABLED` requires `UNRANKED_BOT_GOLD_REWARDS_ENABLED`. Pre-flag rows and Solo Practice earn zero. Pending XP must remain recoverable until Gold settles, then become terminal on Gold refusal or cap.
