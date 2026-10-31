@@ -13,6 +13,7 @@
 - Verification: focused UI/audio/media tests 73/73, scoped ESLint has no errors (CSS is intentionally ignored), TypeScript and production build pass. Browser checks at 390x844 and 1366x768 confirmed the opening route, direct battle route bypass, and no horizontal overflow under the local unauthenticated gate.
 - Limits: no authenticated Privy session, installed iOS PWA, physical Safari, or Snap Mini Browser was available. Report those as unverified rather than live acceptance.
 - PR #20 follow-up `2d448c9` adds a 560ms confirmed-XP width transition with a reduced-motion opt-out. The earlier red `1 Issue` badge was a Grammarly body-attribute hydration warning in the development browser. Clean in-app and production-shell captures show no badge. PR #20 remains open and unmerged.
+- The Gold disclosure now closes on pointer input outside its native `<details>` control. The disclosure keeps inside clicks, keyboard activation, and the existing Earn Gold link behavior.
 
 # V2.2c-2 Account XP battle result UI (2026-10-30)
 

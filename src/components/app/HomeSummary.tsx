@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useRef } from "react";
 import { GameIcon } from "@/components/game/GameIcon";
 import { accountXpProgressPercent } from "./account-xp-model";
 import type { AccountXpLevelView } from "./account-xp-model";
@@ -73,7 +76,20 @@ function accountProgress(accountLevel: AccountXpLevelView) {
 }
 
 export default function HomeSummary({ gold, crowns, accountLevel }: HomeSummaryProps) {
+  const goldDisclosureRef = useRef<HTMLDetailsElement>(null);
   const progress = accountProgress(accountLevel);
+
+  useEffect(() => {
+    const handlePointerDown = (event: PointerEvent) => {
+      const disclosure = goldDisclosureRef.current;
+      const target = event.target;
+      if (!disclosure || !(target instanceof Node) || disclosure.contains(target)) return;
+      disclosure.open = false;
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown, true);
+    return () => document.removeEventListener("pointerdown", handlePointerDown, true);
+  }, []);
 
   return (
     <section className={`app-panel ${styles.summary}`} aria-label="Account summary">
@@ -84,7 +100,7 @@ export default function HomeSummary({ gold, crowns, accountLevel }: HomeSummaryP
             <span className={styles.metricLabel}>Gold</span>
             <MetricValue metric={gold} label="Gold" />
           </div>
-          <details className={styles.goldDisclosure}>
+          <details ref={goldDisclosureRef} className={styles.goldDisclosure}>
             <summary aria-label="Gold options" title="Gold options">+</summary>
             <div className={styles.goldPopover}>
               <Link href="/app/play" className={styles.earnLink}>Earn Gold</Link>
