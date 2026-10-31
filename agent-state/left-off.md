@@ -1,4 +1,10 @@
-# Current task: Lobby resources / Account XP polish
+# Current task: Desktop lobby Battle Deck card layout
+
+- Doing: hand off the desktop-only card art/footer fix from `codex/desktop-battle-deck-fix` for coordinator review.
+- Done: fixed the 4x2 lobby grid with a fixed flex art box and a fixed independent footer; preserved proportional art and the top-left cost badge; added a focused LobbyView structure test. Test 1/1, TypeScript, scoped ESLint and production build pass. Local commit is complete.
+- Next: coordinator review. Do not push. Full ESLint reports pre-existing `.cjs` review script errors and `any` errors in clan/messages route tests.
+
+# Previous task: Lobby resources / Account XP polish
 
 - Done: compact authenticated Gold/crowns/level/XP home summary, safe Gold earning disclosure, richer shared expanded XP module, scoped mobile/desktop home hierarchy, and CSS Module loader correction. Before/after labeled fixture screenshots are in `C:/Users/USER/Documents/ChogRoyale-Assets/home-polish-pr19`.
 - Checks: 108 focused tests, TypeScript, scoped lint and production build passed after review fixed cached-route freshness and non-JSON HTTP error status. Temporary QA route removed. Live Privy/device acceptance unavailable.

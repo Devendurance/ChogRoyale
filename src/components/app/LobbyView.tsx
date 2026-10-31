@@ -206,8 +206,10 @@ export default function LobbyView({
                         </span>
                       )}
                     </span>
-                    <span className="app-card__name">{card.name}</span>
-                    <span className="app-card__type">{card.typeLabel}</span>
+                    <span className="app-card__footer">
+                      <span className="app-card__name">{card.name}</span>
+                      <span className="app-card__type">{card.typeLabel}</span>
+                    </span>
                   </li>
                 ))}
               </ul>

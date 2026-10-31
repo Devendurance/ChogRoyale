@@ -1,5 +1,11 @@
 # Project State
 
+# Desktop lobby Battle Deck card layout (2026-10-31)
+
+- Desktop `/app` keeps its existing four-column, two-row Battle Deck rail. Cards now give art a fixed flex box and keep proportional full art separate from a fixed two-line name/type footer. The cost badge remains at the top-left. Overrides stay scoped to `.app-home`; mobile and A2 Decks styling are preserved.
+- Verification: focused LobbyView structure test 1/1, TypeScript, scoped ESLint and production build pass. Full ESLint still reports existing errors in review `.cjs` scripts and clan/messages route tests.
+- Delivery: local commit complete. No push or deployment.
+
 # Mobile UX / app-shell / PWA polish pass (2026-10-30)
 
 - Home follow-up on `codex/lobby-resources-xp-polish` from merged main `a67c7ac` adds a nonblocking authenticated resource summary, Gold earning disclosure, clickable Account XP bar, stronger shared expanded level module, and scoped two-column desktop lobby. CSS Modules now bypass the Tailwind loader so their visual classes reach the browser. Labeled fixture screenshots and acceptance notes are in `docs/home-progression-polish.md`. Checks: 108 tests, TypeScript, scoped lint and build passed. PR #19 is already owner-merged, so this slice has a new review branch.
