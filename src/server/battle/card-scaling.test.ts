@@ -181,3 +181,92 @@ describe("P2c session snapshot", () => {
     expect(sFrozen.replay!.config.cardLevels).toEqual([{ choglings: 10 }, {}]);
   });
 });
+
+describe("frame level (frozen match level on deployed entities)", () => {
+  function mkDeck(cards: string[], lv: Record<string, Record<string, number>>) {
+    const s = new BattleSession(rng);
+    s.join({ playerId: "pa", username: "a" });
+    s.join({ playerId: "pb", username: "b" });
+    s.setReady("pa", makeLoadout([...cards], "scout"));
+    s.setReady("pb", makeLoadout([...cards], "scout"));
+    s.cardLevelsByPlayer = JSON.parse(JSON.stringify(lv));
+    s.start(s.lock(), s.readyLoadouts() as [TrustedLoadout, TrustedLoadout], testLockedPatron());
+    return s;
+  }
+  const seatOf = (s: BattleSession, pid: string) => (s.startMessage(0).seat === 0 ? (pid === "pa" ? 0 : 1) : pid === "pa" ? 1 : 0);
+  function until(s: BattleSession, done: () => boolean, act: (n: number) => void) {
+    for (let n = 0; n < 1500 && s.phase === "active" && !done(); n++) {
+      act(n);
+      s.tick();
+    }
+  }
+
+  it("carries the frozen level for deployed troops and buildings, per seat, and ignores later writes", () => {
+    const s = mkDeck([...ORD], { pa: { choglings: 7, rift_sentry: 3 } });
+    const a = seatOf(s, "pa");
+    const yA = a === 0 ? 40 : 120;
+    const yB = a === 0 ? 120 : 40;
+    // A progression write after start must not move the frame level.
+    s.cardLevelsByPlayer = { pa: { choglings: 1, rift_sentry: 1 }, pb: { choglings: 9 } };
+    until(
+      s,
+      () => {
+        const f = s.frame(0);
+        return f.buildings.some((b) => b.owner === a) && f.troops.some((t) => t.owner === a && t.cardId === "choglings") && f.troops.some((t) => t.owner !== a && t.cardId === "choglings");
+      },
+      (n) => {
+        s.submit("pa", { type: "deploy", cid: `a${n}`, cardId: n % 2 ? "rift_sentry" : "choglings", x: 20, y: yA });
+        s.submit("pb", { type: "deploy", cid: `b${n}`, cardId: "choglings", x: 80, y: yB });
+      }
+    );
+    for (const seat of [0, 1] as const) {
+      const f = s.frame(seat);
+      const mine = f.troops.filter((t) => t.owner === a && t.cardId === "choglings");
+      const theirs = f.troops.filter((t) => t.owner !== a && t.cardId === "choglings");
+      expect(mine.length).toBeGreaterThan(0);
+      expect(theirs.length).toBeGreaterThan(0);
+      expect(mine.every((t) => t.level === 7)).toBe(true);
+      expect(theirs.every((t) => t.level === 1)).toBe(true);
+      expect(f.buildings.find((b) => b.owner === a)?.level).toBe(3);
+      // Level equals the engine's own frozen lookup.
+      for (const t of f.troops) expect(t.level).toBe(s.state!.cardLevels[t.owner][t.cardId] ?? 1);
+    }
+  });
+
+  it("omits level on spawned units and commanders", () => {
+    const deck = ["chog_burrow", "choglings", "chaos_archer", "sparkcaster", "rift_snare", "chaos_bolt", "boulderback"];
+    const s = mkDeck(deck, { pa: { chog_burrow: 4 } });
+    const a = seatOf(s, "pa");
+    const y = a === 0 ? 40 : 120;
+    let commanderFrames = 0;
+    let scrapperFrames = 0;
+    let burrowFrames = 0;
+    until(
+      s,
+      () => commanderFrames > 0 && scrapperFrames > 0,
+      (n) => {
+        const hand = s.state!.hands[a];
+        if (!s.state!.buildings.length && hand.includes("chog_burrow")) s.submit("pa", { type: "deploy", cid: `a${n}`, cardId: "chog_burrow", x: 20, y });
+        // Cycle the hand (the commander card sits at the back of the queue).
+        const next = hand.find((c) => c.startsWith("cmdr:")) ?? hand.find((c) => c !== "chog_burrow");
+        if (next && n % 4 === 0) s.submit("pa", { type: "deploy", cid: `c${n}`, cardId: next, x: 80, y });
+        const f = s.frame(a);
+        for (const c of f.commanders) {
+          commanderFrames++;
+          expect("level" in c).toBe(false);
+        }
+        for (const t of f.troops.filter((u) => u.cardId === "burrow_scrapper")) {
+          scrapperFrames++;
+          expect("level" in t).toBe(false);
+        }
+        for (const b of f.buildings.filter((u) => u.cardId === "chog_burrow")) {
+          burrowFrames++;
+          expect(b.level).toBe(4);
+        }
+      }
+    );
+    expect(scrapperFrames).toBeGreaterThan(0);
+    expect(burrowFrames).toBeGreaterThan(0);
+    expect(commanderFrames).toBeGreaterThan(0);
+  });
+});

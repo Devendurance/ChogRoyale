@@ -5,7 +5,7 @@
 
 import { randomBytes, randomInt } from "crypto";
 import { scenarioConfig } from "@/lib/arena-scenarios";
-import { clampCardLevel, type CardLevels } from "@/lib/card-levels";
+import { clampCardLevel, levelFor, type CardLevels } from "@/lib/card-levels";
 import { describeCard, describeCommander } from "@/lib/card-details";
 import { DECKS_V13 } from "@/lib/bot-economy";
 import { deriveChaosSchedule } from "@/lib/chaos";
@@ -473,10 +473,12 @@ export class BattleSession {
       hand: [...s.hands[seat]],
       next: s.queues[seat][0] ?? null,
       abilities: commanderAbilityStatus(s, seat).map((a) => ({ abilityId: a.abilityId, cost: a.cost, readyAt: a.readyAt, cooldownTicks: a.cooldownTicks, activeUntil: a.activeUntil, ready: a.ready, blockedBy: a.blockedBy })),
-      troops: s.troops.filter((t) => t.hp > 0).map((t) => ({ id: t.id, owner: t.owner, cardId: t.cardId, x: t.x, y: t.y, hp: t.hp, maxHp: t.maxHp, air: t.moveType === "air", shield: shield(t) })),
+      // Deployed troops and buildings carry their frozen match level. Spawned
+      // units (Burrow Scrappers) and commanders never scale, so they omit it.
+      troops: s.troops.filter((t) => t.hp > 0).map((t) => ({ id: t.id, owner: t.owner, cardId: t.cardId, x: t.x, y: t.y, hp: t.hp, maxHp: t.maxHp, air: t.moveType === "air", shield: shield(t), ...(t.spawnedBy === undefined ? { level: levelFor(s.cardLevels, t.owner, t.cardId) } : {}) })),
       commanders: s.commanders.filter((c) => c.hp > 0).map((c) => ({ id: c.id, owner: c.owner, cardId: `cmdr:${c.commanderId}`, cls: c.class, x: c.x, y: c.y, hp: c.hp, maxHp: c.maxHp, air: false, shield: shield(c) })),
       structures: s.structures.map((x) => ({ id: x.id, owner: x.owner, kind: x.structure, x: x.x, y: x.y, hp: x.hp, maxHp: x.maxHp, alive: x.alive })),
-      buildings: s.buildings.filter((b) => b.alive).map((b) => ({ id: b.id, owner: b.owner, cardId: b.cardId, x: b.x, y: b.y, hp: b.hp, maxHp: b.maxHp, footprint: b.footprint, expiresAt: b.expiresAt, ...(b.nextSpawnAt !== undefined ? { nextSpawnAt: b.nextSpawnAt, spawnsLeft: b.spawnsLeft ?? 0 } : {}) })),
+      buildings: s.buildings.filter((b) => b.alive).map((b) => ({ id: b.id, owner: b.owner, cardId: b.cardId, x: b.x, y: b.y, hp: b.hp, maxHp: b.maxHp, footprint: b.footprint, expiresAt: b.expiresAt, level: levelFor(s.cardLevels, b.owner, b.cardId), ...(b.nextSpawnAt !== undefined ? { nextSpawnAt: b.nextSpawnAt, spawnsLeft: b.spawnsLeft ?? 0 } : {}) })),
       projectiles: s.projectiles.map((p) => ({ id: p.id, owner: p.owner, x: p.snapX, y: p.snapY, targetId: p.targetId })),
       impacts: s.pendingImpacts.map((i) => ({ id: i.id, owner: i.owner, cardId: i.cardId, x: i.x, y: i.y, impactTick: i.impactTick, ...(BUILDING_CARDS_V1[i.cardId]?.shell ? { radius: BUILDING_CARDS_V1[i.cardId]!.shell!.radius } : {}) })),
       chaos,

@@ -219,6 +219,11 @@ export interface UnitView {
   maxHp: number;
   air: boolean;
   shield: number;
+  /** Frozen match level from the engine (card-levels.ts `levelFor` over the
+   * levels snapshotted at match start; Level 1 when scaling is off, which is
+   * the level the engine really uses). Public once the card is deployed.
+   * Omitted for spawned units and commanders, which never scale. */
+  level?: number;
 }
 export interface CommanderView extends UnitView {
   cls: string;
@@ -243,6 +248,8 @@ export interface BuildingView {
   maxHp: number;
   footprint: number;
   expiresAt: number;
+  /** Frozen match level from the engine for this deployed building. */
+  level?: number;
   /** Spawner buildings only: next due wave tick and waves remaining. */
   nextSpawnAt?: number;
   spawnsLeft?: number;
