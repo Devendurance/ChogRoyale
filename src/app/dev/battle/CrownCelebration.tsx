@@ -56,8 +56,10 @@ export default function CrownCelebration({ frame, start, me, boardRef, mineRef, 
     previous.current = frame;
     prime.current = false;
     if (!host.current || !art.current) return;
-    const canvas = boardRef.current?.querySelector("canvas") ?? boardRef.current?.querySelector('[data-testid="battle-board"]');
-    const rect = canvas?.getBoundingClientRect();
+    // The canvas renders the whole world; the board marker is the playable
+    // 100x160 rect inside it, so tower origins land on the tower art.
+    const board = boardRef.current?.querySelector("[data-board-rect]") ?? boardRef.current?.querySelector('[data-testid="battle-board"]');
+    const rect = board?.getBoundingClientRect();
     if (!rect || !rect.width || !rect.height) return;
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
     // The chime marks the moment a crown reaches its counter. Reduced motion

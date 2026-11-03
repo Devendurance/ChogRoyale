@@ -1,5 +1,13 @@
 # Current task: Game feel, battlefield scale and game UI overhaul
 
+## PR #24 full-screen world correction, 2026-11-04
+
+- Owner rejected the boxed 100:160 board, purple header and opaque tray. References studied: `.local-references/battle-immersive-reference` (local only, never commit).
+- Done: v003 world surround rendered by `ChogRoyale-Assets/arena-worlds/chaos-crossing/v003/scripts/build_world.py` (anchors exact), shipped as `layers/world-surround.webp` plus manifest `world`. Canvas fills the screen, `src/lib/battle-camera.ts` fits the board above the measured tray, mapper and crown origins use `[data-board-rect]`.
+- Done: portrait HUD is overlays only (opponent name top-left, timer top-right, crown counters on the right edge at the river, translucent hand). Units about 25% larger, buildings 1.2x, towers 1.3x and Cores 1.2x with anchors scaled.
+- Verified: crown flights observed in the browser for both seats once the harness passed a stable `start`. Evidence in `ChogRoyale-Assets/battle-immersive-20261103` (fixture, capture.cjs, after/).
+- Next: owner visual review of PR #24. Do not merge or deploy. Temporary `src/app/dev/battle/qa-world` must stay uncommitted and be deleted after captures.
+
 ## PR #24 final targeted correction, 2026-11-03
 
 - Done: changed the portrait cap to `min(100cqw, 62.5cqh)`, removed terrain blur, fixed fixture `NaN%` audio and hid Dev diagnostics from acceptance captures.

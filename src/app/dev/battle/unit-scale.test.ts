@@ -3,7 +3,7 @@ import { readFileSync } from "fs";
 import path from "path";
 import { SPAWNED_TROOPS_V1, TROOP_CARDS_V1 } from "@/lib/combat";
 import { anchorOffset, type UnitAnimManifest } from "./unit-anim";
-import { SCALE_CLAMP, SIZE_CLASS_TARGET, UNIT_SIZE_CLASS, hpBarWidth, sizeClassOf, unitDrawScale, unitDrawnHeight, unitSizeMult } from "./unit-scale";
+import { BUILDING_SIZE_MULT, SCALE_CLAMP, SIZE_CLASS_TARGET, UNIT_SIZE_CLASS, hpBarWidth, sizeClassOf, unitDrawScale, unitDrawnHeight, unitSizeMult } from "./unit-scale";
 
 const manifest = JSON.parse(
   readFileSync(path.join(process.cwd(), "public/assets/chog-units/v001/manifests/units.runtime.json"), "utf8")
@@ -26,10 +26,10 @@ describe("unit size-class policy", () => {
     expect(max(of("flying_swarm"))).toBeLessThan(min(of("flying")));
   });
 
-  it("leaves buildings at their packed scale", () => {
+  it("scales buildings by one flat multiplier", () => {
     for (const u of units.filter((x) => x.kind === "building")) {
-      expect(unitSizeMult(u)).toBe(1);
-      expect(unitDrawScale(u)).toBe(u.displayScale);
+      expect(unitSizeMult(u)).toBe(BUILDING_SIZE_MULT);
+      expect(unitDrawScale(u)).toBeCloseTo(u.displayScale * BUILDING_SIZE_MULT, 9);
     }
   });
 

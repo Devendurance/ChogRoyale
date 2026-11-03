@@ -1,0 +1,4576 @@
+{
+ "report": [
+  {
+   "view": "390x844-seat0",
+   "before": {
+    "board": {
+     "x": 0,
+     "y": 37.5,
+     "w": 390,
+     "h": 624
+    },
+    "canvas": {
+     "x": 0,
+     "y": 0,
+     "w": 390,
+     "h": 844
+    },
+    "tray": {
+     "x": 0,
+     "y": 693,
+     "w": 390,
+     "h": 151
+    },
+    "clock": {
+     "x": 306,
+     "y": 6,
+     "w": 76,
+     "h": 46.9
+    },
+    "crowns": [
+     {
+      "label": "Fixture blue crowns",
+      "crowns": "0",
+      "rect": {
+       "x": 346,
+       "y": 355.5,
+       "w": 40,
+       "h": 50
+      }
+     },
+     {
+      "label": "Fixture red crowns",
+      "crowns": "0",
+      "rect": {
+       "x": 346,
+       "y": 293.5,
+       "w": 40,
+       "h": 50
+      }
+     }
+    ],
+    "purpleHeader": [
+     "contents"
+    ],
+    "cssPerBoard": 0.78,
+    "camera": {
+     "zoom": 1.56,
+     "worldView": {
+      "x": 0,
+      "y": -48.1,
+      "w": 500,
+      "h": 1082.1
+     }
+    },
+    "backing": {
+     "w": 780,
+     "h": 1688
+    },
+    "units": [
+     {
+      "id": "boulderback",
+      "boardH": 78,
+      "cssH": 60.8
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 35.9
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 35.9
+     },
+     {
+      "id": "rift_runner",
+      "boardH": 60,
+      "cssH": 46.8
+     },
+     {
+      "id": "ember_mauler",
+      "boardH": 70,
+      "cssH": 54.6
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 35.9
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 35.9
+     }
+    ],
+    "mounts": [
+     {
+      "key": "king-red:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 119.8,
+      "cssH": 149.8
+     },
+     {
+      "key": "king-red:defender-aim-south",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 119.8,
+      "cssH": 149.8
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "lane-red:defender-aim-south",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "lane-red:defender-aim-south",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "lane-blue:defender-aim-north",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "lane-blue:defender-aim-north",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "king-blue:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 119.8,
+      "cssH": 149.8
+     },
+     {
+      "key": "king-blue:defender-aim-north",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 119.8,
+      "cssH": 149.8
+     }
+    ],
+    "doc": {
+     "scrollW": 390,
+     "scrollH": 844,
+     "vw": 390,
+     "vh": 844
+    }
+   },
+   "after": {
+    "board": {
+     "x": 0,
+     "y": 37.5,
+     "w": 390,
+     "h": 624
+    },
+    "canvas": {
+     "x": 0,
+     "y": 0,
+     "w": 390,
+     "h": 844
+    },
+    "tray": {
+     "x": 0,
+     "y": 693,
+     "w": 390,
+     "h": 151
+    },
+    "clock": {
+     "x": 306,
+     "y": 6,
+     "w": 76,
+     "h": 46.9
+    },
+    "crowns": [
+     {
+      "label": "Fixture blue crowns",
+      "crowns": "1",
+      "rect": {
+       "x": 346,
+       "y": 355.5,
+       "w": 40,
+       "h": 50
+      }
+     },
+     {
+      "label": "Fixture red crowns",
+      "crowns": "1",
+      "rect": {
+       "x": 346,
+       "y": 293.5,
+       "w": 40,
+       "h": 50
+      }
+     }
+    ],
+    "purpleHeader": [
+     "contents"
+    ],
+    "cssPerBoard": 0.78,
+    "camera": {
+     "zoom": 1.56,
+     "worldView": {
+      "x": 0,
+      "y": -48.1,
+      "w": 500,
+      "h": 1082.1
+     }
+    },
+    "backing": {
+     "w": 780,
+     "h": 1688
+    },
+    "units": [
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 35.9
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 35.9
+     },
+     {
+      "id": "boulderback",
+      "boardH": 78,
+      "cssH": 60.8
+     },
+     {
+      "id": "chaos_archer",
+      "boardH": 60,
+      "cssH": 46.8
+     },
+     {
+      "id": "chaos_archer",
+      "boardH": 60,
+      "cssH": 46.8
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 35.9
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 35.9
+     }
+    ],
+    "mounts": [
+     {
+      "key": "king-red:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 119.8,
+      "cssH": 149.8
+     },
+     {
+      "key": "king-red:defender-aim-south",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 119.8,
+      "cssH": 149.8
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "lane-red:defender-aim-south",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "lane-blue:defender-aim-north",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "king-blue:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 119.8,
+      "cssH": 149.8
+     },
+     {
+      "key": "king-blue:defender-aim-north",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 119.8,
+      "cssH": 149.8
+     }
+    ],
+    "doc": {
+     "scrollW": 390,
+     "scrollH": 844,
+     "vw": 390,
+     "vh": 844
+    }
+   },
+   "combat": {
+    "board": {
+     "x": 0,
+     "y": 37.5,
+     "w": 390,
+     "h": 624
+    },
+    "canvas": {
+     "x": 0,
+     "y": 0,
+     "w": 390,
+     "h": 844
+    },
+    "tray": {
+     "x": 0,
+     "y": 693,
+     "w": 390,
+     "h": 151
+    },
+    "clock": {
+     "x": 306,
+     "y": 6,
+     "w": 76,
+     "h": 46.9
+    },
+    "crowns": [
+     {
+      "label": "Fixture blue crowns",
+      "crowns": "2",
+      "rect": {
+       "x": 346,
+       "y": 355.5,
+       "w": 40,
+       "h": 50
+      }
+     },
+     {
+      "label": "Fixture red crowns",
+      "crowns": "1",
+      "rect": {
+       "x": 346,
+       "y": 293.5,
+       "w": 40,
+       "h": 50
+      }
+     }
+    ],
+    "purpleHeader": [
+     "contents"
+    ],
+    "cssPerBoard": 0.78,
+    "camera": {
+     "zoom": 1.56,
+     "worldView": {
+      "x": 0,
+      "y": -48.1,
+      "w": 500,
+      "h": 1082.1
+     }
+    },
+    "backing": {
+     "w": 780,
+     "h": 1688
+    },
+    "units": [
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 35.9
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 35.9
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 35.9
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 35.9
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 35.9
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 35.9
+     },
+     {
+      "id": "riftbreaker",
+      "boardH": 70,
+      "cssH": 54.6
+     },
+     {
+      "id": "rift_sprites",
+      "boardH": 44,
+      "cssH": 34.3
+     },
+     {
+      "id": "rift_sprites",
+      "boardH": 44,
+      "cssH": 34.3
+     }
+    ],
+    "mounts": [
+     {
+      "key": "king-red:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 119.8,
+      "cssH": 149.8
+     },
+     {
+      "key": "king-red:defender-aim-south",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 119.8,
+      "cssH": 149.8
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "lane-blue:defender-aim-north",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "king-blue:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 119.8,
+      "cssH": 149.8
+     },
+     {
+      "key": "king-blue:defender-aim-north",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 119.8,
+      "cssH": 149.8
+     }
+    ],
+    "doc": {
+     "scrollW": 390,
+     "scrollH": 844,
+     "vw": 390,
+     "vh": 844
+    }
+   },
+   "flights": [
+    {
+     "cls": "chud-crown-flight",
+     "team": "theirs",
+     "left": "117px",
+     "top": "505.5px",
+     "at": 13976
+    },
+    {
+     "cls": "chud-crown-flight",
+     "team": "mine",
+     "left": "273px",
+     "top": "193.5px",
+     "at": 14484
+    },
+    {
+     "cls": "chud-crown-plus",
+     "team": "theirs",
+     "left": "366px",
+     "top": "347.5px",
+     "at": 15369
+    },
+    {
+     "cls": "chud-crown-plus",
+     "team": "mine",
+     "left": "366px",
+     "top": "409.5px",
+     "at": 16442
+    }
+   ],
+   "input": {
+    "pts": [
+     {
+      "f": [
+       0.3,
+       0.75
+      ],
+      "at": {
+       "x": 30,
+       "y": 40
+      }
+     },
+     {
+      "f": [
+       0.7,
+       0.75
+      ],
+      "at": {
+       "x": 70,
+       "y": 40
+      }
+     },
+     {
+      "f": [
+       0.5,
+       0.5
+      ],
+      "at": {
+       "x": 50,
+       "y": 80
+      }
+     },
+     {
+      "f": [
+       0.02,
+       0.98
+      ],
+      "at": {
+       "x": 2,
+       "y": 3
+      }
+     }
+    ],
+    "offBoard": null,
+    "board": [
+     0,
+     37.5,
+     390,
+     624
+    ]
+   },
+   "dragTarget": {
+    "x": 117,
+    "y": 474.29999999999995
+   },
+   "intents": [
+    {
+     "type": "deploy",
+     "cardId": "chog_burrow",
+     "x": 30,
+     "y": 48
+    }
+   ]
+  },
+  {
+   "view": "390x844-seat1",
+   "before": {
+    "board": {
+     "x": 0,
+     "y": 37.5,
+     "w": 390,
+     "h": 624
+    },
+    "canvas": {
+     "x": 0,
+     "y": 0,
+     "w": 390,
+     "h": 844
+    },
+    "tray": {
+     "x": 0,
+     "y": 693,
+     "w": 390,
+     "h": 151
+    },
+    "clock": {
+     "x": 306,
+     "y": 6,
+     "w": 76,
+     "h": 46.9
+    },
+    "crowns": [
+     {
+      "label": "Fixture blue crowns",
+      "crowns": "0",
+      "rect": {
+       "x": 346,
+       "y": 355.5,
+       "w": 40,
+       "h": 50
+      }
+     },
+     {
+      "label": "Fixture blue crowns",
+      "crowns": "0",
+      "rect": {
+       "x": 346,
+       "y": 293.5,
+       "w": 40,
+       "h": 50
+      }
+     }
+    ],
+    "purpleHeader": [
+     "contents"
+    ],
+    "cssPerBoard": 0.78,
+    "camera": {
+     "zoom": 1.56,
+     "worldView": {
+      "x": 0,
+      "y": -48.1,
+      "w": 500,
+      "h": 1082.1
+     }
+    },
+    "backing": {
+     "w": 780,
+     "h": 1688
+    },
+    "units": [
+     {
+      "id": "ember_mauler",
+      "boardH": 70,
+      "cssH": 54.6
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 35.9
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 35.9
+     },
+     {
+      "id": "rift_runner",
+      "boardH": 60,
+      "cssH": 46.8
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 35.9
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 35.9
+     },
+     {
+      "id": "boulderback",
+      "boardH": 78,
+      "cssH": 60.8
+     }
+    ],
+    "mounts": [
+     {
+      "key": "king-red:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 119.8,
+      "cssH": 149.8
+     },
+     {
+      "key": "king-red:defender-aim-south",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 119.8,
+      "cssH": 149.8
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "lane-red:defender-aim-south",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "lane-red:defender-aim-south",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "lane-blue:defender-aim-north",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "lane-blue:defender-aim-north",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "king-blue:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 119.8,
+      "cssH": 149.8
+     },
+     {
+      "key": "king-blue:defender-aim-north",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 119.8,
+      "cssH": 149.8
+     }
+    ],
+    "doc": {
+     "scrollW": 390,
+     "scrollH": 844,
+     "vw": 390,
+     "vh": 844
+    }
+   },
+   "after": {
+    "board": {
+     "x": 0,
+     "y": 37.5,
+     "w": 390,
+     "h": 624
+    },
+    "canvas": {
+     "x": 0,
+     "y": 0,
+     "w": 390,
+     "h": 844
+    },
+    "tray": {
+     "x": 0,
+     "y": 693,
+     "w": 390,
+     "h": 151
+    },
+    "clock": {
+     "x": 306,
+     "y": 6,
+     "w": 76,
+     "h": 46.9
+    },
+    "crowns": [
+     {
+      "label": "Fixture blue crowns",
+      "crowns": "1",
+      "rect": {
+       "x": 346,
+       "y": 355.5,
+       "w": 40,
+       "h": 50
+      }
+     },
+     {
+      "label": "Fixture blue crowns",
+      "crowns": "1",
+      "rect": {
+       "x": 346,
+       "y": 293.5,
+       "w": 40,
+       "h": 50
+      }
+     }
+    ],
+    "purpleHeader": [
+     "contents"
+    ],
+    "cssPerBoard": 0.78,
+    "camera": {
+     "zoom": 1.56,
+     "worldView": {
+      "x": 0,
+      "y": -48.1,
+      "w": 500,
+      "h": 1082.1
+     }
+    },
+    "backing": {
+     "w": 780,
+     "h": 1688
+    },
+    "units": [
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 35.9
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 35.9
+     },
+     {
+      "id": "chaos_archer",
+      "boardH": 60,
+      "cssH": 46.8
+     },
+     {
+      "id": "chaos_archer",
+      "boardH": 60,
+      "cssH": 46.8
+     },
+     {
+      "id": "boulderback",
+      "boardH": 78,
+      "cssH": 60.8
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 35.9
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 35.9
+     }
+    ],
+    "mounts": [
+     {
+      "key": "king-red:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 119.8,
+      "cssH": 149.8
+     },
+     {
+      "key": "king-red:defender-aim-south",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 119.8,
+      "cssH": 149.8
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "lane-red:defender-aim-south",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "lane-blue:defender-aim-north",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "king-blue:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 119.8,
+      "cssH": 149.8
+     },
+     {
+      "key": "king-blue:defender-aim-north",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 119.8,
+      "cssH": 149.8
+     }
+    ],
+    "doc": {
+     "scrollW": 390,
+     "scrollH": 844,
+     "vw": 390,
+     "vh": 844
+    }
+   },
+   "combat": {
+    "board": {
+     "x": 0,
+     "y": 37.5,
+     "w": 390,
+     "h": 624
+    },
+    "canvas": {
+     "x": 0,
+     "y": 0,
+     "w": 390,
+     "h": 844
+    },
+    "tray": {
+     "x": 0,
+     "y": 693,
+     "w": 390,
+     "h": 151
+    },
+    "clock": {
+     "x": 306,
+     "y": 6,
+     "w": 76,
+     "h": 46.9
+    },
+    "crowns": [
+     {
+      "label": "Fixture blue crowns",
+      "crowns": "1",
+      "rect": {
+       "x": 346,
+       "y": 355.5,
+       "w": 40,
+       "h": 50
+      }
+     },
+     {
+      "label": "Fixture blue crowns",
+      "crowns": "2",
+      "rect": {
+       "x": 346,
+       "y": 293.5,
+       "w": 40,
+       "h": 50
+      }
+     }
+    ],
+    "purpleHeader": [
+     "contents"
+    ],
+    "cssPerBoard": 0.78,
+    "camera": {
+     "zoom": 1.56,
+     "worldView": {
+      "x": 0,
+      "y": -48.1,
+      "w": 500,
+      "h": 1082.1
+     }
+    },
+    "backing": {
+     "w": 780,
+     "h": 1688
+    },
+    "units": [
+     {
+      "id": "riftbreaker",
+      "boardH": 70,
+      "cssH": 54.6
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 35.9
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 35.9
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 35.9
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 35.9
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 35.9
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 35.9
+     },
+     {
+      "id": "rift_sprites",
+      "boardH": 44,
+      "cssH": 34.3
+     },
+     {
+      "id": "rift_sprites",
+      "boardH": 44,
+      "cssH": 34.3
+     }
+    ],
+    "mounts": [
+     {
+      "key": "king-red:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 119.8,
+      "cssH": 149.8
+     },
+     {
+      "key": "king-red:defender-aim-south",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 119.8,
+      "cssH": 149.8
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "lane-red:defender-aim-south",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 129.8,
+      "cssH": 162.2
+     },
+     {
+      "key": "king-blue:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 119.8,
+      "cssH": 149.8
+     },
+     {
+      "key": "king-blue:defender-aim-north",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 119.8,
+      "cssH": 149.8
+     }
+    ],
+    "doc": {
+     "scrollW": 390,
+     "scrollH": 844,
+     "vw": 390,
+     "vh": 844
+    }
+   },
+   "flights": [
+    {
+     "cls": "chud-crown-flight",
+     "team": "mine",
+     "left": "117px",
+     "top": "193.5px",
+     "at": 13536
+    },
+    {
+     "cls": "chud-crown-flight",
+     "team": "theirs",
+     "left": "273px",
+     "top": "505.5px",
+     "at": 14162
+    },
+    {
+     "cls": "chud-crown-plus",
+     "team": "mine",
+     "left": "366px",
+     "top": "409.5px",
+     "at": 14995
+    },
+    {
+     "cls": "chud-crown-plus",
+     "team": "theirs",
+     "left": "366px",
+     "top": "347.5px",
+     "at": 16125
+    }
+   ],
+   "input": {
+    "pts": [
+     {
+      "f": [
+       0.3,
+       0.75
+      ],
+      "at": {
+       "x": 30,
+       "y": 120
+      }
+     },
+     {
+      "f": [
+       0.7,
+       0.75
+      ],
+      "at": {
+       "x": 70,
+       "y": 120
+      }
+     },
+     {
+      "f": [
+       0.5,
+       0.5
+      ],
+      "at": {
+       "x": 50,
+       "y": 80
+      }
+     },
+     {
+      "f": [
+       0.02,
+       0.98
+      ],
+      "at": {
+       "x": 2,
+       "y": 157
+      }
+     }
+    ],
+    "offBoard": null,
+    "board": [
+     0,
+     37.5,
+     390,
+     624
+    ]
+   },
+   "dragTarget": {
+    "x": 117,
+    "y": 474.29999999999995
+   },
+   "intents": [
+    {
+     "type": "deploy",
+     "cardId": "frostshell",
+     "x": 30,
+     "y": 112
+    }
+   ]
+  },
+  {
+   "view": "430x932-seat0",
+   "before": {
+    "board": {
+     "x": 0,
+     "y": 43,
+     "w": 430,
+     "h": 688
+    },
+    "canvas": {
+     "x": 0,
+     "y": 0,
+     "w": 430,
+     "h": 932
+    },
+    "tray": {
+     "x": 0,
+     "y": 767.7,
+     "w": 430,
+     "h": 164.3
+    },
+    "clock": {
+     "x": 346,
+     "y": 6,
+     "w": 76,
+     "h": 46.9
+    },
+    "crowns": [
+     {
+      "label": "Fixture blue crowns",
+      "crowns": "0",
+      "rect": {
+       "x": 386,
+       "y": 393,
+       "w": 40,
+       "h": 50
+      }
+     },
+     {
+      "label": "Fixture red crowns",
+      "crowns": "0",
+      "rect": {
+       "x": 386,
+       "y": 331,
+       "w": 40,
+       "h": 50
+      }
+     }
+    ],
+    "purpleHeader": [
+     "contents"
+    ],
+    "cssPerBoard": 0.86,
+    "camera": {
+     "zoom": 1.72,
+     "worldView": {
+      "x": 0,
+      "y": -50,
+      "w": 500,
+      "h": 1083.7
+     }
+    },
+    "backing": {
+     "w": 860,
+     "h": 1864
+    },
+    "units": [
+     {
+      "id": "boulderback",
+      "boardH": 78,
+      "cssH": 67.1
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 39.6
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 39.6
+     },
+     {
+      "id": "rift_runner",
+      "boardH": 60,
+      "cssH": 51.6
+     },
+     {
+      "id": "ember_mauler",
+      "boardH": 70,
+      "cssH": 60.2
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 39.6
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 39.6
+     }
+    ],
+    "mounts": [
+     {
+      "key": "king-red:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 132.1,
+      "cssH": 165.1
+     },
+     {
+      "key": "king-red:defender-aim-south",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 132.1,
+      "cssH": 165.1
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 143.1,
+      "cssH": 178.9
+     },
+     {
+      "key": "lane-red:defender-aim-south",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 143.1,
+      "cssH": 178.9
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 143.1,
+      "cssH": 178.9
+     },
+     {
+      "key": "lane-red:defender-aim-south",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 143.1,
+      "cssH": 178.9
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 143.1,
+      "cssH": 178.9
+     },
+     {
+      "key": "lane-blue:defender-aim-north",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 143.1,
+      "cssH": 178.9
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 143.1,
+      "cssH": 178.9
+     },
+     {
+      "key": "lane-blue:defender-aim-north",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 143.1,
+      "cssH": 178.9
+     },
+     {
+      "key": "king-blue:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 132.1,
+      "cssH": 165.1
+     },
+     {
+      "key": "king-blue:defender-aim-north",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 132.1,
+      "cssH": 165.1
+     }
+    ],
+    "doc": {
+     "scrollW": 430,
+     "scrollH": 932,
+     "vw": 430,
+     "vh": 932
+    }
+   },
+   "after": {
+    "board": {
+     "x": 0,
+     "y": 43,
+     "w": 430,
+     "h": 688
+    },
+    "canvas": {
+     "x": 0,
+     "y": 0,
+     "w": 430,
+     "h": 932
+    },
+    "tray": {
+     "x": 0,
+     "y": 767.7,
+     "w": 430,
+     "h": 164.3
+    },
+    "clock": {
+     "x": 346,
+     "y": 6,
+     "w": 76,
+     "h": 46.9
+    },
+    "crowns": [
+     {
+      "label": "Fixture blue crowns",
+      "crowns": "1",
+      "rect": {
+       "x": 386,
+       "y": 393,
+       "w": 40,
+       "h": 50
+      }
+     },
+     {
+      "label": "Fixture red crowns",
+      "crowns": "1",
+      "rect": {
+       "x": 386,
+       "y": 331,
+       "w": 40,
+       "h": 50
+      }
+     }
+    ],
+    "purpleHeader": [
+     "contents"
+    ],
+    "cssPerBoard": 0.86,
+    "camera": {
+     "zoom": 1.72,
+     "worldView": {
+      "x": 0,
+      "y": -50,
+      "w": 500,
+      "h": 1083.7
+     }
+    },
+    "backing": {
+     "w": 860,
+     "h": 1864
+    },
+    "units": [
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 39.6
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 39.6
+     },
+     {
+      "id": "boulderback",
+      "boardH": 78,
+      "cssH": 67.1
+     },
+     {
+      "id": "chaos_archer",
+      "boardH": 60,
+      "cssH": 51.6
+     },
+     {
+      "id": "chaos_archer",
+      "boardH": 60,
+      "cssH": 51.6
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 39.6
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 39.6
+     }
+    ],
+    "mounts": [
+     {
+      "key": "king-red:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 132.1,
+      "cssH": 165.1
+     },
+     {
+      "key": "king-red:defender-aim-south",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 132.1,
+      "cssH": 165.1
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 143.1,
+      "cssH": 178.9
+     },
+     {
+      "key": "lane-red:defender-aim-south",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 143.1,
+      "cssH": 178.9
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 143.1,
+      "cssH": 178.9
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 143.1,
+      "cssH": 178.9
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 143.1,
+      "cssH": 178.9
+     },
+     {
+      "key": "lane-blue:defender-aim-north",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 143.1,
+      "cssH": 178.9
+     },
+     {
+      "key": "king-blue:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 132.1,
+      "cssH": 165.1
+     },
+     {
+      "key": "king-blue:defender-aim-north",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 132.1,
+      "cssH": 165.1
+     }
+    ],
+    "doc": {
+     "scrollW": 430,
+     "scrollH": 932,
+     "vw": 430,
+     "vh": 932
+    }
+   },
+   "combat": {
+    "board": {
+     "x": 0,
+     "y": 43,
+     "w": 430,
+     "h": 688
+    },
+    "canvas": {
+     "x": 0,
+     "y": 0,
+     "w": 430,
+     "h": 932
+    },
+    "tray": {
+     "x": 0,
+     "y": 767.7,
+     "w": 430,
+     "h": 164.3
+    },
+    "clock": {
+     "x": 346,
+     "y": 6,
+     "w": 76,
+     "h": 46.9
+    },
+    "crowns": [
+     {
+      "label": "Fixture blue crowns",
+      "crowns": "2",
+      "rect": {
+       "x": 386,
+       "y": 393,
+       "w": 40,
+       "h": 50
+      }
+     },
+     {
+      "label": "Fixture red crowns",
+      "crowns": "1",
+      "rect": {
+       "x": 386,
+       "y": 331,
+       "w": 40,
+       "h": 50
+      }
+     }
+    ],
+    "purpleHeader": [
+     "contents"
+    ],
+    "cssPerBoard": 0.86,
+    "camera": {
+     "zoom": 1.72,
+     "worldView": {
+      "x": 0,
+      "y": -50,
+      "w": 500,
+      "h": 1083.7
+     }
+    },
+    "backing": {
+     "w": 860,
+     "h": 1864
+    },
+    "units": [
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 39.6
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 39.6
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 39.6
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 39.6
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 39.6
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 39.6
+     },
+     {
+      "id": "riftbreaker",
+      "boardH": 70,
+      "cssH": 60.2
+     },
+     {
+      "id": "rift_sprites",
+      "boardH": 44,
+      "cssH": 37.8
+     },
+     {
+      "id": "rift_sprites",
+      "boardH": 44,
+      "cssH": 37.8
+     }
+    ],
+    "mounts": [
+     {
+      "key": "king-red:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 132.1,
+      "cssH": 165.1
+     },
+     {
+      "key": "king-red:defender-aim-south",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 132.1,
+      "cssH": 165.1
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 143.1,
+      "cssH": 178.9
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 143.1,
+      "cssH": 178.9
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 143.1,
+      "cssH": 178.9
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 143.1,
+      "cssH": 178.9
+     },
+     {
+      "key": "lane-blue:defender-aim-north",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 143.1,
+      "cssH": 178.9
+     },
+     {
+      "key": "king-blue:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 132.1,
+      "cssH": 165.1
+     },
+     {
+      "key": "king-blue:defender-aim-north",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 132.1,
+      "cssH": 165.1
+     }
+    ],
+    "doc": {
+     "scrollW": 430,
+     "scrollH": 932,
+     "vw": 430,
+     "vh": 932
+    }
+   },
+   "flights": [
+    {
+     "cls": "chud-crown-flight",
+     "team": "theirs",
+     "left": "129px",
+     "top": "559px",
+     "at": 11303
+    },
+    {
+     "cls": "chud-crown-flight",
+     "team": "mine",
+     "left": "301px",
+     "top": "215px",
+     "at": 11810
+    },
+    {
+     "cls": "chud-crown-plus",
+     "team": "theirs",
+     "left": "406px",
+     "top": "385px",
+     "at": 13500
+    },
+    {
+     "cls": "chud-crown-plus",
+     "team": "mine",
+     "left": "406px",
+     "top": "447px",
+     "at": 13500
+    }
+   ],
+   "input": {
+    "pts": [
+     {
+      "f": [
+       0.3,
+       0.75
+      ],
+      "at": {
+       "x": 30,
+       "y": 40
+      }
+     },
+     {
+      "f": [
+       0.7,
+       0.75
+      ],
+      "at": {
+       "x": 70,
+       "y": 40
+      }
+     },
+     {
+      "f": [
+       0.5,
+       0.5
+      ],
+      "at": {
+       "x": 50,
+       "y": 80
+      }
+     },
+     {
+      "f": [
+       0.02,
+       0.98
+      ],
+      "at": {
+       "x": 2,
+       "y": 3
+      }
+     }
+    ],
+    "offBoard": null,
+    "board": [
+     0,
+     43,
+     430,
+     688
+    ]
+   },
+   "dragTarget": {
+    "x": 129,
+    "y": 524.5999999999999
+   },
+   "intents": [
+    {
+     "type": "deploy",
+     "cardId": "chog_burrow",
+     "x": 30,
+     "y": 48
+    }
+   ]
+  },
+  {
+   "view": "768x1024-seat0",
+   "before": {
+    "board": {
+     "x": 136.5,
+     "y": 6,
+     "w": 495,
+     "h": 792
+    },
+    "canvas": {
+     "x": 0,
+     "y": 0,
+     "w": 768,
+     "h": 1024
+    },
+    "tray": {
+     "x": 0,
+     "y": 798,
+     "w": 768,
+     "h": 226
+    },
+    "clock": {
+     "x": 664,
+     "y": 6,
+     "w": 96,
+     "h": 52.9
+    },
+    "crowns": [
+     {
+      "label": "Fixture blue crowns",
+      "crowns": "0",
+      "rect": {
+       "x": 716,
+       "y": 408,
+       "w": 48,
+       "h": 60
+      }
+     },
+     {
+      "label": "Fixture red crowns",
+      "crowns": "0",
+      "rect": {
+       "x": 716,
+       "y": 346,
+       "w": 48,
+       "h": 60
+      }
+     }
+    ],
+    "purpleHeader": [
+     "contents"
+    ],
+    "cssPerBoard": 0.99,
+    "camera": {
+     "zoom": 1.98,
+     "worldView": {
+      "x": -137.9,
+      "y": -6.1,
+      "w": 775.8,
+      "h": 1034.3
+     }
+    },
+    "backing": {
+     "w": 1536,
+     "h": 2048
+    },
+    "units": [
+     {
+      "id": "boulderback",
+      "boardH": 78,
+      "cssH": 77.2
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 45.5
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 45.5
+     },
+     {
+      "id": "rift_runner",
+      "boardH": 60,
+      "cssH": 59.4
+     },
+     {
+      "id": "ember_mauler",
+      "boardH": 70,
+      "cssH": 69.3
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 45.5
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 45.5
+     }
+    ],
+    "mounts": [
+     {
+      "key": "king-red:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 152.1,
+      "cssH": 190.1
+     },
+     {
+      "key": "king-red:defender-aim-south",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 152.1,
+      "cssH": 190.1
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "lane-red:defender-aim-south",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "lane-red:defender-aim-south",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "lane-blue:defender-aim-north",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "lane-blue:defender-aim-north",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "king-blue:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 152.1,
+      "cssH": 190.1
+     },
+     {
+      "key": "king-blue:defender-aim-north",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 152.1,
+      "cssH": 190.1
+     }
+    ],
+    "doc": {
+     "scrollW": 768,
+     "scrollH": 1024,
+     "vw": 768,
+     "vh": 1024
+    }
+   },
+   "after": {
+    "board": {
+     "x": 136.5,
+     "y": 6,
+     "w": 495,
+     "h": 792
+    },
+    "canvas": {
+     "x": 0,
+     "y": 0,
+     "w": 768,
+     "h": 1024
+    },
+    "tray": {
+     "x": 0,
+     "y": 798,
+     "w": 768,
+     "h": 226
+    },
+    "clock": {
+     "x": 664,
+     "y": 6,
+     "w": 96,
+     "h": 52.9
+    },
+    "crowns": [
+     {
+      "label": "Fixture blue crowns",
+      "crowns": "1",
+      "rect": {
+       "x": 716,
+       "y": 408,
+       "w": 48,
+       "h": 60
+      }
+     },
+     {
+      "label": "Fixture red crowns",
+      "crowns": "1",
+      "rect": {
+       "x": 716,
+       "y": 346,
+       "w": 48,
+       "h": 60
+      }
+     }
+    ],
+    "purpleHeader": [
+     "contents"
+    ],
+    "cssPerBoard": 0.99,
+    "camera": {
+     "zoom": 1.98,
+     "worldView": {
+      "x": -137.9,
+      "y": -6.1,
+      "w": 775.8,
+      "h": 1034.3
+     }
+    },
+    "backing": {
+     "w": 1536,
+     "h": 2048
+    },
+    "units": [
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 45.5
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 45.5
+     },
+     {
+      "id": "boulderback",
+      "boardH": 78,
+      "cssH": 77.2
+     },
+     {
+      "id": "chaos_archer",
+      "boardH": 60,
+      "cssH": 59.4
+     },
+     {
+      "id": "chaos_archer",
+      "boardH": 60,
+      "cssH": 59.4
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 45.5
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 45.5
+     }
+    ],
+    "mounts": [
+     {
+      "key": "king-red:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 152.1,
+      "cssH": 190.1
+     },
+     {
+      "key": "king-red:defender-aim-south",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 152.1,
+      "cssH": 190.1
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "lane-red:defender-aim-south",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "lane-blue:defender-aim-north",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "king-blue:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 152.1,
+      "cssH": 190.1
+     },
+     {
+      "key": "king-blue:defender-aim-north",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 152.1,
+      "cssH": 190.1
+     }
+    ],
+    "doc": {
+     "scrollW": 768,
+     "scrollH": 1024,
+     "vw": 768,
+     "vh": 1024
+    }
+   },
+   "combat": {
+    "board": {
+     "x": 136.5,
+     "y": 6,
+     "w": 495,
+     "h": 792
+    },
+    "canvas": {
+     "x": 0,
+     "y": 0,
+     "w": 768,
+     "h": 1024
+    },
+    "tray": {
+     "x": 0,
+     "y": 798,
+     "w": 768,
+     "h": 226
+    },
+    "clock": {
+     "x": 664,
+     "y": 6,
+     "w": 96,
+     "h": 52.9
+    },
+    "crowns": [
+     {
+      "label": "Fixture blue crowns",
+      "crowns": "2",
+      "rect": {
+       "x": 716,
+       "y": 408,
+       "w": 48,
+       "h": 60
+      }
+     },
+     {
+      "label": "Fixture red crowns",
+      "crowns": "1",
+      "rect": {
+       "x": 716,
+       "y": 346,
+       "w": 48,
+       "h": 60
+      }
+     }
+    ],
+    "purpleHeader": [
+     "contents"
+    ],
+    "cssPerBoard": 0.99,
+    "camera": {
+     "zoom": 1.98,
+     "worldView": {
+      "x": -137.9,
+      "y": -6.1,
+      "w": 775.8,
+      "h": 1034.3
+     }
+    },
+    "backing": {
+     "w": 1536,
+     "h": 2048
+    },
+    "units": [
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 45.5
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 45.5
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 45.5
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 45.5
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 45.5
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 45.5
+     },
+     {
+      "id": "riftbreaker",
+      "boardH": 70,
+      "cssH": 69.3
+     },
+     {
+      "id": "rift_sprites",
+      "boardH": 44,
+      "cssH": 43.6
+     },
+     {
+      "id": "rift_sprites",
+      "boardH": 44,
+      "cssH": 43.6
+     }
+    ],
+    "mounts": [
+     {
+      "key": "king-red:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 152.1,
+      "cssH": 190.1
+     },
+     {
+      "key": "king-red:defender-aim-south",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 152.1,
+      "cssH": 190.1
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "lane-blue:defender-aim-north",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "king-blue:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 152.1,
+      "cssH": 190.1
+     },
+     {
+      "key": "king-blue:defender-aim-north",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 152.1,
+      "cssH": 190.1
+     }
+    ],
+    "doc": {
+     "scrollW": 768,
+     "scrollH": 1024,
+     "vw": 768,
+     "vh": 1024
+    }
+   },
+   "flights": [
+    {
+     "cls": "chud-crown-flight",
+     "team": "theirs",
+     "left": "285px",
+     "top": "600px",
+     "at": 18012
+    },
+    {
+     "cls": "chud-crown-flight",
+     "team": "mine",
+     "left": "483px",
+     "top": "204px",
+     "at": 18447
+    },
+    {
+     "cls": "chud-crown-plus",
+     "team": "theirs",
+     "left": "740px",
+     "top": "410px",
+     "at": 19444
+    },
+    {
+     "cls": "chud-crown-plus",
+     "team": "mine",
+     "left": "740px",
+     "top": "472px",
+     "at": 20600
+    }
+   ],
+   "input": {
+    "pts": [
+     {
+      "f": [
+       0.3,
+       0.75
+      ],
+      "at": {
+       "x": 30,
+       "y": 40
+      }
+     },
+     {
+      "f": [
+       0.7,
+       0.75
+      ],
+      "at": {
+       "x": 70,
+       "y": 40
+      }
+     },
+     {
+      "f": [
+       0.5,
+       0.5
+      ],
+      "at": {
+       "x": 50,
+       "y": 80
+      }
+     },
+     {
+      "f": [
+       0.02,
+       0.98
+      ],
+      "at": {
+       "x": 2,
+       "y": 3
+      }
+     }
+    ],
+    "offBoard": null,
+    "board": [
+     136.5,
+     6,
+     495,
+     792
+    ]
+   },
+   "dragTarget": {
+    "x": 285,
+    "y": 560.4
+   },
+   "intents": [
+    {
+     "type": "deploy",
+     "cardId": "chog_burrow",
+     "x": 30,
+     "y": 48
+    }
+   ]
+  },
+  {
+   "view": "768x1024-seat1",
+   "before": {
+    "board": {
+     "x": 136.5,
+     "y": 6,
+     "w": 495,
+     "h": 792
+    },
+    "canvas": {
+     "x": 0,
+     "y": 0,
+     "w": 768,
+     "h": 1024
+    },
+    "tray": {
+     "x": 0,
+     "y": 798,
+     "w": 768,
+     "h": 226
+    },
+    "clock": {
+     "x": 664,
+     "y": 6,
+     "w": 96,
+     "h": 52.9
+    },
+    "crowns": [
+     {
+      "label": "Fixture blue crowns",
+      "crowns": "0",
+      "rect": {
+       "x": 716,
+       "y": 408,
+       "w": 48,
+       "h": 60
+      }
+     },
+     {
+      "label": "Fixture blue crowns",
+      "crowns": "0",
+      "rect": {
+       "x": 716,
+       "y": 346,
+       "w": 48,
+       "h": 60
+      }
+     }
+    ],
+    "purpleHeader": [
+     "contents"
+    ],
+    "cssPerBoard": 0.99,
+    "camera": {
+     "zoom": 1.98,
+     "worldView": {
+      "x": -137.9,
+      "y": -6.1,
+      "w": 775.8,
+      "h": 1034.3
+     }
+    },
+    "backing": {
+     "w": 1536,
+     "h": 2048
+    },
+    "units": [
+     {
+      "id": "ember_mauler",
+      "boardH": 70,
+      "cssH": 69.3
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 45.5
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 45.5
+     },
+     {
+      "id": "rift_runner",
+      "boardH": 60,
+      "cssH": 59.4
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 45.5
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 45.5
+     },
+     {
+      "id": "boulderback",
+      "boardH": 78,
+      "cssH": 77.2
+     }
+    ],
+    "mounts": [
+     {
+      "key": "king-red:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 152.1,
+      "cssH": 190.1
+     },
+     {
+      "key": "king-red:defender-aim-south",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 152.1,
+      "cssH": 190.1
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "lane-red:defender-aim-south",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "lane-red:defender-aim-south",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "lane-blue:defender-aim-north",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "lane-blue:defender-aim-north",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "king-blue:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 152.1,
+      "cssH": 190.1
+     },
+     {
+      "key": "king-blue:defender-aim-north",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 152.1,
+      "cssH": 190.1
+     }
+    ],
+    "doc": {
+     "scrollW": 768,
+     "scrollH": 1024,
+     "vw": 768,
+     "vh": 1024
+    }
+   },
+   "after": {
+    "board": {
+     "x": 136.5,
+     "y": 6,
+     "w": 495,
+     "h": 792
+    },
+    "canvas": {
+     "x": 0,
+     "y": 0,
+     "w": 768,
+     "h": 1024
+    },
+    "tray": {
+     "x": 0,
+     "y": 798,
+     "w": 768,
+     "h": 226
+    },
+    "clock": {
+     "x": 664,
+     "y": 6,
+     "w": 96,
+     "h": 52.9
+    },
+    "crowns": [
+     {
+      "label": "Fixture blue crowns",
+      "crowns": "1",
+      "rect": {
+       "x": 716,
+       "y": 408,
+       "w": 48,
+       "h": 60
+      }
+     },
+     {
+      "label": "Fixture blue crowns",
+      "crowns": "1",
+      "rect": {
+       "x": 716,
+       "y": 346,
+       "w": 48,
+       "h": 60
+      }
+     }
+    ],
+    "purpleHeader": [
+     "contents"
+    ],
+    "cssPerBoard": 0.99,
+    "camera": {
+     "zoom": 1.98,
+     "worldView": {
+      "x": -137.9,
+      "y": -6.1,
+      "w": 775.8,
+      "h": 1034.3
+     }
+    },
+    "backing": {
+     "w": 1536,
+     "h": 2048
+    },
+    "units": [
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 45.5
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 45.5
+     },
+     {
+      "id": "chaos_archer",
+      "boardH": 60,
+      "cssH": 59.4
+     },
+     {
+      "id": "chaos_archer",
+      "boardH": 60,
+      "cssH": 59.4
+     },
+     {
+      "id": "boulderback",
+      "boardH": 78,
+      "cssH": 77.2
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 45.5
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 45.5
+     }
+    ],
+    "mounts": [
+     {
+      "key": "king-red:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 152.1,
+      "cssH": 190.1
+     },
+     {
+      "key": "king-red:defender-aim-south",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 152.1,
+      "cssH": 190.1
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "lane-red:defender-aim-south",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "lane-blue:defender-aim-north",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "king-blue:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 152.1,
+      "cssH": 190.1
+     },
+     {
+      "key": "king-blue:defender-aim-north",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 152.1,
+      "cssH": 190.1
+     }
+    ],
+    "doc": {
+     "scrollW": 768,
+     "scrollH": 1024,
+     "vw": 768,
+     "vh": 1024
+    }
+   },
+   "combat": {
+    "board": {
+     "x": 136.5,
+     "y": 6,
+     "w": 495,
+     "h": 792
+    },
+    "canvas": {
+     "x": 0,
+     "y": 0,
+     "w": 768,
+     "h": 1024
+    },
+    "tray": {
+     "x": 0,
+     "y": 798,
+     "w": 768,
+     "h": 226
+    },
+    "clock": {
+     "x": 664,
+     "y": 6,
+     "w": 96,
+     "h": 52.9
+    },
+    "crowns": [
+     {
+      "label": "Fixture blue crowns",
+      "crowns": "1",
+      "rect": {
+       "x": 716,
+       "y": 408,
+       "w": 48,
+       "h": 60
+      }
+     },
+     {
+      "label": "Fixture blue crowns",
+      "crowns": "2",
+      "rect": {
+       "x": 716,
+       "y": 346,
+       "w": 48,
+       "h": 60
+      }
+     }
+    ],
+    "purpleHeader": [
+     "contents"
+    ],
+    "cssPerBoard": 0.99,
+    "camera": {
+     "zoom": 1.98,
+     "worldView": {
+      "x": -137.9,
+      "y": -6.1,
+      "w": 775.8,
+      "h": 1034.3
+     }
+    },
+    "backing": {
+     "w": 1536,
+     "h": 2048
+    },
+    "units": [
+     {
+      "id": "riftbreaker",
+      "boardH": 70,
+      "cssH": 69.3
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 45.5
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 45.5
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 45.5
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 45.5
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 45.5
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 45.5
+     },
+     {
+      "id": "rift_sprites",
+      "boardH": 44,
+      "cssH": 43.6
+     },
+     {
+      "id": "rift_sprites",
+      "boardH": 44,
+      "cssH": 43.6
+     }
+    ],
+    "mounts": [
+     {
+      "key": "king-red:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 152.1,
+      "cssH": 190.1
+     },
+     {
+      "key": "king-red:defender-aim-south",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 152.1,
+      "cssH": 190.1
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "lane-red:defender-aim-south",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 164.7,
+      "cssH": 205.9
+     },
+     {
+      "key": "king-blue:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 152.1,
+      "cssH": 190.1
+     },
+     {
+      "key": "king-blue:defender-aim-north",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 152.1,
+      "cssH": 190.1
+     }
+    ],
+    "doc": {
+     "scrollW": 768,
+     "scrollH": 1024,
+     "vw": 768,
+     "vh": 1024
+    }
+   },
+   "flights": [
+    {
+     "cls": "chud-crown-flight",
+     "team": "mine",
+     "left": "285px",
+     "top": "204px",
+     "at": 16284
+    },
+    {
+     "cls": "chud-crown-flight",
+     "team": "theirs",
+     "left": "483px",
+     "top": "600px",
+     "at": 16833
+    },
+    {
+     "cls": "chud-crown-plus",
+     "team": "mine",
+     "left": "740px",
+     "top": "472px",
+     "at": 18576
+    },
+    {
+     "cls": "chud-crown-plus",
+     "team": "theirs",
+     "left": "740px",
+     "top": "410px",
+     "at": 18576
+    }
+   ],
+   "input": {
+    "pts": [
+     {
+      "f": [
+       0.3,
+       0.75
+      ],
+      "at": {
+       "x": 30,
+       "y": 120
+      }
+     },
+     {
+      "f": [
+       0.7,
+       0.75
+      ],
+      "at": {
+       "x": 70,
+       "y": 120
+      }
+     },
+     {
+      "f": [
+       0.5,
+       0.5
+      ],
+      "at": {
+       "x": 50,
+       "y": 80
+      }
+     },
+     {
+      "f": [
+       0.02,
+       0.98
+      ],
+      "at": {
+       "x": 2,
+       "y": 157
+      }
+     }
+    ],
+    "offBoard": null,
+    "board": [
+     136.5,
+     6,
+     495,
+     792
+    ]
+   },
+   "dragTarget": {
+    "x": 285,
+    "y": 560.4
+   },
+   "intents": [
+    {
+     "type": "deploy",
+     "cardId": "frostshell",
+     "x": 30,
+     "y": 112
+    }
+   ]
+  },
+  {
+   "view": "820x1180-seat0",
+   "before": {
+    "board": {
+     "x": 113.8,
+     "y": 6,
+     "w": 592.5,
+     "h": 948
+    },
+    "canvas": {
+     "x": 0,
+     "y": 0,
+     "w": 820,
+     "h": 1180
+    },
+    "tray": {
+     "x": 0,
+     "y": 954,
+     "w": 820,
+     "h": 226
+    },
+    "clock": {
+     "x": 716,
+     "y": 6,
+     "w": 96,
+     "h": 52.9
+    },
+    "crowns": [
+     {
+      "label": "Fixture blue crowns",
+      "crowns": "0",
+      "rect": {
+       "x": 768,
+       "y": 486,
+       "w": 48,
+       "h": 60
+      }
+     },
+     {
+      "label": "Fixture red crowns",
+      "crowns": "0",
+      "rect": {
+       "x": 768,
+       "y": 424,
+       "w": 48,
+       "h": 60
+      }
+     }
+    ],
+    "purpleHeader": [
+     "contents"
+    ],
+    "cssPerBoard": 1.185,
+    "camera": {
+     "zoom": 2.37,
+     "worldView": {
+      "x": -96,
+      "y": -5.1,
+      "w": 692,
+      "h": 995.8
+     }
+    },
+    "backing": {
+     "w": 1640,
+     "h": 2360
+    },
+    "units": [
+     {
+      "id": "boulderback",
+      "boardH": 78,
+      "cssH": 92.4
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 54.5
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 54.5
+     },
+     {
+      "id": "rift_runner",
+      "boardH": 60,
+      "cssH": 71.1
+     },
+     {
+      "id": "ember_mauler",
+      "boardH": 70,
+      "cssH": 83
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 54.5
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 54.5
+     }
+    ],
+    "mounts": [
+     {
+      "key": "king-red:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 182,
+      "cssH": 227.5
+     },
+     {
+      "key": "king-red:defender-aim-south",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 182,
+      "cssH": 227.5
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 197.2,
+      "cssH": 246.5
+     },
+     {
+      "key": "lane-red:defender-aim-south",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 197.2,
+      "cssH": 246.5
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 197.2,
+      "cssH": 246.5
+     },
+     {
+      "key": "lane-red:defender-aim-south",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 197.2,
+      "cssH": 246.5
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 197.2,
+      "cssH": 246.5
+     },
+     {
+      "key": "lane-blue:defender-aim-north",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 197.2,
+      "cssH": 246.5
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 197.2,
+      "cssH": 246.5
+     },
+     {
+      "key": "lane-blue:defender-aim-north",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 197.2,
+      "cssH": 246.5
+     },
+     {
+      "key": "king-blue:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 182,
+      "cssH": 227.5
+     },
+     {
+      "key": "king-blue:defender-aim-north",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 182,
+      "cssH": 227.5
+     }
+    ],
+    "doc": {
+     "scrollW": 820,
+     "scrollH": 1180,
+     "vw": 820,
+     "vh": 1180
+    }
+   },
+   "after": {
+    "board": {
+     "x": 113.8,
+     "y": 6,
+     "w": 592.5,
+     "h": 948
+    },
+    "canvas": {
+     "x": 0,
+     "y": 0,
+     "w": 820,
+     "h": 1180
+    },
+    "tray": {
+     "x": 0,
+     "y": 954,
+     "w": 820,
+     "h": 226
+    },
+    "clock": {
+     "x": 716,
+     "y": 6,
+     "w": 96,
+     "h": 52.9
+    },
+    "crowns": [
+     {
+      "label": "Fixture blue crowns",
+      "crowns": "1",
+      "rect": {
+       "x": 768,
+       "y": 486,
+       "w": 48,
+       "h": 60
+      }
+     },
+     {
+      "label": "Fixture red crowns",
+      "crowns": "1",
+      "rect": {
+       "x": 768,
+       "y": 424,
+       "w": 48,
+       "h": 60
+      }
+     }
+    ],
+    "purpleHeader": [
+     "contents"
+    ],
+    "cssPerBoard": 1.185,
+    "camera": {
+     "zoom": 2.37,
+     "worldView": {
+      "x": -96,
+      "y": -5.1,
+      "w": 692,
+      "h": 995.8
+     }
+    },
+    "backing": {
+     "w": 1640,
+     "h": 2360
+    },
+    "units": [
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 54.5
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 54.5
+     },
+     {
+      "id": "boulderback",
+      "boardH": 78,
+      "cssH": 92.4
+     },
+     {
+      "id": "chaos_archer",
+      "boardH": 60,
+      "cssH": 71.1
+     },
+     {
+      "id": "chaos_archer",
+      "boardH": 60,
+      "cssH": 71.1
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 54.5
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 54.5
+     }
+    ],
+    "mounts": [
+     {
+      "key": "king-red:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 182,
+      "cssH": 227.5
+     },
+     {
+      "key": "king-red:defender-aim-south",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 182,
+      "cssH": 227.5
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 197.2,
+      "cssH": 246.5
+     },
+     {
+      "key": "lane-red:defender-aim-south",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 197.2,
+      "cssH": 246.5
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 197.2,
+      "cssH": 246.5
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 197.2,
+      "cssH": 246.5
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 197.2,
+      "cssH": 246.5
+     },
+     {
+      "key": "lane-blue:defender-aim-north",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 197.2,
+      "cssH": 246.5
+     },
+     {
+      "key": "king-blue:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 182,
+      "cssH": 227.5
+     },
+     {
+      "key": "king-blue:defender-aim-north",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 182,
+      "cssH": 227.5
+     }
+    ],
+    "doc": {
+     "scrollW": 820,
+     "scrollH": 1180,
+     "vw": 820,
+     "vh": 1180
+    }
+   },
+   "combat": {
+    "board": {
+     "x": 113.8,
+     "y": 6,
+     "w": 592.5,
+     "h": 948
+    },
+    "canvas": {
+     "x": 0,
+     "y": 0,
+     "w": 820,
+     "h": 1180
+    },
+    "tray": {
+     "x": 0,
+     "y": 954,
+     "w": 820,
+     "h": 226
+    },
+    "clock": {
+     "x": 716,
+     "y": 6,
+     "w": 96,
+     "h": 52.9
+    },
+    "crowns": [
+     {
+      "label": "Fixture blue crowns",
+      "crowns": "2",
+      "rect": {
+       "x": 768,
+       "y": 486,
+       "w": 48,
+       "h": 60
+      }
+     },
+     {
+      "label": "Fixture red crowns",
+      "crowns": "1",
+      "rect": {
+       "x": 768,
+       "y": 424,
+       "w": 48,
+       "h": 60
+      }
+     }
+    ],
+    "purpleHeader": [
+     "contents"
+    ],
+    "cssPerBoard": 1.185,
+    "camera": {
+     "zoom": 2.37,
+     "worldView": {
+      "x": -96,
+      "y": -5.1,
+      "w": 692,
+      "h": 995.8
+     }
+    },
+    "backing": {
+     "w": 1640,
+     "h": 2360
+    },
+    "units": [
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 54.5
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 54.5
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 54.5
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 54.5
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 54.5
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 54.5
+     },
+     {
+      "id": "riftbreaker",
+      "boardH": 70,
+      "cssH": 83
+     },
+     {
+      "id": "rift_sprites",
+      "boardH": 44,
+      "cssH": 52.1
+     },
+     {
+      "id": "rift_sprites",
+      "boardH": 44,
+      "cssH": 52.1
+     }
+    ],
+    "mounts": [
+     {
+      "key": "king-red:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 182,
+      "cssH": 227.5
+     },
+     {
+      "key": "king-red:defender-aim-south",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 182,
+      "cssH": 227.5
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 197.2,
+      "cssH": 246.5
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 197.2,
+      "cssH": 246.5
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 197.2,
+      "cssH": 246.5
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 197.2,
+      "cssH": 246.5
+     },
+     {
+      "key": "lane-blue:defender-aim-north",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 197.2,
+      "cssH": 246.5
+     },
+     {
+      "key": "king-blue:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 182,
+      "cssH": 227.5
+     },
+     {
+      "key": "king-blue:defender-aim-north",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 182,
+      "cssH": 227.5
+     }
+    ],
+    "doc": {
+     "scrollW": 820,
+     "scrollH": 1180,
+     "vw": 820,
+     "vh": 1180
+    }
+   },
+   "flights": [
+    {
+     "cls": "chud-crown-flight",
+     "team": "theirs",
+     "left": "291.5px",
+     "top": "717px",
+     "at": 13812
+    },
+    {
+     "cls": "chud-crown-flight",
+     "team": "mine",
+     "left": "528.5px",
+     "top": "243px",
+     "at": 14323
+    },
+    {
+     "cls": "chud-crown-plus",
+     "team": "theirs",
+     "left": "792px",
+     "top": "488px",
+     "at": 15191
+    },
+    {
+     "cls": "chud-crown-plus",
+     "team": "mine",
+     "left": "792px",
+     "top": "550px",
+     "at": 16275
+    }
+   ],
+   "input": {
+    "pts": [
+     {
+      "f": [
+       0.3,
+       0.75
+      ],
+      "at": {
+       "x": 30,
+       "y": 40
+      }
+     },
+     {
+      "f": [
+       0.7,
+       0.75
+      ],
+      "at": {
+       "x": 70,
+       "y": 40
+      }
+     },
+     {
+      "f": [
+       0.5,
+       0.5
+      ],
+      "at": {
+       "x": 50,
+       "y": 80
+      }
+     },
+     {
+      "f": [
+       0.02,
+       0.98
+      ],
+      "at": {
+       "x": 2,
+       "y": 3
+      }
+     }
+    ],
+    "offBoard": null,
+    "board": [
+     113.75,
+     6,
+     592.5,
+     948
+    ]
+   },
+   "dragTarget": {
+    "x": 291.5,
+    "y": 669.5999999999999
+   },
+   "intents": [
+    {
+     "type": "deploy",
+     "cardId": "chog_burrow",
+     "x": 30,
+     "y": 48
+    }
+   ]
+  },
+  {
+   "view": "1366x768-seat0",
+   "before": {
+    "board": {
+     "x": 516.6,
+     "y": 170.3,
+     "w": 333,
+     "h": 532.8
+    },
+    "canvas": {
+     "x": 516.6,
+     "y": 170.3,
+     "w": 332.8,
+     "h": 532.5
+    },
+    "tray": {
+     "x": 914.9,
+     "y": 561.7,
+     "w": 439.1,
+     "h": 190.3
+    },
+    "clock": {
+     "x": 642,
+     "y": 27.5,
+     "w": 82,
+     "h": 29
+    },
+    "crowns": [
+     {
+      "label": "Fixture blue crowns",
+      "crowns": "0",
+      "rect": {
+       "x": 472.1,
+       "y": 25,
+       "w": 60.3,
+       "h": 34
+      }
+     },
+     {
+      "label": "Fixture red crowns",
+      "crowns": "0",
+      "rect": {
+       "x": 833.6,
+       "y": 25,
+       "w": 60.3,
+       "h": 34
+      }
+     }
+    ],
+    "purpleHeader": [
+     "flex"
+    ],
+    "cssPerBoard": 0.666,
+    "camera": {
+     "zoom": 0.666,
+     "worldView": {
+      "x": 0,
+      "y": -0.2,
+      "w": 500,
+      "h": 800.3
+     }
+    },
+    "backing": {
+     "w": 333,
+     "h": 533
+    },
+    "units": [
+     {
+      "id": "boulderback",
+      "boardH": 78,
+      "cssH": 51.9
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 30.6
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 30.6
+     },
+     {
+      "id": "rift_runner",
+      "boardH": 60,
+      "cssH": 40
+     },
+     {
+      "id": "ember_mauler",
+      "boardH": 70,
+      "cssH": 46.6
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 30.6
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 30.6
+     }
+    ],
+    "mounts": [
+     {
+      "key": "king-red:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 102.3,
+      "cssH": 127.9
+     },
+     {
+      "key": "king-red:defender-aim-south",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 102.3,
+      "cssH": 127.9
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 110.8,
+      "cssH": 138.5
+     },
+     {
+      "key": "lane-red:defender-aim-south",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 110.8,
+      "cssH": 138.5
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 110.8,
+      "cssH": 138.5
+     },
+     {
+      "key": "lane-red:defender-aim-south",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 110.8,
+      "cssH": 138.5
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 110.8,
+      "cssH": 138.5
+     },
+     {
+      "key": "lane-blue:defender-aim-north",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 110.8,
+      "cssH": 138.5
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 110.8,
+      "cssH": 138.5
+     },
+     {
+      "key": "lane-blue:defender-aim-north",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 110.8,
+      "cssH": 138.5
+     },
+     {
+      "key": "king-blue:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 102.3,
+      "cssH": 127.9
+     },
+     {
+      "key": "king-blue:defender-aim-north",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 102.3,
+      "cssH": 127.9
+     }
+    ],
+    "doc": {
+     "scrollW": 1366,
+     "scrollH": 768,
+     "vw": 1366,
+     "vh": 768
+    }
+   },
+   "after": {
+    "board": {
+     "x": 516.6,
+     "y": 170.3,
+     "w": 333,
+     "h": 532.8
+    },
+    "canvas": {
+     "x": 516.6,
+     "y": 170.3,
+     "w": 332.8,
+     "h": 532.5
+    },
+    "tray": {
+     "x": 914.9,
+     "y": 561.7,
+     "w": 439.1,
+     "h": 190.3
+    },
+    "clock": {
+     "x": 642,
+     "y": 27.5,
+     "w": 82,
+     "h": 29
+    },
+    "crowns": [
+     {
+      "label": "Fixture blue crowns",
+      "crowns": "1",
+      "rect": {
+       "x": 472.1,
+       "y": 25,
+       "w": 54.8,
+       "h": 34
+      }
+     },
+     {
+      "label": "Fixture red crowns",
+      "crowns": "1",
+      "rect": {
+       "x": 839.2,
+       "y": 25,
+       "w": 54.8,
+       "h": 34
+      }
+     }
+    ],
+    "purpleHeader": [
+     "flex"
+    ],
+    "cssPerBoard": 0.666,
+    "camera": {
+     "zoom": 0.666,
+     "worldView": {
+      "x": 0,
+      "y": -0.2,
+      "w": 500,
+      "h": 800.3
+     }
+    },
+    "backing": {
+     "w": 333,
+     "h": 533
+    },
+    "units": [
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 30.6
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 30.6
+     },
+     {
+      "id": "boulderback",
+      "boardH": 78,
+      "cssH": 51.9
+     },
+     {
+      "id": "chaos_archer",
+      "boardH": 60,
+      "cssH": 40
+     },
+     {
+      "id": "chaos_archer",
+      "boardH": 60,
+      "cssH": 40
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 30.6
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 30.6
+     }
+    ],
+    "mounts": [
+     {
+      "key": "king-red:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 102.3,
+      "cssH": 127.9
+     },
+     {
+      "key": "king-red:defender-aim-south",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 102.3,
+      "cssH": 127.9
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 110.8,
+      "cssH": 138.5
+     },
+     {
+      "key": "lane-red:defender-aim-south",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 110.8,
+      "cssH": 138.5
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 110.8,
+      "cssH": 138.5
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 110.8,
+      "cssH": 138.5
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 110.8,
+      "cssH": 138.5
+     },
+     {
+      "key": "lane-blue:defender-aim-north",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 110.8,
+      "cssH": 138.5
+     },
+     {
+      "key": "king-blue:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 102.3,
+      "cssH": 127.9
+     },
+     {
+      "key": "king-blue:defender-aim-north",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 102.3,
+      "cssH": 127.9
+     }
+    ],
+    "doc": {
+     "scrollW": 1366,
+     "scrollH": 768,
+     "vw": 1366,
+     "vh": 768
+    }
+   },
+   "combat": {
+    "board": {
+     "x": 516.6,
+     "y": 170.3,
+     "w": 333,
+     "h": 532.8
+    },
+    "canvas": {
+     "x": 516.6,
+     "y": 170.3,
+     "w": 332.8,
+     "h": 532.5
+    },
+    "tray": {
+     "x": 914.9,
+     "y": 561.7,
+     "w": 439.1,
+     "h": 190.3
+    },
+    "clock": {
+     "x": 642,
+     "y": 27.5,
+     "w": 82,
+     "h": 29
+    },
+    "crowns": [
+     {
+      "label": "Fixture blue crowns",
+      "crowns": "2",
+      "rect": {
+       "x": 472.1,
+       "y": 25,
+       "w": 57.6,
+       "h": 34
+      }
+     },
+     {
+      "label": "Fixture red crowns",
+      "crowns": "1",
+      "rect": {
+       "x": 839.2,
+       "y": 25,
+       "w": 54.8,
+       "h": 34
+      }
+     }
+    ],
+    "purpleHeader": [
+     "flex"
+    ],
+    "cssPerBoard": 0.666,
+    "camera": {
+     "zoom": 0.666,
+     "worldView": {
+      "x": 0,
+      "y": -0.2,
+      "w": 500,
+      "h": 800.3
+     }
+    },
+    "backing": {
+     "w": 333,
+     "h": 533
+    },
+    "units": [
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 30.6
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 30.6
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 30.6
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 30.6
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 30.6
+     },
+     {
+      "id": "choglings",
+      "boardH": 46,
+      "cssH": 30.6
+     },
+     {
+      "id": "riftbreaker",
+      "boardH": 70,
+      "cssH": 46.6
+     },
+     {
+      "id": "rift_sprites",
+      "boardH": 44,
+      "cssH": 29.3
+     },
+     {
+      "id": "rift_sprites",
+      "boardH": 44,
+      "cssH": 29.3
+     }
+    ],
+    "mounts": [
+     {
+      "key": "king-red:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 102.3,
+      "cssH": 127.9
+     },
+     {
+      "key": "king-red:defender-aim-south",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 102.3,
+      "cssH": 127.9
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 110.8,
+      "cssH": 138.5
+     },
+     {
+      "key": "lane-red:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 110.8,
+      "cssH": 138.5
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 110.8,
+      "cssH": 138.5
+     },
+     {
+      "key": "lane-blue:structure-base",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 110.8,
+      "cssH": 138.5
+     },
+     {
+      "key": "lane-blue:defender-aim-north",
+      "boardW": 166.4,
+      "boardH": 208,
+      "cssW": 110.8,
+      "cssH": 138.5
+     },
+     {
+      "key": "king-blue:structure-base",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 102.3,
+      "cssH": 127.9
+     },
+     {
+      "key": "king-blue:defender-aim-north",
+      "boardW": 153.6,
+      "boardH": 192,
+      "cssW": 102.3,
+      "cssH": 127.9
+     }
+    ],
+    "doc": {
+     "scrollW": 1366,
+     "scrollH": 768,
+     "vw": 1366,
+     "vh": 768
+    }
+   },
+   "flights": [
+    {
+     "cls": "chud-crown-flight",
+     "team": "theirs",
+     "left": "616.494px",
+     "top": "569.941px",
+     "at": 9071
+    },
+    {
+     "cls": "chud-crown-flight",
+     "team": "mine",
+     "left": "749.694px",
+     "top": "303.543px",
+     "at": 9539
+    },
+    {
+     "cls": "chud-crown-plus",
+     "team": "theirs",
+     "left": "866.562px",
+     "top": "63px",
+     "at": 10421
+    },
+    {
+     "cls": "chud-crown-plus",
+     "team": "mine",
+     "left": "499.438px",
+     "top": "63px",
+     "at": 10858
+    }
+   ],
+   "input": {
+    "pts": [
+     {
+      "f": [
+       0.3,
+       0.75
+      ],
+      "at": {
+       "x": 30,
+       "y": 40
+      }
+     },
+     {
+      "f": [
+       0.7,
+       0.75
+      ],
+      "at": {
+       "x": 70,
+       "y": 40
+      }
+     },
+     {
+      "f": [
+       0.5,
+       0.5
+      ],
+      "at": {
+       "x": 50,
+       "y": 80
+      }
+     },
+     {
+      "f": [
+       0.02,
+       0.98
+      ],
+      "at": {
+       "x": 2,
+       "y": 3
+      }
+     }
+    ],
+    "offBoard": null,
+    "board": [
+     516.59375,
+     170.34375,
+     333,
+     532.796875
+    ]
+   },
+   "dragTarget": {
+    "x": 616.49375,
+    "y": 543.3015625
+   },
+   "intents": [
+    {
+     "type": "deploy",
+     "cardId": "chog_burrow",
+     "x": 30,
+     "y": 48
+    }
+   ]
+  }
+ ],
+ "errors": []
+}

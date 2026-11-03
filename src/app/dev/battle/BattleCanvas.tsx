@@ -9,6 +9,7 @@
 import { useEffect, useRef } from "react";
 import type { BattleFrame, CardInfo, FrameEvent, StartMessage } from "@/lib/battle-protocol";
 import { deployZones, screenToArena, type ArenaPoint } from "@/lib/battle-input";
+import { boardClientRect, boardLayout, cameraFor, canvasResolution, type BoardLayout, type WorldInsets } from "@/lib/battle-camera";
 import {
   battleAnimationCues,
   interpolateBattlePosition,
@@ -45,7 +46,9 @@ import {
   teamTrimHalves,
   tintsTeamTrim,
   updateDefender,
+  structureArtScale,
   weaponScreen,
+  worldImageOrigin,
   type ArenaManifest,
   type DefenderState,
 } from "./arena-registry";
@@ -155,6 +158,15 @@ interface Props {
   seat?: 0 | 1;
   /** Optional overrides for the host div (e.g. HUD sizes by height). */
   hostStyle?: React.CSSProperties;
+  /** Full-bleed world mode: stage areas covered by overlaid HUD controls. The
+   * world renders under them and the board is fitted into the rest. */
+  insets?: WorldInsets;
+}
+
+interface StageLayout {
+  stageW: number;
+  stageH: number;
+  board: BoardLayout;
 }
 
 /** Authoritative motion for an animated unit: frame-to-frame position delta and the foe in reach. */
@@ -176,22 +188,63 @@ const hashPhase = (id: string) => {
   return h / 1000;
 };
 
-export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, hostStyle, seat = 0 }: Props) {
+export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, hostStyle, insets, seat = 0 }: Props) {
   const host = useRef<HTMLDivElement>(null);
+  const boardBox = useRef<HTMLDivElement>(null);
   const press = useRef<{ id: number; x: number; y: number } | null>(null);
+  const insetsRef = useRef<WorldInsets | undefined>(insets);
+  const stage = useRef<StageLayout | null>(null);
+  // Set by the Phaser scene once it exists: re-applies size and camera.
+  const relayout = useRef<(() => void) | null>(null);
 
-  // One mapper for taps and drags: the rendered canvas rect absorbs FIT
-  // scaling, zoom and DPR, and the seat decides the vertical flip.
+  // One mapper for taps and drags: the board rect inside the full-bleed
+  // canvas absorbs the camera layout, CSS zoom and DPR, and the seat decides
+  // the vertical flip. Points over the surrounding world map to null.
   useEffect(() => {
     mapRef.current = (cx, cy) => {
-      const canvas = host.current?.querySelector("canvas");
+      const el = host.current;
       const f = feed.current;
-      return canvas && f ? screenToArena(cx, cy, canvas.getBoundingClientRect(), f.start.seat) : null;
+      if (!el || !f) return null;
+      const r = el.getBoundingClientRect();
+      const st = stage.current;
+      const board = st ? boardClientRect(st.board, r, st.stageW, st.stageH) : r;
+      return screenToArena(cx, cy, board, f.start.seat);
     };
     return () => {
       mapRef.current = null;
     };
   }, [feed, mapRef]);
+
+  // Stage size and insets drive the board layout. The marker element mirrors
+  // the board rect so DOM overlays (crown flights, tests) share one source.
+  const measure = () => {
+    const el = host.current;
+    if (!el) return;
+    const stageW = el.clientWidth;
+    const stageH = el.clientHeight;
+    if (!(stageW > 0 && stageH > 0)) return;
+    const board = boardLayout(stageW, stageH, insetsRef.current);
+    stage.current = { stageW, stageH, board };
+    const box = boardBox.current;
+    if (box) Object.assign(box.style, { left: `${board.left}px`, top: `${board.top}px`, width: `${board.width}px`, height: `${board.height}px` });
+    relayout.current?.();
+  };
+  const measureRef = useRef(measure);
+  useEffect(() => {
+    measureRef.current = measure;
+  });
+  useEffect(() => {
+    insetsRef.current = insets;
+    measureRef.current();
+  }, [insets?.top, insets?.bottom, insets?.left, insets?.right]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const el = host.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => measureRef.current());
+    ro.observe(el);
+    measureRef.current();
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     let game: import("phaser").Game | null = null;
@@ -299,6 +352,9 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
         rubble: boolean;
       }
       const envLayers = new Map<string, import("phaser").GameObjects.Image[]>();
+      let worldImg: import("phaser").GameObjects.Image | null = null;
+      // Base camera scroll from the stage layout; the screen nudge adds to it.
+      const camBase = { x: 0, y: 0 };
       const mountPool = new Map<string, MountEnt>();
       const defenderStates = new Map<string, DefenderState>();
       let eventStart: StartMessage | null = null;
@@ -380,6 +436,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             else this.load.image(vfxKey(key), `${VFX_URL}/${t.path}`);
           }
           if (arena) {
+            if (arena.world) this.load.image("arena:world", `${arenaBase}/${arena.world.path}`);
             for (const l of arena.layers) this.load.image(`arena:layer:${l.id}`, `${arenaBase}/${l.path}`);
             for (const [role, r] of Object.entries(arena.mounts)) {
               for (const p of Object.values(r.parts)) if (p) this.load.image(`${role}:${p.split("/").pop()!.replace(".png", "")}`, `${arenaBase}/${p}`);
@@ -391,6 +448,12 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
           // Two Graphics layers: board art under everything, HUD overlays
           // (bars, telegraphs, ghost) above every sprite and effect image.
           // v002 arena art sits below both as a textured underlay.
+          // The world surround (camera space, never flipped) sits under every
+          // arena layer and replaces the base terrain it continues.
+          if (arena?.world && !missing.has("arena:world")) {
+            const [ox, oy] = worldImageOrigin(arena.world);
+            worldImg = this.add.image(ox, oy, "arena:world").setOrigin(0, 0).setDepth(-520);
+          }
           for (const l of arena?.layers ?? []) {
             const mk = () => this.add.image(-50, -60, `arena:layer:${l.id}`).setOrigin(0, 0).setDepth(-500 + l.zOrder);
             const img = mk();
@@ -494,7 +557,8 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                     : l.state === "chaos-expiry"
                       ? 0.6
                       : 1;
-              for (const img of imgs) img.setFlipY(layerFlipY(l, seat)).setVisible(vis).setAlpha(alpha);
+              const replaced = worldImg !== null && arena.world?.replaces === l.id;
+              for (const img of imgs) img.setFlipY(layerFlipY(l, seat)).setVisible(vis && !replaced).setAlpha(alpha);
             }
           }
           // Ground, own territory, river, bridges, ford. When the v002
@@ -1014,7 +1078,8 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                 me = { root, shadow, teamAccent, base, socket, defender, rim, rubble: false };
                 mountPool.set(s.id, me);
               }
-              me.root.setPosition(x, y).setDepth(y);
+              const artK = structureArtScale(s.kind);
+              me.root.setPosition(x, y).setDepth(y).setScale(artK);
               const artOffsetY = mountVisualOffsetY(s.kind, y, mrole.artTopLocalBoardPixels);
               const partY = (part: import("phaser").GameObjects.Image) => part.setY(artOffsetY);
               partY(me.base);
@@ -1091,11 +1156,11 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                 if (accepted && fire && placement) {
                   const poseDef = mrole.poses[pose];
                   if (poseDef && poseDef.firingAllowed) {
-                    const [wx, wy] = weaponScreen(placement.groundAnchorPixels, poseDef.weaponAnchorLocalBoardPixels, seat);
-                    towerFx.push({ fx: wx, fy: wy + artOffsetY, tx: fire.x, ty: fire.y, born: now, dur: 120 });
+                    const [wx, wy] = weaponScreen(placement.groundAnchorPixels, poseDef.weaponAnchorLocalBoardPixels, seat, artK);
+                    towerFx.push({ fx: wx, fy: wy + artOffsetY * artK, tx: fire.x, ty: fire.y, born: now, dur: 120 });
                     if (vfx?.has("muzzle")) {
                       // Same anchor, target and ~120 ms window as the Graphics cue.
-                      const m0 = toArena(wx, Math.max(7, wy + artOffsetY));
+                      const m0 = toArena(wx, Math.max(7, wy + artOffsetY * artK));
                       vfx.spawn([
                         { tex: "muzzle", x: m0.x, y: m0.y, life: 130, scale: 0.5, scale1: 0.7, alpha: 1, alpha1: 0, rot: (fire.tick % 7) * 0.4, tint: 0xffe27a, blend: "add", layer: "top" },
                         { tex: "glow", x: m0.x, y: m0.y, life: 160, scale: 0.8, scale1: 1.1, alpha: 0.8, alpha1: 0, tint: 0xffd36a, blend: "add", layer: "top" },
@@ -1107,11 +1172,11 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                 }
                 // HP bar from the authored mount rectangle (master px -> board px).
                 const hb = mrole.healthBarLocalBoardRectangle;
-                const visualY = y + artOffsetY;
+                const visualY = y + artOffsetY * artK;
                 // Presentation clamp: the far Core's bar and number would sit
                 // above the canvas edge. Keep them readable inside it.
-                const barY = Math.max(16, visualY + hb[1] / 2);
-                structurePlate(s.id, x + (hb[0] + hb[2] / 2) / 2 + 4, barY, Math.max(30, hb[2] / 2 - 8), s.hp, s.maxHp, s.owner, core);
+                const barY = Math.max(16, visualY + (hb[1] / 2) * artK);
+                structurePlate(s.id, x + ((hb[0] + hb[2] / 2) / 2) * artK + 4, barY, Math.max(30, (hb[2] / 2) * artK - 8), s.hp, s.maxHp, s.owner, core);
               } else if (!me.rubble) {
                 // Destroyed: only the dimmed base remains, like rubble.
                 me.rubble = true;
@@ -1968,8 +2033,8 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             const cam = this.cameras.main;
             if (np >= 0 && np < 1) {
               const amp = 2 * (1 - np);
-              cam.setScroll(Math.sin(np * Math.PI * 6) * amp, Math.cos(np * Math.PI * 5) * amp * 0.6);
-            } else if (cam.scrollX !== 0 || cam.scrollY !== 0) cam.setScroll(0, 0);
+              cam.setScroll(camBase.x + Math.sin(np * Math.PI * 6) * amp, camBase.y + Math.cos(np * Math.PI * 5) * amp * 0.6);
+            } else if (cam.scrollX !== camBase.x || cam.scrollY !== camBase.y) cam.setScroll(camBase.x, camBase.y);
           }
           // Placement ghost: green when the advisory check passes, red otherwise.
           if (f.ghost) {
@@ -1996,18 +2061,57 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
         }
       }
 
+      // The canvas fills the host stage at device resolution. The camera, not
+      // CSS, places the 500x800 board inside the rendered world.
+      const sizeNow = () => {
+        const st = stage.current;
+        const cw = st?.stageW ?? W;
+        const ch = st?.stageH ?? H;
+        // Never below board-native detail (500 board px across the board),
+        // so a small desktop board keeps the old 500x800 backing sharpness.
+        const native = st ? 500 / st.board.width : 1;
+        const res = Math.max(canvasResolution(cw, ch, window.devicePixelRatio || 1), Math.min(2, native));
+        return { cw, ch, res, w: Math.max(1, Math.round(cw * res)), h: Math.max(1, Math.round(ch * res)) };
+      };
+      const first = sizeNow();
       game = new Phaser.Game({
         type: Phaser.AUTO,
         parent: host.current,
-        width: W,
-        height: H,
-        backgroundColor: "#0b1210",
+        width: first.w,
+        height: first.h,
+        backgroundColor: "#1d3b22",
         scene: Arena,
         // Input is handled by DOM pointer events on the host. Phaser's touch
         // capture would otherwise preventDefault and fight those handlers.
         input: { keyboard: false, mouse: false, touch: false, gamepad: false },
-        scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_HORIZONTALLY },
+        scale: { mode: Phaser.Scale.NONE },
       });
+      const applyLayout = () => {
+        const g = game;
+        const st = stage.current;
+        if (!g || !st) return;
+        const sz = sizeNow();
+        if (g.scale.width !== sz.w || g.scale.height !== sz.h) g.scale.resize(sz.w, sz.h);
+        // Phaser writes the backing size into the canvas style; the stage owns it.
+        Object.assign(g.canvas.style, { width: "100%", height: "100%", display: "block" });
+        const sc = g.scene.scenes[0];
+        const cam = sc?.cameras?.main;
+        if (!cam) return;
+        const c = cameraFor(st.board, st.stageW, st.stageH, sz.res);
+        cam.setZoom(c.zoom);
+        cam.centerOn(c.centerX, c.centerY);
+        camBase.x = cam.scrollX;
+        camBase.y = cam.scrollY;
+      };
+      relayout.current = applyLayout;
+      Object.assign(game.canvas.style, { width: "100%", height: "100%", display: "block" });
+      // The scene's camera exists only after boot: apply on the first step.
+      const firstStep = () => {
+        if (!game?.scene.scenes[0]?.cameras?.main) return;
+        applyLayout();
+        game.events.off("poststep", firstStep);
+      };
+      game.events.on("poststep", firstStep);
       // Dev-surface debug handle: lets the temporary harness assert that the
       // mounted structure art lands on the authoritative board points.
       if (process.env.NODE_ENV !== "production") {
@@ -2017,6 +2121,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
     });
     return () => {
       cancelled = true;
+      relayout.current = null;
       game?.destroy(true);
     };
   }, [feed, seat]);
@@ -2027,7 +2132,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
       ref={host}
       data-testid="battle-board"
       data-seat={seat}
-      style={{ width: "100%", maxWidth: 500, aspectRatio: "100 / 160", touchAction: "none", ...hostStyle }}
+      style={{ position: "relative", width: "100%", maxWidth: 500, aspectRatio: "100 / 160", touchAction: "none", ...hostStyle }}
       onPointerDown={(e) => {
         if (e.button === 0) press.current = { id: e.pointerId, x: e.clientX, y: e.clientY };
       }}
@@ -2044,6 +2149,9 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
       }}
       onPointerMove={(e) => onBoardHover(mapRef.current?.(e.clientX, e.clientY) ?? null)}
       onPointerLeave={() => onBoardHover(null)}
-    />
+    >
+      {/* Noninteractive mirror of the playable board rect inside the world. */}
+      <div ref={boardBox} data-board-rect="" aria-hidden="true" style={{ position: "absolute", pointerEvents: "none", zIndex: 0 }} />
+    </div>
   );
 }

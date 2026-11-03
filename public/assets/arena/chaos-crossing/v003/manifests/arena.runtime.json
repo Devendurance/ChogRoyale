@@ -428,5 +428,17 @@
         1640
       ]
     }
-  ]
+  ],
+  "world": {
+    "path": "layers/world-surround.webp",
+    "size": [
+      1400,
+      1400
+    ],
+    "boardOffset": [
+      450,
+      300
+    ],
+    "replaces": "base-terrain"
+  }
 }
