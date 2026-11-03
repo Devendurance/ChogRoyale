@@ -313,3 +313,4 @@ Durable facts, conventions, and gotchas that should survive across sessions.
 - Fallback reservations are consumed with `client.consumeSeatReservation(reservation)`. Never call `client.create("battle_practice")` from the Unranked queue path.
 - The Practice room is shared by solo Practice and Unranked fallback. Use authoritative `practiceOpponent.source` and distinct resume storage to avoid cross-mode recovery.
 - Human Unranked retains settlement. Fallback uses `end.practice.noReward` and source-specific result copy and must re-enter the human-first Unranked queue for Find Opponent Again.
+- PR #24 final visual correction uses `min(100cqw, 62.5cqh)` for the complete 100:160 board. Browser evidence: 390x844 canvas 378x604.80, 430x932 417.98x668.80, 768x1024 470x752. Fixture captures use explicit 55% audio, no Dev overlay, and full-colour Chaos Crossing terrain. Crown score transition observed, crown flight DOM not observed.

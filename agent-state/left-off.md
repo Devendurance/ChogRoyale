@@ -1,5 +1,12 @@
 # Current task: Game feel, battlefield scale and game UI overhaul
 
+## PR #24 final targeted correction, 2026-11-03
+
+- Done: changed the portrait cap to `min(100cqw, 62.5cqh)`, removed terrain blur, fixed fixture `NaN%` audio and hid Dev diagnostics from acceptance captures.
+- Done: captured clean 390x844, 430x932 and 768x1024 screenshots with measured bounds in `output/playwright/battle-viewport-acceptance`.
+- Verified: 42 focused tests, TypeScript, scoped ESLint, production build and public player route HTTP 200. Crown score transition was observed. Crown flight was not observed in the browser fixture, so it remains unclaimed.
+- Next: commit and push the targeted correction to existing PR #24. Do not merge or deploy.
+
 ## Final portrait battle viewport visual acceptance, 2026-11-03
 
 - Done: reused the recorded BattleSession fixture and Playwright CLI to capture actual rendered battle art at 390x844, 430x932, 768x1024 and 1366x768. Measurements and PNGs are in `output/playwright/battle-viewport-acceptance`.
