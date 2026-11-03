@@ -3,6 +3,7 @@
 - Portrait battle layout uses a fixed `.chud` viewport with safe-area padding. `.chud-arena` is the full-width atmospheric surface, while the Phaser canvas keeps `aspect-ratio: 100 / 160` and `--chud-board-w: min(100cqw, 58cqh)` so all playable lanes remain visible.
 - Do not change BattleCanvas mapping, Phaser lifecycle, board coordinates, or pointer/deploy handlers for presentation sizing. The canvas rect remains the source of screen-to-arena mapping.
 - Crown counters render `scoreView(frame, end, me)` live from authoritative frames, with role=status and atomic live updates. CrownCelebration retains the existing dedupe and score-ref flights.
+- Visual acceptance fixture measured canvas sizes 328.45x525.55 at 390x844, 371.75x594.81 at 430x932, 408.30x653.30 at 768x1024 and 332.81x532.50 at 1366x768. The board remained 100:160 and all pages had no document overflow.
 
 # V2.2c-2 Account XP battle rewards
 

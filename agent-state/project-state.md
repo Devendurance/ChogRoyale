@@ -4,6 +4,12 @@
 - Live crown presentation remains server-frame-driven and player-relative. Added atomic live status attributes and a both-seat render regression.
 - Verification: 78 focused battle/UI/pointer tests, TypeScript, scoped ESLint, and production build passed. Authenticated live device interaction and evidence screenshots were not available in this session.
 
+## Visual acceptance follow-up
+
+- Captured actual Playwright fixture screenshots at 390x844, 430x932, 768x1024 and 1366x768 with measured canvas and arena bounds in `output/playwright/battle-viewport-acceptance/metrics.json`.
+- Added existing Chaos Crossing base terrain as noninteractive arena background for wide portrait tablets. The full logical board remains visible and undistorted. Seat 0 and seat 1 fixture score transitions were observed. Crown flight DOM presence was not observed in the browser probe and remains covered by existing presentation tests.
+- 34 focused battle tests, TypeScript, scoped ESLint and production build passed.
+
 # Project State
 
 # Desktop lobby Battle Deck card layout (2026-10-31)

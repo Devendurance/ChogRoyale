@@ -1,5 +1,12 @@
 # Current task: Game feel, battlefield scale and game UI overhaul
 
+## Final portrait battle viewport visual acceptance, 2026-11-03
+
+- Done: reused the recorded BattleSession fixture and Playwright CLI to capture actual rendered battle art at 390x844, 430x932, 768x1024 and 1366x768. Measurements and PNGs are in `output/playwright/battle-viewport-acceptance`.
+- Done: at 768px tablet width, the noninteractive arena surface now uses the existing Chaos Crossing base-terrain texture around the complete 100:160 board, replacing plain dark letterboxing. No gameplay coordinates or canvas mapper changed.
+- Verified: no document overflow, canvas aspect stayed about 0.625 at all four sizes, cards and energy stayed visible, seat-relative crowns updated in the fixture for both perspectives. The DOM crown-flight probe did not observe a flight node, so animation is supported by existing crown presentation tests but not claimed as browser visual evidence.
+- Checks: 34 focused battle tests, TypeScript, scoped ESLint and production build pass. Temporary fixture route and copied JSON were removed. Current next action is commit and push the visual acceptance CSS checkpoint, then owner review.
+
 ## Battlefield viewport + HUD overhaul, 2026-11-03
 
 - Done: portrait mobile/tablet battle HUD now owns the viewport, compacts the top score bar, keeps the hand and energy tray anchored, and extends the arena atmosphere edge to edge while fitting the logical 100:160 canvas without crop or distortion. Desktop and short-landscape rules remain isolated.

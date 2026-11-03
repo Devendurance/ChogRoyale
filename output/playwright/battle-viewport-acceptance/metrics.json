@@ -1,0 +1,15 @@
+{
+  "fixture": "Recorded BattleSession presentation fixture, no authenticated multiplayer or settlement",
+  "boardAspectTarget": "100:160",
+  "boardWidthRule": "min(100cqw, 58cqh)",
+  "captures": [
+    {"viewport":"390x844","canvas":{"x":30.765625,"y":100.390625,"width":328.453125,"height":525.546875,"right":359.21875,"bottom":625.9375},"arena":{"x":6,"y":80,"width":378,"height":566.34375,"right":384,"bottom":646.34375},"canvasAspect":0.624974,"playableScreenPercent":52.4418,"arenaSideUnused":49.5469,"arenaVerticalUnused":40.7969,"screenSideUnused":61.5469,"screenVerticalUnused":218.4531,"documentOverflow":"none","cards":"4 visible","energy":"visible and inside tray"},
+    {"viewport":"430x932","canvas":{"x":29.125,"y":103.09375,"width":371.75,"height":594.8125,"right":400.875,"bottom":697.90625},"arena":{"x":6,"y":80,"width":418,"height":641,"right":424,"bottom":721},"canvasAspect":0.624987,"playableScreenPercent":55.1756,"arenaSideUnused":46.25,"arenaVerticalUnused":46.1875,"screenSideUnused":58.25,"screenVerticalUnused":234.0938,"documentOverflow":"none","cards":"4 visible","energy":"visible and inside tray"},
+    {"viewport":"768x1024","canvas":{"x":179.84375,"y":105.34375,"width":408.296875,"height":653.296875,"right":588.140625,"bottom":758.640625},"arena":{"x":6,"y":80,"width":756,"height":704,"right":762,"bottom":784},"canvasAspect":0.624979,"playableScreenPercent":33.9176,"arenaSideUnused":347.7031,"arenaVerticalUnused":50.7031,"screenSideUnused":359.7031,"screenVerticalUnused":265.3594,"documentOverflow":"none","cards":"4 visible","energy":"visible and inside tray"},
+    {"viewport":"1366x768","canvas":{"x":516.59375,"y":174.25,"width":332.8125,"height":532.5,"right":849.40625,"bottom":706.75},"arena":{"x":479.0625,"y":129,"width":407.875,"height":623,"right":886.9375,"bottom":752},"canvasAspect":0.625,"playableScreenPercent":16.8930,"arenaSideUnused":75.0625,"arenaVerticalUnused":90.5,"screenSideUnused":1033.1875,"screenVerticalUnused":235.5,"documentOverflow":"none","cards":"4 visible","energy":"visible and inside tray"}
+  ],
+  "notes": [
+    "Tablet side space is unavoidable when preserving the complete 100:160 board. The existing base-terrain texture now fills the noninteractive arena surface around the board.",
+    "Canvas display size changes only. Phaser coordinates, hit testing, deployment mapping and board geometry remain unchanged."
+  ]
+}
