@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import BattleHud, { type BattleHudProps } from "./BattleHud";
 import { battleIdentity } from "./battle-identity";
-import type { StartMessage } from "@/lib/battle-protocol";
+import type { BattleFrame, StartMessage } from "@/lib/battle-protocol";
 
 vi.mock("next/dynamic", () => ({ default: () => () => null }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: () => {} }) }));
@@ -26,6 +26,34 @@ describe("local battle scoreboard", () => {
       expect(foe).toContain("RivalChog");
       expect(foe).toContain(`${seat === 0 ? 1 : 2} <img`);
     }
+  });
+
+  it("renders live frame crowns immediately on the matching player counter", () => {
+    const start = { seat: 0, self: "LocalChog", opponent: "RivalChog", resumed: true, catalog: {}, commander: { class: "scout", kind: "class", name: "Scout" }, patron: { tokenId: "1", theme: "test" } } as unknown as StartMessage;
+    const frame = (crowns: [number, number]) => ({ crowns, tick: 12, phase: "active", clockTicks: 1200, chaos: [], troops: [], commanders: [], structures: [], buildings: [], projectiles: [], impacts: [], events: [], abilities: [], hand: [], next: null, energy: 5, energyProgress: 0, regenMult: 1 } as unknown as BattleFrame);
+    const render = (crowns: [number, number], me = 0) => renderToStaticMarkup(React.createElement(BattleHud, {
+      start,
+      me,
+      playerName: "LocalChog",
+      frame: frame(crowns),
+      end: null,
+      abort: null,
+      settlement: null,
+      presence: null,
+      now: 0,
+      acks: [],
+      showDevDiagnostics: false,
+      feed: { current: null },
+      mapRef: { current: null },
+      audioMuted: true,
+      audioVolume: 0,
+    } as unknown as BattleHudProps));
+    const seatZero = render([1, 0]);
+    expect(seatZero).toContain('aria-label="LocalChog crowns" data-crowns="1"');
+    expect(seatZero).toContain('aria-label="RivalChog crowns" data-crowns="0"');
+    const seatOne = render([1, 2], 1);
+    expect(seatOne).toContain('aria-label="LocalChog crowns" data-crowns="2"');
+    expect(seatOne).toContain('aria-label="RivalChog crowns" data-crowns="1"');
   });
 
   it("shows the server-owned Practice identity and difficulty without a Medium fallback", () => {

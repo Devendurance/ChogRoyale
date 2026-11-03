@@ -1,3 +1,9 @@
+# Battlefield viewport + HUD overhaul (2026-11-03)
+
+- Portrait mobile/tablet battle presentation is now full-screen and battle-first. The central arena flexes between a compact HUD and anchored hand/energy tray, with edge-to-edge noninteractive atmosphere and safe-area handling. The logical Phaser board remains 100x160 and unmodified.
+- Live crown presentation remains server-frame-driven and player-relative. Added atomic live status attributes and a both-seat render regression.
+- Verification: 78 focused battle/UI/pointer tests, TypeScript, scoped ESLint, and production build passed. Authenticated live device interaction and evidence screenshots were not available in this session.
+
 # Project State
 
 # Desktop lobby Battle Deck card layout (2026-10-31)

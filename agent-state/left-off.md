@@ -1,5 +1,12 @@
 # Current task: Game feel, battlefield scale and game UI overhaul
 
+## Battlefield viewport + HUD overhaul, 2026-11-03
+
+- Done: portrait mobile/tablet battle HUD now owns the viewport, compacts the top score bar, keeps the hand and energy tray anchored, and extends the arena atmosphere edge to edge while fitting the logical 100:160 canvas without crop or distortion. Desktop and short-landscape rules remain isolated.
+- Done: live frame crowns remain authoritative and seat-relative. Counters now expose atomic live status semantics and the identity test covers both seat perspectives.
+- Verification: focused battle/UI/pointer tests 78 passed, TypeScript, scoped ESLint, and production build passed. Browser/device screenshots and authenticated deployment interaction remain unverified in this session.
+- Next: owner review of viewport captures and merge/push through the approved workflow.
+
 - Branch `feat/game-feel-overhaul` from origin/main `e951154`. One PR, no merge or deploy.
 - Video refs: `/watch` skill not installed, so both owner videos were sampled with ffmpeg. Findings are in the PR body.
 - Done: `unit-scale.ts` size classes (swarm 38, flying_swarm 36, regular 48, flying 50, heavy 56, commander 58, titan 62 board px), frame `level` on deployed troops/buildings, team HP bars, level badges, tower emblem plates (no tower levels), deploy callouts, class-scaled juice. App UI: game lobby, deck level plates, server-confirmed upgrade celebration, HUD hand states, result polish.

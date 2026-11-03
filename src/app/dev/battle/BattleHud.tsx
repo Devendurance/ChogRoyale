@@ -447,7 +447,7 @@ export default function BattleHud(props: BattleHudProps) {
         <header className="chud-top">
           <div className="chud-score">
             <span className="chud-side-tag" data-side="you">
-              <span className="chud-crown-num" ref={mineScoreRef}>
+              <span className="chud-crown-num" ref={mineScoreRef} role="status" aria-live="polite" aria-atomic="true" aria-label={`${props.playerName ?? "You"} crowns`} data-crowns={score.mine}>
                 <GameIcon kind="crown" size={25} /> {score.mine}
               </span>
               <span className="chud-player">{props.playerName ?? "You"}</span>
@@ -459,7 +459,7 @@ export default function BattleHud(props: BattleHudProps) {
             </span>
             <span className="chud-side-tag" data-side="foe">
               <span className="chud-player">{opponentName}</span>
-              <span className="chud-crown-num" ref={theirsScoreRef}>
+              <span className="chud-crown-num" ref={theirsScoreRef} role="status" aria-live="polite" aria-atomic="true" aria-label={`${opponentName} crowns`} data-crowns={score.theirs}>
                 {score.theirs} <GameIcon kind="crown" size={25} />
               </span>
             </span>
