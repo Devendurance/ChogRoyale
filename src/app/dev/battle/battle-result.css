@@ -91,3 +91,15 @@
 @media(max-height:700px){.chud-finale-content{padding-top:2px}.chud-finale-emblem{height:78px}.chud-finale-emblem .game-icon{width:80px;height:80px}.chud-finale h2{font-size:48px}.chud-finale-context{margin-bottom:12px}.chud-finale-ribbon{padding:7px 22px 9px}.chud-finale-crowns{min-height:44px}.chud-finale-crowns .game-icon{width:36px;height:36px}.chud-finale-details{margin-top:10px}.chud-finale-footer{margin-top:6px}}
 @media(max-height:450px) and (min-width:600px){.chud-finale-content{width:min(100%,740px);display:grid;grid-template-columns:200px 1fr;column-gap:22px;align-items:center}.chud-finale-kicker{grid-column:1/-1}.chud-finale-emblem{grid-column:1;grid-row:2;height:80px}.chud-finale h2{grid-column:1;grid-row:3;font-size:40px}.chud-finale-context{grid-column:1;grid-row:4}.chud-finale-versus{grid-column:2;grid-row:2/5}.chud-finale-details{grid-column:1/-1}.chud-finale-footer{max-width:500px}}
 @media(prefers-reduced-motion:reduce){.chud-finale *,.chud-finale-scrim,.chud-finale .chud-finale-emblem:before,.chud-finale .chud-finale-emblem:after{animation:none!important;transition:none!important}.chud-finale-account-xp-levelup{transform:none!important}}
+
+/* Game-feel pass: one light sweep across the winner's ribbon, a gentle pulse
+   on the Winner badge and a warm glow on earned crowns. Data and copy are
+   unchanged, and reduced motion drops every one of these. */
+.chud-finale-ribbon[data-winner=true]::after{content:"";position:absolute;top:0;bottom:0;left:-30%;width:22%;background:linear-gradient(90deg,transparent,#ffffff70,transparent);pointer-events:none;animation:chud-finale-sweep 1.1s ease-out calc(var(--fd) + 1.25s) both}
+.chud-finale-badge{animation:chud-finale-pop .4s calc(var(--fd) + 1.1s) both,chud-finale-badge-pulse 2.4s ease-in-out calc(var(--fd) + 1.7s) infinite}
+.chud-finale-crowns>span[data-earned=true]{filter:drop-shadow(0 0 7px #ffd76888)}
+.chud-finale .chud-finale-exit{transition:transform .12s ease,filter .12s ease}
+@media(hover:hover){.chud-finale .chud-finale-exit:hover{transform:translateY(-1px)}}
+@keyframes chud-finale-sweep{0%{opacity:0;transform:translateX(0) skewX(-18deg)}15%{opacity:1}100%{opacity:0;transform:translateX(700%) skewX(-18deg)}}
+@keyframes chud-finale-badge-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+@media(prefers-reduced-motion:reduce){.chud-finale-ribbon[data-winner=true]::after{display:none}.chud-finale .chud-finale-exit{transition:none}.chud-finale .chud-finale-exit:hover{transform:none}}

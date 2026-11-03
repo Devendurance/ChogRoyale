@@ -154,10 +154,7 @@ function CardButton({
       data-selected={selected}
       data-afford={afford}
       aria-label={`${card?.name ?? id}, ${cost} energy${!afford ? ", not enough energy" : ""}${isCommanderCard(id) ? ", commander class art" : ""}`}
-      style={{
-        transform: selected ? "translateY(-4px)" : "none",
-        opacity: dragging ? 0.3 : 1,
-      }}
+      style={{ opacity: dragging ? 0.3 : 1 }}
     >
       <Portrait src={src} name={card?.name ?? id} className="chud-card-portrait" />
       {!afford && (
@@ -194,13 +191,17 @@ function EnergyMeter({ frame }: { frame: BattleFrame }) {
         {Array.from({ length: 10 }, (_, i) => {
           const f = Math.max(0, Math.min(1, fill - i));
           return (
-            <div key={i} className="chud-cell">
+            <div key={i} className="chud-cell" data-full={f >= 1} data-filling={f > 0 && f < 1}>
               <div className="chud-cell-fill" style={{ width: `${f * 100}%` }} />
             </div>
           );
         })}
       </div>
-      <span className="chud-energy-num">{frame.energy}/10</span>
+      <span className="chud-energy-num">
+        <span className="chud-energy-drop" aria-hidden="true" />
+        <b>{frame.energy}</b>
+        <small>/10</small>
+      </span>
       <span className="chud-mult">{mult}x</span>
       {chaosMod && <span className="chud-mult chud-chaos-mod">Chaos x{frame.regenMult.toFixed(2)}</span>}
     </div>

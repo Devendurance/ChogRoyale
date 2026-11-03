@@ -110,7 +110,7 @@ export default function HomeSummary({ gold, crowns, accountLevel }: HomeSummaryP
         </div>
 
         <div className={`${styles.metric} ${styles.crownMetric}`}>
-          <GameIcon kind="crown" size={26} className={styles.crown} />
+          <GameIcon kind="crown" size={36} className={styles.crown} />
           <div className={styles.metricCopy}>
             <span className={styles.metricLabel}>Crowns earned</span>
             <MetricValue metric={crowns} label="Crowns earned" />

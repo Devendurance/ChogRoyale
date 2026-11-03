@@ -10,6 +10,7 @@ import {
   availableCosts,
   cardAction,
   commanderCostFor,
+  confirmedUpgradeCelebration,
   commanderOptionsFor,
   deckAverage,
   deckSaveState,
@@ -359,5 +360,38 @@ describe("account state", () => {
     expect(sameDraft(draft, { cards: [...seven], commander: { kind: "free", class: "scout" } })).toBe(true);
     expect(sameDraft(draft, { cards: [...seven].reverse(), commander: { kind: "free", class: "scout" } })).toBe(false);
     expect(sameDraft(draft, { cards: [...seven], commander: { kind: "nft", tokenId: "1" } })).toBe(false);
+  });
+});
+
+describe("confirmed upgrade celebration", () => {
+  const intent = { cardId: "chogling", expectedLevel: 3, key: "k-1" };
+  const entry = (purchasedLevel: number): DeckCardProgression => ({
+    cardId: "chogling",
+    purchasedLevel,
+    xpLevel: purchasedLevel,
+    xp: 400,
+    xpTarget: 500,
+    goldCost: 200,
+    eligible: false,
+    maxed: false,
+  });
+
+  it("celebrates an upgraded or duplicate outcome only after the re-read shows the higher level", () => {
+    expect(confirmedUpgradeCelebration("upgraded", intent, { chogling: entry(4) })).toEqual({
+      cardId: "chogling",
+      fromLevel: 3,
+      toLevel: 4,
+      key: "k-1",
+    });
+    expect(confirmedUpgradeCelebration("duplicate", intent, { chogling: entry(4) })?.toLevel).toBe(4);
+  });
+
+  it("never celebrates a refusal, a failed re-read or an unchanged level", () => {
+    for (const status of ["insufficient-xp", "insufficient-gold", "level-mismatch", "maxed", "invalid-card", "conflict-retry"] as const) {
+      expect(confirmedUpgradeCelebration(status, intent, { chogling: entry(4) })).toBeNull();
+    }
+    expect(confirmedUpgradeCelebration("upgraded", intent, null)).toBeNull();
+    expect(confirmedUpgradeCelebration("upgraded", intent, {})).toBeNull();
+    expect(confirmedUpgradeCelebration("upgraded", intent, { chogling: entry(3) })).toBeNull();
   });
 });

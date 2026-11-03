@@ -6691,3 +6691,810 @@
     align-items: start;
   }
 }
+
+/* ===========================================================================
+   Game-feel pass: lobby home, deck and collection cards, upgrade feedback.
+   Presentation only. Every value still comes from the server-backed models,
+   and every animation has a reduced-motion and .app-calm fallback.
+   ========================================================================= */
+
+/* ------------------------------------------------- chunky orange action */
+
+.app-btn--battle {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  transform-origin: 50% 100%;
+  background: linear-gradient(180deg, #ffdb6a 0%, var(--battle-orange-light) 24%, #ff9a12 80%, #f28a08 100%);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 247, 210, 0.85),
+    inset 0 -4px 0 rgba(196, 107, 0, 0.5),
+    0 5px 0 var(--battle-orange-base),
+    0 14px 26px rgba(255, 163, 24, 0.3);
+}
+
+/* Gloss cap across the top half, under the label. */
+.app-btn--battle::before {
+  content: "";
+  position: absolute;
+  inset: 3px 6px 52% 6px;
+  z-index: -1;
+  border-radius: 11px 11px 40% 40% / 11px 11px 14px 14px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.08));
+  pointer-events: none;
+}
+
+@media (hover: hover) {
+  .app-btn--battle:not([disabled]):hover {
+    transform: translateY(-2px);
+    filter: brightness(1.05) saturate(1.05);
+    box-shadow:
+      inset 0 2px 0 rgba(255, 247, 210, 0.9),
+      inset 0 -4px 0 rgba(196, 107, 0, 0.5),
+      0 7px 0 var(--battle-orange-base),
+      0 18px 30px rgba(255, 163, 24, 0.42);
+  }
+}
+
+/* Pressed: the button squashes onto its base. */
+.app-btn--battle:not([disabled]):active {
+  transform: translateY(4px) scaleY(0.95);
+  filter: brightness(0.97);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 247, 210, 0.7),
+    inset 0 -2px 0 rgba(196, 107, 0, 0.5),
+    0 1px 0 var(--battle-orange-base),
+    0 5px 10px rgba(255, 163, 24, 0.22);
+}
+
+.app-btn--battle[disabled] {
+  filter: saturate(0.55);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 247, 210, 0.5),
+    0 3px 0 var(--battle-orange-base);
+}
+
+@media (hover: hover) {
+  .app-btn--ghost:not([disabled]):hover {
+    transform: translateY(-1px);
+    filter: brightness(1.12);
+  }
+}
+
+.app-btn--ghost:not([disabled]):active {
+  transform: translateY(3px) scaleY(0.96);
+}
+
+.app-nav__item {
+  transition: transform 120ms var(--app-ease-out), color 120ms var(--app-ease-out);
+}
+
+.app-nav__item:not(.app-nav__item--disabled):active {
+  transform: scale(0.95);
+}
+
+@media (hover: hover) {
+  .app-nav__item:not(.app-nav__item--active):not(.app-nav__item--disabled):hover {
+    color: #fff;
+  }
+}
+
+/* ------------------------------------------------------- lobby: stage */
+
+/* A gold inner trim and corner studs frame the arena stage as a plate. */
+.app-home .app-commander::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  z-index: 4;
+  border: 1px solid rgba(255, 200, 61, 0.3);
+  border-radius: 13px;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 9px 9px, #ffe08a 0 2.5px, #9a5a12 3px, transparent 3.6px),
+    radial-gradient(circle at calc(100% - 9px) 9px, #ffe08a 0 2.5px, #9a5a12 3px, transparent 3.6px),
+    radial-gradient(circle at 9px calc(100% - 9px), #ffe08a 0 2.5px, #9a5a12 3px, transparent 3.6px),
+    radial-gradient(circle at calc(100% - 9px) calc(100% - 9px), #ffe08a 0 2.5px, #9a5a12 3px, transparent 3.6px);
+  box-shadow: inset 0 0 22px rgba(18, 11, 69, 0.55);
+}
+
+/* The pedestal gets the lavender-cyan rim from the lobby reference. */
+.app-home .app-commander__disc {
+  border-color: rgba(61, 217, 255, 0.6);
+  box-shadow:
+    0 0 34px rgba(143, 123, 255, 0.55),
+    0 0 14px rgba(61, 217, 255, 0.35),
+    inset 0 0 26px rgba(61, 217, 255, 0.3);
+}
+
+.app-home .app-commander__title {
+  text-shadow: 0 3px 0 rgba(18, 11, 69, 0.75);
+}
+
+/* ------------------------------------------------- lobby: battle deck */
+
+.app-home .app-deck__head {
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.app-home .app-deck__label {
+  font-family: var(--font-game);
+  font-size: 19px;
+  font-weight: 400;
+  line-height: 22px;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: #fff;
+  -webkit-text-stroke: 2px var(--outline);
+  paint-order: stroke fill;
+}
+
+.app-home .app-deck__links {
+  align-items: center;
+  gap: 6px;
+}
+
+/* Secondary deck actions are small plates. The visible plate stays compact,
+   and a vertical-only hit extension gives each a 44px target without
+   overlapping its neighbour. */
+.app-home .app-deck__edit {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 2px solid var(--outline);
+  border-radius: 10px;
+  background: linear-gradient(180deg, var(--plate-light), var(--plate-mid));
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.18),
+    0 3px 0 rgba(18, 11, 69, 0.72);
+  color: #fff;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  transition: transform 120ms var(--app-ease-out), filter 120ms var(--app-ease-out);
+}
+
+.app-home .app-deck__edit::after {
+  content: "";
+  position: absolute;
+  inset: -8px 0;
+}
+
+@media (hover: hover) {
+  .app-home .app-deck__edit:hover {
+    filter: brightness(1.14);
+    transform: translateY(-1px);
+  }
+}
+
+.app-home .app-deck__edit:active {
+  transform: translateY(2px);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.18),
+    0 1px 0 rgba(18, 11, 69, 0.72);
+}
+
+/* ---------------------------------------------- lobby: battle cluster */
+
+.app-home .app-battle {
+  padding: 14px 14px 10px;
+  background:
+    radial-gradient(ellipse 70% 90% at 50% 0%, rgba(255, 200, 61, 0.2), transparent 62%),
+    linear-gradient(180deg, #2c1e86 0%, var(--plate-dark) 72%);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.18),
+    inset 0 0 0 1px rgba(255, 200, 61, 0.22),
+    0 5px 0 rgba(18, 11, 69, 0.72),
+    0 18px 34px rgba(10, 6, 40, 0.5);
+}
+
+/* Rivets in the plate corners. */
+.app-home .app-battle::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 10px 10px, #cdb8ff 0 2px, #2a1b7a 2.5px, transparent 3.2px),
+    radial-gradient(circle at calc(100% - 10px) 10px, #cdb8ff 0 2px, #2a1b7a 2.5px, transparent 3.2px),
+    radial-gradient(circle at 10px calc(100% - 10px), #cdb8ff 0 2px, #2a1b7a 2.5px, transparent 3.2px),
+    radial-gradient(circle at calc(100% - 10px) calc(100% - 10px), #cdb8ff 0 2px, #2a1b7a 2.5px, transparent 3.2px);
+}
+
+.app-home .app-battle__row {
+  flex-wrap: nowrap;
+}
+
+.app-home .app-battle .app-btn--battle {
+  flex: 1 1 170px;
+  max-width: 300px;
+  min-height: 70px;
+  font-size: 33px;
+  -webkit-text-stroke-width: 3.5px;
+}
+
+.app-home .app-battle .app-btn--battle svg {
+  width: 30px;
+  height: 30px;
+}
+
+/* A slow light sweep invites the tap without moving the button. */
+.app-home .app-battle .app-btn--battle::after {
+  content: "";
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  left: -40%;
+  z-index: -1;
+  width: 32%;
+  transform: skewX(-20deg) translateX(0);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+  pointer-events: none;
+  animation: app-battle-shine 4.8s var(--app-ease-out) 1.2s infinite;
+}
+
+@keyframes app-battle-shine {
+  0% { transform: skewX(-20deg) translateX(0); opacity: 0; }
+  6% { opacity: 1; }
+  28%, 100% { transform: skewX(-20deg) translateX(560%); opacity: 0; }
+}
+
+.app-home .app-battle .app-btn--ghost {
+  flex: none;
+  min-height: 48px;
+  padding: 0 14px;
+}
+
+/* A short desktop viewport keeps the whole home, nav included, above the fold. */
+@media (min-width: 1024px) and (max-height: 900px) {
+  .app-home .app-battle {
+    padding: 10px 12px 8px;
+  }
+
+  .app-home .app-battle .app-btn--battle {
+    min-height: 60px;
+    font-size: 30px;
+  }
+
+  .app-home .app-deck__head {
+    margin-bottom: 4px;
+  }
+}
+
+@media (max-width: 380px) {
+  .app-home .app-battle {
+    padding-inline: 10px;
+  }
+
+  .app-home .app-battle__row {
+    gap: 8px;
+  }
+
+  .app-home .app-battle .app-btn--battle {
+    padding: 0 16px;
+    font-size: 29px;
+  }
+
+  .app-home .app-battle .app-btn--ghost {
+    padding: 0 10px;
+    letter-spacing: 0.06em;
+  }
+}
+
+/* ------------------------------------- deck and collection card states */
+
+.app-slot,
+.app-tile {
+  transition:
+    transform 160ms var(--app-ease-out),
+    box-shadow 160ms var(--app-ease-out),
+    border-color 160ms var(--app-ease-out),
+    filter 160ms var(--app-ease-out);
+}
+
+@media (hover: hover) {
+  .app-slot:not(.app-slot--empty):hover,
+  .app-tile:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.08);
+  }
+}
+
+/* Selected cards lift and take a bright gold outline. */
+.app-slot--selected,
+.app-tile--selected,
+.app-slot--selected:hover,
+.app-tile--selected:hover {
+  transform: translateY(-4px);
+  border-color: #fff1b0;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.24),
+    0 6px 0 rgba(18, 11, 69, 0.7),
+    0 0 0 2px var(--coin-gold),
+    0 0 22px rgba(255, 200, 61, 0.45);
+}
+
+.app-slot--selected:active,
+.app-tile--selected:active {
+  transform: translateY(-1px);
+}
+
+/* Ready to upgrade: green rim, never confused with the gold selection. */
+.app-tile--ready:not(.app-tile--selected),
+.app-slot--ready:not(.app-slot--selected) {
+  border-color: #5fd85a;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.2),
+    0 4px 0 rgba(18, 11, 69, 0.7),
+    0 0 14px rgba(67, 201, 59, 0.35);
+}
+
+/* Level plate across the bottom of the art, with cyan progress under it. */
+.app-lvl {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  bottom: 3px;
+  z-index: 3;
+  display: grid;
+  gap: 2px;
+  justify-items: stretch;
+  pointer-events: none;
+}
+
+.app-lvl__plate {
+  display: block;
+  padding: 2px 4px 1px;
+  border: 2px solid var(--outline);
+  border-radius: 6px;
+  background: linear-gradient(180deg, #8f7bff 0%, #5a44d9 48%, #3a2aa6 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 2px 0 rgba(18, 11, 69, 0.6);
+  color: #fff;
+  font-family: var(--font-game);
+  font-size: 10px;
+  line-height: 11px;
+  text-align: center;
+  white-space: nowrap;
+  -webkit-text-stroke: 1.5px var(--outline);
+  paint-order: stroke fill;
+}
+
+.app-lvl__bar {
+  display: block;
+  height: 5px;
+  overflow: hidden;
+  border: 1px solid var(--outline);
+  border-radius: 999px;
+  background: rgba(8, 7, 39, 0.9);
+}
+
+.app-lvl__bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #1bb3e7, var(--xp-cyan) 70%, #b4f7ff);
+  box-shadow: 0 0 6px rgba(61, 217, 255, 0.7);
+  transition: width 420ms var(--app-ease-out);
+}
+
+.app-lvl--ready .app-lvl__plate {
+  background: linear-gradient(180deg, #8ff07f 0%, #43c93b 50%, #2e9e2a 100%);
+}
+
+.app-lvl--ready .app-lvl__bar > span {
+  background: linear-gradient(90deg, #43c93b, #9cf58e);
+  box-shadow: 0 0 6px rgba(67, 201, 59, 0.8);
+}
+
+.app-lvl--maxed .app-lvl__plate {
+  background: linear-gradient(180deg, #fff0ae 0%, #ffc83d 48%, #c27a17 100%);
+}
+
+.app-lvl--maxed .app-lvl__bar > span {
+  background: linear-gradient(90deg, #ffc83d, #fff0ae);
+  box-shadow: 0 0 6px rgba(255, 200, 61, 0.7);
+}
+
+/* The upgrade-ready arrow sits on the plate's right end. */
+.app-lvl__up {
+  position: absolute;
+  top: -10px;
+  right: -5px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--outline);
+  border-radius: 50%;
+  background: linear-gradient(180deg, #8ff07f, #2e9e2a);
+  box-shadow: 0 2px 0 rgba(18, 11, 69, 0.7), 0 0 10px rgba(67, 201, 59, 0.7);
+  animation: app-badge-pulse 2.4s ease-in-out infinite;
+}
+
+.app-lvl__up svg {
+  display: block;
+  width: 12px;
+  height: 12px;
+}
+
+@keyframes app-badge-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+/* The art keeps room for the plate. The art box itself never changes size:
+   an explicit zero minimum stops the portrait from stretching the 5:7 box. */
+.app-tile__art:has(.app-lvl),
+.app-slot__art:has(.app-lvl) {
+  min-height: 0;
+  padding-bottom: 24px;
+}
+
+.app-tile__art:has(.app-lvl) > img,
+.app-slot__art:has(.app-lvl) > img {
+  min-height: 0;
+  max-height: 100%;
+}
+
+/* In the detail sheet the badge belongs to the progression heading, not the
+   sheet corner, so it never lands under the close button. */
+.app-progression__head .app-progression__badge {
+  position: static;
+  flex: none;
+  min-height: 24px;
+  padding: 3px 8px;
+  font-size: 10px;
+}
+
+/* Green upgrade action, separate from the one orange action per screen. */
+.app-btn--upgrade {
+  min-height: 48px;
+  padding: 0 18px;
+  border-color: #155a12;
+  background: linear-gradient(180deg, #8ff07f 0%, #5fd85a 22%, #43c93b 74%, #35ad2e 100%);
+  color: #fff;
+  font-family: var(--font-game);
+  font-size: 18px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  -webkit-text-stroke: 2.5px #1d6a19;
+  paint-order: stroke fill;
+  box-shadow:
+    inset 0 2px 0 rgba(235, 255, 225, 0.8),
+    inset 0 -3px 0 rgba(30, 110, 25, 0.5),
+    0 4px 0 #2e7e28,
+    0 10px 18px rgba(67, 201, 59, 0.28);
+  transform-origin: 50% 100%;
+}
+
+@media (hover: hover) {
+  .app-btn--upgrade:not([disabled]):hover {
+    transform: translateY(-1px);
+    filter: brightness(1.06);
+  }
+}
+
+.app-btn--upgrade:not([disabled]):active {
+  transform: translateY(3px) scaleY(0.95);
+  box-shadow:
+    inset 0 2px 0 rgba(235, 255, 225, 0.7),
+    0 1px 0 #2e7e28;
+}
+
+/* Locked, maxed and in-flight states read as a flat plate, not a call to action. */
+.app-btn--upgrade[disabled] {
+  border-color: var(--outline);
+  background: linear-gradient(180deg, var(--plate-light), var(--plate-mid));
+  font-size: 14px;
+  -webkit-text-stroke: 2px var(--outline);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.14), 0 3px 0 rgba(18, 11, 69, 0.7);
+  opacity: 0.85;
+}
+
+.app-btn--upgrade[aria-busy="true"] {
+  cursor: progress;
+}
+
+.app-btn--upgrade[aria-busy="true"]::after {
+  content: "";
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: app-spin 800ms linear infinite;
+}
+
+@keyframes app-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* The detail sheet upgrade row needs a real button, not the old 11px label. */
+.app-progression__upgrade .app-btn--upgrade {
+  min-height: 48px;
+  padding: 0 18px;
+  font-size: 18px;
+}
+
+.app-progression__upgrade .app-btn--upgrade[disabled] {
+  font-size: 14px;
+}
+
+/* ---------------------------------------------- upgrade celebration */
+
+.app-levelup {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px calc(var(--app-nav-h) + env(safe-area-inset-bottom) + 16px);
+  background: radial-gradient(ellipse at 50% 40%, rgba(90, 68, 217, 0.55), rgba(12, 7, 44, 0.9) 70%);
+  animation: app-levelup-dim 260ms ease-out both;
+}
+
+.app-levelup__panel {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  width: min(340px, 100%);
+  padding: 22px 18px 18px;
+  border: 3px solid var(--outline);
+  border-radius: 18px;
+  background: linear-gradient(180deg, var(--plate-mid) 0%, var(--plate-dark) 72%);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.2),
+    inset 0 0 0 1px rgba(255, 200, 61, 0.3),
+    0 6px 0 rgba(18, 11, 69, 0.8),
+    0 24px 48px rgba(6, 3, 26, 0.6);
+  text-align: center;
+  animation: app-levelup-in 320ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.app-levelup__eyebrow {
+  margin: 0;
+  color: #b4f7a8;
+  font-family: var(--font-data);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.app-levelup__stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 150px;
+  height: 170px;
+}
+
+/* Light burst: soft rays behind the card art. */
+.app-levelup__burst {
+  position: absolute;
+  inset: -40px;
+  z-index: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(255, 244, 196, 0.85) 0%, rgba(255, 200, 61, 0.35) 24%, transparent 58%),
+    repeating-conic-gradient(from 0deg, rgba(255, 224, 138, 0.42) 0deg 8deg, transparent 8deg 24deg);
+  -webkit-mask-image: radial-gradient(circle, #000 18%, transparent 68%);
+  mask-image: radial-gradient(circle, #000 18%, transparent 68%);
+  pointer-events: none;
+  animation: app-levelup-burst 700ms var(--app-ease-out) 120ms both, app-levelup-spin 18s linear 820ms infinite;
+}
+
+.app-levelup__card {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 112px;
+  aspect-ratio: 5 / 7;
+  padding: 10px 6px;
+  border: 3px solid var(--outline);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 50% 60%, rgba(143, 123, 255, 0.45), transparent 70%),
+    linear-gradient(180deg, var(--plate-light), var(--plate-dark));
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.25),
+    0 5px 0 rgba(18, 11, 69, 0.8),
+    0 0 28px rgba(255, 200, 61, 0.45);
+  animation: app-levelup-pop 520ms cubic-bezier(0.34, 1.56, 0.64, 1) 160ms both;
+}
+
+.app-levelup__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.app-levelup__initial {
+  font-family: var(--font-game);
+  font-size: 34px;
+  color: var(--app-ink-65);
+}
+
+.app-levelup__name {
+  margin: 0;
+  color: #fff;
+  font-family: var(--font-game);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 27px;
+  -webkit-text-stroke: 2.5px var(--outline);
+  paint-order: stroke fill;
+}
+
+/* Framed level plate: before, arrow, after. */
+.app-levelup__levels {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.app-levelup__plate {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 2px solid var(--outline);
+  border-radius: 10px;
+  background: linear-gradient(180deg, var(--plate-light), var(--plate-mid));
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.22), 0 3px 0 rgba(18, 11, 69, 0.7);
+  color: rgba(255, 255, 255, 0.8);
+  font-family: var(--font-game);
+  font-size: 17px;
+  line-height: 1;
+  white-space: nowrap;
+  -webkit-text-stroke: 2px var(--outline);
+  paint-order: stroke fill;
+}
+
+.app-levelup__plate--after {
+  min-height: 44px;
+  border-color: #155a12;
+  background: linear-gradient(180deg, #8ff07f 0%, #43c93b 55%, #2e9e2a 100%);
+  color: #fff;
+  font-size: 21px;
+  -webkit-text-stroke-color: #1d6a19;
+  box-shadow:
+    inset 0 2px 0 rgba(235, 255, 225, 0.8),
+    0 3px 0 #2e7e28,
+    0 0 18px rgba(67, 201, 59, 0.55);
+  animation: app-levelup-pop 460ms cubic-bezier(0.34, 1.56, 0.64, 1) 520ms both;
+}
+
+.app-levelup__arrow {
+  display: grid;
+  place-items: center;
+  color: #b4f7a8;
+}
+
+.app-levelup__meter {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+}
+
+.app-levelup__track {
+  display: block;
+  height: 12px;
+  overflow: hidden;
+  border: 2px solid var(--outline);
+  border-radius: 999px;
+  background: rgba(8, 7, 39, 0.9);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+
+.app-levelup__track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #1bb3e7, var(--xp-cyan) 70%, #b4f7ff);
+  box-shadow: 0 0 8px rgba(61, 217, 255, 0.7);
+  transform-origin: 0 50%;
+  animation: app-levelup-fill 700ms var(--app-ease-out) 760ms both;
+}
+
+.app-levelup__meter-label {
+  color: var(--app-ink-85);
+  font-family: var(--font-data);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 14px;
+}
+
+.app-levelup__note {
+  margin: 0;
+  color: var(--app-ink-65);
+  font-size: 11px;
+  line-height: 15px;
+}
+
+.app-levelup__done {
+  width: 100%;
+}
+
+@keyframes app-levelup-dim {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes app-levelup-in {
+  from { opacity: 0; transform: translateY(20px) scale(0.9); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes app-levelup-pop {
+  0% { opacity: 0; transform: scale(0.6); }
+  70% { opacity: 1; transform: scale(1.08); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes app-levelup-burst {
+  from { opacity: 0; transform: scale(0.5); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes app-levelup-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes app-levelup-fill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* Calm (reduced motion or Save-Data) and reduced-motion users get the final
+   frame of every flourish with no movement. */
+.app-calm .app-lvl__up,
+.app-calm .app-home .app-battle .app-btn--battle::after,
+.app-calm.app-levelup,
+.app-calm .app-levelup,
+.app-calm .app-levelup * {
+  animation: none !important;
+}
+
+.app-calm .app-home .app-battle .app-btn--battle::after {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-btn--battle,
+  .app-btn--upgrade,
+  .app-slot,
+  .app-tile,
+  .app-nav__item,
+  .app-home .app-deck__edit {
+    transition: none;
+  }
+
+  .app-slot--selected,
+  .app-tile--selected,
+  .app-slot--selected:hover,
+  .app-tile--selected:hover {
+    transform: none;
+  }
+
+  .app-home .app-battle .app-btn--battle::after {
+    animation: none !important;
+    opacity: 0;
+  }
+
+  .app-lvl__up,
+  .app-levelup,
+  .app-levelup * {
+    animation: none !important;
+  }
+}

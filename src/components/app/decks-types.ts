@@ -99,6 +99,21 @@ export type ProgressionPhase = "loading" | "ready" | "unavailable" | "session" |
 
 export type UpgradeStatus = "idle" | "working" | "success" | "error";
 
+/**
+ * A confirmed card upgrade, ready to celebrate. Built only after the server
+ * answered `upgraded` or `duplicate` and the progression re-read returned a
+ * purchased level above the level the request expected.
+ */
+export interface UpgradeCelebration {
+  cardId: string;
+  /** The purchased level the request was sent against. */
+  fromLevel: number;
+  /** The purchased level the server returned on the re-read. */
+  toLevel: number;
+  /** The request key, so a new confirmed upgrade remounts the reveal. */
+  key: string;
+}
+
 /** The card the detail panel is showing. */
 export interface DecksSelection {
   /** Card id in the collection, or the commander marker. */
@@ -178,6 +193,9 @@ export interface DecksViewProps {
   upgradeCardId: string | null;
   upgradeStatus: UpgradeStatus;
   upgradeMessage: string | null;
+  /** A server-confirmed upgrade to celebrate, or null. */
+  upgradeCelebration?: UpgradeCelebration | null;
+  onDismissCelebration?: () => void;
   onUpgrade: (cardId: string) => void;
 
   saveState: DeckSaveState;
