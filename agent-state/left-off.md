@@ -6,7 +6,7 @@
 - Checks: tsc clean, scoped eslint clean, next build passes, 1501 tests pass. 22 failures in 16 files are DB-backed (clans, gold, card XP, sponsorships, messages, friends/loans/gifts, legacy) plus site copy `/app/play` links, none touched by this branch.
 - Evidence: fixture screenshots in `ChogRoyale-Assets/game-feel-overhaul/{battle,ui}`.
 - Open: commander size computed not rendered, upgrade stat deltas need a server field, pre-existing secondary orange buttons on decks, live two-client and real-device QA.
-- Next: owner review of the PR. Sub-agents run on Haiku per owner preference.
+- PR #23 open: https://github.com/Devendurance/ChogRoyale/pull/23. Next: owner review. No merge or deploy. Sub-agents run on Haiku per owner preference.
 
 # Previous task: Desktop lobby Battle Deck card layout (PR #22, merged as e951154)
 
