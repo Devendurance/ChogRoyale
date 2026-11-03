@@ -95,6 +95,7 @@ import {
   type VfxStatus,
 } from "./battle-vfx";
 import { VfxLayer } from "./vfx-layer";
+import { classWeight, hasFootsteps, hpBarWidth, isSmallClass, sizeClassOf, unitDrawScale, unitDrawnHeight, type UnitSizeClass } from "./unit-scale";
 
 /** Commander class sheets live in the units manifest as `commander_<class>`. */
 const commanderAnimId = (cls: string) => `commander_${cls}`;
@@ -116,6 +117,7 @@ const S = 5; // pixels per arena unit
 // Allegiance follows the v3 orientation lock: the viewer is blue, the
 // opponent red, derived from owner === seat for both perspectives.
 const OWN = TEAM_COLORS.friendly;
+const BAR_OUTLINE = 0x120b45;
 const FOE = TEAM_COLORS.opponent;
 const KIT_URL = "/assets/chog-kit/v001";
 
@@ -217,6 +219,28 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
       const fx: Fx[] = [];
       const seenEventKeys = new Set<string>();
       const labels = new Map<string, import("phaser").GameObjects.Text>();
+      // Level badge digits and floating deploy callouts, pooled per entity id
+      // and destroyed when the entity leaves the frame or the callout ends.
+      const badges = new Map<string, import("phaser").GameObjects.Text>();
+      const trails = new Map<string, { frac: number; from: number; at: number }>();
+      interface Callout {
+        text: import("phaser").GameObjects.Text;
+        x: number;
+        y: number;
+        born: number;
+      }
+      const callouts: Callout[] = [];
+      // Restrained screen nudge (titan landing, structure destroyed).
+      let nudgeAt = -Infinity;
+      let resolvedFont: string | null = null;
+      // The HUD's game face when next/font has defined it, else a bold fallback.
+      const gameFont = () => {
+        if (resolvedFont) return resolvedFont;
+        const el = host.current;
+        const v = el ? getComputedStyle(el).getPropertyValue("--font-lilita").trim() || getComputedStyle(el).getPropertyValue("--font-game").trim() : "";
+        if (v) resolvedFont = `${v}, "Lilita One", "Arial Black", sans-serif`;
+        return resolvedFont ?? '"Lilita One", "Arial Black", Impact, sans-serif';
+      };
       const missing = new Set<string>();
       const rec = (id: string): SpriteRecord | null => (manifest && !missing.has(id) ? byId(manifest, id) : null);
 
@@ -243,6 +267,10 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
         view: UnitView;
         /** Last attack cycle whose impact frame spawned its effect. */
         lastImpact: string | null;
+        /** Size class of an animated sheet (unit-scale.ts), else null. */
+        cls: UnitSizeClass | null;
+        /** Last footstep puff (heavy and titan classes). */
+        stepAt: number;
       }
       interface FxImg {
         img: import("phaser").GameObjects.Image;
@@ -324,6 +352,11 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
         mountPool.clear();
         for (const label of labels.values()) label.destroy();
         labels.clear();
+        for (const b of badges.values()) b.destroy();
+        badges.clear();
+        trails.clear();
+        for (const c of callouts) c.text.destroy();
+        callouts.length = 0;
         fx.length = 0;
         towerFx.length = 0;
         defenderStates.clear();
@@ -334,6 +367,8 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
       class Arena extends Phaser.Scene {
         g!: import("phaser").GameObjects.Graphics;
         og!: import("phaser").GameObjects.Graphics;
+        /** Tower and Core plates: above unit bars, badges and callouts. */
+        plateG!: import("phaser").GameObjects.Graphics;
         preload() {
           this.load.on("loaderror", (file: { key: string }) => missing.add(file.key));
           if (manifest) for (const a of manifest.assets) this.load.image(a.stableAssetId, `${KIT_URL}/${a.path}`);
@@ -373,14 +408,17 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
           }
           this.g = this.add.graphics().setDepth(-100);
           this.og = this.add.graphics().setDepth(3000);
+          this.plateG = this.add.graphics().setDepth(3010);
           vfx = new VfxLayer(this, Phaser, vfxManifest, missing, reduced);
         }
         update() {
           const f = feed.current;
           const g = this.g;
           const og = this.og;
+          const plateG = this.plateG;
           g.clear();
           og.clear();
+          plateG.clear();
           const now = performance.now();
           if (!f || !f.frame) return;
           const { start, frame, prev } = f;
@@ -511,20 +549,143 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
               zonePool.delete(key);
             }
           }
-          const hpBar = (x: number, y: number, w: number, hp: number, max: number, shield = 0) => {
-            og.fillStyle(0x000000, 0.6).fillRect(x - w / 2, y, w, 4);
-            og.fillStyle(hp / max > 0.5 ? 0x22c55e : hp / max > 0.25 ? 0xeab308 : 0xef4444, 1).fillRect(x - w / 2, y, (w * Math.max(0, hp)) / max, 4);
-            if (shield > 0) og.fillStyle(0xe5e7eb, 1).fillRect(x - w / 2, y - 3, Math.min(w, (w * shield) / max), 2);
+          // Unit HP bar: player-relative team fill (friendly blue, opponent
+          // red from owner === seat), dark outline, a light "trail" segment
+          // that drains toward the real HP after an observed authoritative
+          // drop, the shield strip above it, and a gentle pulse under 25%.
+          // The optional level badge sits at the bar's left end and shows
+          // only the frame's own `level` (frozen by the engine at match
+          // start); it is never inferred from HP or art.
+          const seenBars = new Set<string>();
+          const badgeSpots: { key: string; x: number; y: number }[] = [];
+          const trailFrac = (id: string, frac: number): number => {
+            let tr = trails.get(id);
+            if (!tr || frac > tr.frac + 1e-6) tr = { frac, from: frac, at: -Infinity };
+            else if (frac < tr.frac - 1e-6) {
+              const shown = trailAt(tr);
+              tr = { frac, from: Math.max(shown, tr.frac), at: now };
+            }
+            trails.set(id, tr);
+            return trailAt(tr);
+          };
+          const trailAt = (tr: { frac: number; from: number; at: number }) => {
+            const p = (now - tr.at - 80) / 300;
+            if (p <= 0) return tr.from;
+            if (p >= 1) return tr.frac;
+            // Reduced motion: hold the lost chunk briefly, then drop it, no drain.
+            return reduced ? tr.from : tr.from + (tr.frac - tr.from) * (1 - (1 - p) * (1 - p));
+          };
+          const hpBar = (
+            id: string,
+            x: number,
+            y: number,
+            w: number,
+            hp: number,
+            max: number,
+            shield: number,
+            owner: number,
+            o: { level?: number; small?: boolean; h?: number; group?: string; g?: import("phaser").GameObjects.Graphics } = {}
+          ) => {
+            seenBars.add(id);
+            const og = o.g ?? this.og;
+            const h = o.h ?? (o.small ? 4 : 5);
+            const x0 = x - w / 2;
+            const frac = max > 0 ? Math.max(0, Math.min(1, hp / max)) : 0;
+            const trail = trailFrac(id, frac);
+            og.fillStyle(BAR_OUTLINE, 0.95).fillRect(x0 - 1, y - 1, w + 2, h + 2);
+            og.fillStyle(0x2a1f5c, 1).fillRect(x0, y, w, h);
+            if (trail > frac) og.fillStyle(0xfff1c1, 0.92).fillRect(x0 + w * frac, y, w * (trail - frac), h);
+            const low = frac > 0 && frac < 0.25;
+            const pulse = low && !reduced ? 0.62 + 0.38 * (0.5 + 0.5 * Math.sin(now / 150)) : 1;
+            og.fillStyle(col(owner), pulse).fillRect(x0, y, w * frac, h);
+            og.fillStyle(0xffffff, 0.3 * pulse).fillRect(x0, y, w * frac, 1);
+            if (shield > 0 && max > 0) {
+              const sw = Math.min(w, (w * shield) / max);
+              og.fillStyle(BAR_OUTLINE, 0.9).fillRect(x0 - 1, y - 4, sw + 2, 4);
+              og.fillStyle(0xe5e7eb, 1).fillRect(x0, y - 3, sw, 2);
+            }
+            // A packed swarm shares one level per owner and card, so a badge
+            // that would land on top of a sibling's badge is skipped instead
+            // of stacking unreadable digits. Each member keeps its own bar.
+            const crowded =
+              o.level !== undefined &&
+              o.small &&
+              badgeSpots.some((b) => b.key === o.group && Math.abs(b.x - x) < 16 && Math.abs(b.y - y) < 10);
+            if (o.level !== undefined && !crowded) {
+              if (o.small && o.group) badgeSpots.push({ key: o.group, x, y });
+              const bs = o.small ? 11 : 13;
+              const cx = x0 - bs / 2 + 1;
+              const cy = y + h / 2;
+              og.fillStyle(BAR_OUTLINE, 1).fillRoundedRect(cx - bs / 2 - 1, cy - bs / 2 - 1, bs + 2, bs + 2, 3);
+              og.fillStyle(col(owner), 1).fillRoundedRect(cx - bs / 2, cy - bs / 2, bs, bs, 2.5);
+              og.fillStyle(0xffffff, 0.28).fillRect(cx - bs / 2 + 1.5, cy - bs / 2 + 1, bs - 3, 1.5);
+              let t = badges.get(id);
+              if (!t) {
+                t = this.add
+                  .text(0, 0, "", { fontFamily: gameFont(), fontSize: `${o.small ? 9 : 11}px`, color: "#ffffff", stroke: "#120b45", strokeThickness: 3, resolution: 3 })
+                  .setOrigin(0.5, 0.5)
+                  .setDepth(3001);
+                badges.set(id, t);
+              }
+              const txt = String(o.level);
+              if (t.text !== txt) t.setText(txt);
+              t.setPosition(cx, cy + 0.5);
+            }
+          };
+          // Tower and Core plate: a Graphics-drawn emblem (crown for the Core,
+          // shield for a tower), a large stroked HP numeral and a team bar.
+          // Towers and Cores carry no level: their stats never scale with card
+          // levels (card-levels.ts), so a level number would be invented.
+          const structurePlate = (id: string, x: number, y: number, w: number, hp: number, max: number, owner: number, core: boolean) => {
+            const pg = this.plateG;
+            hpBar(`bar:${id}`, x, y, w, hp, max, 0, owner, { h: 6, g: pg });
+            const ex = x - w / 2 - 8;
+            const ey = y + 3;
+            const team = col(owner);
+            if (core) {
+              pg.fillStyle(BAR_OUTLINE, 1).fillCircle(ex, ey, 9);
+              pg.fillStyle(team, 1).fillCircle(ex, ey, 7.5);
+              // Crown: band plus three points, gold with a dark edge.
+              pg.fillStyle(BAR_OUTLINE, 1).fillRect(ex - 5.5, ey - 1, 11, 5.5);
+              pg.fillStyle(0xffc83d, 1).fillRect(ex - 4.5, ey, 9, 3.5);
+              for (const dx of [-4.5, 0, 4.5]) pg.fillTriangle(ex + dx - 2, ey + 0.5, ex + dx + 2, ey + 0.5, ex + dx, ey - 4.5);
+            } else {
+              const pts = (k: number) => [
+                { x: ex - 7 * k, y: ey - 8 * k },
+                { x: ex + 7 * k, y: ey - 8 * k },
+                { x: ex + 7 * k, y: ey + 1 * k },
+                { x: ex, y: ey + 8 * k },
+                { x: ex - 7 * k, y: ey + 1 * k },
+              ];
+              const shieldPath = (k: number) => {
+                const q = pts(k);
+                pg.beginPath().moveTo(q[0]!.x, q[0]!.y);
+                for (const v of q.slice(1)) pg.lineTo(v.x, v.y);
+                pg.closePath().fillPath();
+              };
+              pg.fillStyle(BAR_OUTLINE, 1);
+              shieldPath(1.15);
+              pg.fillStyle(team, 1);
+              shieldPath(0.95);
+              // Inner chevron crest: a plain mark, not a letter.
+              pg.lineStyle(1.8, 0xffe7a2, 0.95).beginPath().moveTo(ex - 4, ey + 1.5).lineTo(ex, ey - 3).lineTo(ex + 4, ey + 1.5).strokePath();
+              pg.lineStyle(1.2, 0xffffff, 0.45).beginPath().moveTo(ex - 4, ey + 4).lineTo(ex, ey + 0.5).lineTo(ex + 4, ey + 4).strokePath();
+            }
+            label(`hp:${id}`, `${hp}`, x, y - 8, "plate");
           };
           const seen = new Set<string>();
-          const label = (id: string, text: string, x: number, y: number) => {
+          const label = (id: string, text: string, x: number, y: number, style: "debug" | "plate" = "debug") => {
             seen.add(id);
             let l = labels.get(id);
             if (!l) {
-              l = this.add.text(0, 0, text, { fontSize: "11px", color: "#ffffff", fontFamily: "monospace" }).setOrigin(0.5).setDepth(2000);
+              l =
+                style === "plate"
+                  ? this.add.text(0, 0, text, { fontFamily: gameFont(), fontSize: "14px", color: "#ffffff", stroke: "#120b45", strokeThickness: 4, resolution: 3 }).setOrigin(0.5).setDepth(3011)
+                  : this.add.text(0, 0, text, { fontSize: "11px", color: "#ffffff", fontFamily: "monospace" }).setOrigin(0.5).setDepth(2000);
               labels.set(id, l);
             }
-            l.setText(text).setPosition(x, y);
+            if (l.text !== text) l.setText(text);
+            l.setPosition(x, y);
           };
           const all = new Map<string, { x: number; y: number }>();
           for (const u of [...frame.troops, ...frame.commanders, ...frame.buildings, ...frame.structures]) all.set(u.id, u);
@@ -548,8 +709,9 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
               // tinted; the dark contact shadow sits on top of the marker.
               // Animated sheets size it from half their drawn height, the same
               // proportion the v001 records produce.
-              const scale = anim ? anim.displayScale : displayScale(r);
-              const vis = anim ? anim.visibleHeight * scale * 0.5 : r.proposedDisplaySize.visibleHeight * scale;
+              // Animated sheets draw at the size-class policy (unit-scale.ts).
+              const scale = anim ? unitDrawScale(anim) : displayScale(r);
+              const vis = anim ? unitDrawnHeight(anim) * 0.5 : r.proposedDisplaySize.visibleHeight * scale;
               const ew = Math.max(16, vis * 0.85);
               const marker = this.add.ellipse(0, 0, ew, ew * 0.45, col(owner), 0.35);
               marker.setStrokeStyle(2, owner === seat ? 0x93c5fd : 0xfca5a5, 0.95);
@@ -583,6 +745,8 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                 // troops show their backs, the opponent's their faces.
                 view: owner === seat ? "rear" : "front",
                 lastImpact: null,
+                cls: anim ? sizeClassOf(anim) : null,
+                stepAt: -Infinity,
               };
               // A building placed this session rises through its deploy clip.
               if (anim && freshSpawns.has(id)) e.animSt = { ...e.animSt, deployAt: now };
@@ -605,7 +769,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             const key = now - st.firedAt < 2000 ? `f${st.firedAt}` : st.engagedSince !== null ? `e${st.engagedSince}:${Math.floor((now - st.engagedSince) / a.attackPeriodMs)}` : null;
             if (!key || key === e.lastImpact) return;
             e.lastImpact = key;
-            const drawn = a.visibleHeight * a.displayScale;
+            const drawn = unitDrawnHeight(a);
             const flip = e.facingX < 0;
             const tip = anchorOffset(a, "muzzle", e.view, "attack", flip) ?? anchorOffset(a, "tip", e.view, "attack", flip);
             const from = tip ? { dx: tip.x, dy: tip.y } : { dx: 0, dy: -drawn * 0.55 };
@@ -654,7 +818,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             if (e.lastHp >= 0 && hp < e.lastHp) {
               e.flashUntil = now + 140;
               e.animSt.hitAt = now;
-              const drawn = e.anim ? e.anim.visibleHeight * e.anim.displayScale : 0;
+              const drawn = e.anim ? unitDrawnHeight(e.anim) : 0;
               fx.push({
                 kind: "hit",
                 x: px,
@@ -683,9 +847,19 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
               const fr = unitFrame(e.anim, { ...e.animSt, goneAt: e.gone }, { now, moving: m.moving, view: e.view });
               e.img.setFrame(fr.frame);
               if (fr.clip === "attack") onAttackImpact(e, px, py, m.foe);
+              // Hit reaction from the observed authoritative HP drop: a ~60 ms
+              // bright additive flash, then the warm tint, and a tiny squash
+              // about the ground pivot for every class but the titan. The
+              // squash is motion, so reduced motion keeps only the flash.
+              const sinceHit = now - e.animSt.hitAt;
+              if (!reduced && e.cls !== "titan" && sinceHit >= 0 && sinceHit < 140) {
+                const k = Math.sin((sinceHit / 140) * Math.PI);
+                scaleX *= 1 + 0.07 * k;
+                scaleY *= 1 - 0.08 * k;
+              }
               e.img.setPosition(0, e.air ? -10 : 0).setScale(scaleX, scaleY).setFlipX(e.facingX < 0).setRotation(0);
-              // A light warm flash: the sheet's own hit clip carries the reaction.
-              if (e.flashUntil > now) e.img.setTint(0xffc2b8);
+              if (sinceHit >= 0 && sinceHit < 60) e.img.setTint(0x8a7f74).setTintMode(Phaser.TintModes.ADD);
+              else if (e.flashUntil > now) e.img.setTint(0xffc2b8).setTintMode(Phaser.TintModes.MULTIPLY);
               else e.img.clearTint();
               e.lastX = px;
               e.lastY = py;
@@ -764,7 +938,8 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             drawPh: () => void,
             name: string,
             anim: UnitAnimRecord | null = null,
-            motion?: UnitMotion
+            motion?: UnitMotion,
+            level?: number
           ) => {
             if (r) {
               const e = ensure(id, r, air, owner, anim);
@@ -772,13 +947,15 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
               updateEnt(e, id, x, y, hp, moving, owner, motion);
               const hpx = sx(x);
               if (e.anim) {
-                // Animated sheets carry their measured idle height: the bar sits just above the head.
-                const drawn = e.anim.visibleHeight * e.anim.displayScale;
-                hpBar(hpx, sy(y) - drawn - (air ? 14 : 3), Math.max(16, drawn * 0.6), hp, maxHp, shield);
+                // Animated sheets carry their measured idle height at the
+                // size-class draw scale: the bar sits just above the head.
+                const drawn = unitDrawnHeight(e.anim);
+                const cls = sizeClassOf(e.anim);
+                hpBar(id, hpx, sy(y) - drawn - (air ? 14 : 4), hpBarWidth(cls, drawn), hp, maxHp, shield, owner, { level, small: isSmallClass(cls), group: `${owner}:${e.anim.entityId}` });
                 return;
               }
-              const hpy = sy(y) - r.proposedDisplaySize.visibleHeight * displayScale(r) - (air ? 14 : 4);
-              hpBar(hpx, hpy, Math.max(16, r.proposedDisplaySize.visibleHeight * displayScale(r) * 0.6), hp, maxHp, shield);
+              const vis = r.proposedDisplaySize.visibleHeight * displayScale(r);
+              hpBar(id, hpx, sy(y) - vis - (air ? 14 : 5), hpBarWidth(null, vis), hp, maxHp, shield, owner, { level });
             } else {
               drawPh();
               label(id, name, sx(x), sy(y));
@@ -934,8 +1111,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                 // Presentation clamp: the far Core's bar and number would sit
                 // above the canvas edge. Keep them readable inside it.
                 const barY = Math.max(16, visualY + hb[1] / 2);
-                hpBar(x + (hb[0] + hb[2] / 2) / 2, barY, hb[2] / 2, s.hp, s.maxHp);
-                label(`hp:${s.id}`, `${s.hp}`, x, barY - 9);
+                structurePlate(s.id, x + (hb[0] + hb[2] / 2) / 2 + 4, barY, Math.max(30, hb[2] / 2 - 8), s.hp, s.maxHp, s.owner, core);
               } else if (!me.rubble) {
                 // Destroyed: only the dimmed base remains, like rubble.
                 me.rubble = true;
@@ -950,12 +1126,11 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                 const e = ensure(s.id, r, false, s.owner);
                 updateEnt(e, s.id, s.x, s.y, s.hp, false, s.owner);
                 const top = y - r.proposedDisplaySize.visibleHeight * displayScale(r);
-                hpBar(x, top - 4, 36, s.hp, s.maxHp);
-                label(`hp:${s.id}`, `${s.hp}`, x, top - 14);
+                structurePlate(s.id, x + 4, top - 4, 36, s.hp, s.maxHp, s.owner, core);
               } else {
                 og.fillStyle(col(s.owner), 0.9).fillRect(x - r0, y - r0, r0 * 2, r0 * 2);
                 og.lineStyle(2, 0x111827, 1).strokeRect(x - r0, y - r0, r0 * 2, r0 * 2);
-                hpBar(x, y - r0 - 7, r0 * 2, s.hp, s.maxHp);
+                hpBar(`bar:${s.id}`, x, y - r0 - 7, r0 * 2, s.hp, s.maxHp, 0, s.owner);
                 label(s.id, `${s.kind === "core" ? "CORE" : "T"} ${s.hp}`, x, y);
               }
             } else if (r) {
@@ -1036,17 +1211,18 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                 const pr = (b.footprint + 0.5) * S;
                 og.fillStyle(col(b.owner), 0.6).fillRect(x - pr, y - pr, pr * 2, pr * 2);
                 og.lineStyle(2, b.cardId === "rift_sentry" ? 0xfbbf24 : b.cardId === "chog_burrow" ? 0xa78bfa : b.cardId === "rift_mortar" ? 0xf97316 : 0xd1d5db, 1).strokeRect(x - pr, y - pr, pr * 2, pr * 2);
-                hpBar(x, y - pr - 6, pr * 2, b.hp, b.maxHp);
+                hpBar(b.id, x, y - pr - 6, pr * 2, b.hp, b.maxHp, 0, b.owner, { level: b.level });
               },
               b.cardId === "rift_sentry" ? "SEN" : b.cardId === "chog_burrow" ? "BUR" : b.cardId === "rift_mortar" ? "MOR" : "TOT",
               banim,
-              bmotion
+              bmotion,
+              b.level
             );
             if (b.nextSpawnAt !== undefined && b.spawnsLeft && b.spawnsLeft > 0) {
               const frac = 1 - Math.max(0, Math.min(1, (b.nextSpawnAt - frame.tick) / 50));
               const rr = ent("building", b.cardId);
               const top = banim
-                ? y - banim.visibleHeight * banim.displayScale - 12
+                ? y - unitDrawnHeight(banim) - 12
                 : rr ? y - rr.proposedDisplaySize.visibleHeight * displayScale(rr) - 10 : y - (b.footprint + 0.5) * S - 10;
               og.lineStyle(2, banim ? 0x5ff0ff : 0xa78bfa, 0.9).beginPath().arc(x, top, 4, -Math.PI / 2, -Math.PI / 2 + frac * Math.PI * 2).strokePath();
             }
@@ -1078,6 +1254,15 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
               const up = seat === 0 ? -1 : 1;
               const heading = foe ? { x: foe.x - u.x, y: up * (foe.y - u.y) } : moving ? { x: dx, y: up * dy } : null;
               motion = { moving, dx, foe, heading };
+              // Heavy footfalls: a small dust puff at the feet while observed
+              // moving, at most one per 450 ms per unit, under the VFX cap.
+              const pe = pool.get(u.id);
+              if (moving && pe && !reduced && vfx?.has("smoke") && hasFootsteps(pe.cls) && now - pe.stepAt > 450) {
+                pe.stepAt = now;
+                const w = classWeight(pe.cls);
+                const side = Math.floor(now / 450) % 2 === 0 ? -1 : 1;
+                vfx.spawn([{ tex: "smoke", animate: true, x: p.x + side * 0.9, y: p.y, life: 420, lift: 0, lift1: 4, scale: 0.2 * w, scale1: 0.34 * w, alpha: 0.5, alpha1: 0, blend: "normal", layer: "ground" }], now);
+              }
             }
             spriteOrFallback(
               u.id,
@@ -1096,11 +1281,12 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                   og.fillStyle(0x000000, 0.3).fillCircle(x, y + 6, 4);
                   og.fillStyle(col(u.owner), 1).fillTriangle(x, y - 9, x - 7, y + 3, x + 7, y + 3);
                 } else og.fillStyle(col(u.owner), 1).fillCircle(x, y, 6);
-                hpBar(x, y - 14, 14, u.hp, u.maxHp, u.shield);
+                hpBar(u.id, x, y - 14, 16, u.hp, u.maxHp, u.shield, u.owner, { level: u.level, small: true, group: `${u.owner}:${u.cardId}` });
               },
               (start.catalog[u.cardId]?.name ?? u.cardId).slice(0, 2),
               anim,
-              motion
+              motion,
+              u.level
             );
           }
           for (const c of frame.commanders) {
@@ -1137,7 +1323,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                 const y = sy(p.y);
                 og.fillStyle(col(c.owner), 1).fillCircle(x, y, 10);
                 og.lineStyle(3, 0xfbbf24, 1).strokeCircle(x, y, 11);
-                hpBar(x, y - 19, 24, c.hp, c.maxHp, c.shield);
+                hpBar(c.id, x, y - 19, 24, c.hp, c.maxHp, c.shield, c.owner);
               },
               c.cls.slice(0, 2).toUpperCase(),
               canim,
@@ -1363,6 +1549,31 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             ...frame.commanders.map((c) => ({ id: c.id, owner: c.owner, x: c.x, y: c.y, kind: "commander" as const, cardId: c.cardId })),
           ];
           const spellCtx = { radius: (id: string) => start.catalog[id]?.radius, reduced };
+          // Size class of a deployed card's sheet, for landing dust and nudges.
+          const classOfCard = (cardId: string): UnitSizeClass | null => {
+            if (cardId.startsWith("cmdr:")) return "commander";
+            const a = unitAnimFor(unitManifest, cardId);
+            return a ? sizeClassOf(a) : null;
+          };
+          // Deploy callout: the card's catalog name and, only when the frame
+          // carries it, the deployed entity's frozen level. Floats up and
+          // fades over ~900 ms; reduced motion shortens it and drops the rise.
+          const deployCallout = (e: FrameEvent) => {
+            const ids = ((e.entityIds as unknown[] | undefined) ?? []).map(String);
+            const pts = ids.map((id) => all.get(id)).filter((q): q is { x: number; y: number } => !!q);
+            const name = start.catalog[String(e.cardId)]?.name;
+            if (!pts.length || !name) return;
+            const ent0 = frame.troops.find((t) => t.id === ids[0]) ?? frame.buildings.find((b) => b.id === ids[0]);
+            const level = ent0?.level;
+            const ax = pts.reduce((a, q) => a + q.x, 0) / pts.length;
+            const ay = pts.reduce((a, q) => a + q.y, 0) / pts.length;
+            const text = this.add
+              .text(0, 0, level !== undefined ? `${name}\nLv ${level}` : name, { fontFamily: gameFont(), fontSize: "13px", color: "#ffffff", stroke: "#120b45", strokeThickness: 4, align: "center", lineSpacing: -3, resolution: 3 })
+              .setOrigin(0.5, 1)
+              .setDepth(3002);
+            callouts.push({ text, x: sx(ax), y: sy(ay) - 34, born: now });
+            while (callouts.length > 6) callouts.shift()!.text.destroy();
+          };
           for (const e of frame.events as FrameEvent[]) {
             const key = combatEventKey(e);
             if (seenEventKeys.has(key)) continue;
@@ -1373,6 +1584,10 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             }
             const at = (id: unknown) => all.get(String(id)) ?? prevAll.get(String(id));
             const until = frame.tick + (reduced ? 3 : 6);
+            if (e.type === "deploy" && !animationPriming) deployCallout(e);
+            // Restrained nudge (<= 2 px, 140 ms): a titan landing or a fallen
+            // structure, both authoritative events. Off under reduced motion.
+            if (!reduced && !animationPriming && (e.type === "structure_destroyed" || (e.type === "deploy" && classOfCard(String(e.cardId)) === "titan"))) nudgeAt = now;
             // Animation-sheet triggers, independent of the VFX pack.
             if (e.type === "building_spawned") buildingActiveAt.set(String(e.buildingId), Number(e.activeAt));
             else if (e.type === "unit_spawned") {
@@ -1408,6 +1623,19 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                     { tex: "summon", x: p.x, y: p.y, life: reduced ? 220 : 520, scale: big ? 0.36 : 0.24, scale1: big ? 0.46 : 0.32, alpha: 0.95, alpha1: 0, rot: 0, spin: 1.2, tint: team, blend: "add", layer: "ground", ease: "out" },
                     { tex: "glow", x: p.x, y: p.y, life: reduced ? 160 : 300, scale: big ? 1.2 : 0.8, scale1: big ? 1.5 : 1, alpha: 0.6, alpha1: 0, tint: team, blend: "add", layer: "ground" }
                   );
+                  // Landing dust scaled by size class: a ground ring for every
+                  // unit, flanking puffs for heavier ones (more for the titan).
+                  const cls = classOfCard(String(e.cardId));
+                  if (cls !== "building") {
+                    const w = classWeight(cls);
+                    const rnd = seeded(`${id}:land`);
+                    sp.push(ringAt(p.x, p.y, 2.4 * w, 0xe8d6b0, reduced ? 200 : 420, { scale: 0.06, scale1: (2.4 * w * VFX_S) / TEX_RADIUS.ring, alpha: 0.75, alpha1: 0, blend: "normal", ease: "out" }));
+                    const puffs = reduced ? 0 : cls === "titan" ? 4 : cls === "heavy" || cls === "commander" ? 3 : cls === "swarm" || cls === "flying_swarm" ? 0 : 1;
+                    for (let k = 0; k < puffs; k++) {
+                      const side = k % 2 === 0 ? -1 : 1;
+                      sp.push({ tex: "smoke", animate: true, x: p.x + side * (1.6 + rnd()) * w, y: p.y + (rnd() - 0.5) * 1.5, delay: k * 40, life: 520, lift: 0, lift1: 6 * w, scale: 0.3 * w, scale1: 0.5 * w, alpha: 0.7, blend: "normal", layer: "top" });
+                    }
+                  }
                 }
                 vfx.spawn(sp, now);
               } else if (e.type === "spell_cast") {
@@ -1475,9 +1703,13 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
                 const p = at(e.entityId);
                 if (p) {
                   const rnd = seeded(String(e.entityId));
-                  const air = frame.troops.find((t) => t.id === String(e.entityId))?.air ?? prev?.troops.find((t) => t.id === String(e.entityId))?.air ?? false;
+                  const dead = frame.troops.find((t) => t.id === String(e.entityId)) ?? prev?.troops.find((t) => t.id === String(e.entityId));
+                  const air = dead?.air ?? false;
+                  // Defeat puff scaled by the unit's size class.
+                  const cmdr = !dead && (prev?.commanders.some((c) => c.id === String(e.entityId)) ?? false);
+                  const dw = classWeight(dead ? classOfCard(dead.cardId) : cmdr ? "commander" : null);
                   vfx.spawn([
-                    { tex: "smoke", animate: true, x: p.x, y: p.y, delay: 120, life: reduced ? 220 : 520, lift: air ? 18 : 4, lift1: air ? 22 : 14, scale: 0.5, scale1: 0.75, alpha: 0.85, blend: "normal", layer: "top" },
+                    { tex: "smoke", animate: true, x: p.x, y: p.y, delay: 120, life: reduced ? 220 : 520, lift: air ? 18 : 4, lift1: air ? 22 : 14 * dw, scale: 0.5 * dw, scale1: 0.75 * dw, alpha: 0.85, blend: "normal", layer: "top" },
                     ...Array.from({ length: reduced ? 0 : 4 }, () => { const a = rnd() * Math.PI * 2; return { tex: "spark", x: p.x, y: p.y, to: { x: p.x + Math.cos(a) * 2.4, y: p.y + Math.sin(a) * 2 }, delay: 120, lift: 12, lift1: 22, life: 420, scale: 0.32, scale1: 0.1, alpha: 1, alpha1: 0, spin: 6, tint: VFX_COLORS.spark, blend: "add" as const, layer: "top" as const, ease: "out" as const }; }),
                   ], now);
                 }
@@ -1609,7 +1841,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
               }
               const X = e.root.x;
               const Y = e.root.y + (e.air ? -10 : 0);
-              const drawn = e.anim ? e.anim.visibleHeight * e.anim.displayScale : e.rec.proposedDisplaySize.visibleHeight * displayScale(e.rec);
+              const drawn = e.anim ? unitDrawnHeight(e.anim) : e.rec.proposedDisplaySize.visibleHeight * displayScale(e.rec);
               const pulse = 0.5 + 0.5 * Math.sin(now / 180 + e.phase);
               const feet = (tex: string, tint: number, scale: number, alpha: number) =>
                 vfx!.keyedImage(`${key}:feet`, tex, "ground", tex === "snare-bind" ? "normal" : "add", tint)?.setPosition(X, Y).setScale(scale).setAlpha(alpha);
@@ -1718,6 +1950,27 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             e.root.destroy(true);
             pool.delete(id);
           }
+          for (let i = callouts.length - 1; i >= 0; i--) {
+            const c = callouts[i]!;
+            const dur = reduced ? 600 : 900;
+            const p = (now - c.born) / dur;
+            if (p >= 1) {
+              c.text.destroy();
+              callouts.splice(i, 1);
+              continue;
+            }
+            const rise = reduced ? 0 : 14 * (1 - (1 - p) * (1 - p));
+            const alpha = !reduced && p < 0.15 ? p / 0.15 : p > 0.7 ? 1 - (p - 0.7) / 0.3 : 1;
+            c.text.setPosition(Math.max(40, Math.min(W - 40, c.x)), Math.max(30, c.y - rise)).setAlpha(alpha);
+          }
+          {
+            const np = (now - nudgeAt) / 140;
+            const cam = this.cameras.main;
+            if (np >= 0 && np < 1) {
+              const amp = 2 * (1 - np);
+              cam.setScroll(Math.sin(np * Math.PI * 6) * amp, Math.cos(np * Math.PI * 5) * amp * 0.6);
+            } else if (cam.scrollX !== 0 || cam.scrollY !== 0) cam.setScroll(0, 0);
+          }
           // Placement ghost: green when the advisory check passes, red otherwise.
           if (f.ghost) {
             const card = start.catalog[f.ghost.cardId];
@@ -1734,6 +1987,12 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             l.destroy();
             labels.delete(id);
           }
+          for (const [id, b] of badges) {
+            if (seenBars.has(id)) continue;
+            b.destroy();
+            badges.delete(id);
+          }
+          for (const id of trails.keys()) if (!seenBars.has(id)) trails.delete(id);
         }
       }
 
