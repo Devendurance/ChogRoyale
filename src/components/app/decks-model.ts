@@ -17,6 +17,7 @@ import type {
   DecksCatalogCard,
   DeckSaveState,
   DecksCommanderOption,
+  UpgradeCelebration,
 } from "./decks-types";
 
 /** Options reflect server entitlement. Loan metadata never enters the saved claim. */
@@ -385,4 +386,21 @@ export function progressionStatusText(state: CardProgressionDisplayState, entry:
   if (state === "ready") return "Ready to upgrade";
   if (state === "gold-locked") return `Need ${entry.goldCost ?? 0} Gold`;
   return `${Math.max(0, (entry.xpTarget ?? 0) - entry.xp)} XP to unlock`;
+}
+
+/**
+ * The celebration for a card upgrade, or null. It exists only when the server
+ * answered `upgraded` or `duplicate` and the progression re-read returned a
+ * purchased level above the level the request was sent against. A refusal, a
+ * failed re-read or an unchanged level never celebrates.
+ */
+export function confirmedUpgradeCelebration(
+  status: DeckUpgradeStatus,
+  intent: { cardId: string; expectedLevel: number; key: string },
+  reread: Record<string, DeckCardProgression> | null
+): UpgradeCelebration | null {
+  if (status !== "upgraded" && status !== "duplicate") return null;
+  const after = reread?.[intent.cardId];
+  if (!after || after.purchasedLevel <= intent.expectedLevel) return null;
+  return { cardId: intent.cardId, fromLevel: intent.expectedLevel, toLevel: after.purchasedLevel, key: intent.key };
 }

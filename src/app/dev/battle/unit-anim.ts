@@ -3,6 +3,8 @@
 // from authoritative frame data only: position deltas, HP drops, removal and
 // distance to enemies. It never predicts damage, targeting or movement.
 
+import { unitDrawScale } from "./unit-scale";
+
 export type UnitClipName = "idle" | "move" | "attack" | "hit" | "defeat" | "deploy" | "ability";
 /** Every sheet has idle, attack, hit and defeat. Troops and commanders add
  * move, buildings add a one-shot deploy, commanders add an ability cast. */
@@ -167,7 +169,8 @@ export function unitFrame(
 
 /**
  * Sheet anchor for an effect (muzzle flash, weapon tip) as a board-pixel
- * offset from the unit's ground point, honouring the drawn scale and mirror.
+ * offset from the unit's ground point, honouring the drawn scale (the
+ * size-class policy in unit-scale.ts) and mirror.
  * Falls back to the idle anchor, then null when the sheet has none.
  */
 export function anchorOffset(
@@ -181,8 +184,9 @@ export function anchorOffset(
   const byView = a?.[view] ?? a?.front;
   const p = byView?.[clip] ?? byView?.idle;
   if (!p) return null;
-  const dx = (p[0] - rec.pivot[0]) * rec.displayScale;
-  return { x: flipX ? -dx : dx, y: (p[1] - rec.pivot[1]) * rec.displayScale };
+  const k = unitDrawScale(rec);
+  const dx = (p[0] - rec.pivot[0]) * k;
+  return { x: flipX ? -dx : dx, y: (p[1] - rec.pivot[1]) * k };
 }
 
 /** Defeat fade: opaque for most of the clip, then out over the last 35%. */

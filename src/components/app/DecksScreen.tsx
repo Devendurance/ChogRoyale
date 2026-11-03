@@ -40,6 +40,7 @@ import {
   replaceCard,
   saveStateLabel,
   saveStateStatus,
+  confirmedUpgradeCelebration,
   upgradeResultCue,
   validateDeckDraft,
   type DeckDraft,
@@ -55,6 +56,7 @@ import type {
   DecksNotices,
   DecksTab,
   ProgressionPhase,
+  UpgradeCelebration,
   UpgradeStatus,
 } from "./decks-types";
 import type { CardXpEntry } from "@/lib/card-xp";
@@ -199,6 +201,9 @@ function DecksShell() {
   const [upgradeCardId, setUpgradeCardId] = useState<string | null>(null);
   const [upgradeStatus, setUpgradeStatus] = useState<UpgradeStatus>("idle");
   const [upgradeMessage, setUpgradeMessage] = useState<string | null>(null);
+  // Set only after a confirmed upgrade and a progression re-read that returned
+  // the higher level. Nothing celebrates ahead of the server.
+  const [upgradeCelebration, setUpgradeCelebration] = useState<UpgradeCelebration | null>(null);
   const [nowMs, setNowMs] = useState(0);
 
   // The draft starts empty on both the server and the client, so the first
@@ -279,7 +284,7 @@ function DecksShell() {
     }
   }, [getAccessToken, catalog, sessionKey]);
 
-  const loadProgression = useCallback(async () => {
+  const loadProgression = useCallback(async (): Promise<Record<string, DeckCardProgression> | null> => {
     setProgressionPhase("loading");
     setProgressionMessage(null);
     const token = await getAccessToken();
@@ -289,7 +294,7 @@ function DecksShell() {
       setGoldHistoryAvailable(false);
       setProgressionPhase("session");
       setProgressionMessage("Sign in again to read card progression and Gold.");
-      return;
+      return null;
     }
 
     const [xpResult, goldResult] = await Promise.all([
@@ -312,7 +317,7 @@ function DecksShell() {
               ? "The progression service could not be reached. Your deck remains editable."
               : "The progression service is unavailable in this environment. No level or Gold values are shown."
       );
-      return;
+      return null;
     }
 
     const payload = xpResult.data.cards;
@@ -322,7 +327,7 @@ function DecksShell() {
       setGoldHistoryAvailable(false);
       setProgressionPhase("unavailable");
       setProgressionMessage("Card progression is unavailable because the server response was incomplete.");
-      return;
+      return null;
     }
 
     const next: Record<string, DeckCardProgression> = {};
@@ -346,6 +351,7 @@ function DecksShell() {
     setGoldHistoryAvailable(goldResult.ok);
     setProgressionPhase("ready");
     setProgressionMessage(goldResult.ok ? null : "Gold history is unavailable. Upgrade eligibility still follows the card progression response.");
+    return next;
   }, [getAccessToken]);
 
   useEffect(() => {
@@ -565,6 +571,7 @@ function DecksShell() {
       setUpgradeCardId(cardId);
       setUpgradeStatus("working");
       setUpgradeMessage(null);
+      setUpgradeCelebration(null);
       // The upgrade asset is the completion flourish. The initial gesture is
       // intentionally ordinary, since the server may still refuse it.
       uiSound("primary");
@@ -596,7 +603,10 @@ function DecksShell() {
         setUpgradeMessage(upgradeOutcomeMessage(status));
         setUpgradeStatus(status === "upgraded" || status === "duplicate" ? "success" : "error");
         uiSound(upgradeResultCue(status));
-        await loadProgression();
+        const fresh = await loadProgression();
+        // Celebrate only a confirmed outcome whose re-read shows the new level.
+        const celebration = confirmedUpgradeCelebration(status, intent, fresh);
+        if (celebration) setUpgradeCelebration(celebration);
         if (status !== "conflict-retry") upgradeIntent.current = null;
       } catch {
         setUpgradeStatus("error");
@@ -608,6 +618,8 @@ function DecksShell() {
     },
     [getAccessToken, loadProgression, progression, progressionPhase, upgradeCardId]
   );
+
+  const dismissCelebration = useCallback(() => setUpgradeCelebration(null), []);
 
   // The account service being unreachable is not the same as an empty account.
   const unavailable = Boolean(loadoutError) && loadoutError?.code !== "FORBIDDEN" && loadoutError?.code !== "UNAUTHORIZED";
@@ -748,6 +760,8 @@ function DecksShell() {
       upgradeCardId={upgradeCardId}
       upgradeStatus={upgradeStatus}
       upgradeMessage={upgradeMessage}
+      upgradeCelebration={upgradeCelebration}
+      onDismissCelebration={dismissCelebration}
       onUpgrade={onUpgrade}
       saveState={saveState}
       saveLabel={saveStateLabel(saveState)}

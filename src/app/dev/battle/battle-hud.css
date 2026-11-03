@@ -251,3 +251,31 @@
   .chud-start { display: none; }
   .chud-card, .chud-cell-fill { transition: none; }
 }
+/* Game-feel pass: hand lift, affordability and the energy meter. Only
+   transforms, filters and shadows change, so selecting a card never changes
+   layout or resizes the arena. */
+.chud-card { transition: transform .16s cubic-bezier(.16,1,.3,1), box-shadow .16s ease, border-color .16s ease; }
+.chud-card-portrait { transition: filter .28s ease; }
+.chud-card[data-selected="true"] { z-index: 3; transform: translateY(-8px) scale(1.04); border-color: #fff; box-shadow: 0 0 0 2px #ffe084, 0 0 18px #ffd25a99, 0 9px 14px #160a34; }
+.chud-card[data-afford="false"] .chud-card-portrait { filter: saturate(.2) brightness(.8) contrast(1.06); }
+.chud-card[data-afford="false"] .chud-name { color: #ddd3ee; }
+.chud-card[data-afford="true"]:not([data-selected="true"]):active { transform: translateY(2px) scale(.97); }
+@media (hover: hover) { .chud-card[data-afford="true"]:not([data-selected="true"]):hover { transform: translateY(-3px); border-color: #e4d5ff; } }
+.chud-cost { transition: background .28s ease; }
+.chud-cell { position: relative; transition: border-color .2s ease, box-shadow .2s ease; }
+.chud-cell[data-full="true"] { border-color: #f2cbff; box-shadow: inset 0 2px 3px #10092355, 0 0 6px #d07bff70; }
+.chud-cell[data-full="true"] .chud-cell-fill { background: linear-gradient(180deg, #f6d6ff, #c95cf6 40%, #8a2ccc); }
+.chud-cell[data-filling="true"] .chud-cell-fill { opacity: .8; }
+.chud-energy-num { display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px; min-width: 64px; }
+.chud-energy-num b { font: 400 25px/1 var(--font-lilita), sans-serif; -webkit-text-stroke: 2px #24103f; paint-order: stroke fill; text-shadow: 0 2px 0 #160a34; }
+.chud-energy-num small { font: 400 13px/1 var(--font-lilita), sans-serif; color: #dccbf3; -webkit-text-stroke: 1.5px #24103f; paint-order: stroke fill; }
+.chud-energy-drop { flex: none; width: 13px; height: 13px; margin-right: 2px; border: 2px solid #24103f; border-radius: 0 50% 50% 50%; background: linear-gradient(135deg, #f6d6ff, #c95cf6 45%, #7a22b8); box-shadow: inset 1px 1px 0 #ffffff88; transform: rotate(45deg); }
+@media (max-width: 520px) {
+  .chud-card[data-selected="true"] { transform: translateY(-7px) scale(1.03); }
+  .chud-energy-num { min-width: 56px; }
+  .chud-energy-num b { font-size: 22px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chud-card, .chud-card-portrait, .chud-cost, .chud-cell { transition: none; }
+  .chud-card[data-selected="true"] { transform: translateY(-6px); }
+}

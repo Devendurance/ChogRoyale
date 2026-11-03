@@ -8,7 +8,7 @@
 - Private invites contain only the current-origin `/app/play/battle?mode=private&room=` URL and a validated case-sensitive Colyseus nanoid(9). Preserve that destination through login/setup. Attempt automatic joining once after setup is verified, never auto-ready. A locked-room refusal can mean full or already started.
 - An active invite URL must recover its matching saved seat on refresh. Prioritize saved resume credentials only when their room matches the invite, never resume a different room or add recovery credentials to the URL. Mark automatic attempt refs inside the scheduled task so Strict Mode cleanup cannot consume an attempt.
 - Queue handoffs must mark ownership before awaiting reservation consumption, attach the reserved battle room before awaiting queue cleanup, and ignore late queue-close callbacks. Battle rooms may replay an authenticated lobby snapshot through `lobby_sync`; never render a lobby stage with no visible loading or recovery action.
-- Owner authorization on 2026-10-27 covered merging approved PR #6 and pushing/opening the final polish PR. PR #7 was subsequently merged by the owner. New merges and production promotions still need separate owner approval. Current session subagents use GPT-5.6 Luna with extra-high reasoning and coordinator review, per the owner's latest preference.
+- Owner authorization on 2026-10-27 covered merging approved PR #6 and pushing/opening the final polish PR. PR #7 was subsequently merged by the owner. New merges and production promotions still need separate owner approval. Sub-agents run on Haiku (`model: "haiku"`) and the coordinator reviews their work, per the owner's 2026-11-03 preference.
 
 
 - Auto-log meaningful rules to the project’s AGENTS.md.
@@ -155,6 +155,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Battle VFX live in `public/assets/battle-vfx/v001` (built by `tools/vfx/build_vfx.cjs` plus `build_vfx_props.py`), planned by pure `battle-vfx.ts` and drawn by `vfx-layer.ts` with a 180-sprite cap. If the VFX manifest fails, the older Graphics cues must still run.
 - Pre-rendered 2.5D arena layers (v003+) are camera-space (`space: "camera"`) and must never be flipped for seat 1, or trees, posts and banners turn upside down. Only board-space overlays mirror. New layers keep logical points on exact master pixels via the pitched ortho camera with ground Y stretched by 1/cos(pitch). Check the projected anchors before importing.
 - Tower mounts are player-relative roles from `structureMounts`: the opponent gets red Bulwark mounts aiming south and the viewer gets blue Chog Guardian mounts aiming north. Weapon anchors come from projected 3D muzzle points, never hand-picked pixels. Keep v002 as the runtime fallback.
+- Animated unit draw size goes only through `unitDrawScale`/`unitDrawnHeight` in `unit-scale.ts` (size classes swarm, flying_swarm, regular, flying, heavy, titan, commander, building). Never read `anim.displayScale` directly, or rings, bars and muzzle anchors drift off the art. Calibrate class targets on rendered frames: a titan must stay about one bridge wide and swarms at least 22 CSS px tall at 390 width.
+- In-battle level badges read only the frame `level` field, which the server fills from `levelFor` over the levels frozen at match start, for deployed troops and buildings. Spawned units and commanders omit it. Towers and Cores never scale, so they get an emblem HP plate and never a level. Tower plates draw above unit bars, badges and callouts.
 - Defender art refinements are judged against the original card first. Reject a revision that is prettier but less recognizable as its Chog. Visual-only refinements must leave weapon anchors, pivots, ground anchors and the ripple and Chaos layers unchanged, so compare the export log anchors before importing.
 
 ## GAME APP SHELL
@@ -233,7 +235,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## BATTLEFIELD PRESENTATION
 
-- Use GPT-5.6 Luna with extra-high reasoning for delegated project work under the owner's current preference. The coordinator reviews the work.
+- Delegated project work runs on Haiku sub-agents under the owner's 2026-11-03 preference. The coordinator reviews the work.
 - Keep contextual card guidance outside layout flow so selection and deselection never resize the arena during a gesture. Card labels wrap at word boundaries, and unaffordable portraits must remain recognizable.
 - Audio readiness requires a running Web Audio context, positive volume, an unmuted preference and a visible page. A saved preference alone cannot justify "Sound On". Ordinary melee has no public attack-release event, so use observed authoritative HP loss for its impact feedback.
 - Keep battle shell styles scoped to `.chud` and `chud-` classes. Desktop hand placement must not reduce the board's height, and compact landscape rules must stay below the desktop breakpoint.

@@ -10,7 +10,8 @@
 // a filterable collection grid. Server-backed card progression appears in the
 // collection without changing the deck contract.
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import AppHud, { AppHudBackLink } from "./AppHud";
 import AppNav from "./AppNav";
@@ -18,7 +19,7 @@ import AppNotice from "./AppNotice";
 import Icon from "./icons";
 import { dedupeNotices } from "./feedback-model";
 import { DECK_CARD_COUNT, progressionDisplayState, progressionPercent, progressionStatusText } from "./decks-model";
-import type { DeckCardProgression, DecksCatalogCard, DecksCommanderOption, DecksViewProps, ProgressionPhase, UpgradeStatus } from "./decks-types";
+import type { DeckCardProgression, DecksCatalogCard, DecksCommanderOption, DecksViewProps, ProgressionPhase, UpgradeCelebration, UpgradeStatus } from "./decks-types";
 import type { LobbyArt } from "./lobby-types";
 
 /** The energy cost badge, read from the real card cost. */
@@ -39,18 +40,72 @@ function Plate({ art, alt, className, sizes }: { art: LobbyArt; alt: string; cla
   return <Image src={art.src} alt={alt} width={art.width} height={art.height} className={className} sizes={sizes} unoptimized />;
 }
 
+/** A small up arrow, drawn inline so it inherits the plate stroke. */
+function UpArrow({ size = 12 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 12 12" aria-hidden="true" focusable="false">
+      <path d="M6 1.5 10.5 6.5H7.6V10.5H4.4V6.5H1.5Z" fill="#fff" stroke="#1d6a19" strokeWidth="1.2" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/**
+ * The level plate across the bottom of a card's art, with cyan progress under
+ * it. It renders only from a server progression entry that is ready, so a
+ * failed or pending read never shows a level.
+ */
+function LevelPlate({
+  entry,
+  goldBalance,
+  phase,
+}: {
+  entry: DeckCardProgression | null;
+  goldBalance: number | null;
+  phase: ProgressionPhase;
+}) {
+  if (phase !== "ready" || !entry) return null;
+  const state = progressionDisplayState(entry, goldBalance, "ready");
+  if (state === "unavailable") return null;
+  const percent = progressionPercent(entry);
+  return (
+    <span className={`app-lvl app-lvl--${state}`}>
+      <span className="app-lvl__plate">{state === "maxed" ? "Max level" : `Level ${entry.purchasedLevel}`}</span>
+      <span className="app-lvl__bar" aria-hidden="true">
+        <span style={{ width: `${percent}%` }} />
+      </span>
+      {state === "ready" && (
+        <span className="app-lvl__up" aria-hidden="true">
+          <UpArrow />
+        </span>
+      )}
+      <span className="app-sr">{progressionStatusText(state, entry)}</span>
+    </span>
+  );
+}
+
+/** True when the server entry says this card can be upgraded right now. */
+function upgradeReady(entry: DeckCardProgression | null, goldBalance: number | null, phase: ProgressionPhase): boolean {
+  return phase === "ready" && progressionDisplayState(entry, goldBalance, "ready") === "ready";
+}
+
 /** One slot of the battle deck. Empty slots show where a card goes. */
 function DeckSlot({
   card,
   index,
   selected,
   swapping,
+  progression,
+  goldBalance,
+  progressionPhase,
   onSelect,
 }: {
   card: DecksCatalogCard | null;
   index: number;
   selected: boolean;
   swapping: boolean;
+  progression: DeckCardProgression | null;
+  goldBalance: number | null;
+  progressionPhase: ProgressionPhase;
   onSelect: (index: number) => void;
 }) {
   if (!card) {
@@ -69,7 +124,7 @@ function DeckSlot({
     <li>
       <button
         type="button"
-        className={`app-slot${selected ? " app-slot--selected" : ""}${swapping ? " app-slot--target" : ""}`}
+        className={`app-slot${selected ? " app-slot--selected" : ""}${swapping ? " app-slot--target" : ""}${upgradeReady(progression, goldBalance, progressionPhase) ? " app-slot--ready" : ""}`}
         onClick={() => onSelect(index)}
         data-audio-skip="true"
         aria-pressed={selected}
@@ -88,6 +143,7 @@ function DeckSlot({
               {card.name.charAt(0)}
             </span>
           )}
+          <LevelPlate entry={progression} goldBalance={goldBalance} phase={progressionPhase} />
         </span>
         <span className="app-slot__name">{card.name}</span>
       </button>
@@ -136,7 +192,7 @@ function CollectionTile({
     <li>
       <button
         type="button"
-        className={`app-tile${selected ? " app-tile--selected" : ""}${inDeck ? " app-tile--indeck" : ""}`}
+        className={`app-tile${selected ? " app-tile--selected" : ""}${inDeck ? " app-tile--indeck" : ""}${upgradeReady(progression, goldBalance, progressionPhase) ? " app-tile--ready" : ""}`}
         onClick={() => onSelect(card.id)}
         data-audio-skip="true"
         aria-pressed={selected}
@@ -148,7 +204,11 @@ function CollectionTile({
           <span className="app-sr">Energy cost {card.cost}</span>
         </span>
         {inDeck && <span className="app-tile__indeck">In deck</span>}
-        <ProgressionBadge entry={progression} goldBalance={goldBalance} phase={progressionPhase} />
+        {/* A ready server entry draws the level plate. Every other state keeps
+            the explicit unavailable badge, so no level is ever guessed. */}
+        {!(progressionPhase === "ready" && progression) && (
+          <ProgressionBadge entry={progression} goldBalance={goldBalance} phase={progressionPhase} />
+        )}
         <span className="app-tile__art">
           {card.art ? (
             <Plate art={card.art} alt="" className="app-tile__img" sizes="(max-width: 639px) 76px, 110px" />
@@ -157,6 +217,7 @@ function CollectionTile({
               {card.name.charAt(0)}
             </span>
           )}
+          <LevelPlate entry={progression} goldBalance={goldBalance} phase={progressionPhase} />
         </span>
         <span className="app-tile__name">{card.name}</span>
         <span className="app-tile__type">{card.typeLabel}</span>
@@ -315,7 +376,15 @@ function DetailSheet({
                 <span className="app-progression__cost-label">Next upgrade</span>
                 <strong>{progression.goldCost === null ? "MAX" : `${progression.goldCost} Gold`}</strong>
               </div>
-              <button type="button" className="app-btn app-btn--battle" onClick={() => onUpgrade(card.id)} data-audio-skip="true" disabled={!canUpgrade}>
+              <button
+                type="button"
+                className="app-btn app-btn--upgrade"
+                onClick={() => onUpgrade(card.id)}
+                data-audio-skip="true"
+                disabled={!canUpgrade}
+                aria-busy={upgradeCardId === card.id && upgradeStatus === "working" ? true : undefined}
+              >
+                {displayState === "ready" && upgradeCardId === null && <UpArrow size={16} />}
                 {upgradeCardId === card.id && upgradeStatus === "working" ? "Confirming" : displayState === "maxed" ? "Max level" : displayState === "ready" ? "Upgrade card" : progressionStatusText(displayState, progression)}
               </button>
             </div>
@@ -332,6 +401,96 @@ function DetailSheet({
       </div>
     </section>
   );
+}
+
+const noSubscribe = () => () => {};
+
+/**
+ * The upgrade celebration. It only mounts for a celebration the container
+ * built after the server confirmed the upgrade and the progression re-read
+ * returned the higher level, so it never runs ahead of the server.
+ */
+function LevelUpReveal({
+  celebration,
+  card,
+  entry,
+  onDone,
+}: {
+  celebration: UpgradeCelebration;
+  card: DecksCatalogCard | null;
+  entry: DeckCardProgression | null;
+  onDone: () => void;
+}) {
+  const done = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    done.current?.focus();
+    // Capture on window runs before the detail sheet's document listener, so
+    // Escape closes only the reveal and leaves the sheet open behind it.
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.stopPropagation();
+        onDone();
+      } else if (event.key === "Tab") {
+        event.preventDefault();
+        done.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [onDone]);
+
+  // Hydration-safe client flag. The reveal portals to the app root so it sits
+  // above the sticky HUD as a true modal, with the app tokens still in scope.
+  const mounted = useSyncExternalStore(noSubscribe, () => true, () => false);
+  const percent = progressionPercent(entry);
+  const name = card?.name ?? "Card";
+  const reveal = (
+    <div className="app-levelup" onClick={(event) => event.target === event.currentTarget && onDone()}>
+      <section className="app-levelup__panel" role="dialog" aria-modal="true" aria-labelledby="app-levelup-title" aria-describedby="app-levelup-levels">
+        <p className="app-levelup__eyebrow">Upgrade confirmed</p>
+        <div className="app-levelup__stage" aria-hidden="true">
+          <span className="app-levelup__burst" />
+          <span className="app-levelup__card">
+            {card?.art ? (
+              <Plate art={card.art} alt="" className="app-levelup__img" sizes="112px" />
+            ) : (
+              <span className="app-levelup__initial">{name.charAt(0)}</span>
+            )}
+          </span>
+        </div>
+        <h2 className="app-levelup__name" id="app-levelup-title">
+          {name}
+        </h2>
+        <p className="app-levelup__levels" id="app-levelup-levels">
+          <span className="app-levelup__plate">Level {celebration.fromLevel}</span>
+          <span className="app-levelup__arrow" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12h13M13 6l6 6-6 6" />
+            </svg>
+          </span>
+          <span className="app-sr"> to </span>
+          <span className="app-levelup__plate app-levelup__plate--after">Level {celebration.toLevel}</span>
+        </p>
+        {entry && (
+          <div className="app-levelup__meter">
+            <span className="app-levelup__track" aria-hidden="true">
+              <span style={{ width: `${percent}%` }} />
+            </span>
+            <span className="app-levelup__meter-label">
+              {entry.maxed || entry.xpTarget === null ? "Max level reached" : `${entry.xp} / ${entry.xpTarget} XP toward the next level`}
+            </span>
+          </div>
+        )}
+        <p className="app-levelup__note">Level read back from your account.</p>
+        <button type="button" ref={done} className="app-btn app-btn--ghost app-levelup__done" onClick={onDone}>
+          Continue
+        </button>
+      </section>
+    </div>
+  );
+  const root = mounted ? document.querySelector(".app-root") : null;
+  return root ? createPortal(reveal, root) : reveal;
 }
 
 /** The commander panel: the five free classes and any eligible NFT commander. */
@@ -493,6 +652,8 @@ export default function DecksView(props: DecksViewProps) {
     upgradeCardId,
     upgradeStatus,
     upgradeMessage,
+    upgradeCelebration = null,
+    onDismissCelebration,
     onUpgrade,
     saveState,
     saveLabel,
@@ -670,6 +831,9 @@ export default function DecksView(props: DecksViewProps) {
                         index={index}
                         selected={selectedCardId === card?.id}
                         swapping={swapping}
+                        progression={card ? (progression[card.id] ?? null) : null}
+                        goldBalance={goldBalance}
+                        progressionPhase={progressionPhase}
                         onSelect={onDeckSlot}
                       />
                     ))}
@@ -835,6 +999,15 @@ export default function DecksView(props: DecksViewProps) {
         )}
         {commanderOpen && (
           <CommanderSheet options={commanderOptions} current={commanderOption} onSelect={onSelectCommander} onClose={onCloseDetail} />
+        )}
+        {upgradeCelebration && onDismissCelebration && (
+          <LevelUpReveal
+            key={upgradeCelebration.key}
+            celebration={upgradeCelebration}
+            card={cards.find((c) => c.id === upgradeCelebration.cardId) ?? null}
+            entry={progression[upgradeCelebration.cardId] ?? null}
+            onDone={onDismissCelebration}
+          />
         )}
 
         <p className="app-sr" role="status" aria-live="polite">

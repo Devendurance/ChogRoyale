@@ -1,4 +1,14 @@
-# Current task: Desktop lobby Battle Deck card layout
+# Current task: Game feel, battlefield scale and game UI overhaul
+
+- Branch `feat/game-feel-overhaul` from origin/main `e951154`. One PR, no merge or deploy.
+- Video refs: `/watch` skill not installed, so both owner videos were sampled with ffmpeg. Findings are in the PR body.
+- Done: `unit-scale.ts` size classes (swarm 38, flying_swarm 36, regular 48, flying 50, heavy 56, commander 58, titan 62 board px), frame `level` on deployed troops/buildings, team HP bars, level badges, tower emblem plates (no tower levels), deploy callouts, class-scaled juice. App UI: game lobby, deck level plates, server-confirmed upgrade celebration, HUD hand states, result polish.
+- Checks: tsc clean, scoped eslint clean, next build passes, 1501 tests pass. 22 failures in 16 files are DB-backed (clans, gold, card XP, sponsorships, messages, friends/loans/gifts, legacy) plus site copy `/app/play` links, none touched by this branch.
+- Evidence: fixture screenshots in `ChogRoyale-Assets/game-feel-overhaul/{battle,ui}`.
+- Open: commander size computed not rendered, upgrade stat deltas need a server field, pre-existing secondary orange buttons on decks, live two-client and real-device QA.
+- PR #23 open: https://github.com/Devendurance/ChogRoyale/pull/23. Next: owner review. No merge or deploy. Sub-agents run on Haiku per owner preference.
+
+# Previous task: Desktop lobby Battle Deck card layout (PR #22, merged as e951154)
 
 - Doing: review PR #22 for the desktop-only card art/footer fix.
 - Done: fixed the 4x2 lobby grid with a fixed flex art box and a fixed independent footer; preserved proportional art and the top-left cost badge; added a focused LobbyView structure test. Test 1/1, TypeScript, scoped ESLint and production build pass. Full ESLint reports pre-existing `.cjs` review script errors and `any` errors in clan/messages route tests. Branch head `925313f`; PR #22 is open and its latest Vercel preview is Ready.
