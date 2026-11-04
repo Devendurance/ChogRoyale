@@ -43,6 +43,8 @@ interface Props {
   onAudioCue?: (cue: BattleCue) => void;
   rankedAward?: RankedAwardView | null;
   rankedAwardStatus?: "idle" | "checking" | "awarded" | "unavailable" | "timeout";
+  /** Training Camp result: no replay action and a camp return label. */
+  tutorial?: boolean;
 }
 
 /** Ribbons land 0.75s after the reveal starts, then each crown step takes 0.34s. */
@@ -103,7 +105,7 @@ function Ribbon({ side, name, crowns, shown, winner, you }: { side: "foe" | "min
   );
 }
 
-export default function BattleResult({ start, end, abort, settlement, botGold, goldBalance, goldBalanceStatus, botCardXp, cardXpReadbackStatus, accountXp, accountXpStatus, accountXpReadbackStatus, spriteManifest, me, playerName, onExit, onAgain, onAudioCue, rankedAward, rankedAwardStatus }: Props) {
+export default function BattleResult({ start, end, abort, settlement, botGold, goldBalance, goldBalanceStatus, botCardXp, cardXpReadbackStatus, accountXp, accountXpStatus, accountXpReadbackStatus, spriteManifest, me, playerName, onExit, onAgain, onAudioCue, rankedAward, rankedAwardStatus, tutorial = false }: Props) {
   const router = useRouter();
   const dialog = useRef<HTMLDivElement>(null);
   const exit = useRef<HTMLButtonElement>(null);
@@ -143,7 +145,7 @@ export default function BattleResult({ start, end, abort, settlement, botGold, g
   const cardXpHasAmount = cardXpReward?.state === "confirmed" || cardXpReward?.state === "duplicate";
   const noRewardCopy = reward?.state === "no-message" ? reward.text : reward ? null : view.noRewards;
   const goBack = () => { onExit?.(); if (!onExit) router.push("/app/play"); };
-  const hasAgainAction = view.origin === "practice" || (view.againLabel !== null && Boolean(onAgain));
+  const hasAgainAction = !tutorial && (view.origin === "practice" || (view.againLabel !== null && Boolean(onAgain)));
   const goAgain = () => {
     if (onAgain) {
       onAgain();
@@ -274,7 +276,7 @@ export default function BattleResult({ start, end, abort, settlement, botGold, g
       <div className="chud-finale-footer">
         <div className={`chud-finale-actions${view.practice ? " chud-finale-actions--practice" : ""}`}>
           {hasAgainAction && view.againLabel && <button ref={again} type="button" className="chud-finale-exit" onClick={goAgain}>{view.againLabel} <span aria-hidden="true">↻</span></button>}
-          <button ref={exit} type="button" className={`chud-finale-exit${hasAgainAction ? " chud-finale-exit--secondary" : ""}`} onClick={goBack}>{view.practice ? "Back to Battle Hall" : "Back to lobby"} <span aria-hidden="true">›</span></button>
+          <button ref={exit} type="button" className={`chud-finale-exit${hasAgainAction ? " chud-finale-exit--secondary" : ""}`} onClick={goBack}>{tutorial ? "Back to Training Camp" : view.practice ? "Back to Battle Hall" : "Back to lobby"} <span aria-hidden="true">›</span></button>
         </div>
       </div>
     </div>

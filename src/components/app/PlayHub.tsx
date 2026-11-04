@@ -10,6 +10,7 @@ import { useLogin, usePrivy } from "@privy-io/react-auth";
 import AppHud from "./AppHud";
 import AppNav from "./AppNav";
 import Icon from "./icons";
+import { TUTORIAL_CAMP_PATH } from "@/lib/tutorial-camp";
 import { useOnboardingRedirect } from "./use-onboarding-redirect";
 import { RANKED_SEASON } from "@/lib/ranked";
 import { resolvePlayer, type ProfilePayload } from "./lobby-model";
@@ -106,6 +107,17 @@ export function PlayHubView({ player, onSignOut }: { player: LobbyPlayer | null;
 
           <section className="app-play-modes" aria-labelledby="app-play-modes-title">
             <h2 id="app-play-modes-title" className="app-sr">Battle modes</h2>
+            <article className="app-play-card app-play-card--training">
+              <div className="app-play-card__icon app-play-card__icon--practice" aria-hidden="true"><Icon name="guide" size={28} /></div>
+              <div className="app-play-card__body">
+                <p className="app-play-card__eyebrow">NEW PLAYERS START HERE</p>
+                <h2>Training Camp</h2>
+                <p>A friendly Training Captain teaches deployment, towers and real battle timing in short guided battles. Progress saves to your account.</p>
+                <span className="app-play-card__detail">3 guided battles · Battle 1 ready · No rewards</span>
+                <Link href={TUTORIAL_CAMP_PATH} className="app-btn app-btn--battle">Enter Training Camp</Link>
+              </div>
+              <span className="app-play-card__status app-play-card__status--live">Guided</span>
+            </article>
             <article className="app-play-card app-play-card--practice">
               <div className="app-play-card__icon app-play-card__icon--practice" aria-hidden="true"><Icon name="guide" size={28} /></div>
               <div className="app-play-card__body">

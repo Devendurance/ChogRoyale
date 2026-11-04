@@ -1,6 +1,6 @@
 import { Server } from "@colyseus/core";
 import { WebSocketTransport } from "@colyseus/ws-transport";
-import { BATTLE_PRACTICE_ROOM, BATTLE_QUEUE_ROOM, BATTLE_RANKED_QUEUE_ROOM, BATTLE_ROOM } from "@/lib/battle-protocol";
+import { BATTLE_PRACTICE_ROOM, BATTLE_QUEUE_ROOM, BATTLE_RANKED_QUEUE_ROOM, BATTLE_ROOM, BATTLE_TUTORIAL_ROOM } from "@/lib/battle-protocol";
 import { logger } from "@/lib/logger";
 import { MatchCoordinator, QueueRoom, RankedQueueRoom } from "@/server/battle/matchmaking";
 import { BattleRoom, type BattleRoomDeps } from "@/server/battle/room";
@@ -49,6 +49,7 @@ export async function startBattleServer(
   server.define(BATTLE_QUEUE_ROOM, QueueRoom);
   server.define(BATTLE_RANKED_QUEUE_ROOM, RankedQueueRoom);
   server.define(BATTLE_PRACTICE_ROOM, PracticeRoom);
+  server.define(BATTLE_TUTORIAL_ROOM, PracticeRoom);
   await server.listen(port, hostname);
   if (runtime.enableShutdownHooks) installShutdownHooks(server, deps);
   return server;

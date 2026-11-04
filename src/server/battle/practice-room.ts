@@ -8,7 +8,9 @@
 import { randomBytes, randomUUID, timingSafeEqual } from "crypto";
 import { CloseCode, Room, ServerError, type Client } from "@colyseus/core";
 import { logger } from "@/lib/logger";
-import { CLIENT_READY_MESSAGE, readySchema, type CommanderChoice, type PracticeDifficulty, type PracticeOpponent } from "@/lib/battle-protocol";
+import { BATTLE_TUTORIAL_ROOM, CLIENT_READY_MESSAGE, readySchema, type CommanderChoice, type PracticeDifficulty, type PracticeOpponent } from "@/lib/battle-protocol";
+import { TUTORIAL_READY, isTutorialStage, type TutorialStage } from "@/lib/tutorial-camp";
+import { productionTutorialDeps } from "@/server/tutorial";
 import {
   PRACTICE_BOT_DISPLAY_NAME,
   botSeatFor,
@@ -22,7 +24,7 @@ import {
 import { BattleSession, deckFor, type SeatPlayer, type SessionRandom, type TrustedLoadout } from "@/server/battle/session";
 import { MATCH_ARMING_MS, MatchArming } from "@/server/battle/arming";
 import { authenticateSeat, type BattleRoomDeps } from "@/server/battle/room";
-import { freeStarterSlot } from "@/lib/combat";
+import { freeStarterSlot, TROOP_CARDS_V1 } from "@/lib/combat";
 import { commanderCardId, isAbilityCommand, validateDeck } from "@/lib/combat";
 import { BOT_GOLD_POLICY_VERSION } from "@/lib/bot-gold";
 import { BotGoldService } from "@/server/battle/bot-gold";
@@ -103,6 +105,13 @@ export class PracticeRoom extends Room {
   private session!: BattleSession;
   /** Immutable difficulty profile, resolved once at room creation. */
   private difficulty: PracticeDifficulty = "medium";
+  /** Non-null only in the server-owned Training Camp room. */
+  private tutorialStage: TutorialStage | null = null;
+  private tutorialReplay = false;
+  private tutorialCompleted = false;
+  private tutorialCompletedStages = 0;
+  /** Cids of queued troop deploys awaiting the step-loop ack. */
+  private readonly tutorialDeployCids = new Set<string>();
   /** Solo practice vs server-assigned Unranked fallback. Never client-chosen. */
   private origin: "practice" | "unranked-fallback" = "practice";
   /** The lone human a fallback room is reserved for. Null for solo practice. */
@@ -125,8 +134,19 @@ export class PracticeRoom extends Room {
     return authenticateSeat(token, PracticeRoom.deps);
   }
 
-  onCreate(options?: { difficulty?: unknown; fallbackKey?: unknown }) {
-    if (typeof options?.fallbackKey === "string" && options.fallbackKey.length > 0) {
+  onCreate(options?: { difficulty?: unknown; fallbackKey?: unknown; stage?: unknown }) {
+    if (this.roomName === BATTLE_TUTORIAL_ROOM) {
+      // Training Camp is a separate server-owned room name. Only the first
+      // guided battle is playable in this slice; later stages are rejected
+      // rather than pretending to be available.
+      if (!isTutorialStage(options?.stage) || options.stage !== 1) {
+        throw new ServerError(403, "That Training Camp battle is not available yet");
+      }
+      this.tutorialStage = options.stage;
+      this.difficulty = "easy";
+      this.opponent = { ...practiceOpponentFor("easy"), source: "practice" };
+      this.botPlayerId = practiceBotPlayerId("easy");
+    } else if (typeof options?.fallbackKey === "string" && options.fallbackKey.length > 0) {
       // Server-assigned Unranked fallback: the key is a single-use coordinator
       // mint. A forged, consumed, or missing key fails creation. Client
       // difficulty options are ignored on this path.
@@ -170,6 +190,17 @@ export class PracticeRoom extends Room {
       }
       const ack = this.session.submit(client.auth.playerId, msg);
       if (ack) client.send("ack", ack);
+      if (this.tutorialStage === 1) {
+        const command = msg as { type?: unknown; cardId?: unknown; cid?: unknown };
+        const cid = typeof command.cid === "string" ? command.cid : "";
+        if (command.type === "deploy" && typeof command.cardId === "string" && TROOP_CARDS_V1[command.cardId] && cid) {
+          if (ack?.ok) void this.completeTutorialFromDeploy(client);
+          // A queued legal command returns no immediate ack. Its server-
+          // generated ack arrives in the next step, so remember the cid and
+          // wait for that authoritative acceptance.
+          else if (!ack) this.tutorialDeployCids.add(cid);
+        }
+      }
     });
     this.onMessage(CLIENT_READY_MESSAGE, (client: PracticeClient) => {
       if (this.session.slotOf(client.auth.playerId) === 0) this.arming?.markReady(0);
@@ -177,11 +208,22 @@ export class PracticeRoom extends Room {
     this.clock.setTimeout(() => this.lobbyTimeout(), MATCH_LOBBY_MS);
   }
 
-  onJoin(client: PracticeClient, options?: { resume?: unknown }) {
+  async onJoin(client: PracticeClient, options?: { resume?: unknown }) {
     const playerId = client.auth.playerId;
     if (playerId.startsWith("bot:")) throw new ServerError(403, "Bot seats are server-owned");
     if (this.origin === "unranked-fallback" && playerId !== this.fallbackPlayerId) {
       throw new ServerError(403, "Not the reserved player for this match");
+    }
+    const tutorial = PracticeRoom.deps.tutorial ?? productionTutorialDeps;
+    if (this.tutorialStage) {
+      // Reading progress here is display data and the replay flag. Completion
+      // is decided later from an accepted deployment, never from this read.
+      const snapshot = await tutorial.progress(playerId);
+      this.tutorialCompletedStages = snapshot.completedStages;
+      this.tutorialReplay = snapshot.completedStages >= this.tutorialStage;
+    } else if (this.session.slotOf(playerId) < 0) {
+      const admission = await tutorial.admission(playerId);
+      if (!admission.allowed) throw new ServerError(403, "Finish Training Camp to unlock Practice");
     }
     this.humanClient = client;
     if (this.session.phase === "finished" || this.session.phase === "aborted") {
@@ -191,12 +233,12 @@ export class PracticeRoom extends Room {
       this.resume(client, options?.resume);
       return;
     }
-    PracticeRoom.coordinator?.claimRoom(playerId, this.roomId);
+    if (!this.tutorialStage) PracticeRoom.coordinator?.claimRoom(playerId, this.roomId);
     if (this.session.slotOf(playerId) < 0) {
       try {
         this.session.join(client.auth);
       } catch (e) {
-        PracticeRoom.coordinator?.releaseRoom(playerId, this.roomId);
+        if (!this.tutorialStage) PracticeRoom.coordinator?.releaseRoom(playerId, this.roomId);
         throw new ServerError(409, e instanceof Error ? e.message : "Cannot join");
       }
     }
@@ -222,6 +264,17 @@ export class PracticeRoom extends Room {
     if (this.checking) return client.send("error", { reason: "Loadout check in progress" });
     this.checking = true;
     try {
+      if (this.tutorialStage) {
+        // The room owns the teaching loadout. Any client payload that passed
+        // the shape check is ignored, so a forged deck cannot alter the lesson.
+        if (this.session.slotOf(client.auth.playerId) < 0) return;
+        const grant = await resolveCommander(client.auth.playerId, { ...TUTORIAL_READY.commander }, entitlement());
+        this.session.setReady(client.auth.playerId, { cards: [...TUTORIAL_READY.cards], grant });
+        this.choice = { ...TUTORIAL_READY.commander };
+        this.sendLobby(client);
+        await this.lockAndStart(client);
+        return;
+      }
       const grant = await resolveCommander(client.auth.playerId, parsed.data.commander, entitlement());
       if (this.session.slotOf(client.auth.playerId) < 0) return;
       this.session.setReady(client.auth.playerId, { cards: parsed.data.cards, grant });
@@ -296,10 +349,44 @@ export class PracticeRoom extends Room {
     msg.practiceOpponent = this.opponent;
     msg.opponent = this.opponent.displayName;
     if (this.arming) msg.arming = { timeoutMs: this.arming.remainingMs };
+    if (this.tutorialStage) {
+      msg.tutorial = { stage: this.tutorialStage, replay: this.tutorialReplay, completedStages: this.tutorialCompletedStages };
+    }
     client.send("start", msg);
+    if (this.tutorialStage) {
+      client.send("tutorial", {
+        stage: this.tutorialStage,
+        objective: "first_troop_deploy",
+        completed: false,
+        replay: this.tutorialReplay,
+        completedStages: this.tutorialCompletedStages,
+        graduated: false,
+      });
+    }
     // The tick 0 snapshot lets the client paint towers and its hand while frozen.
     if (this.arming) client.send("frame", this.session.frame(this.session.seatOfSlot[0]!, []));
     else this.go();
+  }
+
+  /** A real accepted troop deployment proves stage 1. A client claim cannot. */
+  private async completeTutorialFromDeploy(client: PracticeClient) {
+    if (this.tutorialCompleted || this.tutorialStage !== 1) return;
+    this.tutorialCompleted = true;
+    const result = await (PracticeRoom.deps.tutorial ?? productionTutorialDeps).complete(client.auth.playerId, 1);
+    if (result.status === "completed" || result.status === "already-complete") {
+      this.tutorialCompletedStages = Math.max(this.tutorialCompletedStages, result.completedStages);
+      client.send("tutorial", {
+        stage: 1,
+        objective: "first_troop_deploy",
+        completed: true,
+        replay: this.tutorialReplay || result.status === "already-complete",
+        completedStages: this.tutorialCompletedStages,
+        graduated: result.graduated,
+      });
+      return;
+    }
+    if (result.status === "unavailable") this.tutorialCompleted = false;
+    client.send("error", { reason: "Training progress could not be saved. Your battle can continue." });
   }
 
   /** First simulated tick. The bot cannot act before this point. */
@@ -361,7 +448,12 @@ export class PracticeRoom extends Room {
     const out = this.session.tick();
     if (!out) return;
     const humanSeat = this.session.seatOfSlot[0]!;
-    for (const ack of out.acks[humanSeat]) client.send("ack", ack);
+    for (const ack of out.acks[humanSeat]) {
+      client.send("ack", ack);
+      if (this.tutorialStage === 1 && this.tutorialDeployCids.delete(ack.cid) && ack.ok) {
+        void this.completeTutorialFromDeploy(client);
+      }
+    }
     client.send("frame", out.frames[humanSeat]);
     if (out.end) {
       const end = { ...out.end[humanSeat], matchId: this.matchId, practice: { opponentKind: "bot" as const, noReward: true as const, source: this.origin } };
@@ -558,6 +650,9 @@ export class PracticeRoom extends Room {
     msg.practiceOpponent = this.opponent;
     msg.opponent = this.opponent.displayName;
     if (this.arming) msg.arming = { timeoutMs: this.arming.remainingMs };
+    if (this.tutorialStage) {
+      msg.tutorial = { stage: this.tutorialStage, replay: this.tutorialReplay, completedStages: this.tutorialCompletedStages };
+    }
     client.send("start", msg);
     client.send("frame", this.session.frame(seat, []));
     client.send("presence", { opponentConnected: true, reconnectDeadlineAt: null });

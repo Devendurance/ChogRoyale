@@ -8,6 +8,8 @@ export const BATTLE_ROOM = "battle";
 export const BATTLE_QUEUE_ROOM = "battle_queue";
 export const BATTLE_RANKED_QUEUE_ROOM = "battle_queue_ranked";
 export const BATTLE_PRACTICE_ROOM = "battle_practice";
+/** Server-owned guided Training Camp room. Separate from Practice admission. */
+export const BATTLE_TUTORIAL_ROOM = "battle_tutorial";
 
 /** Authoritative match identity: server-chosen, never a client label. */
 export type MatchMode = "private" | "matchmaking" | "ranked" | "practice";
@@ -207,6 +209,8 @@ export interface StartMessage {
    * seat to paint the battlefield. Tick 1 is the authoritative go signal.
    * Absent on older servers and on a resume after the match began. */
   arming?: { timeoutMs: number };
+  /** Present only in a Training Camp room. The client never sets this. */
+  tutorial?: { stage: import("./tutorial-camp").TutorialStage; replay: boolean; completedStages: number };
 }
 
 /** Sent while arming when a seat's readiness changes. Human opponents only. */

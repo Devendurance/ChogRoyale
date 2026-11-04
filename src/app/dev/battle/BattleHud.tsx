@@ -20,6 +20,7 @@ import type {
 } from "@/lib/battle-protocol";
 import type { ArenaPoint } from "@/lib/battle-input";
 import type { RankedAwardView } from "@/lib/ranked";
+import type { TutorialMessage, TutorialStage } from "@/lib/tutorial-camp";
 import type { BoardMapper, CanvasFeed } from "./BattleCanvas";
 
 // Phaser must stay client-only, same as page.tsx's original dynamic import.
@@ -32,6 +33,7 @@ import { satoshi, georama, lilitaOne } from "@/components/site/fonts";
 import type { BattleCue } from "./battle-audio";
 import { GameIcon } from "@/components/game/GameIcon";
 import BattleResult from "./BattleResult";
+import TrainingCoach from "./TrainingCoach";
 import CrownCelebration from "./CrownCelebration";
 import { PRACTICE_OPPONENT, practiceDifficultyLabel } from "./battle-result-model";
 import "./battle-hud.css";
@@ -59,6 +61,10 @@ export interface BattleHudProps {
   onGiveUp?: () => void;
   onExit?: () => void;
   onBattleAgain?: () => void;
+  /** Training Camp lesson state and exit. Absent outside the guided room. */
+  tutorial?: TutorialMessage | null;
+  tutorialStage?: TutorialStage;
+  onTutorialExit?: () => void;
   /** The server is holding tick 0 for this match. */
   arming?: boolean;
   /** This client has painted the battlefield. */
@@ -667,7 +673,7 @@ export default function BattleHud(props: BattleHudProps) {
       {/* The server's first tick already happened. The reveal is pointer-
           transparent and clears in under two seconds so the live clock is
           never blocked. */}
-      {!start.resumed && !end && !abort && !props.arming && <div className="chud-start" aria-hidden="true">
+      {!start.resumed && !end && !abort && !props.arming && !props.tutorial && <div className="chud-start" aria-hidden="true">
         <div className="chud-start-band chud-start-band--foe">
           <span className="chud-start-emblem"><GameIcon kind="crown" size={46} /></span>
           <span className="chud-start-who"><small>{opponentBadge ?? "Opponent"}</small><b>{opponentName}</b></span>
@@ -683,7 +689,10 @@ export default function BattleHud(props: BattleHudProps) {
         <span className="chud-start-go">Battle!</span>
         <span className="chud-start-patron">Arena Patron · {start.patron.name ?? `CHOG #${start.patron.tokenId}`}</span>
       </div>}
-      {(end || abort) && <BattleResult start={start} end={end} abort={abort} settlement={settlement} botGold={props.botGold} goldBalance={props.goldBalance} goldBalanceStatus={props.goldBalanceStatus} botCardXp={props.botCardXp} cardXpReadbackStatus={props.cardXpReadbackStatus} accountXp={props.accountXp} accountXpStatus={props.accountXpStatus} accountXpReadbackStatus={props.accountXpReadbackStatus} spriteManifest={manifest} me={me} playerName={props.playerName} onExit={props.onExit} onAgain={props.onBattleAgain} onAudioCue={props.onAudioCue} rankedAward={props.rankedAward} rankedAwardStatus={props.rankedAwardStatus} />}
+      {props.tutorial && (props.tutorial.completed || (!end && !abort)) && (
+        <TrainingCoach tutorial={props.tutorial} onExit={props.onTutorialExit ?? props.onExit ?? (() => undefined)} />
+      )}
+      {(end || abort) && <BattleResult start={start} end={end} abort={abort} settlement={settlement} botGold={props.botGold} goldBalance={props.goldBalance} goldBalanceStatus={props.goldBalanceStatus} botCardXp={props.botCardXp} cardXpReadbackStatus={props.cardXpReadbackStatus} accountXp={props.accountXp} accountXpStatus={props.accountXpStatus} accountXpReadbackStatus={props.accountXpReadbackStatus} spriteManifest={manifest} me={me} playerName={props.playerName} onExit={props.onExit} onAgain={props.onBattleAgain} onAudioCue={props.onAudioCue} rankedAward={props.rankedAward} rankedAwardStatus={props.rankedAwardStatus} tutorial={Boolean(props.tutorialStage)} />}
       {dragging && (
         <div
           ref={(el) => {

@@ -522,3 +522,154 @@
   .chud-side-tag[data-side="foe"] .chud-player { font-size: 24px; max-width: 38vw; }
   .chud-phase-banner { top: calc(var(--chud-field-top, 0px) + var(--chud-field-h, 100dvh) / 2); }
 }
+
+/* Training Camp coach and completion. The in-battle coach never blocks the
+   board or hand; only the completion panel is a true modal. */
+.chud-training-coach {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 66px);
+  left: 50%;
+  z-index: 35;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: min(430px, calc(100vw - 20px));
+  padding: 10px 12px;
+  transform: translateX(-50%);
+  border: 2px solid #bf986e;
+  border-radius: 14px;
+  background: #1d1458f2;
+  box-shadow: inset 0 2px #ffffff2e, 0 4px 0 #120b45;
+  color: #fff;
+  pointer-events: none;
+}
+
+.chud-training-coach__badge {
+  flex: none;
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  height: 30px;
+  padding: 0 7px;
+  border: 2px solid #120b45;
+  border-radius: 9px;
+  background: #32229a;
+  color: #3dd9ff;
+  font: 400 15px/1 var(--font-lilita), sans-serif;
+}
+
+.chud-training-coach__copy {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.chud-training-coach__copy b {
+  display: block;
+  color: #fff1c8;
+  font: 400 16px/1.1 var(--font-lilita), sans-serif;
+}
+
+.chud-training-coach__copy p {
+  margin: 3px 0 0;
+  color: #dfceef;
+  font: 500 12px/1.35 var(--font-georama), sans-serif;
+}
+
+.chud-training-coach__exit {
+  flex: none;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 2px solid #120b45;
+  border-radius: 8px;
+  background: #32229a;
+  color: #fff;
+  font: 400 13px/1 var(--font-lilita), sans-serif;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.chud-training-done {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: radial-gradient(ellipse at 50% 38%, rgba(90, 68, 217, 0.5), rgba(10, 6, 40, 0.92) 72%);
+}
+
+.chud-training-done__panel {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  width: min(380px, 100%);
+  padding: 24px 20px 20px;
+  border: 3px solid #120b45;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #32229a, #1d1458 72%);
+  box-shadow: inset 0 2px #ffffff2e, 0 6px 0 #120b45;
+  text-align: center;
+}
+
+.chud-training-done__eyebrow {
+  margin: 0;
+  color: #ffc83d;
+  font: 700 10px/1.2 var(--font-georama), sans-serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.chud-training-done__panel h2 {
+  margin: 0;
+  color: #fff;
+  font: 400 30px/1.05 var(--font-lilita), sans-serif;
+  -webkit-text-stroke: 3px #120b45;
+  paint-order: stroke fill;
+}
+
+.chud-training-done__panel p {
+  margin: 0;
+  color: #dfceef;
+  font: 500 14px/1.5 var(--font-georama), sans-serif;
+}
+
+.chud-training-done__progress {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  color: #3dd9ff;
+  font: 400 18px/1 var(--font-lilita), sans-serif;
+}
+
+.chud-training-done__progress span + span {
+  color: #dfceef;
+  font: 500 11px/1.2 var(--font-georama), sans-serif;
+}
+
+.chud-training-done__action {
+  min-height: 48px;
+  width: 100%;
+  margin-top: 4px;
+  padding: 0 18px;
+  border: 2px solid #120b45;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #ffc83d, #ffa318);
+  color: #2b1450;
+  font: 400 20px/1 var(--font-lilita), sans-serif;
+  cursor: pointer;
+  box-shadow: inset 0 2px #fff8c9, 0 4px 0 #120b45;
+}
+
+@media (max-height: 560px) {
+  .chud-training-coach {
+    top: calc(env(safe-area-inset-top, 0px) + 8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chud-training-done,
+  .chud-training-coach {
+    animation: none;
+  }
+}

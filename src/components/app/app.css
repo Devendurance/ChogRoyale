@@ -7626,3 +7626,268 @@
     animation: none !important;
   }
 }
+
+/* ---------------------------------------------------- Training Camp */
+
+.app-training-entry,
+.app-training-camp {
+  display: grid;
+  gap: 16px;
+}
+
+.app-training-entry {
+  width: min(720px, 100%);
+  margin: 0 auto;
+  padding: 22px;
+}
+
+.app-training-entry__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.app-training-entry__head > div {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.app-training-entry__head .app-btn {
+  margin-left: auto;
+}
+
+.app-training-entry__mark {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  flex: none;
+  border: 2px solid var(--outline);
+  border-radius: 14px;
+  background: linear-gradient(180deg, var(--battle-orange-light), var(--battle-orange-base));
+  color: #fff8df;
+  box-shadow: inset 0 2px #ffffff4d, 0 4px 0 #120b45aa;
+}
+
+.app-training-entry h1,
+.app-training-camp h1 {
+  margin: 2px 0 0;
+  font: 400 clamp(28px, 5vw, 38px)/1 var(--font-game);
+  color: #fff;
+  -webkit-text-stroke: 3px var(--outline);
+  paint-order: stroke fill;
+}
+
+.app-training-entry__lead,
+.app-training-camp__lead {
+  margin: 0;
+  color: var(--app-ink-85);
+  font: 500 15px/1.55 var(--font-site);
+}
+
+.app-training-entry__steps {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 14px 16px 14px 38px;
+  border: 2px solid rgba(185, 162, 255, 0.28);
+  border-radius: 14px;
+  background: rgba(18, 11, 69, 0.32);
+  color: var(--app-ink-85);
+  font: 500 14px/1.45 var(--font-site);
+}
+
+.app-training-entry__steps li::marker {
+  color: var(--battle-orange-light);
+  font-weight: 800;
+}
+
+.app-training-entry__note {
+  margin: 0;
+  color: var(--app-ink-65);
+  font: 500 12px/1.5 var(--font-data);
+}
+
+.app-training-entry__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.app-training-camp {
+  width: min(900px, 100%);
+  margin: 0 auto;
+}
+
+.app-training-camp__hero {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 22px;
+}
+
+.app-training-camp__coach {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border: 2px solid rgba(255, 200, 61, 0.42);
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(255, 200, 61, 0.12), rgba(18, 11, 69, 0.32));
+}
+
+.app-training-camp__coach b {
+  color: #fff1c8;
+  font: 400 20px/1.1 var(--font-game);
+}
+
+.app-training-camp__coach p {
+  margin: 5px 0 0;
+  color: var(--app-ink-85);
+  font: 500 13px/1.5 var(--font-site);
+}
+
+.app-training-camp__progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.app-training-camp__progress strong {
+  font: 400 28px/1 var(--font-game);
+  color: #fff1c8;
+}
+
+.app-training-camp__meter {
+  flex: 1;
+  height: 14px;
+  overflow: hidden;
+  border: 2px solid var(--outline);
+  border-radius: 999px;
+  background: #120b45;
+}
+
+.app-training-camp__meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #3dd9ff, #ffc83d);
+  transition: width 240ms var(--app-ease-out);
+}
+
+.app-training-camp__stages {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.app-training-stage {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 16px;
+  border: 2px solid rgba(185, 162, 255, 0.22);
+  border-radius: 14px;
+  background: rgba(18, 11, 69, 0.3);
+}
+
+.app-training-stage--current {
+  border-color: var(--battle-orange-light);
+  background: linear-gradient(135deg, rgba(255, 200, 61, 0.14), rgba(18, 11, 69, 0.36));
+}
+
+.app-training-stage--complete {
+  border-color: rgba(61, 217, 255, 0.5);
+}
+
+.app-training-stage__num {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 2px solid var(--outline);
+  border-radius: 50%;
+  background: var(--plate-mid);
+  color: #fff1c8;
+  font: 400 20px/1 var(--font-game);
+}
+
+.app-training-stage__body {
+  min-width: 0;
+}
+
+.app-training-stage__body h2 {
+  margin: 0;
+  color: #fff;
+  font: 400 20px/1.1 var(--font-game);
+}
+
+.app-training-stage__body p {
+  margin: 4px 0 0;
+  color: var(--app-ink-65);
+  font: 500 12px/1.45 var(--font-site);
+}
+
+.app-training-stage__status {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+  text-align: right;
+}
+
+.app-training-stage__status span {
+  color: var(--app-ink-65);
+  font: 700 10px/1.2 var(--font-data);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.app-training-camp__notice {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(185, 162, 255, 0.24);
+  background: rgba(18, 11, 69, 0.34);
+  color: var(--app-ink-85);
+  font: 500 12px/1.5 var(--font-data);
+}
+
+.app-training-camp__back {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+@media (max-width: 560px) {
+  .app-training-entry,
+  .app-training-camp__hero {
+    padding: 16px;
+  }
+
+  .app-training-entry__head .app-btn {
+    margin-left: 0;
+  }
+
+  .app-training-stage {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .app-training-stage__status {
+    grid-column: 1 / -1;
+    justify-items: start;
+    text-align: left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-training-camp__meter span {
+    transition: none;
+  }
+}

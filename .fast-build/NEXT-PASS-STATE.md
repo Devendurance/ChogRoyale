@@ -20,7 +20,11 @@ existing Chaos Crossing art.
   `policyFor`, difficulty UI model. Status: working. Easy, Medium, Hard and
   Ultimate exist; Easy uses the same deck, costs, placement checks and rules.
   Medium remains the default difficulty.
-- Tutorials / training camp: no matches in `src`. Status: missing.
+- Tutorials / training camp: `player_tutorial_progress`, `tutorial_release`,
+  the policy in `src/server/tutorial.ts`, the `battle_tutorial` room and the
+  Training Camp hub. Status: partial. Battle 1 is playable and persists
+  server-side. Battles 2/3, Play Hub lock states and graduation are missing.
+  Enforcement is default-OFF.
 - Post-tutorial navigation coach: no coachmark or tour code. Status: missing.
 - Scenic `/app` lobby: `.app-root` uses a purple gradient. Existing
   Chaos Crossing world art is in `public/assets/arena/chaos-crossing/v003`.
@@ -37,6 +41,11 @@ existing Chaos Crossing art.
   policy, difficulty copy, rematch retention. No reward change.
 - [ ] Slice 3: Tutorial battles 1-3 with authoritative staged completion,
   persistence, resume, retries and gated modes. Safe rollout/backfill.
+  - [x] 3A: persistent progress contract + playable Battle 1.
+  - [ ] 3B: Battle 2 (towers, territory, real expanded pocket) and Play Hub
+    lock states.
+  - [ ] 3C: Battle 3 (roles, commander abilities, Chaos), graduation and
+    enforcement activation.
 - [ ] Slice 4: Post-tutorial navigation coach using the real routes and
   features. Reopenable, skippable, mobile-safe.
 - [ ] Slice 5: Scenic `/app` lobby atmosphere from existing world art.
@@ -44,7 +53,7 @@ existing Chaos Crossing art.
 
 ## Current slice
 
-Slice 2 complete. Slice 3 is next.
+Slice 3A complete. Slice 3B is next.
 
 ## Completed
 
@@ -97,6 +106,30 @@ Slice 2 complete. Slice 3 is next.
   - Evidence: `ChogRoyale-Assets/next-pass-20261104/visual/easy-practice`.
     No reward, Gold, XP, account XP, settlement or flag path changed.
 
+- 2026-11-04, Slice 3A:
+  - Additive migration 0029 adds `player_tutorial_progress` and the
+    `tutorial_release` singleton. Applied to TEST only. Check constraints keep
+    the stage and timestamps consistent; no production migration was run.
+  - `src/db/tutorial.ts` provides stage-ordered, idempotent completion and
+    explicit grandfathering. `src/server/tutorial.ts` owns the gate-off,
+    no-release, graduated, grandfathered and training-required policy.
+  - New `battle_tutorial` room reuses PracticeRoom, the real BattleSession,
+    readiness, reconnect and WebGL cleanup. Only stage 1 is accepted; a fixed
+    teaching deck is server-owned, and completion is triggered only by a
+    server-generated `ok` ack for a troop deploy (queued or immediate).
+  - New authenticated read `/api/players/me/tutorial`, `/app/play/training`
+    hub with 0/3 to 1/3, briefing and coach, and `/app/play/training/battle`.
+    Battle 2/3 are honestly marked coming next. Normal Practice, Unranked and
+    Private joins call the admission gate; reconnects skip it. The gate is
+    default-OFF via `TUTORIAL_ENFORCEMENT_ENABLED=0`.
+  - Evidence: DB suite 4/4, tutorial policy 6/6, real-room suite 5/5,
+    TrainingEntry 3/3, 75 focused tests, typecheck, scoped lint and build.
+    Browser captures at `ChogRoyale-Assets/next-pass-20261104/visual/training-camp`
+    show 0/3, briefing, coach, server-confirmed completion and 1/3.
+  - Limits: the browser capture uses an API fixture and injected completion
+    service; DB persistence is proven separately. Stages 2/3, the Play Hub
+    lock states and graduation are not built. Enforcement must stay OFF.
+
 ## Verification
 
 - Slice 1: `npx vitest run src/components/app/DecksView.test.ts` 5/5,
@@ -105,25 +138,29 @@ Slice 2 complete. Slice 3 is next.
   BattleEntry and battle-result suites, `npm run typecheck`, scoped ESLint,
   `npm run build`. Browser: 2 Easy practice cycles with Battle Again, no page
   errors, second start difficulty `easy`.
+- Slice 3A: 75 focused tests plus the DB tutorial suite 4/4; policy 6/6; real
+  tutorial room 5/5; TrainingEntry 3/3; typecheck; scoped ESLint; build.
+  Browser evidence is captured but uses a fixture API and injected completion,
+  so it is UI evidence, not live account acceptance.
 - Browser visual evidence is dev/production-equivalent fixture or injected-auth
   QA, not a live owner account. Live account acceptance remains owner-gated.
 
 ## Blockers
 
-- Tutorial eligibility needs a new server-owned progress store and rollout
-  policy. Implement behind a safe release plan and do not apply production
-  migrations or activate restrictions without owner approval.
+- Tutorial eligibility needs the 3B/3C battles and Play Hub lock states before
+  enforcement can be activated. Do not apply migration 0029 to production or
+  set `TUTORIAL_ENFORCEMENT_ENABLED=1` yet.
 - Easy Practice rewards remain the existing no-reward policy. Any bounded
   starter reward is a separate product decision.
 
 ## Next action
 
-Slice 3: design the server-owned tutorial progress contract and three guided
-Practice battles. Start with the persisted per-player stage record and
-authoritative completion events, then the gated room/eligibility checks, then
-the coach UI. Cover retries, reconnect/resume, duplicate completion, existing
-player backfill and the rollout flag. Do not apply production migrations or
-lock modes for existing players without owner approval.
+Slice 3B: build Battle 2 (Towers & Territory) on the same tutorial room and
+progress contract. Use the real `deployZones` and server placement rules,
+require an actual enemy tower destruction, then require an accepted troop
+deployment inside the newly unlocked pocket. Read the updated territory from
+the authoritative frame, never from a client guess. Then add the Play Hub lock
+states for enforcement and keep the flag OFF until 3C completes.
 
 ## References
 

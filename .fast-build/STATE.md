@@ -279,3 +279,10 @@
 - Added server-validated Easy Practice (`practice-easy-v1`) with a simpler first-legal-card policy, banked energy, plain defensive bodies, no abilities and no counter targeting. Same deck, costs, placement checks and rules.
 - Evidence: 12 identical-deck Easy vs Medium games -> Easy 0 / Medium 12, all replay-identical; a simple novice policy beat Easy 8/8 and Medium 0/8. Real client: entry/lobby/result show Easy and Battle Again keeps `difficulty: "easy"`. 78 focused tests, typecheck, scoped lint and build pass.
 - Next: Slice 3 tutorial progress and gated battles. See `.fast-build/NEXT-PASS-STATE.md`.
+
+## Next Player Experience: Training Camp 3A (2026-11-04)
+- Additive migration 0029 adds per-player Training Camp progress and the owner-only release boundary. Applied to TEST only; production untouched, enforcement flag default OFF.
+- Added `battle_tutorial` (reuses PracticeRoom/BattleSession/readiness/reconnect), a server-owned teaching deck, and authoritative stage-1 completion from an accepted troop deploy ack. Added the Training Camp hub at `/app/play/training`, Battle 1 at `/app/play/training/battle?stage=1`, and the Training Captain coach.
+- Admission gate hooks cover new BattleRoom, QueueRoom and PracticeRoom joins; reconnects and the tutorial room stay allowed. Grandfathering uses an explicit release boundary. Battles 2/3 and Play Hub lock states remain.
+- Evidence: docs/training-camp.md, `ChogRoyale-Assets/next-pass-20261104/visual/training-camp`; DB 4/4, policy 6/6, room 5/5, focused 75, typecheck, scoped lint, build.
+- Next: 3B towers/territory + Play Hub locks; keep enforcement OFF.
