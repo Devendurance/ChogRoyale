@@ -771,11 +771,12 @@ export function BattlePanel({
       if (m.tutorial) {
         setTutorial({
           stage: m.tutorial.stage,
-          objective: "first_troop_deploy",
+          objective: m.tutorial.stage === 2 ? "destroy_enemy_tower" : "first_troop_deploy",
           completed: false,
           replay: m.tutorial.replay,
           completedStages: m.tutorial.completedStages,
           graduated: false,
+          towerLanes: m.tutorial.towerLanes ?? [],
         });
       } else if (!tutorialStage) {
         setTutorial(null);
@@ -1043,7 +1044,9 @@ export function BattlePanel({
         setError(mode === "join"
           ? roomJoinError(e)
           : mode === "practice"
-            ? "Couldn't start practice. Check your connection and try again."
+            ? tutorialStage && e instanceof Error
+              ? e.message
+              : "Couldn't start practice. Check your connection and try again."
             : "Couldn't create a room. Check your connection and try again.");
         setStage("idle");
       } finally {

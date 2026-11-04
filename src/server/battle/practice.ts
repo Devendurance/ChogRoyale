@@ -271,6 +271,35 @@ export const easyPolicy: PracticePolicy = {
   ability: () => null,
 };
 
+/**
+ * TUTORIAL stage 2: a deliberately passive training opponent. It waits for a
+ * high energy buffer, only plays ordinary troops and places them at the back
+ * of its own side. It never counters, uses spells, builds or abilities. The
+ * player still fights a real battle and must actually destroy a tower.
+ */
+export const tutorialPolicy: PracticePolicy = {
+  difficulty: "easy",
+  choose: (state, seat) => {
+    if (state.energy[seat] < 8) return null;
+    const troop = state.hands[seat].find((card) => !isCommanderCard(card) && TROOP_CARDS_V1[card]);
+    if (!troop) return null;
+    const cost = CARDS_V1[troop]?.cost ?? 99;
+    if (cost > state.energy[seat]) return null;
+    const lane = Math.floor(state.tick / 8) % 2 === 0 ? 30 : 70;
+    for (const depth of [18, 22, 14, 26]) {
+      for (const dx of [0, 4, -4]) {
+        const x = lane + dx;
+        const y = seat === 0 ? depth : ARENA_V2.maxY - depth;
+        if (troopDeployCheck(state.structures, seat, x, y, buildingSolids(state.buildings)).ok) {
+          return { cardId: troop, x, y };
+        }
+      }
+    }
+    return null;
+  },
+  ability: () => null,
+};
+
 // --- Shared tactical scaffolding (mirror-equivariant by construction) ---
 
 type TacticUnit = { id: string; x: number; y: number; hp: number; owner: PlayerIndex; moveType: string };

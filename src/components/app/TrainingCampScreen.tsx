@@ -105,14 +105,18 @@ export default function TrainingCampScreen() {
   const tutorial = load.tutorial;
   const percent = Math.round((Math.min(TUTORIAL_TOTAL_STAGES, tutorial.completedStages) / TUTORIAL_TOTAL_STAGES) * 100);
   const coachCopy = tutorial.access === "training-required"
-    ? tutorial.completedStages >= 1
-      ? "Battle 1 is complete. Battle 2 is coming next, and the other battle modes unlock after all three lessons."
-      : "Complete Training Camp to unlock the other battle modes. Battle 1 is ready now."
+    ? tutorial.completedStages >= 2
+      ? "Battle 2 is complete. Battle 3 is coming next, and the other battle modes unlock after all three lessons."
+      : tutorial.completedStages >= 1
+        ? "Battle 1 is complete. Battle 2 is ready now; finish all three lessons to unlock the other battle modes."
+        : "Complete Training Camp to unlock the other battle modes. Battle 1 is ready now."
     : tutorial.access === "grandfathered"
       ? "Your account already has full battle access. You can replay the lessons any time."
-      : tutorial.completedStages >= 1
-        ? "Battle 1 is complete. Battles 2 and 3 arrive in the next Training Camp update."
-        : "Three short battles teach the real controls. Battle 1 is ready now, and every lesson is checked by the server.";
+      : tutorial.completedStages >= 2
+        ? "Battle 2 is complete. Battle 3 arrives in the next Training Camp update."
+        : tutorial.completedStages >= 1
+          ? "Battle 1 is complete. Battle 2 is ready now; Battle 3 arrives in the next update."
+          : "Three short battles teach the real controls. Battle 1 is ready now, and every lesson is checked by the server.";
 
   return (
     <main className="app-stage">
@@ -150,8 +154,9 @@ export default function TrainingCampScreen() {
         <ol className="app-training-camp__stages">
           {TUTORIAL_STAGES.map((stage) => {
             const complete = tutorial.completedStages >= stage.stage;
-            const current = tutorial.nextStage === stage.stage && stage.playable;
-            const canPlay = stage.playable;
+            const unlocked = stage.stage === 1 || (stage.stage === 2 && tutorial.completedStages >= 1);
+            const current = tutorial.nextStage === stage.stage && stage.playable && unlocked;
+            const canPlay = stage.playable && unlocked;
             return (
               <li key={stage.stage} className={`app-training-stage${complete ? " app-training-stage--complete" : current ? " app-training-stage--current" : ""}`}>
                 <span className="app-training-stage__num" aria-hidden="true">{complete ? "✓" : stage.stage}</span>
@@ -162,10 +167,15 @@ export default function TrainingCampScreen() {
                 <div className="app-training-stage__status">
                   {canPlay ? (
                     <>
-                      <span>{complete ? "Complete" : current ? "Ready" : "Locked"}</span>
+                      <span>{complete ? "Complete" : current ? "Ready" : "Available"}</span>
                       <Link className="app-btn app-btn--battle" href={tutorialBattlePath(stage.stage)}>
-                        {complete ? "Replay Battle 1" : "Start Battle 1"}
+                        {complete ? `Replay Battle ${stage.stage}` : `Start Battle ${stage.stage}`}
                       </Link>
+                    </>
+                  ) : stage.playable ? (
+                    <>
+                      <span>Locked</span>
+                      <span>Complete Battle 1 first</span>
                     </>
                   ) : (
                     <>
@@ -183,8 +193,8 @@ export default function TrainingCampScreen() {
           {tutorial.access === "grandfathered"
             ? "Your account keeps full battle access. You can replay the lessons any time."
             : tutorial.enforcement && tutorial.access === "training-required"
-              ? "Training Camp is in enforced rollout. Battles 2 and 3 arrive in the next update, so normal modes stay locked until all three lessons are available."
-              : "Battles 2 and 3 arrive in the next Training Camp update. Normal modes stay open while the camp is in preview. Tutorial battles never grant Gold, XP, trophies or a competitive result."}
+              ? "Training Camp is in enforced rollout. Battle 2 is ready now; Battle 3 is coming next, so normal modes stay locked until all three lessons are available."
+              : "Battle 2 is ready now. Battle 3 arrives in the next Training Camp update. Normal modes stay open while the camp is in preview. Tutorial battles never grant Gold, XP, trophies or a competitive result."}
         </p>
       </div>
     </main>

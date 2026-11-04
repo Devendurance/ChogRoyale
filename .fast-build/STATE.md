@@ -286,3 +286,9 @@
 - Admission gate hooks cover new BattleRoom, QueueRoom and PracticeRoom joins; reconnects and the tutorial room stay allowed. Grandfathering uses an explicit release boundary. Battles 2/3 and Play Hub lock states remain.
 - Evidence: docs/training-camp.md, `ChogRoyale-Assets/next-pass-20261104/visual/training-camp`; DB 4/4, policy 6/6, room 5/5, focused 75, typecheck, scoped lint, build.
 - Next: 3B towers/territory + Play Hub locks; keep enforcement OFF.
+
+## Next Player Experience: Training Camp 3B (2026-11-04)
+- Battle 2 (Towers & Territory) is playable after Battle 1. The server completes it only on a real `structure_destroyed` enemy tower event plus a later accepted troop deploy in the engine's pocket-left/pocket-right zone. Own-side, other-lane, spell, building and client-claim paths do not complete it.
+- Added the real-pocket highlight, tower-fall coach, stage-specific briefing, result "what remains" note, stage-2 reconnect, a passive tutorial bot, and Play Hub training-required locks with progress and Continue Training.
+- Evidence: real-socket tutorial 6/6 including tower and reconnect; both-seat pocket 2/2; DB 4/4; policy 6/6; UI/Play Hub/battle-result suites; typecheck, scoped lint, build. Browser: `ChogRoyale-Assets/next-pass-20261104/visual/training-camp-2`.
+- Next: 3C Battle 3 and graduation. Keep enforcement OFF; no production migration or flag change.

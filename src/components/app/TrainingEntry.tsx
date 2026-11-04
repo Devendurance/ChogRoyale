@@ -33,12 +33,10 @@ export default function TrainingEntry({
         {lesson.summary} Your Training Captain will point to the next action, and the server checks each lesson with real battle events.
       </p>
       <ol className="app-training-entry__steps">
-        <li>Tap a troop card in your hand.</li>
-        <li>Tap or drag onto the glowing band on your side of the arena.</li>
-        <li>Your first accepted troop deployment completes this lesson.</li>
+        {lesson.steps.map((step) => <li key={step}>{step}</li>)}
       </ol>
       <p className="app-training-entry__note">
-        Practice rules. No Gold, XP, trophies or competitive result. If you leave, you can retry from Training Camp.
+        Practice rules. No Gold, XP, trophies or competitive result. {lesson.completion} If you leave, you can retry from Training Camp.
       </p>
       {!setupReady && <p className="app-play-battle-state" role="status">Checking your player setup before training.</p>}
       {error && <p className="app-play-battle-error" role="alert">{error}</p>}

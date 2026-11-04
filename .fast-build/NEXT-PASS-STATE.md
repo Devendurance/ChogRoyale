@@ -22,9 +22,9 @@ existing Chaos Crossing art.
   Medium remains the default difficulty.
 - Tutorials / training camp: `player_tutorial_progress`, `tutorial_release`,
   the policy in `src/server/tutorial.ts`, the `battle_tutorial` room and the
-  Training Camp hub. Status: partial. Battle 1 is playable and persists
-  server-side. Battles 2/3, Play Hub lock states and graduation are missing.
-  Enforcement is default-OFF.
+  Training Camp hub. Status: partial. Battles 1 and 2 are playable and persist
+  server-side. Battle 3, final graduation and enforcement activation remain.
+  The Play Hub lock states exist. Enforcement is default-OFF.
 - Post-tutorial navigation coach: no coachmark or tour code. Status: missing.
 - Scenic `/app` lobby: `.app-root` uses a purple gradient. Existing
   Chaos Crossing world art is in `public/assets/arena/chaos-crossing/v003`.
@@ -42,7 +42,7 @@ existing Chaos Crossing art.
 - [ ] Slice 3: Tutorial battles 1-3 with authoritative staged completion,
   persistence, resume, retries and gated modes. Safe rollout/backfill.
   - [x] 3A: persistent progress contract + playable Battle 1.
-  - [ ] 3B: Battle 2 (towers, territory, real expanded pocket) and Play Hub
+  - [x] 3B: Battle 2 (towers, territory, real expanded pocket) and Play Hub
     lock states.
   - [ ] 3C: Battle 3 (roles, commander abilities, Chaos), graduation and
     enforcement activation.
@@ -53,7 +53,7 @@ existing Chaos Crossing art.
 
 ## Current slice
 
-Slice 3A complete. Slice 3B is next.
+Slice 3B complete. Slice 3C is next.
 
 ## Completed
 
@@ -130,6 +130,30 @@ Slice 3A complete. Slice 3B is next.
     service; DB persistence is proven separately. Stages 2/3, the Play Hub
     lock states and graduation are not built. Enforcement must stay OFF.
 
+- 2026-11-04, Slice 3B:
+  - Battle 2 is playable at `/app/play/training/battle?stage=2` after verified
+    Battle 1. The server rejects stage 2 at 0/3 and rejects stage 3.
+  - The room tracks `structure_destroyed` events for an enemy tower. It only
+    completes after a later accepted troop deploy in the engine's
+    `pocket-left`/`pocket-right` zone associated with a fallen lane. Own-side,
+    other-lane, spell, building and client-claim paths do not complete it.
+  - The stage 2 bot uses a bounded passive policy; the player still fights a
+    real battle and destroys a real tower. The coach switches on the actual
+    tower fall and highlights the real `deployZones()` pocket. The result
+    screen explains the remaining objective if the battle ends early.
+  - The Training Camp hub shows Battle 1 complete, Battle 2 ready, Battle 3
+    coming next, and 1/3 to 2/3. Stage 2 cannot be opened from the hub before
+    Battle 1. The Play Hub locks only when the server reports
+    `training-required`; gate-off, no-release, schema-unavailable, graduated
+    and grandfathered states keep their authorized modes.
+  - Evidence: `src/server/battle/tutorial-room.test.ts` 6/6 (real tower,
+    outside-pocket negative, pocket completion, stage-2 reconnect), pocket
+    geometry 2/2, DB suite 4/4, policy 6/6, UI suites, typecheck, scoped lint
+    and build. Browser: `ChogRoyale-Assets/next-pass-20261104/visual/training-camp-2`.
+  - Limits: the browser capture uses an API fixture and injected completion
+    service. DB persistence is proven separately. Battle 3 and graduation
+    remain. Enforcement must stay OFF.
+
 ## Verification
 
 - Slice 1: `npx vitest run src/components/app/DecksView.test.ts` 5/5,
@@ -142,25 +166,30 @@ Slice 3A complete. Slice 3B is next.
   tutorial room 5/5; TrainingEntry 3/3; typecheck; scoped ESLint; build.
   Browser evidence is captured but uses a fixture API and injected completion,
   so it is UI evidence, not live account acceptance.
+- Slice 3B: real tutorial room 6/6 including a real tower and stage-2
+  reconnect, pocket geometry 2/2 for both seats, DB 4/4, policy 6/6, Training
+  UI 5/5, Play Hub 3/3, battle-result 45/45, typecheck, scoped ESLint, build.
+  Browser evidence at `.../visual/training-camp-2` with 1/3 to 2/3, tower
+  coach, real pocket highlight, completion and locked Play Hub.
 - Browser visual evidence is dev/production-equivalent fixture or injected-auth
   QA, not a live owner account. Live account acceptance remains owner-gated.
 
 ## Blockers
 
-- Tutorial eligibility needs the 3B/3C battles and Play Hub lock states before
-  enforcement can be activated. Do not apply migration 0029 to production or
-  set `TUTORIAL_ENFORCEMENT_ENABLED=1` yet.
+- Tutorial eligibility needs Battle 3, the final graduation flow and the
+  remaining enforcement review before activation. Do not apply migration 0029
+  to production or set `TUTORIAL_ENFORCEMENT_ENABLED=1` yet.
 - Easy Practice rewards remain the existing no-reward policy. Any bounded
   starter reward is a separate product decision.
 
 ## Next action
 
-Slice 3B: build Battle 2 (Towers & Territory) on the same tutorial room and
-progress contract. Use the real `deployZones` and server placement rules,
-require an actual enemy tower destruction, then require an accepted troop
-deployment inside the newly unlocked pocket. Read the updated territory from
-the authoritative frame, never from a client guess. Then add the Play Hub lock
-states for enforcement and keep the flag OFF until 3C completes.
+Slice 3C: build Battle 3 (Your First Strategy) on the same tutorial room and
+progress contract. Teach commander deployment and one active ability with real
+authority, use a bounded forgiving bot, require an authoritative commander
+ability or battle completion objective, then set graduation and the 3/3 flow.
+Keep the enforcement flag OFF until the graduation and Play Hub lock review is
+complete.
 
 ## References
 

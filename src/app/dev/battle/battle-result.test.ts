@@ -192,6 +192,14 @@ describe("battle finale render", () => {
     expect(html).not.toContain("Find Opponent Again");
     expect(html).toContain(">Back to Battle Hall <");
   });
+
+  it("shows what remains for an incomplete training battle without a replay action", () => {
+    const html = renderPractice({ tutorial: true, tutorialNote: "Training objective remaining: destroy an enemy tower, then deploy a troop in the new ground." });
+    expect(html).toContain("Training objective remaining");
+    expect(html).toContain("destroy an enemy tower");
+    expect(html).not.toContain(">Battle Again <");
+    expect(html).toContain("Back to Training Camp");
+  });
   it("renders fallback provenance and only offers Find Opponent Again through the existing callback", () => {
     const withoutCallback = renderFallback();
     expect(withoutCallback).toContain("Unranked · AI Opponent");

@@ -35,13 +35,18 @@ const entitlement: EntitlementDeps = {
 };
 
 const completed: Array<{ playerId: string; stage: number }> = [];
+const progressByPlayer = new Map<string, number>([["tutorial-stage2", 1]]);
 let allowAdmission = true;
 const tutorial: TutorialDeps = {
   admission: async () => ({ allowed: allowAdmission, access: allowAdmission ? "gate-off" : "training-required" }),
-  progress: async () => ({ stage: 0, completedStages: 0, graduated: false, grandfathered: false, nextStage: 1, enforcement: false, access: "gate-off" }),
+  progress: async (playerId) => {
+    const stage = progressByPlayer.get(playerId) ?? 0;
+    return { stage, completedStages: stage, graduated: stage >= 3, grandfathered: false, nextStage: stage < 3 ? ((stage + 1) as 1 | 2 | 3) : null, enforcement: false, access: "gate-off" };
+  },
   complete: async (playerId, stage) => {
     completed.push({ playerId, stage });
-    return { status: "completed", stage, completedStages: 1, graduated: false };
+    progressByPlayer.set(playerId, stage);
+    return { status: "completed", stage, completedStages: stage, graduated: stage >= 3 };
   },
 };
 
@@ -83,7 +88,7 @@ interface Seen {
   starts: StartMessage[];
   frames: BattleFrame[];
   acks: AckMessage[];
-  tutorial: Array<{ completed: boolean; stage: number; replay: boolean; completedStages: number }>;
+  tutorial: Array<{ completed: boolean; stage: number; replay: boolean; completedStages: number; towerLanes: string[] }>;
   errors: string[];
   closed: boolean;
 }
@@ -115,7 +120,7 @@ async function startTutorial(name: string): Promise<Seen> {
 describe("Training Camp battle 1", () => {
   it("starts from the real PracticeRoom with the teaching loadout and Easy opponent", async () => {
     const seen = await startTutorial("tutorial-start");
-    expect(seen.starts[0]!.tutorial).toEqual({ stage: 1, replay: false, completedStages: 0 });
+    expect(seen.starts[0]!.tutorial).toEqual({ stage: 1, replay: false, completedStages: 0, towerLanes: [] });
     expect(seen.starts[0]!.practiceOpponent?.difficulty).toBe("easy");
     expect(seen.starts[0]!.practiceOpponent?.botId).toBe("practice-easy-v1");
     expect(seen.starts[0]!.deck).toEqual([...TUTORIAL_READY.cards, seen.starts[0]!.deck[7]]);
@@ -161,12 +166,13 @@ describe("Training Camp battle 1", () => {
     if (!back) throw new Error("tutorial room stayed locked");
     await until(() => back.starts.length > 0);
     expect(back.starts[0]!.resumed).toBe(true);
-    expect(back.starts[0]!.tutorial).toEqual({ stage: 1, replay: false, completedStages: 0 });
+    expect(back.starts[0]!.tutorial).toEqual({ stage: 1, replay: false, completedStages: 0, towerLanes: [] });
     await back.room.leave();
   });
 
-  it("rejects a later stage that is not built yet", async () => {
-    await expect(client("tutorial-later").create(BATTLE_TUTORIAL_ROOM, { stage: 2 })).rejects.toThrow(/not available yet/);
+  it("rejects stage 3 until it is built and stage 2 before Battle 1 is complete", async () => {
+    await expect(client("tutorial-later").create(BATTLE_TUTORIAL_ROOM, { stage: 3 })).rejects.toThrow(/not available yet/);
+    await expect(client("tutorial-locked").create(BATTLE_TUTORIAL_ROOM, { stage: 2 })).rejects.toThrow(/Complete Training Camp Battle 1 first/);
   });
 
   it("admits a new practice room only when the server admission allows it", async () => {
@@ -174,6 +180,78 @@ describe("Training Camp battle 1", () => {
     await expect(client("tutorial-gate").create(BATTLE_PRACTICE_ROOM)).rejects.toThrow(/Finish Training Camp/);
     allowAdmission = true;
     const room = await client("tutorial-gate").create(BATTLE_PRACTICE_ROOM);
+    await room.leave();
+  });
+
+  it("completes Battle 2 only after a real tower falls and a pocket deploy is accepted", { timeout: 60_000 }, async () => {
+    let room = await client("tutorial-stage2").create(BATTLE_TUTORIAL_ROOM, { stage: 2 });
+    let seen = watch(room);
+    room.send("ready", TUTORIAL_READY);
+    await until(() => seen.starts.length > 0 && seen.frames.length > 0);
+    const start = seen.starts[0]!;
+    expect(start.tutorial).toMatchObject({ stage: 2, completedStages: 1, towerLanes: [] });
+    expect(seen.tutorial[0]).toMatchObject({ stage: 2, completed: false, towerLanes: [] });
+
+    let lastPush = -100;
+    const deadline = Date.now() + 35_000;
+    while (!seen.tutorial.some((message) => message.towerLanes.length > 0) && Date.now() < deadline) {
+      const frame = seen.frames.at(-1);
+      if (frame && frame.tick > lastPush + 12) {
+        lastPush = frame.tick;
+        const priority = ["chog_guardian", "chaos_archer", "sparkcaster", "choglings", "rift_sprites"];
+        const troop = priority.find((id) => frame.hand.includes(id) && start.catalog[id]!.cost <= frame.energy);
+        if (troop) room.send("cmd", { type: "deploy", cid: `push-${frame.tick}`, cardId: troop, x: 30, y: start.seat === 0 ? 60 : 100 });
+      }
+      await sleep(10);
+    }
+    expect(seen.tutorial.some((message) => message.towerLanes.length > 0)).toBe(true);
+    expect(completed.filter((entry) => entry.playerId === "tutorial-stage2")).toHaveLength(0);
+
+    await until(() => {
+      const latest = seen.frames.at(-1);
+      return !!latest && latest.hand.some((id) => start.catalog[id]?.kind === "troop" && start.catalog[id]!.cost <= latest.energy);
+    }, 10_000);
+    const outsideFrame = seen.frames.at(-1)!;
+    const outsideTroop = outsideFrame.hand.find((id) => start.catalog[id]?.kind === "troop" && start.catalog[id]!.cost <= outsideFrame.energy)!;
+    room.send("cmd", { type: "deploy", cid: "outside-pocket", cardId: outsideTroop, x: 30, y: start.seat === 0 ? 60 : 100 });
+    await until(() => seen.acks.some((ack) => ack.cid === "outside-pocket" && ack.ok), 10_000);
+    await sleep(120);
+    expect(completed.filter((entry) => entry.playerId === "tutorial-stage2")).toHaveLength(0);
+
+    // Reconnect after the tower falls. The room must carry the fallen lane
+    // into the resumed start, not ask the client to remember it.
+    const resumeToken = start.resumeToken;
+    const roomId = room.roomId;
+    await room.leave(false);
+    await until(() => seen.closed);
+    let back: Seen | null = null;
+    for (let attempt = 0; attempt < 100 && !back; attempt++) {
+      try {
+        back = watch(await client("tutorial-stage2").joinById(roomId, { resume: resumeToken }));
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        if (!/locked|full/i.test(message)) throw error;
+        await sleep(50);
+      }
+    }
+    if (!back) throw new Error("tutorial stage 2 room stayed locked");
+    await until(() => back!.starts.length > 0);
+    expect(back.starts[0]!.resumed).toBe(true);
+    expect(back.starts[0]!.tutorial).toMatchObject({ stage: 2, towerLanes: ["left"] });
+    room = back.room;
+    seen = back;
+    const resumedStart = back.starts[0]!;
+
+    await until(() => {
+      const frame = seen.frames.at(-1);
+      return !!frame && frame.hand.some((id) => resumedStart.catalog[id]?.kind === "troop" && resumedStart.catalog[id]!.cost <= frame.energy);
+    }, 10_000);
+    const frame = seen.frames.at(-1)!;
+    const troop = frame.hand.find((id) => resumedStart.catalog[id]?.kind === "troop" && resumedStart.catalog[id]!.cost <= frame.energy)!;
+    room.send("cmd", { type: "deploy", cid: "pocket", cardId: troop, x: 30, y: resumedStart.seat === 0 ? 95 : 65 });
+    await until(() => seen.tutorial.some((message) => message.completed), 10_000);
+    expect(completed).toContainEqual({ playerId: "tutorial-stage2", stage: 2 });
+    expect(seen.tutorial.find((message) => message.completed)).toMatchObject({ stage: 2, completedStages: 2, towerLanes: ["left"] });
     await room.leave();
   });
 });

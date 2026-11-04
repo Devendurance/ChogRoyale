@@ -1,29 +1,62 @@
-# Training Camp: authoritative progress and Battle 1
+# Training Camp: authoritative progress, Battle 1 and Battle 2
 
 Date: 2026-11-04. Branch `feat/next-player-experience`. Draft PR #26.
 No merge, deployment, production migration or live flag change.
 
 ## What is playable
 
-Battle 1, First Deployment, is playable end to end on the real battle stack:
+Two guided battles run on the real battle stack:
 
-- `/app/play/training` shows the player's server-owned progress, 0/3 or 1/3.
-- `/app/play/training/battle?stage=1` opens the real PracticeRoom with a fixed
-  teaching deck, the Easy bot, normal readiness, reconnect and WebGL lifecycle.
-- The Training Captain explains card selection, tapping or dragging, valid
-  ground and the first deployment.
-- The client sends the fixed teaching ready payload. The server ignores the
-  payload's cards and uses its own copy, so a forged deck cannot change the
-  lesson.
-- The first server-accepted troop deployment completes stage 1. A queued
-  command is accepted only from the step-loop ack, never from a client claim.
-- Completion is shown as a modal and the player returns to Training Camp.
-  Progress is read back from the account, not from local UI state.
-- Replaying Battle 1 is allowed and idempotent. It never grants Gold, Card XP,
-  Account XP, trophies or a competitive result.
+- `/app/play/training` shows server-owned progress from 0/3 to 2/3.
+- `/app/play/training/battle?stage=1` teaches the first troop deployment.
+- `/app/play/training/battle?stage=2` teaches tower destruction and the real
+  forward deployment pocket.
+- Both use the real `PracticeRoom`, `BattleSession`, readiness handshake,
+  reconnect path and WebGL cleanup. There is no second simulation.
+- The server owns the teaching deck and free commander. The client's ready
+  payload is ignored for cards, so a forged deck cannot change a lesson.
+- Replaying a completed stage is allowed, idempotent and never grants Gold,
+  Card XP, Account XP, trophies or a competitive result.
+- Stage 3 is honestly marked "Coming next" and is rejected by the room.
 
-Battles 2 and 3 are honestly marked "Coming next" and are rejected by the
-room until their slices land.
+## Battle 1
+
+The Training Captain explains card selection, tapping or dragging, valid
+ground and the first deployment. The first server-accepted troop deployment
+completes stage 1. Both immediate and queued commands wait for the server's
+step-loop `ok` ack; a client claim cannot complete the stage.
+
+## Battle 2
+
+The Training Captain explains the river, bridges, both tower lines and why
+defence matters while pushing. The player uses the real cards and board.
+
+The server completes stage 2 only when both facts are true in the current
+room:
+
+1. A `structure_destroyed` frame event shows an enemy tower (`owner !== human
+   seat`) actually fell.
+2. A later troop deploy is accepted by `troopDeployCheck` in the
+   `pocket-left` or `pocket-right` zone associated with a fallen lane.
+
+The completion check computes the zone with the engine's own placement rule
+before submitting the command, then waits for the authoritative ack. A deploy
+on the player's own side, a different lane, a spell, a building or a client
+claim never completes the stage. Both seats use the same pocket rule; the
+client presentation flips it through `deployZones()` and the board geometry.
+
+The stage 2 opponent uses a bounded, passive tutorial policy: it waits for a
+high energy buffer, only plays ordinary troops and places them at the back.
+The player still fights a real battle and must actually destroy a tower.
+
+On a tower fall, the server reports the fallen lane in a `tutorial` message.
+The HUD highlights the exact `deployZones()` pocket with a translucent "New
+ground" overlay. The coach switches to "Your troops destroyed that tower! New
+ground opened in the glowing lane. Deploy a troop there." The overlay never
+blocks pointer input.
+
+If the match ends before the objective, the result screen says what remains
+and returns to Training Camp without a Battle Again action.
 
 ## Progress contract
 
@@ -61,10 +94,19 @@ Admission checks run on new joins to `BattleRoom`, `QueueRoom` and
 tutorial room is the only new room that admits an ungraduated player. Ranked
 keeps its independent closed gate.
 
+## Play Hub locks
+
+When the authenticated read reports `training-required`, the Play Hub shows a
+2/3 (or current) progress gate and "Continue Training" action. Practice,
+Unranked and Private become non-navigable "Training required" actions and
+their cards say Locked. Gate-off, no-release, schema-unavailable, graduated
+and grandfathered states never lock a mode the server permits. Ranked stays
+independently closed.
+
 ## Release gates
 
 Enforcement is default-OFF through `TUTORIAL_ENFORCEMENT_ENABLED=0`. Do not
-turn it on until Battles 2 and 3 exist and the Play Hub lock states ship.
+turn it on until Battle 3 and the final graduation flow exist.
 
 Owner-only activation, after approval and the production migration:
 
@@ -83,20 +125,25 @@ Owner-only activation, after approval and the production migration:
 - `src/db/tutorial.test.ts`: stage order, idempotent duplicates, preserved
   timestamps, account isolation, graduation, release idempotency and
   grandfathering against the TEST branch.
-- `src/server/battle/tutorial-room.test.ts`: real Colyseus tutorial start,
-  fixed deck, Easy opponent, accepted troop deployment completion, duplicate
-  suppression, resume and normal-practice admission denial.
-- `src/components/app/TrainingEntry.test.ts`: briefing, in-progress coach and
-  completion copy.
+- `src/server/battle/tutorial-room.test.ts`: real sockets for Battle 1,
+  Battle 2, a real tower destruction, an outside-pocket negative, an accepted
+  pocket deploy, duplicate suppression, stage-2 reconnect and normal-practice
+  admission denial.
+- `src/server/battle/tutorial-pockets.test.ts`: both seat perspectives and
+  the exact pocket geometry.
+- `src/components/app/TrainingEntry.test.ts`: stage-specific briefing, coach
+  and completion copy.
+- `src/components/app/PlayHub.test.ts`: lock only for a real
+  `training-required` decision.
+- `src/app/dev/battle/battle-result.test.ts`: no replay action and a remaining
+  objective note for an incomplete training battle.
 - Browser evidence: `ChogRoyale-Assets/next-pass-20261104/visual/training-camp`
-  with 0/3, briefing, coach, server-confirmed completion and 1/3. The API was
-  stubbed for the capture and the room used an injected completion service, so
-  this is UI evidence; the DB test is the persistence evidence.
+  for Battle 1 and `.../visual/training-camp-2` for Battle 2, the pocket
+  highlight, completion, 2/3 and the locked Play Hub.
 - TypeScript, scoped ESLint and production build pass.
 
 ## Remaining
 
-- 3B: Battle 2, tower destruction and the real expanded deployment pocket.
-- 3C: Battle 3, commander abilities, Chaos and graduation.
-- Play Hub lock states and a complete 3/3 graduation flow before enforcement.
+- 3C: Battle 3 (roles, commander abilities, Chaos) and graduation.
+- Full 3/3 graduation flow and enforcement activation.
 - Real-device and real-Privy acceptance.

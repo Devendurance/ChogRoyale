@@ -45,6 +45,8 @@ interface Props {
   rankedAwardStatus?: "idle" | "checking" | "awarded" | "unavailable" | "timeout";
   /** Training Camp result: no replay action and a camp return label. */
   tutorial?: boolean;
+  /** What remains when a training battle ends before its objective. */
+  tutorialNote?: string | null;
 }
 
 /** Ribbons land 0.75s after the reveal starts, then each crown step takes 0.34s. */
@@ -105,7 +107,7 @@ function Ribbon({ side, name, crowns, shown, winner, you }: { side: "foe" | "min
   );
 }
 
-export default function BattleResult({ start, end, abort, settlement, botGold, goldBalance, goldBalanceStatus, botCardXp, cardXpReadbackStatus, accountXp, accountXpStatus, accountXpReadbackStatus, spriteManifest, me, playerName, onExit, onAgain, onAudioCue, rankedAward, rankedAwardStatus, tutorial = false }: Props) {
+export default function BattleResult({ start, end, abort, settlement, botGold, goldBalance, goldBalanceStatus, botCardXp, cardXpReadbackStatus, accountXp, accountXpStatus, accountXpReadbackStatus, spriteManifest, me, playerName, onExit, onAgain, onAudioCue, rankedAward, rankedAwardStatus, tutorial = false, tutorialNote = null }: Props) {
   const router = useRouter();
   const dialog = useRef<HTMLDivElement>(null);
   const exit = useRef<HTMLButtonElement>(null);
@@ -215,6 +217,7 @@ export default function BattleResult({ start, end, abort, settlement, botGold, g
         <h2 id="chud-finale-title">{view.title}</h2>
         <p className="chud-finale-context" id="chud-finale-context">{view.context}</p>
         {view.practice && <p className="chud-finale-practice-meta" data-difficulty={practiceDifficulty?.toLowerCase() ?? "unknown"}>{opponent}{practiceDifficulty ? ` · ${practiceDifficulty} difficulty` : ""}</p>}
+        {tutorial && tutorialNote && <p className="chud-finale-training-note" role="status">{tutorialNote}</p>}
         {end && <div className="chud-finale-versus">
           <Ribbon side="mine" name={playerName ?? null} crowns={view.mine} shown={tallyAt(step, view.mine)} winner={view.winner === "mine"} you />
           <span className="chud-finale-vs" aria-hidden="true">VS</span>

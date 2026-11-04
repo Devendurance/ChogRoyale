@@ -12,12 +12,20 @@ export default function TrainingCoach({ tutorial, onExit }: { tutorial: Tutorial
         <section className="chud-training-done__panel">
           <p className="chud-training-done__eyebrow">Training Camp · Battle {tutorial.stage} of 3</p>
           <h2 id="chud-training-done-title">
-            {tutorial.replay ? "Lesson practiced" : tutorial.stage === 1 ? "First deployment confirmed" : "Lesson complete"}
+            {tutorial.replay
+              ? "Lesson practiced"
+              : tutorial.stage === 1
+                ? "First deployment confirmed"
+                : tutorial.stage === 2
+                  ? "Tower and new ground confirmed"
+                  : "Lesson complete"}
           </h2>
           <p id="chud-training-done-copy">
             {tutorial.stage === 1
               ? "Your first troop reached the field. You have completed the first Training Camp battle."
-              : "The Training Captain confirmed your lesson with a real battle event."}
+              : tutorial.stage === 2
+                ? "Your troops destroyed an enemy tower and you deployed into the new pocket. Battle 2 of 3 is complete."
+                : "The Training Captain confirmed your lesson with a real battle event."}
           </p>
           <div className="chud-training-done__progress">
             <span>{tutorialProgressLabel(tutorial.completedStages)}</span>
@@ -39,7 +47,11 @@ export default function TrainingCoach({ tutorial, onExit }: { tutorial: Tutorial
         <p>
           {tutorial.stage === 1
             ? "Tap a troop card, then tap or drag onto your side of the arena. The green band shows where troops can land."
-            : lesson.summary}
+            : tutorial.stage === 2
+              ? tutorial.towerLanes.length > 0
+                ? "Your troops destroyed that tower! New ground opened in the glowing lane. Deploy a troop there."
+                : "Push a lane across a bridge toward an enemy tower. Keep your own towers standing while you attack."
+              : lesson.summary}
         </p>
       </div>
       <button type="button" className="chud-training-coach__exit" onClick={onExit} data-audio-skip="true">

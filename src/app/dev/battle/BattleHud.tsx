@@ -34,6 +34,7 @@ import type { BattleCue } from "./battle-audio";
 import { GameIcon } from "@/components/game/GameIcon";
 import BattleResult from "./BattleResult";
 import TrainingCoach from "./TrainingCoach";
+import TrainingPocketHighlight from "./TrainingPocketHighlight";
 import CrownCelebration from "./CrownCelebration";
 import { PRACTICE_OPPONENT, practiceDifficultyLabel } from "./battle-result-model";
 import "./battle-hud.css";
@@ -689,10 +690,13 @@ export default function BattleHud(props: BattleHudProps) {
         <span className="chud-start-go">Battle!</span>
         <span className="chud-start-patron">Arena Patron · {start.patron.name ?? `CHOG #${start.patron.tokenId}`}</span>
       </div>}
+      {props.tutorial?.stage === 2 && props.tutorial.towerLanes.length > 0 && !props.tutorial.completed && frame && (
+        <TrainingPocketHighlight start={start} frame={frame} towerLanes={props.tutorial.towerLanes} boardRef={boardElementRef} />
+      )}
       {props.tutorial && (props.tutorial.completed || (!end && !abort)) && (
         <TrainingCoach tutorial={props.tutorial} onExit={props.onTutorialExit ?? props.onExit ?? (() => undefined)} />
       )}
-      {(end || abort) && <BattleResult start={start} end={end} abort={abort} settlement={settlement} botGold={props.botGold} goldBalance={props.goldBalance} goldBalanceStatus={props.goldBalanceStatus} botCardXp={props.botCardXp} cardXpReadbackStatus={props.cardXpReadbackStatus} accountXp={props.accountXp} accountXpStatus={props.accountXpStatus} accountXpReadbackStatus={props.accountXpReadbackStatus} spriteManifest={manifest} me={me} playerName={props.playerName} onExit={props.onExit} onAgain={props.onBattleAgain} onAudioCue={props.onAudioCue} rankedAward={props.rankedAward} rankedAwardStatus={props.rankedAwardStatus} tutorial={Boolean(props.tutorialStage)} />}
+      {(end || abort) && <BattleResult start={start} end={end} abort={abort} settlement={settlement} botGold={props.botGold} goldBalance={props.goldBalance} goldBalanceStatus={props.goldBalanceStatus} botCardXp={props.botCardXp} cardXpReadbackStatus={props.cardXpReadbackStatus} accountXp={props.accountXp} accountXpStatus={props.accountXpStatus} accountXpReadbackStatus={props.accountXpReadbackStatus} spriteManifest={manifest} me={me} playerName={props.playerName} onExit={props.onExit} onAgain={props.onBattleAgain} onAudioCue={props.onAudioCue} rankedAward={props.rankedAward} rankedAwardStatus={props.rankedAwardStatus} tutorial={Boolean(props.tutorialStage)} tutorialNote={props.tutorial && !props.tutorial.completed ? props.tutorial.stage === 2 ? "Training objective remaining: destroy an enemy tower, then deploy a troop in the new ground." : "Training objective remaining: deploy a troop on your side of the arena." : null} />}
       {dragging && (
         <div
           ref={(el) => {

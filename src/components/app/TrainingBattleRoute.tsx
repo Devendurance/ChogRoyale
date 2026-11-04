@@ -11,7 +11,7 @@ export default function TrainingBattleRoute() {
   const onboarding = useMyOnboardingState();
   useOnboardingRedirect(onboarding, null);
   const stage = Number(params.get("stage"));
-  if (!isTutorialStage(stage) || stage !== 1) {
+  if (!isTutorialStage(stage) || stage === 3) {
     return (
       <main className="app-stage app-stage--gate">
         <div className="app-column app-column--gate">
