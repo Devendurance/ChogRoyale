@@ -35,7 +35,12 @@ const entitlement: EntitlementDeps = {
 };
 
 const completed: Array<{ playerId: string; stage: number }> = [];
-const progressByPlayer = new Map<string, number>([["tutorial-stage2", 1]]);
+const progressByPlayer = new Map<string, number>([
+  ["tutorial-stage2", 1],
+  ["tutorial-stage3", 2],
+  ["tutorial-stage3-reconnect", 2],
+  ["tutorial-stage3-abandon", 2],
+]);
 let allowAdmission = true;
 const tutorial: TutorialDeps = {
   admission: async () => ({ allowed: allowAdmission, access: allowAdmission ? "gate-off" : "training-required" }),
@@ -88,7 +93,7 @@ interface Seen {
   starts: StartMessage[];
   frames: BattleFrame[];
   acks: AckMessage[];
-  tutorial: Array<{ completed: boolean; stage: number; replay: boolean; completedStages: number; towerLanes: string[] }>;
+  tutorial: Array<{ completed: boolean; stage: number; replay: boolean; completedStages: number; graduated?: boolean; towerLanes: string[]; objectives?: Array<{ id: string; done: boolean }> }>;
   errors: string[];
   closed: boolean;
 }
@@ -117,10 +122,78 @@ async function startTutorial(name: string): Promise<Seen> {
   return seen;
 }
 
+/**
+ * Play Battle 3 for real: cycle the fixed deck, deploy the commander once it
+ * reaches the hand, then fire the first ready active ability. Stops at the
+ * commander step when asked, so a test can leave or reconnect mid-lesson.
+ */
+async function driveStage3(room: Room, seen: Seen, start: StartMessage, stopAfterCommander = false) {
+  let seq = 0;
+  const deadline = Date.now() + 40_000;
+  const spotY = start.seat === 0 ? 60 : 100;
+  while (Date.now() < deadline) {
+    if (seen.tutorial.some((message) => message.completed)) return;
+    const frame = seen.frames.at(-1);
+    if (!frame) {
+      await sleep(5);
+      continue;
+    }
+    const objectives = seen.tutorial.at(-1)?.objectives ?? [];
+    const pushDone = objectives.find((entry) => entry.id === "build_push")?.done === true;
+    const commanderDone = objectives.find((entry) => entry.id === "deploy_commander")?.done === true;
+    const commanderOnField = frame.commanders.some((entry) => entry.owner === start.seat);
+    const canDeployCommander = frame.hand.includes(start.commander.cardId)
+      && frame.energy >= (start.catalog[start.commander.cardId]?.cost ?? 99);
+    const cycle = () => {
+      const playable = frame.hand.find((id) => id !== start.commander.cardId && (start.catalog[id]?.cost ?? 99) <= frame.energy);
+      if (!playable) return;
+      seq += 1;
+      room.send("cmd", { type: "deploy", cid: `t3-cycle-${seq}`, cardId: playable, x: 30, y: spotY });
+    };
+    const deployCommander = () => {
+      seq += 1;
+      room.send("cmd", { type: "deploy", cid: `t3-cmdr-${seq}`, cardId: start.commander.cardId, x: 30, y: spotY });
+    };
+    if (stopAfterCommander) {
+      if (commanderDone && pushDone) return;
+      if (!commanderDone && canDeployCommander) deployCommander();
+      else cycle();
+    } else if (commanderOnField) {
+      // `ready` ignores energy, so only fire a genuinely usable ability.
+      const usable = frame.abilities.find((entry) => entry.ready && !entry.blockedBy && frame.energy >= entry.cost);
+      if (usable) {
+        seq += 1;
+        room.send("cmd", { type: "ability", cid: `t3-ability-${seq}`, abilityId: usable.abilityId });
+      }
+    } else if (canDeployCommander) {
+      // Also covers a redeploy after the commander fell before the ability.
+      deployCommander();
+    } else {
+      cycle();
+    }
+    await sleep(5);
+  }
+  const last = seen.frames.at(-1);
+  throw new Error(`stage 3 objectives were not reached ${JSON.stringify({
+    commanderCardId: start.commander.cardId,
+    seat: start.seat,
+    hand: last?.hand,
+    energy: last?.energy,
+    commanders: last?.commanders,
+    abilities: last?.abilities,
+    objectives: seen.tutorial.at(-1)?.objectives,
+    tutorialCount: seen.tutorial.length,
+    firstCommanders: start.deck[7],
+    okAcks: seen.acks.filter((a) => a.ok).slice(-6),
+    errors: seen.errors.slice(-2),
+    tick: last?.tick,
+  })}`);
+}
+
 describe("Training Camp battle 1", () => {
   it("starts from the real PracticeRoom with the teaching loadout and Easy opponent", async () => {
     const seen = await startTutorial("tutorial-start");
-    expect(seen.starts[0]!.tutorial).toEqual({ stage: 1, replay: false, completedStages: 0, towerLanes: [] });
+    expect(seen.starts[0]!.tutorial).toEqual({ stage: 1, replay: false, completedStages: 0, towerLanes: [], objectives: [{ id: "first_troop_deploy", done: false }] });
     expect(seen.starts[0]!.practiceOpponent?.difficulty).toBe("easy");
     expect(seen.starts[0]!.practiceOpponent?.botId).toBe("practice-easy-v1");
     expect(seen.starts[0]!.deck).toEqual([...TUTORIAL_READY.cards, seen.starts[0]!.deck[7]]);
@@ -166,12 +239,12 @@ describe("Training Camp battle 1", () => {
     if (!back) throw new Error("tutorial room stayed locked");
     await until(() => back.starts.length > 0);
     expect(back.starts[0]!.resumed).toBe(true);
-    expect(back.starts[0]!.tutorial).toEqual({ stage: 1, replay: false, completedStages: 0, towerLanes: [] });
+    expect(back.starts[0]!.tutorial).toEqual({ stage: 1, replay: false, completedStages: 0, towerLanes: [], objectives: [{ id: "first_troop_deploy", done: false }] });
     await back.room.leave();
   });
 
-  it("rejects stage 3 until it is built and stage 2 before Battle 1 is complete", async () => {
-    await expect(client("tutorial-later").create(BATTLE_TUTORIAL_ROOM, { stage: 3 })).rejects.toThrow(/not available yet/);
+  it("rejects stage 2 and stage 3 before their previous lesson is verified", async () => {
+    await expect(client("tutorial-later").create(BATTLE_TUTORIAL_ROOM, { stage: 3 })).rejects.toThrow(/Complete Training Camp Battle 2 first/);
     await expect(client("tutorial-locked").create(BATTLE_TUTORIAL_ROOM, { stage: 2 })).rejects.toThrow(/Complete Training Camp Battle 1 first/);
   });
 
@@ -253,5 +326,126 @@ describe("Training Camp battle 1", () => {
     expect(completed).toContainEqual({ playerId: "tutorial-stage2", stage: 2 });
     expect(seen.tutorial.find((message) => message.completed)).toMatchObject({ stage: 2, completedStages: 2, towerLanes: ["left"] });
     await room.leave();
+  });
+
+  it("rejects Battle 3 before Battle 2 is verified", async () => {
+    await expect(client("tutorial-stage3-locked").create(BATTLE_TUTORIAL_ROOM, { stage: 3 })).rejects.toThrow(/Complete Training Camp Battle 2 first/);
+  });
+
+  it("graduates only after a real push, commander deployment and active ability", { timeout: 60_000 }, async () => {
+    const room = await client("tutorial-stage3").create(BATTLE_TUTORIAL_ROOM, { stage: 3 });
+    const seen = watch(room);
+    room.send("ready", TUTORIAL_READY);
+    await until(() => seen.starts.length > 0 && seen.frames.length > 0);
+    const start = seen.starts[0]!;
+    expect(start.tutorial).toMatchObject({ stage: 3, completedStages: 2 });
+    expect(seen.tutorial[0]).toMatchObject({
+      stage: 3,
+      completed: false,
+      objectives: [
+        { id: "build_push", done: false },
+        { id: "deploy_commander", done: false },
+        { id: "use_ability", done: false },
+      ],
+    });
+
+    // A single troop deploy cannot skip the push objective, which needs two.
+    let cid = 0;
+    const sendDeploy = (cardId: string) => {
+      cid += 1;
+      room.send("cmd", { type: "deploy", cid: `t3-${cid}`, cardId, x: 30, y: start.seat === 0 ? 60 : 100 });
+    };
+    await until(() => {
+      const frame = seen.frames.at(-1);
+      return !!frame && frame.hand.some((id) => start.catalog[id]?.kind === "troop" && start.catalog[id]!.cost <= frame.energy);
+    }, 10_000);
+    const frameNow = seen.frames.at(-1)!;
+    const firstTroop = frameNow.hand.find((id) => start.catalog[id]?.kind === "troop" && start.catalog[id]!.cost <= frameNow.energy)!;
+    sendDeploy(firstTroop);
+    await until(() => seen.acks.some((ack) => ack.cid === "t3-1"), 10_000);
+    const firstAck = seen.acks.find((ack) => ack.cid === "t3-1")!;
+    expect(firstAck.ok).toBe(true);
+    await sleep(120);
+    expect(seen.tutorial.at(-1)!.objectives!.find((entry) => entry.id === "build_push")!.done).toBe(false);
+    expect(seen.tutorial.some((message) => message.completed)).toBe(false);
+
+    await driveStage3(room, seen, start);
+    await until(() => seen.tutorial.some((message) => message.completed), 10_000);
+    const done = seen.tutorial.find((message) => message.completed)!;
+    expect(done).toMatchObject({
+      stage: 3,
+      completedStages: 3,
+      graduated: true,
+      objectives: [
+        { id: "build_push", done: true },
+        { id: "deploy_commander", done: true },
+        { id: "use_ability", done: true },
+      ],
+    });
+    expect(completed.filter((entry) => entry.playerId === "tutorial-stage3")).toEqual([{ playerId: "tutorial-stage3", stage: 3 }]);
+    await sleep(150);
+    expect(completed.filter((entry) => entry.playerId === "tutorial-stage3")).toHaveLength(1);
+    await room.leave();
+  });
+
+  it("keeps legitimate stage 3 progress across a reconnect, then graduates", { timeout: 60_000 }, async () => {
+    let room = await client("tutorial-stage3-reconnect").create(BATTLE_TUTORIAL_ROOM, { stage: 3 });
+    let seen = watch(room);
+    room.send("ready", TUTORIAL_READY);
+    await until(() => seen.starts.length > 0 && seen.frames.length > 0);
+    const start = seen.starts[0]!;
+    await driveStage3(room, seen, start, true);
+    await until(() => {
+      const objectives = seen.tutorial.at(-1)?.objectives ?? [];
+      return objectives.find((entry) => entry.id === "build_push")?.done === true
+        && objectives.find((entry) => entry.id === "deploy_commander")?.done === true;
+    }, 20_000);
+    expect(seen.tutorial.some((message) => message.completed)).toBe(false);
+
+    const roomId = room.roomId;
+    const resumeToken = start.resumeToken;
+    await room.leave(false);
+    await until(() => seen.closed);
+    let back: Seen | null = null;
+    for (let attempt = 0; attempt < 100 && !back; attempt++) {
+      try {
+        back = watch(await client("tutorial-stage3-reconnect").joinById(roomId, { resume: resumeToken }));
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        if (!/locked|full/i.test(message)) throw error;
+        await sleep(50);
+      }
+    }
+    if (!back) throw new Error("stage 3 room stayed locked");
+    await until(() => back!.starts.length > 0);
+    expect(back.starts[0]!.resumed).toBe(true);
+    expect(back.starts[0]!.tutorial).toMatchObject({ stage: 3, completedStages: 2 });
+    expect(back.starts[0]!.tutorial!.objectives).toMatchObject([
+      { id: "build_push", done: true },
+      { id: "deploy_commander", done: true },
+      { id: "use_ability", done: false },
+    ]);
+    room = back.room;
+    seen = back;
+    await driveStage3(room, seen, back.starts[0]!);
+    await until(() => seen.tutorial.some((message) => message.completed), 10_000);
+    expect(completed.filter((entry) => entry.playerId === "tutorial-stage3-reconnect")).toEqual([{ playerId: "tutorial-stage3-reconnect", stage: 3 }]);
+    await room.leave();
+  });
+
+  it("never graduates a player who leaves before the ability", { timeout: 60_000 }, async () => {
+    const room = await client("tutorial-stage3-abandon").create(BATTLE_TUTORIAL_ROOM, { stage: 3 });
+    const seen = watch(room);
+    room.send("ready", TUTORIAL_READY);
+    await until(() => seen.starts.length > 0 && seen.frames.length > 0);
+    const start = seen.starts[0]!;
+    await driveStage3(room, seen, start, true);
+    await until(() => {
+      const objectives = seen.tutorial.at(-1)?.objectives ?? [];
+      return objectives.find((entry) => entry.id === "deploy_commander")?.done === true;
+    }, 20_000);
+    await room.leave();
+    await sleep(200);
+    expect(completed.filter((entry) => entry.playerId === "tutorial-stage3-abandon")).toHaveLength(0);
   });
 });

@@ -210,7 +210,13 @@ export interface StartMessage {
    * Absent on older servers and on a resume after the match began. */
   arming?: { timeoutMs: number };
   /** Present only in a Training Camp room. The client never sets this. */
-  tutorial?: { stage: import("./tutorial-camp").TutorialStage; replay: boolean; completedStages: number; towerLanes: import("./tutorial-camp").TutorialLane[] };
+  tutorial?: {
+    stage: import("./tutorial-camp").TutorialStage;
+    replay: boolean;
+    completedStages: number;
+    towerLanes: import("./tutorial-camp").TutorialLane[];
+    objectives: import("./tutorial-camp").TutorialObjective[];
+  };
 }
 
 /** Sent while arming when a seat's readiness changes. Human opponents only. */

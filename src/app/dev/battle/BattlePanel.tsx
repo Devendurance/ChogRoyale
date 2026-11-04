@@ -40,7 +40,7 @@ import type { BoardMapper, CanvasFeed } from "./BattleCanvas";
 import BattleLobby from "./BattleLobby";
 import BattleEntry from "@/components/app/BattleEntry";
 import TrainingEntry from "@/components/app/TrainingEntry";
-import { TUTORIAL_CAMP_PATH, TUTORIAL_READY, type TutorialMessage, type TutorialStage } from "@/lib/tutorial-camp";
+import { TUTORIAL_BATTLE_HALL_PATH, TUTORIAL_CAMP_PATH, TUTORIAL_READY, type TutorialMessage, type TutorialStage } from "@/lib/tutorial-camp";
 import BattleHud from "./BattleHud";
 import { battleIdentity } from "./battle-identity";
 import { attachOwnedRoom, createRoomOwner, leaveRoom } from "./battle-connection";
@@ -771,12 +771,13 @@ export function BattlePanel({
       if (m.tutorial) {
         setTutorial({
           stage: m.tutorial.stage,
-          objective: m.tutorial.stage === 2 ? "destroy_enemy_tower" : "first_troop_deploy",
+          objective: m.tutorial.objectives?.find((entry) => !entry.done)?.id ?? "complete",
           completed: false,
           replay: m.tutorial.replay,
           completedStages: m.tutorial.completedStages,
-          graduated: false,
+          graduated: m.tutorial.completedStages >= 3,
           towerLanes: m.tutorial.towerLanes ?? [],
+          objectives: m.tutorial.objectives ?? [],
         });
       } else if (!tutorialStage) {
         setTutorial(null);
@@ -1241,6 +1242,12 @@ export function BattlePanel({
     router.push(TUTORIAL_CAMP_PATH);
   }, [reset, router]);
 
+  /** Graduation hands the player to the real battle hall, not back to camp. */
+  const enterBattleHall = useCallback(() => {
+    reset();
+    router.push(TUTORIAL_BATTLE_HALL_PATH);
+  }, [reset, router]);
+
   useEffect(() => () => {
     if (room) roomOwner.release(room);
     leaveRoom(room);
@@ -1578,6 +1585,7 @@ export function BattlePanel({
           tutorial={tutorial}
           tutorialStage={tutorialStage}
           onTutorialExit={tutorialStage ? exitTraining : undefined}
+          onTutorialGraduated={tutorialStage ? enterBattleHall : undefined}
           arming={armed}
           painted={painted}
           opponentReady={opponentReady}

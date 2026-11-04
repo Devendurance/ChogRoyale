@@ -13,6 +13,7 @@ const inProgress: TutorialMessage = {
   completedStages: 0,
   graduated: false,
   towerLanes: [],
+  objectives: [{ id: "first_troop_deploy", done: false }],
 };
 
 describe("Training Camp presentation", () => {
@@ -76,5 +77,80 @@ describe("Training Camp presentation", () => {
     }));
     expect(complete).toContain("Tower and new ground confirmed");
     expect(complete).toContain("2/3");
+  });
+
+  it("briefs Battle 3 with strategy, commander and ability steps", () => {
+    const html = renderToStaticMarkup(createElement(TrainingEntry, { stage: 3, error: null, setupReady: true, onStart: () => undefined }));
+    expect(html).toContain("Battle 3 of 3");
+    expect(html).toContain("Your First Strategy");
+    expect(html).toContain("Build a push");
+    expect(html).toContain("Bulwark commander");
+    expect(html).toContain("Aegis Wall");
+    expect(html).toContain("Start Battle 3");
+    expect(html).not.toContain("Destroy an enemy lane tower with your troops");
+  });
+
+  it("walks Battle 3 through push, commander and ability using server objective flags", () => {
+    const base = { ...inProgress, stage: 3 as const, completedStages: 2 };
+    const push = renderToStaticMarkup(createElement(TrainingCoach, {
+      tutorial: { ...base, objectives: [{ id: "build_push", done: false }, { id: "deploy_commander", done: false }, { id: "use_ability", done: false }] },
+      onExit: () => undefined,
+    }));
+    expect(push).toContain("Build a push");
+    expect(push).toContain("Chog Guardian");
+    expect(push).toContain("Build a two-troop push");
+    expect(push).not.toContain("Enter Battle Hall");
+
+    const commander = renderToStaticMarkup(createElement(TrainingCoach, {
+      tutorial: { ...base, objectives: [{ id: "build_push", done: true }, { id: "deploy_commander", done: false }, { id: "use_ability", done: false }] },
+      onExit: () => undefined,
+    }));
+    expect(commander).toContain("deploy your Bulwark commander");
+    expect(commander).not.toContain("Build a push. Lead");
+
+    const ability = renderToStaticMarkup(createElement(TrainingCoach, {
+      tutorial: { ...base, objectives: [{ id: "build_push", done: true }, { id: "deploy_commander", done: true }, { id: "use_ability", done: false }] },
+      onExit: () => undefined,
+    }));
+    expect(ability).toContain("Aegis Wall");
+    expect(ability).toContain("costs energy");
+
+    const fallen = renderToStaticMarkup(createElement(TrainingCoach, {
+      tutorial: { ...base, objectives: [{ id: "build_push", done: true }, { id: "deploy_commander", done: true }, { id: "use_ability", done: false }] },
+      commanderAlive: false,
+      onExit: () => undefined,
+    }));
+    expect(fallen).toContain("deploy it again");
+  });
+
+  it("celebrates graduation at 3/3 with Enter Battle Hall and no invented rewards", () => {
+    const html = renderToStaticMarkup(createElement(TrainingCoach, {
+      tutorial: { ...inProgress, stage: 3, completed: true, completedStages: 3, graduated: true, objectives: [] },
+      onExit: () => undefined,
+      onGraduated: () => undefined,
+    }));
+    expect(html).toContain("Training Camp complete");
+    expect(html).toContain("3 of 3");
+    expect(html).toContain("Enter Battle Hall");
+    expect(html).toContain("Back to Training Camp");
+    expect(html).toContain("3/3");
+    expect(html).not.toContain("Gold");
+    expect(html).not.toContain("trophies awarded");
+  });
+
+  it("shows real Chaos copy only when the frame reports one", () => {
+    const quiet = renderToStaticMarkup(createElement(TrainingCoach, {
+      tutorial: { ...inProgress, stage: 3, completedStages: 2 },
+      onExit: () => undefined,
+    }));
+    expect(quiet).not.toContain("Chaos warning");
+
+    const warned = renderToStaticMarkup(createElement(TrainingCoach, {
+      tutorial: { ...inProgress, stage: 3, completedStages: 2 },
+      chaos: { state: "warning", name: "Rift Ford" },
+      onExit: () => undefined,
+    }));
+    expect(warned).toContain("Chaos warning");
+    expect(warned).toContain("Rift Ford");
   });
 });

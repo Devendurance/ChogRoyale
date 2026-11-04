@@ -66,10 +66,33 @@ describe("Training Camp persistence", () => {
     const second = await completeTutorialStage(p.id, 2);
     expect(second.status).toBe("completed");
     expect(second.progress?.stage).toBe(2);
+    const secondAt = second.progress?.stage2CompletedAt?.getTime();
     const third = await completeTutorialStage(p.id, 3);
     expect(third.status).toBe("completed");
     expect(third.progress?.stage).toBe(3);
     expect(third.progress?.graduatedAt).not.toBeNull();
+    expect(third.progress?.stage1CompletedAt?.getTime()).toBe(firstAt);
+    expect(third.progress?.stage2CompletedAt?.getTime()).toBe(secondAt);
+
+    // Graduation is written once and a replay never moves a timestamp.
+    const graduatedAt = third.progress?.graduatedAt?.getTime();
+    const replay = await completeTutorialStage(p.id, 3);
+    expect(replay.status).toBe("already-complete");
+    expect(replay.progress?.graduatedAt?.getTime()).toBe(graduatedAt);
+    expect(replay.progress?.stage1CompletedAt?.getTime()).toBe(firstAt);
+    expect(replay.progress?.stage2CompletedAt?.getTime()).toBe(secondAt);
+  });
+
+  it("survives two concurrent graduation attempts without a double write", async () => {
+    const p = await player("concurrent");
+    await completeTutorialStage(p.id, 1);
+    await completeTutorialStage(p.id, 2);
+    const results = await Promise.all([completeTutorialStage(p.id, 3), completeTutorialStage(p.id, 3)]);
+    expect(results.map((entry) => entry.status).sort()).toEqual(["already-complete", "completed"]);
+    const stored = await getTutorialProgress(p.id);
+    expect(stored?.stage).toBe(3);
+    expect(stored?.graduatedAt).not.toBeNull();
+    expect(stored?.stage3CompletedAt?.getTime()).toBe(stored?.graduatedAt?.getTime());
   });
 
   it("keeps accounts isolated and does not fabricate another player's stage", async () => {

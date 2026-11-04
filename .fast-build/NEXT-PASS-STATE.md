@@ -22,9 +22,10 @@ existing Chaos Crossing art.
   Medium remains the default difficulty.
 - Tutorials / training camp: `player_tutorial_progress`, `tutorial_release`,
   the policy in `src/server/tutorial.ts`, the `battle_tutorial` room and the
-  Training Camp hub. Status: partial. Battles 1 and 2 are playable and persist
-  server-side. Battle 3, final graduation and enforcement activation remain.
-  The Play Hub lock states exist. Enforcement is default-OFF.
+  Training Camp hub. Status: working, release-gated. Battles 1, 2 and 3 are
+  playable, persist server-side and graduate to 3/3. The Play Hub lock states
+  exist. Enforcement and the production migration remain default-OFF and
+  owner-gated.
 - Post-tutorial navigation coach: no coachmark or tour code. Status: missing.
 - Scenic `/app` lobby: `.app-root` uses a purple gradient. Existing
   Chaos Crossing world art is in `public/assets/arena/chaos-crossing/v003`.
@@ -44,8 +45,8 @@ existing Chaos Crossing art.
   - [x] 3A: persistent progress contract + playable Battle 1.
   - [x] 3B: Battle 2 (towers, territory, real expanded pocket) and Play Hub
     lock states.
-  - [ ] 3C: Battle 3 (roles, commander abilities, Chaos), graduation and
-    enforcement activation.
+  - [x] 3C: Battle 3 (push, commander, active ability, real Chaos), graduation
+    and release-ready eligibility. Production activation stays owner-gated.
 - [ ] Slice 4: Post-tutorial navigation coach using the real routes and
   features. Reopenable, skippable, mobile-safe.
 - [ ] Slice 5: Scenic `/app` lobby atmosphere from existing world art.
@@ -53,7 +54,8 @@ existing Chaos Crossing art.
 
 ## Current slice
 
-Slice 3B complete. Slice 3C is next.
+Slice 3C complete. Slice 3 is code-complete with release gates held. Slice 4 is
+next.
 
 ## Completed
 
@@ -154,6 +156,36 @@ Slice 3B complete. Slice 3C is next.
     service. DB persistence is proven separately. Battle 3 and graduation
     remain. Enforcement must stay OFF.
 
+- 2026-11-04, Slice 3C:
+  - Battle 3 is playable at `/app/play/training/battle?stage=3` only at 2/3 or
+    better. The server completes it only when three authoritative facts exist:
+    two accepted ordinary troop deploys, a human `commander_deployed` event and
+    a human `ability_fired` event with `trigger: "active"`. Rejected,
+    unaffordable or client-claimed attempts never count.
+  - The coach walks push, commander and ability, highlights the real commander
+    card and the real Aegis Wall control, and explains energy and cooldown. If
+    the commander falls, it tells the player to redraw and redeploy it. Chaos
+    copy appears only from authoritative `frame.chaos` state and graduation
+    never depends on a pulse.
+  - Stage 3 writes 3/3 once and sets `graduated_at` exactly once. The DB suite
+    now proves concurrent graduation and preserved earlier timestamps. A
+    graduation panel offers Enter Battle Hall, the camp shows 3/3 with all
+    three replay links, and Play Hub locks release for graduated accounts.
+  - Activation sequence for migration 0029, the release boundary and
+    `TUTORIAL_ENFORCEMENT_ENABLED` is documented in `docs/training-camp.md`,
+    including the separate Vercel and VPS runtimes and grandfathering. Nothing
+    was applied or flipped.
+  - Evidence: tutorial sockets 10/10 (stage 3 gate, one-deploy negative,
+    real commander, real ability, stage-3 reconnect, abandoned attempt),
+    DB 5/5, Training UI 9/9, Play Hub 3/3, battle-result 45/45, pocket 2/2,
+    typecheck, scoped lint, production build. Browser:
+    `ChogRoyale-Assets/next-pass-20261104/visual/training-camp-3` with 2/3
+    camp, briefing, push coach, commander highlight, live Chaos plus ready
+    ability, graduation, Battle Hall and the 3/3 camp.
+  - Limits: browser evidence uses the injected-auth QA server and an API
+    fixture for progress. Live Privy acceptance and production activation
+    remain owner-gated.
+
 ## Verification
 
 - Slice 1: `npx vitest run src/components/app/DecksView.test.ts` 5/5,
@@ -171,25 +203,32 @@ Slice 3B complete. Slice 3C is next.
   UI 5/5, Play Hub 3/3, battle-result 45/45, typecheck, scoped ESLint, build.
   Browser evidence at `.../visual/training-camp-2` with 1/3 to 2/3, tower
   coach, real pocket highlight, completion and locked Play Hub.
+- Slice 3C: real tutorial room 10/10 including the stage-3 gate, a single
+  deploy that does not complete, a real commander deployment, a real active
+  ability, stage-3 reconnect, duplicate suppression and an abandoned attempt
+  that never graduates. DB 5/5 with concurrent graduation. Training UI 9/9,
+  Play Hub 3/3, battle-result 45/45, pocket 2/2, practice difficulty 6/6,
+  typecheck, scoped ESLint, production build.
+  Browser evidence at `.../visual/training-camp-3` with 2/3 camp, Battle 3
+  briefing, push coach, commander highlight, live Chaos with a ready ability,
+  graduation, Battle Hall and the 3/3 camp.
 - Browser visual evidence is dev/production-equivalent fixture or injected-auth
   QA, not a live owner account. Live account acceptance remains owner-gated.
 
 ## Blockers
 
-- Tutorial eligibility needs Battle 3, the final graduation flow and the
-  remaining enforcement review before activation. Do not apply migration 0029
-  to production or set `TUTORIAL_ENFORCEMENT_ENABLED=1` yet.
+- Production activation is owner-gated: apply migration 0029, insert the
+  release boundary, then enable `TUTORIAL_ENFORCEMENT_ENABLED` on the VPS
+  battle runtime and the Vercel environment in one window, per
+  `docs/training-camp.md`. Nothing here was applied or flipped.
 - Easy Practice rewards remain the existing no-reward policy. Any bounded
   starter reward is a separate product decision.
 
 ## Next action
 
-Slice 3C: build Battle 3 (Your First Strategy) on the same tutorial room and
-progress contract. Teach commander deployment and one active ability with real
-authority, use a bounded forgiving bot, require an authoritative commander
-ability or battle completion objective, then set graduation and the 3/3 flow.
-Keep the enforcement flag OFF until the graduation and Play Hub lock review is
-complete.
+Slice 4: the post-tutorial navigation coach on the real routes. Show it once
+after graduation, keep it reopenable and skippable, make it mobile-safe and
+respect reduced motion. Do not add rewards or change tutorial enforcement.
 
 ## References
 

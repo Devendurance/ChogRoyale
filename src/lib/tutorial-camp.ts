@@ -3,12 +3,36 @@
 // this file only names the fixed teaching loadout and the display contract.
 
 export const TUTORIAL_CAMP_PATH = "/app/play/training";
+export const TUTORIAL_BATTLE_HALL_PATH = "/app/play";
 export const tutorialBattlePath = (stage: TutorialStage) => `${TUTORIAL_CAMP_PATH}/battle?stage=${stage}`;
 export const TUTORIAL_COACH_NAME = "Training Captain";
 
 export const TUTORIAL_STAGE_IDS = [1, 2, 3] as const;
 export type TutorialStage = (typeof TUTORIAL_STAGE_IDS)[number];
 export type TutorialLane = "left" | "right";
+
+/** One server-verified lesson step. The room sets `done`, never the client. */
+export type TutorialObjectiveId =
+  | "first_troop_deploy"
+  | "destroy_enemy_tower"
+  | "deploy_in_pocket"
+  | "build_push"
+  | "deploy_commander"
+  | "use_ability";
+
+export interface TutorialObjective {
+  id: TutorialObjectiveId;
+  done: boolean;
+}
+
+export const TUTORIAL_OBJECTIVE_LABELS: Record<TutorialObjectiveId, string> = {
+  first_troop_deploy: "Deploy your first troop",
+  destroy_enemy_tower: "Destroy an enemy tower",
+  deploy_in_pocket: "Deploy into the new ground",
+  build_push: "Build a two-troop push",
+  deploy_commander: "Deploy your commander",
+  use_ability: "Use a commander ability",
+};
 
 export function isTutorialStage(value: unknown): value is TutorialStage {
   return value === 1 || value === 2 || value === 3;
@@ -24,7 +48,7 @@ export interface TutorialStageDefinition {
   playable: boolean;
 }
 
-/** Stage 1 and 2 are playable now. Stage 3 is the next Training Camp slice. */
+/** Stage 1, 2 and 3 are playable. */
 export const TUTORIAL_STAGES: readonly TutorialStageDefinition[] = [
   {
     stage: 1,
@@ -55,15 +79,15 @@ export const TUTORIAL_STAGES: readonly TutorialStageDefinition[] = [
   {
     stage: 3,
     title: "Your First Strategy",
-    objective: "Build a push and use your commander",
-    summary: "Balance offense and defense, time energy and learn the real Chaos rules.",
+    objective: "Build a push, deploy your commander and use its ability",
+    summary: "Lead with a durable troop, add damage behind it, then commit your commander and its ability.",
     steps: [
-      "Build a balanced push.",
-      "Use your commander and its ability.",
-      "React to Chaos and finish the battle.",
+      "Build a push: deploy a durable troop, then supporting damage behind it.",
+      "Deploy your Bulwark commander to anchor the lane.",
+      "Use Aegis Wall while the fight is joined, then watch for Chaos warnings.",
     ],
-    completion: "The final guided battle completes Training Camp.",
-    playable: false,
+    completion: "A real push, a real commander deployment and a real active ability complete Training Camp.",
+    playable: true,
   },
 ];
 
@@ -105,6 +129,8 @@ export interface TutorialMessage {
   graduated: boolean;
   /** Enemy lane towers that have already fallen in this tutorial battle. */
   towerLanes: TutorialLane[];
+  /** Server-verified lesson steps for the current stage. */
+  objectives: TutorialObjective[];
 }
 
 export function tutorialNextStage(completedStages: number): TutorialStage | null {

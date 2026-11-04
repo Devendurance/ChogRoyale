@@ -292,3 +292,11 @@
 - Added the real-pocket highlight, tower-fall coach, stage-specific briefing, result "what remains" note, stage-2 reconnect, a passive tutorial bot, and Play Hub training-required locks with progress and Continue Training.
 - Evidence: real-socket tutorial 6/6 including tower and reconnect; both-seat pocket 2/2; DB 4/4; policy 6/6; UI/Play Hub/battle-result suites; typecheck, scoped lint, build. Browser: `ChogRoyale-Assets/next-pass-20261104/visual/training-camp-2`.
 - Next: 3C Battle 3 and graduation. Keep enforcement OFF; no production migration or flag change.
+
+## Next Player Experience: Training Camp 3C and graduation (2026-11-04)
+- Battle 3 (Your First Strategy) is playable at `/app/play/training/battle?stage=3` at 2/3 or better. The room completes it only on three authoritative facts: two accepted ordinary troop deploys, a human `commander_deployed` event and a human `ability_fired` event with `trigger: "active"`.
+- The coach walks push, commander and ability, highlights the real commander card and the real Aegis Wall control, explains energy/cooldown, and recovers if the commander falls. Chaos copy comes only from authoritative `frame.chaos`; graduation never depends on a pulse.
+- Graduation writes 3/3 and `graduated_at` once, preserves earlier timestamps, survives replay, and offers Enter Battle Hall. The camp shows 3/3 with three replay links.
+- Release activation for migration 0029 and `TUTORIAL_ENFORCEMENT_ENABLED` is documented but not applied; the flag stays OFF.
+- Evidence: tutorial sockets 10/10, DB 5/5 (including concurrent graduation), Training UI 9/9, Play Hub 3/3, battle-result 45/45, pocket 2/2, typecheck, scoped lint, build. Browser: `ChogRoyale-Assets/next-pass-20261104/visual/training-camp-3`.
+- Next: Slice 4, the post-tutorial navigation coach.

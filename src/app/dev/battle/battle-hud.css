@@ -720,3 +720,93 @@
   font: 600 12px/1.45 var(--font-georama), sans-serif;
   text-align: center;
 }
+
+/* Slice 3C: stage 3 checklist, live Chaos coaching and graduation. */
+.chud-training-coach__steps {
+  display: grid;
+  gap: 3px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chud-training-coach__steps li {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  color: #d8d2ff;
+  font: 600 10px/1.35 var(--font-georama), sans-serif;
+}
+
+.chud-training-coach__steps li[data-done="true"] {
+  color: #8ef0b8;
+}
+
+.chud-training-coach__steps li span[aria-hidden="true"] {
+  width: 10px;
+  flex: none;
+  text-align: center;
+}
+
+.chud-training-coach__chaos {
+  margin: 6px 0 0;
+  padding: 5px 8px;
+  border: 1px solid rgba(255, 200, 61, 0.5);
+  border-radius: 8px;
+  background: rgba(255, 200, 61, 0.12);
+  color: #ffe8b0;
+  font: 600 10px/1.4 var(--font-georama), sans-serif;
+}
+
+.chud-training-coach__chaos[data-chaos="active"] {
+  border-color: rgba(255, 120, 90, 0.6);
+  background: rgba(255, 120, 90, 0.14);
+  color: #ffd2c4;
+}
+
+.chud-training-done[data-graduated="true"] {
+  background: radial-gradient(ellipse at 50% 34%, rgba(255, 200, 61, 0.3), rgba(10, 6, 40, 0.94) 70%);
+}
+
+.chud-training-done[data-graduated="true"] .chud-training-done__panel {
+  border-color: #ffc83d;
+  background: linear-gradient(180deg, #4a32b8, #1d1458 68%);
+  box-shadow: inset 0 2px #ffffff2e, 0 6px 0 #120b45, 0 0 34px rgba(255, 200, 61, 0.35);
+}
+
+.chud-training-done__crown {
+  width: 54px;
+  height: 50px;
+  background: url("/assets/brand/v1/chog-royale-crown.webp") center / contain no-repeat;
+  filter: drop-shadow(0 3px 0 #120b45);
+}
+
+.chud-training-done__actions {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+}
+
+.chud-training-done__secondary {
+  min-height: 44px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #cfc8ff;
+  font: 600 12px/1 var(--font-georama), sans-serif;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.chud-card[data-coach-focus="true"] {
+  box-shadow: 0 0 0 3px #ffc83d, 0 0 16px rgba(255, 200, 61, 0.65);
+}
+
+.chud-ability[data-coach-focus="true"] {
+  box-shadow: 0 0 0 3px #ffc83d, 0 0 16px rgba(255, 200, 61, 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chud-training-done__crown { filter: none; }
+}
