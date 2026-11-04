@@ -31,18 +31,18 @@ const DOWN = 2;
 // `hitsAir` and `air` mirror the ruleset too (presentation engagement and the
 // flying lift). Slice 4 heights keep the roster's relative sizes readable.
 const RULES = {
-  choglings: { attackIntervalTicks: 8, range: 2, hitsAir: false, air: false, targetBoardHeight: 38 },
-  boulderback: { attackIntervalTicks: 12, range: 2, hitsAir: false, air: false, targetBoardHeight: 52 },
-  chaos_archer: { attackIntervalTicks: 10, range: 18, hitsAir: true, air: false, targetBoardHeight: 44, trim: true },
-  frostshell: { attackIntervalTicks: 12, range: 2, hitsAir: false, air: false, targetBoardHeight: 52, trim: true },
-  rift_runner: { attackIntervalTicks: 9, range: 2, hitsAir: false, air: false, targetBoardHeight: 44, trim: true },
-  sparkcaster: { attackIntervalTicks: 14, range: 20, hitsAir: true, air: false, targetBoardHeight: 48, trim: true },
-  chog_guardian: { attackIntervalTicks: 10, range: 2, hitsAir: false, air: false, targetBoardHeight: 50, trim: true },
-  hexwing: { attackIntervalTicks: 10, range: 14, hitsAir: true, air: true, targetBoardHeight: 50, trim: true },
-  rift_sprites: { attackIntervalTicks: 8, range: 2, hitsAir: false, air: true, targetBoardHeight: 34, trim: true },
-  gale_netter: { attackIntervalTicks: 10, range: 16, hitsAir: true, air: false, targetBoardHeight: 46, trim: true },
-  riftbreaker: { attackIntervalTicks: 11, range: 2, hitsAir: false, air: false, targetBoardHeight: 54, trim: true },
-  ember_mauler: { attackIntervalTicks: 12, range: 2, hitsAir: false, air: false, targetBoardHeight: 54, trim: true },
+  choglings: { attackIntervalTicks: 8, range: 2, hitsAir: false, air: false, targetBoardHeight: 38, down: 1.5 },
+  boulderback: { attackIntervalTicks: 12, range: 2, hitsAir: false, air: false, targetBoardHeight: 52, down: 1.5 },
+  chaos_archer: { attackIntervalTicks: 10, range: 18, hitsAir: true, air: false, targetBoardHeight: 44, trim: true, down: 1.5 },
+  frostshell: { attackIntervalTicks: 12, range: 2, hitsAir: false, air: false, targetBoardHeight: 52, trim: true, down: 1.5 },
+  rift_runner: { attackIntervalTicks: 9, range: 2, hitsAir: false, air: false, targetBoardHeight: 44, trim: true, down: 1.5 },
+  sparkcaster: { attackIntervalTicks: 14, range: 20, hitsAir: true, air: false, targetBoardHeight: 48, trim: true, down: 1.5 },
+  chog_guardian: { attackIntervalTicks: 10, range: 2, hitsAir: false, air: false, targetBoardHeight: 50, trim: true, down: 1.5 },
+  hexwing: { attackIntervalTicks: 10, range: 14, hitsAir: true, air: true, targetBoardHeight: 50, trim: true, down: 1.5 },
+  rift_sprites: { attackIntervalTicks: 8, range: 2, hitsAir: false, air: true, targetBoardHeight: 34, trim: true, down: 1.5 },
+  gale_netter: { attackIntervalTicks: 10, range: 16, hitsAir: true, air: false, targetBoardHeight: 46, trim: true, down: 1.5 },
+  riftbreaker: { attackIntervalTicks: 11, range: 2, hitsAir: false, air: false, targetBoardHeight: 54, trim: true, down: 1.5 },
+  ember_mauler: { attackIntervalTicks: 12, range: 2, hitsAir: false, air: false, targetBoardHeight: 54, trim: true, down: 1.5 },
   // Final assets. Buildings (BUILDING_CARDS_V1) swap `move` for a one-shot
   // `deploy` clip and fire on authoritative events or presentation engagement
   // (Sentry). The Totem and Burrow render one view. No card portraits: the
@@ -53,16 +53,20 @@ const RULES = {
   chog_burrow: { kind: "building", attackIntervalTicks: 50, range: 0, hitsAir: false, air: false, targetBoardHeight: 46, trim: true, clips: ["idle", "deploy", "attack", "hit", "defeat"], views: ["front"], portrait: false },
   // Acceptance pass: `down` repacks the three sheets that were drawn 1.1x to
   // 1.2x upscaled (soft) at about 1:1 from the same 2x masters.
+  // Full-screen world pass (PR #24): troops, commanders and the spawned
+  // unit now draw 1.2x-1.5x their packed size, so they pack at down 1.5
+  // (about 1.33 sheet px per board px) from the same 2x masters. The
+  // aggregate texture budget in unit-anim.test.ts rose to fit; see there.
   rift_mortar: { kind: "building", attackIntervalTicks: 40, range: 50, hitsAir: false, air: false, targetBoardHeight: 56, trim: true, down: 1.714, clips: ["idle", "deploy", "attack", "hit", "defeat"], portrait: false },
   // Commander class sheets (COMMANDER_COMBAT_PROFILE_V1), shared by every
   // commander of the class. The ability clip plays on an active ability_fired.
-  commander_bulwark: { kind: "commander", attackIntervalTicks: 12, range: 2, hitsAir: false, air: false, targetBoardHeight: 54, trim: true, clips: ["idle", "move", "attack", "hit", "defeat", "ability"], portrait: false },
-  commander_reaver: { kind: "commander", attackIntervalTicks: 11, range: 2, hitsAir: false, air: false, targetBoardHeight: 52, trim: true, down: 1.81, clips: ["idle", "move", "attack", "hit", "defeat", "ability"], portrait: false },
-  commander_deadeye: { kind: "commander", attackIntervalTicks: 13, range: 16, hitsAir: true, air: false, targetBoardHeight: 52, trim: true, clips: ["idle", "move", "attack", "hit", "defeat", "ability"], portrait: false },
-  commander_scout: { kind: "commander", attackIntervalTicks: 7, range: 3, hitsAir: false, air: false, targetBoardHeight: 50, trim: true, down: 1.68, clips: ["idle", "move", "attack", "hit", "defeat", "ability"], portrait: false },
-  commander_warden: { kind: "commander", attackIntervalTicks: 12, range: 8, hitsAir: false, air: false, targetBoardHeight: 58, trim: true, clips: ["idle", "move", "attack", "hit", "defeat", "ability"], portrait: false },
+  commander_bulwark: { kind: "commander", attackIntervalTicks: 12, range: 2, hitsAir: false, air: false, targetBoardHeight: 54, trim: true, down: 1.5, clips: ["idle", "move", "attack", "hit", "defeat", "ability"], portrait: false },
+  commander_reaver: { kind: "commander", attackIntervalTicks: 11, range: 2, hitsAir: false, air: false, targetBoardHeight: 52, trim: true, down: 1.5, clips: ["idle", "move", "attack", "hit", "defeat", "ability"], portrait: false },
+  commander_deadeye: { kind: "commander", attackIntervalTicks: 13, range: 16, hitsAir: true, air: false, targetBoardHeight: 52, trim: true, down: 1.5, clips: ["idle", "move", "attack", "hit", "defeat", "ability"], portrait: false },
+  commander_scout: { kind: "commander", attackIntervalTicks: 7, range: 3, hitsAir: false, air: false, targetBoardHeight: 50, trim: true, down: 1.5, clips: ["idle", "move", "attack", "hit", "defeat", "ability"], portrait: false },
+  commander_warden: { kind: "commander", attackIntervalTicks: 12, range: 8, hitsAir: false, air: false, targetBoardHeight: 58, trim: true, down: 1.5, clips: ["idle", "move", "attack", "hit", "defeat", "ability"], portrait: false },
   // Spawned by the Chog Burrow (SPAWNED_TROOPS_V1), never a card.
-  burrow_scrapper: { kind: "spawned", attackIntervalTicks: 8, range: 2, hitsAir: false, air: false, targetBoardHeight: 38, trim: true, portrait: false },
+  burrow_scrapper: { kind: "spawned", attackIntervalTicks: 8, range: 2, hitsAir: false, air: false, targetBoardHeight: 38, trim: true, portrait: false, down: 1.5 },
 };
 const MARGIN = 6;
 const even = (n, up) => (up ? Math.ceil(n / 2) * 2 : Math.floor(n / 2) * 2);

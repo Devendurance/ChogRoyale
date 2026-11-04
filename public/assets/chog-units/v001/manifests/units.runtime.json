@@ -7,23 +7,23 @@
     "choglings": {
       "entityId": "choglings",
       "sheet": "choglings/sheet.png",
-      "sha256": "68357b3a35c49bc639a265796c3f47bf8adbe5b2c4363c6954995a113ecf39c6",
-      "width": 592,
-      "height": 592,
-      "frameWidth": 74,
-      "frameHeight": 74,
+      "sha256": "d62beb803d5c7f239e532f1713fd98b2adf7f9d0c6c4abf7a128317cfc5cb8b5",
+      "width": 792,
+      "height": 792,
+      "frameWidth": 99,
+      "frameHeight": 99,
       "columns": 8,
       "frameCount": 62,
       "pivot": [
-        37,
-        62
+        49.5,
+        82.9
       ],
       "pivotNormalized": [
         0.5,
-        0.8378378378378378
+        0.8373737373737374
       ],
-      "visibleHeight": 39,
-      "displayScale": 0.974,
+      "visibleHeight": 52,
+      "displayScale": 0.731,
       "facing": "right",
       "clips": {
         "idle": {
@@ -102,29 +102,29 @@
         "tiltDeg": 52,
         "yawDeg": 24.000000000000004,
         "rearYawDeg": 156,
-        "pxPerUnit": 8
+        "pxPerUnit": 10.703
       }
     },
     "boulderback": {
       "entityId": "boulderback",
       "sheet": "boulderback/sheet.png",
-      "sha256": "a8c21684cfca694483639ea74be9091cf1af1185bc97e95488193a87447fe1d8",
-      "width": 800,
-      "height": 990,
-      "frameWidth": 100,
-      "frameHeight": 110,
+      "sha256": "e272003cecd59afa4e6e5c0c21de4d1b28dc0e929dc14f460f48d5bd1f827543",
+      "width": 1064,
+      "height": 1323,
+      "frameWidth": 133,
+      "frameHeight": 147,
       "columns": 8,
       "frameCount": 70,
       "pivot": [
-        50,
-        79
+        66.5,
+        105.6
       ],
       "pivotNormalized": [
         0.5,
-        0.7181818181818181
+        0.7183673469387755
       ],
-      "visibleHeight": 58,
-      "displayScale": 0.897,
+      "visibleHeight": 78,
+      "displayScale": 0.667,
       "facing": "right",
       "clips": {
         "idle": {
@@ -203,29 +203,29 @@
         "tiltDeg": 52,
         "yawDeg": 24.000000000000004,
         "rearYawDeg": 156,
-        "pxPerUnit": 11.25
+        "pxPerUnit": 14.963
       }
     },
     "chaos_archer": {
       "entityId": "chaos_archer",
       "sheet": "chaos_archer/sheet.png",
-      "sha256": "61bf486a14cd4cd9b2b3ebec40aee44f182eb33c16e612db69d30ab43a0e1766",
-      "width": 472,
-      "height": 528,
-      "frameWidth": 59,
-      "frameHeight": 66,
+      "sha256": "0a5c6b294449a0d7e9a14784cdf2d6761cf86c9765705fb8ad359d4c61522f0d",
+      "width": 632,
+      "height": 704,
+      "frameWidth": 79,
+      "frameHeight": 88,
       "columns": 8,
       "frameCount": 62,
       "pivot": [
-        35,
-        48
+        46.9,
+        64
       ],
       "pivotNormalized": [
-        0.5932203389830508,
+        0.5936708860759493,
         0.7272727272727273
       ],
-      "visibleHeight": 43,
-      "displayScale": 1.023,
+      "visibleHeight": 58,
+      "displayScale": 0.759,
       "facing": "right",
       "clips": {
         "idle": {
@@ -304,29 +304,29 @@
         "tiltDeg": 52,
         "yawDeg": 24.000000000000004,
         "rearYawDeg": 156,
-        "pxPerUnit": 9
+        "pxPerUnit": 12.051
       }
     },
     "frostshell": {
       "entityId": "frostshell",
       "sheet": "frostshell/sheet.png",
-      "sha256": "782ce1da22b5b1cc3767afeec2c3a8e6020f30448eb471e3a66d76b3653c987c",
-      "width": 584,
-      "height": 672,
-      "frameWidth": 73,
-      "frameHeight": 84,
+      "sha256": "1390e2b8da1db7494f370fd99a52e5c95146cbb37af0175f4ba694441158f042",
+      "width": 776,
+      "height": 896,
+      "frameWidth": 97,
+      "frameHeight": 112,
       "columns": 8,
       "frameCount": 64,
       "pivot": [
-        40,
-        60
+        53.2,
+        80
       ],
       "pivotNormalized": [
-        0.547945205479452,
+        0.5484536082474227,
         0.7142857142857143
       ],
-      "visibleHeight": 55,
-      "displayScale": 0.945,
+      "visibleHeight": 74,
+      "displayScale": 0.703,
       "facing": "right",
       "clips": {
         "idle": {
@@ -405,29 +405,29 @@
         "tiltDeg": 52,
         "yawDeg": 24.000000000000004,
         "rearYawDeg": 156,
-        "pxPerUnit": 10.4
+        "pxPerUnit": 13.819
       }
     },
     "rift_runner": {
       "entityId": "rift_runner",
       "sheet": "rift_runner/sheet.png",
-      "sha256": "f8a163bd50fa118ebd38f1ce7dc220f5ec520411a15c7217d5048f3182727dd2",
-      "width": 528,
-      "height": 480,
-      "frameWidth": 66,
-      "frameHeight": 60,
+      "sha256": "392ab53cbfdb708d2d31b6e00fb395e00091c8138f7b3634384ea09458f8646b",
+      "width": 704,
+      "height": 640,
+      "frameWidth": 88,
+      "frameHeight": 80,
       "columns": 8,
       "frameCount": 60,
       "pivot": [
-        37,
-        48
+        49.3,
+        64
       ],
       "pivotNormalized": [
-        0.5606060606060606,
+        0.5602272727272727,
         0.8
       ],
-      "visibleHeight": 40,
-      "displayScale": 1.1,
+      "visibleHeight": 54,
+      "displayScale": 0.815,
       "facing": "right",
       "clips": {
         "idle": {
@@ -506,29 +506,29 @@
         "tiltDeg": 52,
         "yawDeg": 24.000000000000004,
         "rearYawDeg": 156,
-        "pxPerUnit": 9
+        "pxPerUnit": 12
       }
     },
     "sparkcaster": {
       "entityId": "sparkcaster",
       "sheet": "sparkcaster/sheet.png",
-      "sha256": "3c8ecfe77fddb6dd56d30773141b793ef025994d4821d21220edb4fe61917eee",
-      "width": 568,
-      "height": 568,
-      "frameWidth": 71,
-      "frameHeight": 71,
+      "sha256": "88324a9a701ec6ef45e577a63c97f7f7b046272f0ecfefcb1bbb4bdaadb79d30",
+      "width": 760,
+      "height": 760,
+      "frameWidth": 95,
+      "frameHeight": 95,
       "columns": 8,
       "frameCount": 64,
       "pivot": [
-        38,
-        52
+        50.8,
+        69.6
       ],
       "pivotNormalized": [
-        0.5352112676056338,
-        0.7323943661971831
+        0.5347368421052632,
+        0.7326315789473684
       ],
-      "visibleHeight": 47,
-      "displayScale": 1.021,
+      "visibleHeight": 63,
+      "displayScale": 0.762,
       "facing": "right",
       "clips": {
         "idle": {
@@ -607,29 +607,29 @@
         "tiltDeg": 52,
         "yawDeg": 24.000000000000004,
         "rearYawDeg": 156,
-        "pxPerUnit": 9.6
+        "pxPerUnit": 12.845
       }
     },
     "chog_guardian": {
       "entityId": "chog_guardian",
       "sheet": "chog_guardian/sheet.png",
-      "sha256": "4cac95336fab4655845f5a77ec7f5a65e5e8249351d7aa9a152fe39a939e2332",
-      "width": 552,
-      "height": 576,
-      "frameWidth": 69,
-      "frameHeight": 72,
+      "sha256": "91f802cb57fa86fed411ba057a19851786d68d62fedb40fe6e11597922cb9ec2",
+      "width": 736,
+      "height": 768,
+      "frameWidth": 92,
+      "frameHeight": 96,
       "columns": 8,
       "frameCount": 64,
       "pivot": [
-        36,
-        53
+        48,
+        70.7
       ],
       "pivotNormalized": [
         0.5217391304347826,
-        0.7361111111111112
+        0.7364583333333333
       ],
-      "visibleHeight": 49,
-      "displayScale": 1.02,
+      "visibleHeight": 65,
+      "displayScale": 0.769,
       "facing": "right",
       "clips": {
         "idle": {
@@ -708,29 +708,29 @@
         "tiltDeg": 52,
         "yawDeg": 24.000000000000004,
         "rearYawDeg": 156,
-        "pxPerUnit": 10
+        "pxPerUnit": 13.333
       }
     },
     "hexwing": {
       "entityId": "hexwing",
       "sheet": "hexwing/sheet.png",
-      "sha256": "0adcfae580fdb6ae41aa24ed9a8fd6b996ad775f755162d6c62481436608d4eb",
-      "width": 600,
-      "height": 576,
-      "frameWidth": 75,
-      "frameHeight": 72,
+      "sha256": "8f5f50598834b24077c75d5c80366f6dfa686dda6524134dc863f7b70fa8f6ed",
+      "width": 800,
+      "height": 768,
+      "frameWidth": 100,
+      "frameHeight": 96,
       "columns": 8,
       "frameCount": 58,
       "pivot": [
-        39,
-        58
+        52,
+        77.3
       ],
       "pivotNormalized": [
         0.52,
-        0.8055555555555556
+        0.8052083333333333
       ],
-      "visibleHeight": 48,
-      "displayScale": 1.042,
+      "visibleHeight": 64,
+      "displayScale": 0.781,
       "facing": "right",
       "clips": {
         "idle": {
@@ -809,29 +809,29 @@
         "tiltDeg": 52,
         "yawDeg": 24.000000000000004,
         "rearYawDeg": 156,
-        "pxPerUnit": 8.5
+        "pxPerUnit": 11.333
       }
     },
     "rift_sprites": {
       "entityId": "rift_sprites",
       "sheet": "rift_sprites/sheet.png",
-      "sha256": "56a8b86a245b0f2dfd681e5dc387563fa0a0f463044bf56855304145d75134d1",
-      "width": 448,
-      "height": 343,
-      "frameWidth": 56,
-      "frameHeight": 49,
+      "sha256": "bfd57e96ae952c9ff1b66000d6f80ea41c0ee869618b70b7da4e0c120317e2ff",
+      "width": 600,
+      "height": 455,
+      "frameWidth": 75,
+      "frameHeight": 65,
       "columns": 8,
       "frameCount": 54,
       "pivot": [
-        30,
-        40
+        40.2,
+        53.1
       ],
       "pivotNormalized": [
-        0.5357142857142857,
-        0.8163265306122449
+        0.536,
+        0.816923076923077
       ],
-      "visibleHeight": 35,
-      "displayScale": 0.971,
+      "visibleHeight": 47,
+      "displayScale": 0.723,
       "facing": "right",
       "clips": {
         "idle": {
@@ -910,29 +910,29 @@
         "tiltDeg": 52,
         "yawDeg": 24.000000000000004,
         "rearYawDeg": 156,
-        "pxPerUnit": 6.5
+        "pxPerUnit": 8.705
       }
     },
     "gale_netter": {
       "entityId": "gale_netter",
       "sheet": "gale_netter/sheet.png",
-      "sha256": "87cfb174f493e1578d4da42d21c55e4f173e1dcfb810a2c309a4265e136758bb",
-      "width": 544,
-      "height": 536,
-      "frameWidth": 68,
-      "frameHeight": 67,
+      "sha256": "2a173f4c85e253e0351868b6456150e9d8d4dc2fda00d521925ff9916d35d450",
+      "width": 728,
+      "height": 712,
+      "frameWidth": 91,
+      "frameHeight": 89,
       "columns": 8,
       "frameCount": 62,
       "pivot": [
-        36,
-        49
+        48.2,
+        65.1
       ],
       "pivotNormalized": [
-        0.5294117647058824,
-        0.7313432835820896
+        0.5296703296703297,
+        0.7314606741573033
       ],
-      "visibleHeight": 44,
-      "displayScale": 1.045,
+      "visibleHeight": 59,
+      "displayScale": 0.78,
       "facing": "right",
       "clips": {
         "idle": {
@@ -1011,29 +1011,29 @@
         "tiltDeg": 52,
         "yawDeg": 24.000000000000004,
         "rearYawDeg": 156,
-        "pxPerUnit": 9.2
+        "pxPerUnit": 12.312
       }
     },
     "riftbreaker": {
       "entityId": "riftbreaker",
       "sheet": "riftbreaker/sheet.png",
-      "sha256": "5a94dded4deb369497da648c89574a4f2e02023ee37224e587d72aa20a750f60",
-      "width": 632,
-      "height": 711,
-      "frameWidth": 79,
-      "frameHeight": 79,
+      "sha256": "a52ce0777df406326780a5a15f2896240a306d3fd8324502b767effbd5952f00",
+      "width": 840,
+      "height": 945,
+      "frameWidth": 105,
+      "frameHeight": 105,
       "columns": 8,
       "frameCount": 66,
       "pivot": [
-        44,
-        59
+        58.5,
+        78.4
       ],
       "pivotNormalized": [
-        0.5569620253164557,
-        0.7468354430379747
+        0.5571428571428572,
+        0.7466666666666667
       ],
-      "visibleHeight": 53,
-      "displayScale": 1.019,
+      "visibleHeight": 70,
+      "displayScale": 0.771,
       "facing": "right",
       "clips": {
         "idle": {
@@ -1112,29 +1112,29 @@
         "tiltDeg": 52,
         "yawDeg": 24.000000000000004,
         "rearYawDeg": 156,
-        "pxPerUnit": 10.8
+        "pxPerUnit": 14.354
       }
     },
     "ember_mauler": {
       "entityId": "ember_mauler",
       "sheet": "ember_mauler/sheet.png",
-      "sha256": "7eaee09fffe7d4be5ef32ed69d978329144814bff8ef0d75e8a5749fe3f131d5",
-      "width": 640,
-      "height": 720,
-      "frameWidth": 80,
-      "frameHeight": 80,
+      "sha256": "07a407aca9c492e1a7862e983ebfaa481dd1fa73d2303df5fdde894192e078c3",
+      "width": 856,
+      "height": 963,
+      "frameWidth": 107,
+      "frameHeight": 107,
       "columns": 8,
       "frameCount": 66,
       "pivot": [
-        39,
-        59
+        52.2,
+        78.9
       ],
       "pivotNormalized": [
-        0.4875,
-        0.7375
+        0.48785046728971965,
+        0.7373831775700935
       ],
-      "visibleHeight": 54,
-      "displayScale": 1,
+      "visibleHeight": 72,
+      "displayScale": 0.75,
       "facing": "right",
       "clips": {
         "idle": {
@@ -1213,7 +1213,7 @@
         "tiltDeg": 52,
         "yawDeg": 24.000000000000004,
         "rearYawDeg": 156,
-        "pxPerUnit": 10.8
+        "pxPerUnit": 14.445
       }
     },
     "rift_sentry": {
@@ -1616,23 +1616,23 @@
       "kind": "commander",
       "entityId": "commander_scout",
       "sheet": "commander_scout/sheet.png",
-      "sha256": "183774420306f99e7677f258732d0fbe71484a000bdd893d25d5b811af23ac6b",
-      "width": 688,
-      "height": 738,
-      "frameWidth": 86,
-      "frameHeight": 82,
+      "sha256": "b66816720e411099367ed5d31e4b8067c4f757af5770167f6f0ad44eb5fb9cd1",
+      "width": 768,
+      "height": 828,
+      "frameWidth": 96,
+      "frameHeight": 92,
       "columns": 8,
       "frameCount": 68,
       "pivot": [
-        41.8,
-        60.6
+        46.7,
+        68
       ],
       "pivotNormalized": [
-        0.48604651162790696,
-        0.7390243902439024
+        0.4864583333333334,
+        0.7391304347826086
       ],
-      "visibleHeight": 51,
-      "displayScale": 0.98,
+      "visibleHeight": 56,
+      "displayScale": 0.893,
       "facing": "right",
       "clips": {
         "idle": {
@@ -1721,30 +1721,30 @@
         "tiltDeg": 52,
         "yawDeg": 24.000000000000004,
         "rearYawDeg": 156,
-        "pxPerUnit": 11.944
+        "pxPerUnit": 13.333
       }
     },
     "commander_bulwark": {
       "kind": "commander",
       "entityId": "commander_bulwark",
       "sheet": "commander_bulwark/sheet.png",
-      "sha256": "adb9d9a06183c961d4ef15faeaa06dbccf0f2d63274ea2fce345c9e6498ef6aa",
-      "width": 520,
-      "height": 810,
-      "frameWidth": 65,
-      "frameHeight": 81,
+      "sha256": "c19ca1090aabb1ed4ae291dfc536ffdd9c60952a26ca0501b3f480cfe58a8796",
+      "width": 696,
+      "height": 1080,
+      "frameWidth": 87,
+      "frameHeight": 108,
       "columns": 8,
       "frameCount": 76,
       "pivot": [
-        36,
-        60
+        48.2,
+        80
       ],
       "pivotNormalized": [
-        0.5538461538461539,
+        0.5540229885057472,
         0.7407407407407407
       ],
-      "visibleHeight": 54,
-      "displayScale": 1,
+      "visibleHeight": 72,
+      "displayScale": 0.75,
       "facing": "right",
       "clips": {
         "idle": {
@@ -1833,30 +1833,30 @@
         "tiltDeg": 52,
         "yawDeg": 24.000000000000004,
         "rearYawDeg": 156,
-        "pxPerUnit": 10
+        "pxPerUnit": 13.385
       }
     },
     "commander_reaver": {
       "kind": "commander",
       "entityId": "commander_reaver",
       "sheet": "commander_reaver/sheet.png",
-      "sha256": "171e12ec2bc0ee27c0a3a42edaa0c64b6838f6d0dc99924e7afc8c4757acce6b",
-      "width": 640,
-      "height": 702,
-      "frameWidth": 80,
-      "frameHeight": 78,
+      "sha256": "1c22bffb2ce41607526ed0aa7bfc39e73152a5ff271b94479c8622b2622afc12",
+      "width": 768,
+      "height": 855,
+      "frameWidth": 96,
+      "frameHeight": 95,
       "columns": 8,
       "frameCount": 72,
       "pivot": [
-        43.3,
-        58.2
+        52,
+        70.9
       ],
       "pivotNormalized": [
-        0.54125,
-        0.7461538461538462
+        0.5416666666666666,
+        0.7463157894736843
       ],
-      "visibleHeight": 52,
-      "displayScale": 1,
+      "visibleHeight": 63,
+      "displayScale": 0.825,
       "facing": "right",
       "clips": {
         "idle": {
@@ -1945,22 +1945,22 @@
         "tip": {
           "front": {
             "idle": [
-              61.8,
-              33.7
+              74.2,
+              41.1
             ],
             "attack": [
-              61.9,
-              62
+              74.3,
+              75.5
             ]
           },
           "rear": {
             "idle": [
-              61.8,
-              33.5
+              74.2,
+              40.8
             ],
             "attack": [
-              61.9,
-              42.8
+              74.3,
+              52.1
             ]
           }
         }
@@ -1969,30 +1969,30 @@
         "tiltDeg": 52,
         "yawDeg": 24.000000000000004,
         "rearYawDeg": 156,
-        "pxPerUnit": 11.111
+        "pxPerUnit": 13.333
       }
     },
     "commander_deadeye": {
       "kind": "commander",
       "entityId": "commander_deadeye",
       "sheet": "commander_deadeye/sheet.png",
-      "sha256": "812bc61d36044101a909b9e425ff632ddc3f6f91361e7a407dc830dbab562e28",
-      "width": 536,
-      "height": 740,
-      "frameWidth": 67,
-      "frameHeight": 74,
+      "sha256": "9454e0106f07d098976e3bfae4e410448592351f1ffd154da68c2ff035687422",
+      "width": 712,
+      "height": 990,
+      "frameWidth": 89,
+      "frameHeight": 99,
       "columns": 8,
       "frameCount": 78,
       "pivot": [
-        40,
-        54
+        53.1,
+        72.2
       ],
       "pivotNormalized": [
-        0.5970149253731343,
-        0.7297297297297297
+        0.5966292134831461,
+        0.7292929292929293
       ],
-      "visibleHeight": 49,
-      "displayScale": 1.061,
+      "visibleHeight": 66,
+      "displayScale": 0.788,
       "facing": "right",
       "clips": {
         "idle": {
@@ -2081,22 +2081,22 @@
         "tip": {
           "front": {
             "idle": [
-              59.8,
-              43.1
+              79.4,
+              57.6
             ],
             "attack": [
-              56.1,
-              39.7
+              74.5,
+              53.2
             ]
           },
           "rear": {
             "idle": [
-              59.8,
-              36.6
+              79.4,
+              48.9
             ],
             "attack": [
-              56.1,
-              35.3
+              74.5,
+              47.2
             ]
           }
         }
@@ -2105,30 +2105,30 @@
         "tiltDeg": 52,
         "yawDeg": 24.000000000000004,
         "rearYawDeg": 156,
-        "pxPerUnit": 10
+        "pxPerUnit": 13.284
       }
     },
     "commander_warden": {
       "kind": "commander",
       "entityId": "commander_warden",
       "sheet": "commander_warden/sheet.png",
-      "sha256": "25bd0e003b9793ef7547db3722d915e9872e0c412906a1b10db10bbe7dd992cb",
-      "width": 536,
-      "height": 738,
-      "frameWidth": 67,
-      "frameHeight": 82,
+      "sha256": "104fd5e0288d63ae88f4b135c6675d768716be0f61d403982ea4f489d9f59a02",
+      "width": 712,
+      "height": 981,
+      "frameWidth": 89,
+      "frameHeight": 109,
       "columns": 8,
       "frameCount": 72,
       "pivot": [
-        38,
-        62
+        50.5,
+        82.4
       ],
       "pivotNormalized": [
-        0.5671641791044776,
-        0.7560975609756098
+        0.5674157303370787,
+        0.7559633027522936
       ],
-      "visibleHeight": 56,
-      "displayScale": 1.036,
+      "visibleHeight": 74,
+      "displayScale": 0.784,
       "facing": "right",
       "clips": {
         "idle": {
@@ -2217,22 +2217,22 @@
         "tip": {
           "front": {
             "idle": [
-              51.6,
-              46.5
+              68.6,
+              61.8
             ],
             "attack": [
-              54.1,
-              44.5
+              71.9,
+              59.1
             ]
           },
           "rear": {
             "idle": [
-              51.6,
-              42.8
+              68.6,
+              56.9
             ],
             "attack": [
-              54.1,
-              40.4
+              71.9,
+              53.7
             ]
           }
         }
@@ -2241,30 +2241,30 @@
         "tiltDeg": 52,
         "yawDeg": 24.000000000000004,
         "rearYawDeg": 156,
-        "pxPerUnit": 10
+        "pxPerUnit": 13.284
       }
     },
     "burrow_scrapper": {
       "kind": "spawned",
       "entityId": "burrow_scrapper",
       "sheet": "burrow_scrapper/sheet.png",
-      "sha256": "74508873ee14aaa740f736e2a4664e54082611968311431a06bbec193f3f1f8c",
-      "width": 480,
-      "height": 480,
-      "frameWidth": 60,
-      "frameHeight": 60,
+      "sha256": "92b0e96705fa7df9b289419fccecd7572e7514e9cea517ab83b2a61b9c260fc3",
+      "width": 640,
+      "height": 640,
+      "frameWidth": 80,
+      "frameHeight": 80,
       "columns": 8,
       "frameCount": 60,
       "pivot": [
-        33,
-        44
+        44,
+        58.7
       ],
       "pivotNormalized": [
         0.55,
-        0.7333333333333333
+        0.73375
       ],
-      "visibleHeight": 39,
-      "displayScale": 0.974,
+      "visibleHeight": 53,
+      "displayScale": 0.717,
       "facing": "right",
       "clips": {
         "idle": {
@@ -2341,7 +2341,7 @@
         "tiltDeg": 52,
         "yawDeg": 24.000000000000004,
         "rearYawDeg": 156,
-        "pxPerUnit": 8
+        "pxPerUnit": 10.667
       }
     }
   }

@@ -1,3 +1,10 @@
+# Battle viewport + HUD, 2026-11-03
+
+- Portrait battle layout uses a fixed `.chud` viewport with safe-area padding. `.chud-arena` is the full-width atmospheric surface, while the Phaser canvas keeps `aspect-ratio: 100 / 160` and `--chud-board-w: min(100cqw, 58cqh)` so all playable lanes remain visible.
+- Do not change BattleCanvas mapping, Phaser lifecycle, board coordinates, or pointer/deploy handlers for presentation sizing. The canvas rect remains the source of screen-to-arena mapping.
+- Crown counters render `scoreView(frame, end, me)` live from authoritative frames, with role=status and atomic live updates. CrownCelebration retains the existing dedupe and score-ref flights.
+- Visual acceptance fixture measured canvas sizes 328.45x525.55 at 390x844, 371.75x594.81 at 430x932, 408.30x653.30 at 768x1024 and 332.81x532.50 at 1366x768. The board remained 100:160 and all pages had no document overflow.
+
 # V2.2c-2 Account XP battle rewards
 
 # Mobile shell and PWA polish (2026-10-30)
@@ -306,3 +313,4 @@ Durable facts, conventions, and gotchas that should survive across sessions.
 - Fallback reservations are consumed with `client.consumeSeatReservation(reservation)`. Never call `client.create("battle_practice")` from the Unranked queue path.
 - The Practice room is shared by solo Practice and Unranked fallback. Use authoritative `practiceOpponent.source` and distinct resume storage to avoid cross-mode recovery.
 - Human Unranked retains settlement. Fallback uses `end.practice.noReward` and source-specific result copy and must re-enter the human-first Unranked queue for Find Opponent Again.
+- PR #24 final visual correction uses `min(100cqw, 62.5cqh)` for the complete 100:160 board. Browser evidence: 390x844 canvas 378x604.80, 430x932 417.98x668.80, 768x1024 470x752. Fixture captures use explicit 55% audio, no Dev overlay, and full-colour Chaos Crossing terrain. Crown score transition observed, crown flight DOM not observed.

@@ -88,9 +88,12 @@ describe("unit animation manifest", () => {
       expect(u.width * u.height * 4).toBeLessThan(6 * 1024 * 1024);
     }
     const rgba = (list: UnitAnimRecord[]) => list.reduce((n, u) => n + u.width * u.height * 4, 0);
-    // The twelve card troops stay under 24 MB of RGBA and the whole package under 40 MB.
-    expect(rgba(byKind(undefined))).toBeLessThan(24 * 1024 * 1024);
-    expect(rgba(Object.values(manifest.units))).toBeLessThan(40 * 1024 * 1024);
+    // The twelve card troops stay under 30 MB of RGBA and the whole package
+    // under 56 MB. Raised from 24/40 MB in the full-screen world pass: troops,
+    // commanders and the spawned unit draw 1.2x-1.5x their packed size, so they
+    // pack at 1.33 sheet px per board px (pack_units.cjs `down: 1.5`).
+    expect(rgba(byKind(undefined))).toBeLessThan(30 * 1024 * 1024);
+    expect(rgba(Object.values(manifest.units))).toBeLessThan(56 * 1024 * 1024);
   });
 
   it("lays out front then rear clips contiguously with a shared pivot", () => {

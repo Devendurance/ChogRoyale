@@ -91,7 +91,15 @@ export interface ArenaManifest {
   structureMounts?: Record<StructureKind, Record<StructureTeam, string>>;
   mounts: Record<string, MountRole>;
   placements: MountPlacement[];
+  /** Optional camera-space world surround: one opaque render of the same
+   * scene continued well past the arena canvas (same camera contract), so a
+   * full-screen camera never shows page chrome. `boardOffset` is where board
+   * pixel (0,0) lands in the image. It replaces the listed base layer. */
+  world?: { path: string; softPath?: string; size: [number, number]; boardOffset: [number, number]; replaces: string };
 }
+
+/** Board-px position of the world surround's top-left corner. */
+export const worldImageOrigin = (w: NonNullable<ArenaManifest["world"]>): [number, number] => [-w.boardOffset[0], -w.boardOffset[1]];
 
 export type Seat = 0 | 1;
 
@@ -132,12 +140,22 @@ export const weaponArena = (groundAnchor: [number, number], anchorLocal: [number
 export const weaponScreen = (
   groundAnchor: [number, number],
   anchorLocal: [number, number],
-  seat: Seat
+  seat: Seat,
+  artScale = 1
 ): [number, number] => {
   const [gx, gy] = masterToScreen(groundAnchor[0], groundAnchor[1], seat);
   const [ox, oy] = anchorScreenOffset(anchorLocal);
-  return [gx + ox, gy + oy];
+  return [gx + ox * artScale, gy + oy * artScale];
 };
+
+/**
+ * Presentation-only size for mounted structure art, applied about the
+ * authoritative ground anchor. The mount, its shadow, weapon anchors and HP
+ * plate all scale together, so the ground point and aim never drift. Towers
+ * read at roughly 15% of the board width and Cores at about 18%.
+ */
+export const STRUCTURE_ART_SCALE: Record<"tower" | "core", number> = { tower: 1.3, core: 1.2 };
+export const structureArtScale = (kind: "tower" | "core"): number => STRUCTURE_ART_SCALE[kind] ?? 1;
 
 export type StructureKind = "tower" | "core";
 

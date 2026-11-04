@@ -4,7 +4,7 @@
 // state, networking and gestures; every intent still flows through the same
 // send/deploy path and the same card pointer handlers.
 import dynamic from "next/dynamic";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type {
   AbilityView,
   AckMessage,
@@ -303,6 +303,46 @@ function DevPanel({ end, acks, start, frame, me }: { end: EndMessage | null; ack
   );
 }
 
+// Every orientation except short landscape phones renders the battle as one
+// full-bleed world with the controls laid over it. The tray's measured height
+// becomes the camera's bottom inset, so the whole board sits above the hand.
+// Keep in sync with the world media queries in battle-hud.css.
+const WORLD_QUERY = "(orientation: portrait), (min-height: 521px), (min-width: 1200px)";
+function useWorldInsets(hudRef: React.RefObject<HTMLDivElement | null>, trayRef: React.RefObject<HTMLDivElement | null>) {
+  const [state, setState] = useState<{ top: number; bottom: number } | null>(null);
+  useEffect(() => {
+    const mq = matchMedia(WORLD_QUERY);
+    const read = () => {
+      const hud = hudRef.current;
+      const tray = trayRef.current;
+      if (!mq.matches || !hud || !tray) return setState(null);
+      const h = hud.getBoundingClientRect();
+      const t = tray.getBoundingClientRect();
+      // Portrait CSS pads the HUD by the top safe area only, so this reads it in px.
+      const safeTop = parseFloat(getComputedStyle(hud).paddingTop) || 0;
+      // In landscape the tray's top padding is a transparent fade, so the
+      // board may tuck under it. Portrait keeps its approved full clearance.
+      const landscape = h.width > h.height;
+      const fade = landscape ? parseFloat(getComputedStyle(tray).paddingTop) || 0 : 0;
+      const next = { top: Math.round(safeTop + (landscape ? 4 : 6)), bottom: Math.max(0, Math.round(h.bottom - t.top - fade)) };
+      setState((prev) => (prev && prev.top === next.top && prev.bottom === next.bottom ? prev : next));
+    };
+    const ro = new ResizeObserver(read);
+    if (hudRef.current) ro.observe(hudRef.current);
+    if (trayRef.current) ro.observe(trayRef.current);
+    mq.addEventListener("change", read);
+    read();
+    return () => {
+      ro.disconnect();
+      mq.removeEventListener("change", read);
+    };
+  }, [hudRef, trayRef]);
+  return {
+    insets: state ?? undefined,
+    style: state ? ({ "--chud-inset-top": `${state.top}px`, "--chud-inset-bottom": `${state.bottom}px` } as React.CSSProperties) : undefined,
+  };
+}
+
 export default function BattleHud(props: BattleHudProps) {
   const { start, frame, me, end, abort, settlement, presence, now, acks, selected, dragging, hint, feed, mapRef, onBoardTap, onBoardHover, send } = props;
   const manifest = useSpriteManifest();
@@ -316,6 +356,16 @@ export default function BattleHud(props: BattleHudProps) {
   const mineScoreRef = useRef<HTMLSpanElement>(null);
   const theirsScoreRef = useRef<HTMLSpanElement>(null);
   const tv = timerView(frame, end);
+  const trayRef = useRef<HTMLDivElement>(null);
+  const hudRef = useRef<HTMLDivElement>(null);
+  const world = useWorldInsets(hudRef, trayRef);
+  const [boardBox, setBoardBox] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
+  const onBoardLayout = useCallback((b: { left: number; top: number; width: number; height: number }) => {
+    setBoardBox((prev) => (prev && Math.abs(prev.left - b.left) < 0.5 && Math.abs(prev.top - b.top) < 0.5 && Math.abs(prev.width - b.width) < 0.5 && Math.abs(prev.height - b.height) < 0.5 ? prev : { left: b.left, top: b.top, width: b.width, height: b.height }));
+  }, []);
+  const hudStyle = world.style && boardBox
+    ? ({ ...world.style, "--chud-field-left": `${boardBox.left}px`, "--chud-field-top": `${boardBox.top}px`, "--chud-field-w": `${boardBox.width}px`, "--chud-field-h": `${boardBox.height}px` } as React.CSSProperties)
+    : world.style;
 
   // 2s non-blocking banner when the energy phase steps up.
   useEffect(() => {
@@ -429,7 +479,7 @@ export default function BattleHud(props: BattleHudProps) {
   );
 
   return (
-    <div className={`chud ${satoshi.variable} ${georama.variable} ${lilitaOne.variable}`} data-testid="battle-hud">
+    <div ref={hudRef} className={`chud ${satoshi.variable} ${georama.variable} ${lilitaOne.variable}`} data-testid="battle-hud" data-world={world.insets ? "full" : undefined} style={hudStyle}>
       <aside className="chud-side chud-side-left">
         <div className="chud-brand">CHOG <span>ROYALE</span><small>CHAOS CROSSING</small></div>
         <div className="chud-side-block">
@@ -447,19 +497,20 @@ export default function BattleHud(props: BattleHudProps) {
         <header className="chud-top">
           <div className="chud-score">
             <span className="chud-side-tag" data-side="you">
-              <span className="chud-crown-num" ref={mineScoreRef}>
+              <span className="chud-crown-num" ref={mineScoreRef} role="status" aria-live="polite" aria-atomic="true" aria-label={`${props.playerName ?? "You"} crowns`} data-crowns={score.mine}>
                 <GameIcon kind="crown" size={25} /> {score.mine}
               </span>
               <span className="chud-player">{props.playerName ?? "You"}</span>
             </span>
-            <span className="chud-clock2">
+            <span className="chud-clock2" role="timer" aria-label={`Time left ${tv.text}`}>
+              <small className="chud-clock-label" aria-hidden="true">{tv.badge ? "Overtime" : "Time left"}</small>
               {tv.badge && <b className="chud-ot">{tv.badge} </b>}
               {tv.text}
               {tv.mult > 1 && <span className="chud-mult chud-clock-mult">{tv.mult}x</span>}
             </span>
             <span className="chud-side-tag" data-side="foe">
               <span className="chud-player">{opponentName}</span>
-              <span className="chud-crown-num" ref={theirsScoreRef}>
+              <span className="chud-crown-num" ref={theirsScoreRef} role="status" aria-live="polite" aria-atomic="true" aria-label={`${opponentName} crowns`} data-crowns={score.theirs}>
                 {score.theirs} <GameIcon kind="crown" size={25} />
               </span>
             </span>
@@ -476,13 +527,15 @@ export default function BattleHud(props: BattleHudProps) {
             {props.onGiveUp && <button className="chud-giveup" onClick={props.onGiveUp}>Give up</button>}
           </div>}
           <div className="chud-subrow">
-            {patronChip}
-            {opponentBadge && <span className={opponentBadgeClass} data-opponent-kind="bot" data-opponent-source={opponentSource}>{opponentBadge}</span>}
-            {presence && (
-              <span className="chud-pill" style={{ color: presence.opponentConnected ? "#86efac" : "#fbbf24" }}>
-                {presence.opponentConnected ? "Opponent back" : `Opp. offline ${Math.max(0, Math.ceil(((presence.reconnectDeadlineAt ?? 0) - now) / 1000))}s`}
-              </span>
-            )}
+            <div className="chud-chips">
+              {patronChip}
+              {opponentBadge && <span className={opponentBadgeClass} data-opponent-kind="bot" data-opponent-source={opponentSource}>{opponentBadge}</span>}
+              {presence && (
+                <span className="chud-pill" style={{ color: presence.opponentConnected ? "#86efac" : "#fbbf24" }}>
+                  {presence.opponentConnected ? "Opponent back" : `Opp. offline ${Math.max(0, Math.ceil(((presence.reconnectDeadlineAt ?? 0) - now) / 1000))}s`}
+                </span>
+              )}
+            </div>
             <div className="chud-audio" role="group" aria-label="Battle audio" ref={audioRef}>
               <button
                 type="button"
@@ -529,7 +582,7 @@ export default function BattleHud(props: BattleHudProps) {
         {props.showDevDiagnostics !== false && devOpen && <div className="chud-dev-inline">{dev}</div>}
         <div className="chud-arena" ref={boardElementRef}>
           <div className="chud-board">
-            <BattleCanvas seat={me === 1 ? 1 : 0} feed={feed} mapRef={mapRef} onBoardTap={onBoardTap} onBoardHover={onBoardHover} hostStyle={{ width: "var(--chud-board-w, min(100cqw, 62.5cqh))", height: "auto", aspectRatio: "100 / 160", maxWidth: "none", margin: "auto" }} />
+            <BattleCanvas seat={me === 1 ? 1 : 0} feed={feed} mapRef={mapRef} onBoardTap={onBoardTap} onBoardHover={onBoardHover} insets={world.insets} onBoardLayout={onBoardLayout} hostStyle={{ width: "var(--chud-host-w, var(--chud-board-w, min(100cqw, 62.5cqh)))", height: "var(--chud-host-h, auto)", aspectRatio: "var(--chud-host-ar, 100 / 160)", maxWidth: "none", margin: "auto" }} />
           </div>
           <div className="chud-chaos-stack">{chaosChips}</div>
           {banner !== null && (
@@ -539,7 +592,7 @@ export default function BattleHud(props: BattleHudProps) {
           )}
 
         </div>
-        <div className="chud-tray">
+        <div className="chud-tray" ref={trayRef}>
           {frame && (
             <>
               <div className="chud-cards">

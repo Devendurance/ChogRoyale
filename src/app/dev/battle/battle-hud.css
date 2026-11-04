@@ -43,6 +43,8 @@
 .chud-clock-mult { margin-left: 4px; vertical-align: 4px; -webkit-text-stroke: 0; text-shadow: none; }
 .chud-ot { color: #ffc83d; font-size: 14px; font-weight: 400; }
 .chud-subrow { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; min-width: 0; }
+.chud-chips { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; min-width: 0; }
+.chud-clock-label { display: none; }
 /* Compact sound controls: a toggle and a volume disclosure. Both draw at 32px
    but extend their hit area to 44px, so the header stays short on phones. */
 .chud-audio { position: relative; display: inline-flex; align-items: center; gap: 4px; margin-left: auto; min-width: 0; }
@@ -215,7 +217,8 @@
   .chud-side-tag { gap: 4px; }
   .chud-pill { font-size: 9px; max-width: 210px; }
   .chud-subrow { gap: 4px; flex-wrap: nowrap; }
-  .chud-subrow > .chud-pill { flex: 0 1 auto; min-width: 0; }
+  .chud-chips { flex-wrap: nowrap; min-width: 0; }
+  .chud-chips > .chud-pill { flex: 0 1 auto; min-width: 0; }
   /* Once sound is on, the toggle shrinks to its icon. The label stays for
      screen readers and returns whenever the player needs to act. */
   .chud-audio-toggle { min-width: 36px; padding-inline: 7px; }
@@ -278,4 +281,235 @@
 @media (prefers-reduced-motion: reduce) {
   .chud-card, .chud-card-portrait, .chud-cost, .chud-cell { transition: none; }
   .chud-card[data-selected="true"] { transform: translateY(-6px); }
+}
+
+/* Full-bleed battle world for portrait, tablet landscape and desktop (every
+   viewport except short landscape phones; keep in sync with WORLD_QUERY in
+   BattleHud). The Phaser canvas covers the whole screen and its camera fits
+   the 100x160 board above the hand (BattleHud measures the tray as the
+   camera's bottom inset). Timer, names, crowns and the hand are overlays on
+   that world, never page bands or dashboard columns. */
+@media (orientation: portrait), (min-height: 521px), (min-width: 1200px) {
+  .chud {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    display: block;
+    gap: 0;
+    overflow: hidden;
+    overscroll-behavior: none;
+    /* Only the top safe area pads the HUD: BattleHud reads it as the camera's top inset. */
+    padding: env(safe-area-inset-top) 0 0;
+    background: #1d3b22;
+  }
+  .chud-col { position: static; display: block; width: 100%; max-width: none; height: 100%; }
+  /* The old desktop dashboard (patron, guide, status, chaos and commander
+     columns) is gone; the same overlays carry what matters. */
+  .chud-side { display: none; }
+  .chud-top .chud-patron { display: inline-block; }
+  .chud-chaos-stack { display: flex; }
+  .chud-tray::before { content: none; }
+  .chud-tray { grid-column: auto; grid-row: auto; justify-self: auto; align-self: auto; max-width: none; }
+  .chud-abilities-tray { display: flex; }
+
+  /* The world. The canvas host fills the screen; the camera places the board. */
+  .chud-arena {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    container-type: normal;
+    --chud-host-w: 100%;
+    --chud-host-h: 100%;
+    --chud-host-ar: auto;
+  }
+  .chud-arena::before { display: none; }
+  /* A soft edge vignette keeps overlays readable without boxing the scene. */
+  .chud-arena::after {
+    display: block;
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    background:
+      linear-gradient(180deg, #0a1a1255 0, transparent calc(var(--chud-inset-top, 0px) + 54px)),
+      radial-gradient(ellipse 120% 90% at 50% 45%, transparent 62%, #0a1a1240 100%);
+  }
+  .chud [data-testid="battle-board"] { box-shadow: none; }
+  .chud [data-testid="battle-board"]::before,
+  .chud [data-testid="battle-board"]::after { display: none; }
+
+  /* Header pieces float over the world individually. */
+  .chud-top { position: static; display: contents; }
+  .chud-score { display: contents; }
+  .chud-side-tag { display: contents; }
+
+  .chud-clock2 {
+    position: absolute;
+    z-index: 6;
+    top: calc(env(safe-area-inset-top) + 6px);
+    right: calc(env(safe-area-inset-right) + 8px);
+    display: grid;
+    justify-items: center;
+    min-width: 76px;
+    padding: 3px 10px 5px;
+    border: 2px solid #120b45cc;
+    border-radius: 10px;
+    background: #120b45b8;
+    box-shadow: inset 0 1px #ffffff26, 0 2px 0 #120b4588;
+    font-size: 24px;
+    pointer-events: none;
+  }
+  .chud-clock-label { display: block; margin-bottom: 1px; font: 600 9px/1.1 var(--font-georama), sans-serif; letter-spacing: .08em; text-transform: uppercase; color: #fff1c9; -webkit-text-stroke: 0; text-shadow: none; }
+  .chud-clock-mult { position: absolute; right: -8px; bottom: -8px; margin: 0; }
+  .chud-ot { font-size: 11px; }
+
+  /* Opponent identity: top-left, text over the world like a nameplate. */
+  .chud-side-tag[data-side="foe"] .chud-player {
+    position: absolute;
+    z-index: 6;
+    top: calc(env(safe-area-inset-top) + 6px);
+    left: calc(env(safe-area-inset-left) + 10px);
+    max-width: calc(100% - 200px);
+    font: 400 19px/1.1 var(--font-lilita), sans-serif;
+    color: #ffb8c4;
+    -webkit-text-stroke: 3px #3a0f2a;
+    paint-order: stroke fill;
+    text-shadow: 0 2px #22071a;
+    pointer-events: none;
+  }
+  /* The viewer is "You" by position; the name stays for assistive tech. */
+  .chud-side-tag[data-side="you"] .chud-player { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+  /* Crown counters sit on the right edge at the river line: opponent (red)
+     above, you (blue) below. They are the crown-flight landing points. */
+  .chud-crown-num {
+    position: absolute;
+    z-index: 6;
+    right: calc(env(safe-area-inset-right) + 4px);
+    flex-direction: column;
+    justify-content: center;
+    gap: 0;
+    min-width: 40px;
+    width: 40px;
+    height: 50px;
+    padding: 2px 0 3px;
+    border-width: 2px;
+    border-radius: 10px;
+    font-size: 20px;
+    -webkit-text-stroke-width: 1.5px;
+    pointer-events: none;
+  }
+  .chud-side-tag[data-side="you"] .chud-crown-num { padding: 2px 0 3px; justify-content: center; }
+  .chud-crown-num .game-icon { width: 24px; height: auto; }
+  .chud-side-tag[data-side="foe"] .chud-crown-num { top: calc((var(--chud-inset-top, 0px) + 100dvh - var(--chud-inset-bottom, 0px)) / 2 - 56px); }
+  .chud-side-tag[data-side="you"] .chud-crown-num { top: calc((var(--chud-inset-top, 0px) + 100dvh - var(--chud-inset-bottom, 0px)) / 2 + 6px); flex-direction: column-reverse; }
+
+  .chud-devbtn { position: absolute; z-index: 6; top: calc(env(safe-area-inset-top) + 64px); right: calc(env(safe-area-inset-right) + 8px); width: 44px; min-width: 44px; height: 30px; min-height: 30px; padding: 2px; font-size: 9px; background: #120b45b8; }
+  .chud-devbtn::after { content: ""; position: absolute; inset: -7px 0; }
+
+  /* Alerts and recovery stay visible as a compact toast under the timer row. */
+  .chud-status { position: absolute; z-index: 7; top: calc(env(safe-area-inset-top) + 58px); left: 50%; translate: -50% 0; width: max-content; max-width: calc(100% - 24px); justify-content: center; gap: 2px 8px; padding: 4px 10px; border: 1px solid #b697d6aa; border-radius: 10px; background: #1d1458e6; font-size: 10px; }
+  .chud-giveup { margin-left: 0; }
+
+  /* Context chips: small, translucent, under the opponent name. */
+  .chud-subrow { display: contents; }
+  .chud-chips { position: absolute; z-index: 6; top: calc(env(safe-area-inset-top) + 30px); left: calc(env(safe-area-inset-left) + 8px); display: flex; flex-direction: column; align-items: flex-start; gap: 3px; max-width: calc(100% - 140px); pointer-events: none; }
+  .chud-chips > .chud-pill { max-width: 100%; background: #120b45a6; border-color: #9271d455; font-size: 9px; }
+  .chud-audio { position: absolute; z-index: 6; top: calc(env(safe-area-inset-top) + 64px); right: calc(env(safe-area-inset-right) + 8px); margin: 0; }
+  .chud-audio-toggle, .chud-audio-more { min-height: 30px; background: #120b45b8; border-color: #b697d688; }
+  .chud-audio-toggle { min-width: 34px; padding-inline: 7px; }
+  /* Icon-only over the world; the label stays for assistive tech. */
+  .chud-audio-toggle .chud-audio-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .chud-audio-toggle { width: 34px; min-width: 34px; padding: 0; font-size: 14px; }
+  .chud-audio-more { min-width: 40px; padding-inline: 4px; font-size: 9px; }
+
+  .chud-chaos-stack { top: calc(var(--chud-inset-top, 0px) + 96px); left: 8px; z-index: 6; }
+  .chud-phase-banner { z-index: 6; top: calc((var(--chud-inset-top, 0px) + 100dvh - var(--chud-inset-bottom, 0px)) / 2); }
+
+  /* The hand: controls laid over the near forest, with a fade instead of a panel. */
+  .chud-tray {
+    position: absolute;
+    z-index: 6;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    gap: 5px;
+    margin: 0;
+    padding: 14px calc(env(safe-area-inset-right) + 8px) calc(env(safe-area-inset-bottom) + 6px) calc(env(safe-area-inset-left) + 8px);
+    border: 0;
+    border-radius: 0;
+    background: linear-gradient(180deg, transparent 0, #120b4566 16px, #120b45b3 60%, #120b45d9);
+    box-shadow: none;
+  }
+  .chud-cards { gap: 6px; grid-template-columns: 38px repeat(4, minmax(0, 1fr)); max-width: 560px; }
+  .chud-next { width: 34px; height: 48px; }
+  .chud-card { min-height: clamp(78px, 10.5dvh, 112px); box-shadow: 0 3px 0 #0d0730, 0 6px 12px #0a041f66, inset 0 1px #ffffff66; }
+  .chud-energy { max-width: 560px; width: 100%; margin: 0 auto; }
+  .chud-energy-cells { height: 15px; }
+  .chud-abilities-tray { gap: 4px; }
+  .chud-hint { bottom: calc(100% + 2px); }
+}
+@media (min-width: 700px) and (max-width: 1199px) and (orientation: portrait) {
+  .chud-clock2 { min-width: 96px; font-size: 30px; }
+  .chud-side-tag[data-side="foe"] .chud-player { font-size: 24px; }
+  .chud-crown-num { width: 48px; min-width: 48px; height: 60px; font-size: 24px; }
+  .chud-crown-num .game-icon { width: 30px; }
+  .chud-cards { max-width: 620px; gap: 10px; grid-template-columns: 52px repeat(4, minmax(0, 1fr)); }
+  .chud-next { width: 46px; height: 64px; }
+  .chud-energy { max-width: 620px; }
+  .chud-energy-cells { height: 19px; }
+}
+/* Landscape tablet and desktop: the same world and overlays, with a compact
+   hand. Card height follows the viewport height, so the hand costs about
+   15-17% of the screen instead of a fifth, and the board tucks under the
+   tray's transparent top fade. Crowns sit just right of the field at the
+   river, exactly as in portrait where the field spans the screen width. */
+@media (orientation: landscape) and (min-height: 521px), (orientation: landscape) and (min-width: 1200px) {
+  .chud { --chud-card-h: clamp(82px, 11dvh, 128px); }
+  .chud-tray {
+    display: grid;
+    grid-template-columns: auto auto;
+    justify-content: center;
+    align-items: end;
+    column-gap: 12px;
+    row-gap: 5px;
+    padding: 18px calc(env(safe-area-inset-right) + 12px) calc(env(safe-area-inset-bottom) + 6px) calc(env(safe-area-inset-left) + 12px);
+    background: linear-gradient(180deg, transparent 0, #120b4540 18px, #120b4599 55%, #120b45c7);
+  }
+  .chud-cards {
+    grid-column: 1;
+    grid-row: 1;
+    width: auto;
+    max-width: none;
+    margin: 0;
+    gap: 8px;
+    grid-template-columns: calc(var(--chud-card-h) * .5) repeat(4, calc(var(--chud-card-h) * .75));
+  }
+  .chud-card { min-height: 0; }
+  .chud-next { width: calc(var(--chud-card-h) * .46); height: calc(var(--chud-card-h) * .64); }
+  .chud-energy { grid-column: 1; grid-row: 2; width: 100%; max-width: none; margin: 0; }
+  .chud-energy-cells { height: 14px; }
+  .chud-abilities-tray { grid-column: 2; grid-row: 1 / span 2; align-self: center; flex-direction: column; }
+  .chud-abilities-tray .chud-ability { width: clamp(180px, 18vw, 240px); }
+  .chud-hint { left: 50%; right: auto; translate: -50% 0; width: max-content; max-width: min(92vw, 520px); }
+
+  .chud-side-tag[data-side="foe"] .chud-crown-num,
+  .chud-side-tag[data-side="you"] .chud-crown-num { right: auto; left: min(calc(var(--chud-field-left, 0px) + var(--chud-field-w, 100vw) + 12px), calc(100vw - 60px)); }
+  .chud-side-tag[data-side="foe"] .chud-crown-num { top: calc(var(--chud-field-top, 0px) + var(--chud-field-h, 100dvh) / 2 - 62px); }
+  .chud-side-tag[data-side="you"] .chud-crown-num { top: calc(var(--chud-field-top, 0px) + var(--chud-field-h, 100dvh) / 2 + 8px); }
+  .chud-crown-num { width: 50px; min-width: 50px; height: 62px; font-size: 25px; }
+  .chud-crown-num .game-icon { width: 30px; }
+  .chud-clock2 { min-width: 100px; font-size: 30px; }
+  .chud-side-tag[data-side="foe"] .chud-player { font-size: 24px; max-width: 38vw; }
+  .chud-phase-banner { top: calc(var(--chud-field-top, 0px) + var(--chud-field-h, 100dvh) / 2); }
 }

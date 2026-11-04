@@ -1,5 +1,42 @@
 # Current task: Game feel, battlefield scale and game UI overhaul
 
+## PR #24 landscape and desktop world, 2026-11-04
+
+- Portrait baseline `1394982` approved by the owner. This pass extends the same world to tablet landscape and desktop.
+- Done: world mode for every viewport except short landscape phones, desktop dashboard columns hidden, compact landscape hand (card height `clamp(82px, 11dvh, 128px)`), crowns beside the field at the river, wider world render (`WX0=-180 WX1=280`, 2300x1400) plus a static depth-of-field variant for desktop.
+- Done: troop, commander and spawned sheets repacked at `down: 1.5` from the 2x masters (drawn sizes unchanged). Texture budget raised to 30/56 MB, which needs owner review.
+- Evidence: `ChogRoyale-Assets/battle-immersive-20261103/landscape`. Real-device testing is unverified.
+- Next: owner review of PR #24. Do not merge or deploy. Delete the temporary `src/app/dev/battle/qa-world` after captures.
+
+## PR #24 full-screen world correction, 2026-11-04
+
+- Owner rejected the boxed 100:160 board, purple header and opaque tray. References studied: `.local-references/battle-immersive-reference` (local only, never commit).
+- Done: v003 world surround rendered by `ChogRoyale-Assets/arena-worlds/chaos-crossing/v003/scripts/build_world.py` (anchors exact), shipped as `layers/world-surround.webp` plus manifest `world`. Canvas fills the screen, `src/lib/battle-camera.ts` fits the board above the measured tray, mapper and crown origins use `[data-board-rect]`.
+- Done: portrait HUD is overlays only (opponent name top-left, timer top-right, crown counters on the right edge at the river, translucent hand). Units about 25% larger, buildings 1.2x, towers 1.3x and Cores 1.2x with anchors scaled.
+- Verified: crown flights observed in the browser for both seats once the harness passed a stable `start`. Evidence in `ChogRoyale-Assets/battle-immersive-20261103` (fixture, capture.cjs, after/).
+- Next: owner visual review of PR #24. Do not merge or deploy. Temporary `src/app/dev/battle/qa-world` must stay uncommitted and be deleted after captures.
+
+## PR #24 final targeted correction, 2026-11-03
+
+- Done: changed the portrait cap to `min(100cqw, 62.5cqh)`, removed terrain blur, fixed fixture `NaN%` audio and hid Dev diagnostics from acceptance captures.
+- Done: captured clean 390x844, 430x932 and 768x1024 screenshots with measured bounds in `output/playwright/battle-viewport-acceptance`.
+- Verified: 42 focused tests, TypeScript, scoped ESLint, production build and public player route HTTP 200. Crown score transition was observed. Crown flight was not observed in the browser fixture, so it remains unclaimed.
+- Next: commit and push the targeted correction to existing PR #24. Do not merge or deploy.
+
+## Final portrait battle viewport visual acceptance, 2026-11-03
+
+- Done: reused the recorded BattleSession fixture and Playwright CLI to capture actual rendered battle art at 390x844, 430x932, 768x1024 and 1366x768. Measurements and PNGs are in `output/playwright/battle-viewport-acceptance`.
+- Done: at 768px tablet width, the noninteractive arena surface now uses the existing Chaos Crossing base-terrain texture around the complete 100:160 board, replacing plain dark letterboxing. No gameplay coordinates or canvas mapper changed.
+- Verified: no document overflow, canvas aspect stayed about 0.625 at all four sizes, cards and energy stayed visible, seat-relative crowns updated in the fixture for both perspectives. The DOM crown-flight probe did not observe a flight node, so animation is supported by existing crown presentation tests but not claimed as browser visual evidence.
+- Checks: 34 focused battle tests, TypeScript, scoped ESLint and production build pass. Temporary fixture route and copied JSON were removed. Current next action is commit and push the visual acceptance CSS checkpoint, then owner review.
+
+## Battlefield viewport + HUD overhaul, 2026-11-03
+
+- Done: portrait mobile/tablet battle HUD now owns the viewport, compacts the top score bar, keeps the hand and energy tray anchored, and extends the arena atmosphere edge to edge while fitting the logical 100:160 canvas without crop or distortion. Desktop and short-landscape rules remain isolated.
+- Done: live frame crowns remain authoritative and seat-relative. Counters now expose atomic live status semantics and the identity test covers both seat perspectives.
+- Verification: focused battle/UI/pointer tests 78 passed, TypeScript, scoped ESLint, and production build passed. Browser/device screenshots and authenticated deployment interaction remain unverified in this session.
+- Next: owner review of viewport captures and merge/push through the approved workflow.
+
 - Branch `feat/game-feel-overhaul` from origin/main `e951154`. One PR, no merge or deploy.
 - Video refs: `/watch` skill not installed, so both owner videos were sampled with ffmpeg. Findings are in the PR body.
 - Done: `unit-scale.ts` size classes (swarm 38, flying_swarm 36, regular 48, flying 50, heavy 56, commander 58, titan 62 board px), frame `level` on deployed troops/buildings, team HP bars, level badges, tower emblem plates (no tower levels), deploy callouts, class-scaled juice. App UI: game lobby, deck level plates, server-confirmed upgrade celebration, HUD hand states, result polish.

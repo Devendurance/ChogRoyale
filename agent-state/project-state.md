@@ -1,3 +1,21 @@
+# Battlefield viewport + HUD overhaul (2026-11-03)
+
+## PR #24 final targeted correction, 2026-11-03
+
+- Changed the portrait board cap from `min(100cqw, 58cqh)` to the exact `min(100cqw, 62.5cqh)`. Recorded canvas bounds are 378x604.80 at 390x844, 417.98x668.80 at 430x932, and 470x752 at 768x1024. All preserve 100:160 and have no document overflow.
+- Tablet atmosphere now uses full-colour existing Chaos Crossing terrain with no blur. Temporary fixture supplies explicit audio state, hides Dev diagnostics, and is removed after capture. Public player battle route returned HTTP 200.
+- The representative 604 -> 875 fixture produced the authoritative crown score change. Browser probing did not observe `.chud-crown-flight` or its landing pulse, so visual flight remains unverified. Focused 42 tests, TypeScript, scoped ESLint and production build passed.
+
+- Portrait mobile/tablet battle presentation is now full-screen and battle-first. The central arena flexes between a compact HUD and anchored hand/energy tray, with edge-to-edge noninteractive atmosphere and safe-area handling. The logical Phaser board remains 100x160 and unmodified.
+- Live crown presentation remains server-frame-driven and player-relative. Added atomic live status attributes and a both-seat render regression.
+- Verification: 78 focused battle/UI/pointer tests, TypeScript, scoped ESLint, and production build passed. Authenticated live device interaction and evidence screenshots were not available in this session.
+
+## Visual acceptance follow-up
+
+- Captured actual Playwright fixture screenshots at 390x844, 430x932, 768x1024 and 1366x768 with measured canvas and arena bounds in `output/playwright/battle-viewport-acceptance/metrics.json`.
+- Added existing Chaos Crossing base terrain as noninteractive arena background for wide portrait tablets. The full logical board remains visible and undistorted. Seat 0 and seat 1 fixture score transitions were observed. Crown flight DOM presence was not observed in the browser probe and remains covered by existing presentation tests.
+- 34 focused battle tests, TypeScript, scoped ESLint and production build passed.
+
 # Project State
 
 # Desktop lobby Battle Deck card layout (2026-10-31)
