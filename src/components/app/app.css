@@ -2496,6 +2496,133 @@
   flex: 1 1 auto;
 }
 
+/* ---------------------------------------------------- card detail modal */
+
+.app-cardmodal {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: calc(env(safe-area-inset-top) + 8px) 8px calc(env(safe-area-inset-bottom) + 8px);
+  background:
+    radial-gradient(ellipse at 50% 34%, rgba(90, 68, 217, 0.32), transparent 62%),
+    rgba(10, 6, 40, 0.78);
+  animation: app-cardmodal-dim 180ms ease-out both;
+}
+
+.app-cardmodal .app-sheet {
+  position: relative;
+  inset: auto;
+  left: auto;
+  right: auto;
+  top: auto;
+  bottom: auto;
+  width: min(460px, 100%);
+  max-height: min(86dvh, 760px);
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: none;
+  animation: app-cardmodal-in 240ms var(--app-ease-out) both;
+}
+
+.app-cardmodal .app-sheet__close {
+  top: 12px;
+  right: 12px;
+  width: 44px;
+  height: 44px;
+}
+
+.app-cardmodal__head {
+  flex: none;
+  padding: 16px 58px 12px 14px;
+  border-bottom: 1px solid rgba(185, 162, 255, 0.16);
+  background: linear-gradient(180deg, rgba(90, 68, 217, 0.22), transparent);
+}
+
+.app-cardmodal .app-sheet__head {
+  padding-right: 0;
+}
+
+.app-cardmodal .app-sheet__art {
+  flex-basis: clamp(80px, 24vw, 104px);
+  aspect-ratio: 1;
+}
+
+.app-cardmodal .app-sheet__title {
+  font-size: clamp(21px, 6vw, 24px);
+  line-height: 1.08;
+}
+
+.app-cardmodal__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 14px 14px;
+  scrollbar-width: thin;
+}
+
+.app-cardmodal__foot {
+  flex: none;
+  padding: 10px 14px 12px;
+  border-top: 1px solid rgba(185, 162, 255, 0.16);
+  background: linear-gradient(180deg, rgba(18, 11, 69, 0.12), rgba(18, 11, 69, 0.55));
+}
+
+.app-cardmodal__foot .app-sheet__actions {
+  margin-top: 0;
+}
+
+@media (max-height: 560px) {
+  .app-cardmodal .app-sheet__art {
+    flex-basis: 56px;
+  }
+
+  .app-cardmodal__head {
+    padding-top: 10px;
+    padding-bottom: 8px;
+  }
+
+  .app-cardmodal .app-sheet__chips {
+    display: none;
+  }
+}
+
+@media (min-width: 700px) {
+  .app-cardmodal {
+    align-items: center;
+    padding: 24px;
+  }
+
+  .app-cardmodal .app-sheet {
+    max-height: min(82vh, 760px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-cardmodal,
+  .app-cardmodal .app-sheet {
+    animation: none;
+  }
+}
+
+@keyframes app-cardmodal-dim {
+  from { opacity: 0; }
+}
+
+@keyframes app-cardmodal-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+}
+
 /* ------------------------------------------------------- progression */
 
 .app-gold {

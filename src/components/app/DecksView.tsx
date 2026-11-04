@@ -258,7 +258,9 @@ function CommanderTile({ option, onOpen }: { option: DecksCommanderOption | null
   );
 }
 
-/** The card detail panel. It is not modal: the deck stays reachable behind it. */
+/** The card detail panel. It is a modal popup: the deck stays visible behind
+ * a dimmed backdrop, but the card's own body scrolls so the close action and
+ * the deck action never leave the screen. */
 function DetailSheet({
   card,
   inDeck,
@@ -286,17 +288,65 @@ function DetailSheet({
   onAction: (id: string) => void;
   onClose: () => void;
 }) {
-  const panel = useRef<HTMLDivElement>(null);
+  const panel = useRef<HTMLElement>(null);
+  const backdropPress = useRef(false);
 
   useEffect(() => {
     const node = panel.current;
     if (!node) return;
+    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const focusable = () =>
+      Array.from(
+        node.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((element) => element.getClientRects().length > 0);
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") {
+        event.stopPropagation();
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const items = focusable();
+      if (items.length === 0) {
+        event.preventDefault();
+        node.focus();
+        return;
+      }
+      const first = items[0]!;
+      const last = items[items.length - 1]!;
+      if (event.shiftKey && (document.activeElement === first || document.activeElement === node)) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
-    document.addEventListener("keydown", onKey);
-    node.focus();
-    return () => document.removeEventListener("keydown", onKey);
+    document.addEventListener("keydown", onKey, true);
+    const frame = requestAnimationFrame(() => (focusable()[0] ?? node).focus());
+
+    // The backdrop blocks the pointer, and the document lock stops the deck
+    // from scrolling under a touch drag.
+    const html = document.documentElement;
+    const body = document.body;
+    const previousHtmlOverflow = html.style.overflow;
+    const previousBodyOverflow = body.style.overflow;
+    const previousPadding = body.style.paddingRight;
+    const scrollbar = window.innerWidth - html.clientWidth;
+    html.style.overflow = "hidden";
+    body.style.overflow = "hidden";
+    if (scrollbar > 0) body.style.paddingRight = `${scrollbar}px`;
+
+    return () => {
+      cancelAnimationFrame(frame);
+      document.removeEventListener("keydown", onKey, true);
+      html.style.overflow = previousHtmlOverflow;
+      body.style.overflow = previousBodyOverflow;
+      body.style.paddingRight = previousPadding;
+      if (previous?.isConnected) previous.focus({ preventScroll: true });
+    };
   }, [onClose]);
 
   const displayState = progressionDisplayState(progression, goldBalance, progressionPhase === "ready" ? "ready" : "unavailable");
@@ -304,102 +354,127 @@ function DetailSheet({
   const canUpgrade = displayState === "ready" && progression !== null && upgradeCardId === null;
 
   return (
-    <section className="app-sheet" role="dialog" aria-labelledby="app-sheet-title" ref={panel} tabIndex={-1}>
-      <button type="button" className="app-sheet__close" onClick={onClose} aria-label="Close the card details">
-        <Icon name="close" size={18} />
-      </button>
-      <div className="app-sheet__head">
-        <span className="app-sheet__art">
-          {card.art ? (
-            <Plate art={card.art} alt="" className="app-sheet__img" sizes="120px" />
-          ) : (
-            <span className="app-sheet__initial" aria-hidden="true">
-              {card.name.charAt(0)}
-            </span>
-          )}
-        </span>
-        <div className="app-sheet__meta">
-          <CostBadge cost={card.cost} size="lg" />
-          <h2 className="app-sheet__title" id="app-sheet-title">
-            {card.name}
-          </h2>
-          <p className="app-sheet__type">{card.typeLabel}</p>
-          <div className="app-sheet__chips">
-            {card.traits.map((trait) => (
-              <span key={trait} className="app-badge">
-                {trait}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
-      <p className="app-sheet__text">{card.description}</p>
-      <dl className="app-sheet__stats">
-        {card.stats.map((stat) => (
-          <div key={stat.label} className="app-sheet__stat">
-            <dt>{stat.label}</dt>
-            <dd>{stat.value}</dd>
-          </div>
-        ))}
-      </dl>
-      <section className="app-progression" aria-labelledby="app-progression-title">
-        <div className="app-progression__head">
-          <div>
-            <p className="app-progression__eyebrow" id="app-progression-title">Card progression</p>
-            <p className="app-progression__headline">
-              {progressionPhase === "ready" && progression ? `Purchased level ${progression.purchasedLevel}` : "Server progression"}
-            </p>
-          </div>
-          <ProgressionBadge entry={progression} goldBalance={goldBalance} phase={progressionPhase} />
-        </div>
-
-        {progressionPhase === "ready" && progression ? (
-          <>
-            <div className="app-progression__levels" aria-label={`Purchased level ${progression.purchasedLevel} of 10, XP potential level ${progression.xpLevel}`}>
-              {Array.from({ length: 10 }, (_, index) => {
-                const level = index + 1;
-                const purchased = level <= progression.purchasedLevel;
-                const potential = !purchased && level <= progression.xpLevel;
-                return <span key={level} className={`app-progression__level${purchased ? " app-progression__level--purchased" : potential ? " app-progression__level--potential" : ""}`} />;
-              })}
-            </div>
-            <div className="app-progression__meter" role="progressbar" aria-label="Lifetime XP toward the next purchased level" aria-valuemin={0} aria-valuemax={progression.xpTarget ?? progression.xp} aria-valuenow={progression.xp}>
-              <span style={{ width: `${percent}%` }} />
-            </div>
-            <div className="app-progression__facts">
-              <span><strong>{progression.xp}</strong> lifetime XP</span>
-              <span><strong>Lv {progression.xpLevel}</strong> XP potential</span>
-              <span>{progression.xpTarget === null ? "Max level reached" : `${progression.xpTarget} XP target`}</span>
-            </div>
-            <div className="app-progression__upgrade">
-              <div>
-                <span className="app-progression__cost-label">Next upgrade</span>
-                <strong>{progression.goldCost === null ? "MAX" : `${progression.goldCost} Gold`}</strong>
-              </div>
-              <button
-                type="button"
-                className="app-btn app-btn--upgrade"
-                onClick={() => onUpgrade(card.id)}
-                data-audio-skip="true"
-                disabled={!canUpgrade}
-                aria-busy={upgradeCardId === card.id && upgradeStatus === "working" ? true : undefined}
-              >
-                {displayState === "ready" && upgradeCardId === null && <UpArrow size={16} />}
-                {upgradeCardId === card.id && upgradeStatus === "working" ? "Confirming" : displayState === "maxed" ? "Max level" : displayState === "ready" ? "Upgrade card" : progressionStatusText(displayState, progression)}
-              </button>
-            </div>
-            {upgradeMessage && <p className={`app-progression__message${upgradeStatus === "error" ? " app-progression__message--error" : ""}`} role="status">{upgradeMessage}</p>}
-          </>
-        ) : (
-          <p className="app-progression__message">{progressionPhase === "loading" ? "Reading server progression…" : "Card progression is unavailable. No level or Gold is shown until the server responds."}</p>
-        )}
-      </section>
-      <div className="app-sheet__actions">
-        <button type="button" className={`app-btn ${inDeck ? "app-btn--danger" : "app-btn--battle"}`} onClick={() => onAction(card.id)}>
-          {inDeck ? "Remove from deck" : deckFull ? "Replace a deck card" : "Add to deck"}
+    <div
+      className="app-cardmodal"
+      onPointerDown={(event) => {
+        backdropPress.current = event.target === event.currentTarget && event.button === 0;
+      }}
+      onClick={(event) => {
+        if (event.target === event.currentTarget && backdropPress.current) onClose();
+        backdropPress.current = false;
+      }}
+    >
+      <section
+        className="app-sheet app-cardmodal__panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="app-sheet-title"
+        aria-describedby="app-sheet-desc"
+        ref={panel}
+        tabIndex={-1}
+      >
+        <button type="button" className="app-sheet__close" onClick={onClose} aria-label="Close the card details">
+          <Icon name="close" size={18} />
         </button>
-      </div>
-    </section>
+        <header className="app-cardmodal__head">
+          <div className="app-sheet__head">
+            <span className="app-sheet__art">
+              {card.art ? (
+                <Plate art={card.art} alt="" className="app-sheet__img" sizes="120px" />
+              ) : (
+                <span className="app-sheet__initial" aria-hidden="true">
+                  {card.name.charAt(0)}
+                </span>
+              )}
+            </span>
+            <div className="app-sheet__meta">
+              <CostBadge cost={card.cost} size="lg" />
+              <h2 className="app-sheet__title" id="app-sheet-title">
+                {card.name}
+              </h2>
+              <p className="app-sheet__type">{card.typeLabel}</p>
+              <div className="app-sheet__chips">
+                {card.traits.map((trait) => (
+                  <span key={trait} className="app-badge">
+                    {trait}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </header>
+        <div className="app-cardmodal__body">
+          <p className="app-sheet__text" id="app-sheet-desc">{card.description}</p>
+          <dl className="app-sheet__stats">
+            {card.stats.map((stat) => (
+              <div key={stat.label} className="app-sheet__stat">
+                <dt>{stat.label}</dt>
+                <dd>{stat.value}</dd>
+              </div>
+            ))}
+          </dl>
+          <section className="app-progression" aria-labelledby="app-progression-title">
+            <div className="app-progression__head">
+              <div>
+                <p className="app-progression__eyebrow" id="app-progression-title">Card progression</p>
+                <p className="app-progression__headline">
+                  {progressionPhase === "ready" && progression ? `Purchased level ${progression.purchasedLevel}` : "Server progression"}
+                </p>
+              </div>
+              <ProgressionBadge entry={progression} goldBalance={goldBalance} phase={progressionPhase} />
+            </div>
+
+            {progressionPhase === "ready" && progression ? (
+              <>
+                <div className="app-progression__levels" aria-label={`Purchased level ${progression.purchasedLevel} of 10, XP potential level ${progression.xpLevel}`}>
+                  {Array.from({ length: 10 }, (_, index) => {
+                    const level = index + 1;
+                    const purchased = level <= progression.purchasedLevel;
+                    const potential = !purchased && level <= progression.xpLevel;
+                    return <span key={level} className={`app-progression__level${purchased ? " app-progression__level--purchased" : potential ? " app-progression__level--potential" : ""}`} />;
+                  })}
+                </div>
+                <div className="app-progression__meter" role="progressbar" aria-label="Lifetime XP toward the next purchased level" aria-valuemin={0} aria-valuemax={progression.xpTarget ?? progression.xp} aria-valuenow={progression.xp}>
+                  <span style={{ width: `${percent}%` }} />
+                </div>
+                <div className="app-progression__facts">
+                  <span><strong>{progression.xp}</strong> lifetime XP</span>
+                  <span><strong>Lv {progression.xpLevel}</strong> XP potential</span>
+                  <span>{progression.xpTarget === null ? "Max level reached" : `${progression.xpTarget} XP target`}</span>
+                </div>
+                <div className="app-progression__upgrade">
+                  <div>
+                    <span className="app-progression__cost-label">Next upgrade</span>
+                    <strong>{progression.goldCost === null ? "MAX" : `${progression.goldCost} Gold`}</strong>
+                  </div>
+                  <button
+                    type="button"
+                    className="app-btn app-btn--upgrade"
+                    onClick={() => onUpgrade(card.id)}
+                    data-audio-skip="true"
+                    disabled={!canUpgrade}
+                    aria-busy={upgradeCardId === card.id && upgradeStatus === "working" ? true : undefined}
+                  >
+                    {displayState === "ready" && upgradeCardId === null && <UpArrow size={16} />}
+                    {upgradeCardId === card.id && upgradeStatus === "working" ? "Confirming" : displayState === "maxed" ? "Max level" : displayState === "ready" ? "Upgrade card" : progressionStatusText(displayState, progression)}
+                  </button>
+                </div>
+                {upgradeMessage && <p className={`app-progression__message${upgradeStatus === "error" ? " app-progression__message--error" : ""}`} role="status">{upgradeMessage}</p>}
+              </>
+            ) : (
+              <p className="app-progression__message">{progressionPhase === "loading" ? "Reading server progression…" : "Card progression is unavailable. No level or Gold is shown until the server responds."}</p>
+            )}
+          </section>
+        </div>
+        <footer className="app-cardmodal__foot">
+          <div className="app-sheet__actions">
+            <button type="button" className={`app-btn ${inDeck ? "app-btn--danger" : "app-btn--battle"}`} onClick={() => onAction(card.id)}>
+              {inDeck ? "Remove from deck" : deckFull ? "Replace a deck card" : "Add to deck"}
+            </button>
+          </div>
+        </footer>
+      </section>
+    </div>
   );
 }
 

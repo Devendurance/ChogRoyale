@@ -1,5 +1,9 @@
 # Fast Build State
 
+> Active milestone, 2026-11-04: Next Player Experience. Read
+> `.fast-build/NEXT-PASS-STATE.md` first. The sections below are the historical
+> build log and do not describe current status.
+
 ## Product
 - Name: Chog Royale (chog-royale, private repo)
 - Outcome: Real-time 1v1 NFT-powered strategy game on Monad

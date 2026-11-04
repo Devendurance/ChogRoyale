@@ -102,6 +102,16 @@ describe("DecksView card level plates", () => {
 });
 
 describe("DecksView upgrade feedback", () => {
+  it("opens the card detail as a modal with a reachable close and deck action", () => {
+    const html = render({ selectedCardId: "chogling" });
+    expect(html).toContain('class="app-cardmodal"');
+    expect(html).toMatch(/role="dialog" aria-modal="true"/);
+    expect(html).toContain('aria-label="Close the card details"');
+    expect(html).toContain("app-cardmodal__body");
+    expect(html).toContain("app-cardmodal__foot");
+    expect(html).toContain("Remove from deck");
+  });
+
   it("uses the green upgrade action in the card detail and keeps it disabled while locked", () => {
     const readyHtml = render({ selectedCardId: "chogling" });
     expect(readyHtml).toMatch(/class="app-btn app-btn--upgrade"[^>]*>.*Upgrade card/);
