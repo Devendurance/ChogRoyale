@@ -8,7 +8,7 @@
 - Done: Phaser loses its WebGL context on destroy; DOM-only card portraits stay out of the Phaser texture plan; the shared prewarm/asset plan from the interrupted session is retained.
 - Verified: 75 focused tests, TypeScript, scoped ESLint, production build. Production-build browser evidence: slow start visible at 52.2 s at tick 0 (pre-fix 32.1 s lost, 1 crown, 3710 HP); two-browser PvP both at tick 0 with seats `[1,0]` and a fresh second queue cycle; 5 practice and 5 unranked-fallback rematches; delayed, reload-hold, reload-live, stall, chunk and leave cases; 8-match run keeps one open WebGL context and flat heap/nodes/listeners. Texture memory 123.5 -> 116.9 MB.
 - Limits: headless Chromium on integrated graphics, no physical device, no real Privy/NFT match, no dense (>9 troop) bucket.
-- Next: open the review PR, then owner review. Do not merge, deploy or flip flags.
+- PR #25 open: https://github.com/Devendurance/ChogRoyale/pull/25. Next: owner review. Do not merge, deploy or flip flags.
 
 # Previous task: Game feel, battlefield scale and game UI overhaul
 

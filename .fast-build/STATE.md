@@ -269,3 +269,4 @@
 - Rematch lifecycle: one owned room per panel, disown before leave, fresh queue/room per press, plain close timers. Browser: 5 practice + 5 unranked-fallback cycles, two-browser PvP seats [1,0] with both at tick 0 and a fresh second queue cycle.
 - Perf/stability: DOM-only card portraits excluded from Phaser (-6.6 MB GPU textures, 123.5 -> 116.9 MB), WebGL context lost on game destroy (8 rematches keep 1 open context), prewarm retained. Phone 56.2 / tablet 56.7 / desktop 53.3 avg FPS at p95 16.8 ms on Intel Iris Xe.
 - Checks: 75 focused tests, typecheck, scoped lint, production build. Evidence: `docs/v1-stabilization.md`, `ChogRoyale-Assets/final-assets/live/v1`.
+- PR #25 open: https://github.com/Devendurance/ChogRoyale/pull/25. Owner review; no merge, deploy or flag changes.
