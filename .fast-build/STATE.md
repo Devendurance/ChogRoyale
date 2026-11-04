@@ -263,3 +263,10 @@
 
 ## Next action
 - User chose to keep the 7 PROD test players for now (open item, delete only with explicit approval). Next: review proposed balance numbers (scout cost 4->5, cheap-unit cost/HP test, control deck rework), then the spawner building, then B3 transport. Smart bot gaps: rarely deploys reaver/deadeye commanders (0-1/game), lower tower damage and longer games. Open: turret still beats siege/control; Netter can sit unused in hand; harness is synthetic (one bot policy). Deferred: unit-unit body collision, route costs ignore footprint detours.
+
+## V1 stabilization (2026-11-04, review PR pending)
+- Server-armed start: BattleRoom and PracticeRoom freeze at tick 0 until every human seat sends `client_ready` after paint, with a 60 s no-result abort and per-seat resume readiness. `MatchArming` unit 7/7, real-socket match-start 9 cases.
+- Rematch lifecycle: one owned room per panel, disown before leave, fresh queue/room per press, plain close timers. Browser: 5 practice + 5 unranked-fallback cycles, two-browser PvP seats [1,0] with both at tick 0 and a fresh second queue cycle.
+- Perf/stability: DOM-only card portraits excluded from Phaser (-6.6 MB GPU textures, 123.5 -> 116.9 MB), WebGL context lost on game destroy (8 rematches keep 1 open context), prewarm retained. Phone 56.2 / tablet 56.7 / desktop 53.3 avg FPS at p95 16.8 ms on Intel Iris Xe.
+- Checks: 75 focused tests, typecheck, scoped lint, production build. Evidence: `docs/v1-stabilization.md`, `ChogRoyale-Assets/final-assets/live/v1`.
+- PR #25 open: https://github.com/Devendurance/ChogRoyale/pull/25. Owner review; no merge, deploy or flag changes.

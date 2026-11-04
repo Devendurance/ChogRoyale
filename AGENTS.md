@@ -71,17 +71,11 @@
 
 - Always ask clarifying questions.
 - Never assume the design, tech stack, or features.
-- Use deep-dive sub-agents to assist with research.
-- For research work or research assist sub-agents, use SWE-2 model with a high reasoning/thinking effort if not available use muse spark-1.3 contributor with x-high reasoning effort.
-- Use deep-dive sub-agents to review the different aspects of your plan before presenting it to the user.
 
 
 ## CHANGE / EDIT MODE
 
 
-- Never implement features yourself when possible; use sub-agents.
-- Identify changes from the plan that can be implemented in parallel, and use sub-agents to implement the features efficiently.
-- When using sub-agents to implement features, act as a coordinator only.
 - After completing features, whether large or small, always run commands such as lint, type check, and next build to check code quality.
 
 
@@ -143,13 +137,20 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Unranked AI fallback keeps the public route intent as Unranked while the server room reports `practice`; use `practiceOpponent.source === "unranked-fallback"` and a separate resume slot to preserve that origin through reconnects and results.
 - Matchmaking fallback UI is opt-in to the server's advertised `queue_status.fallback`; never invent a countdown or bot assignment when that field is absent, and keep `UNRANKED_AI_FALLBACK_ENABLED` unchanged until owner activation.
 
+## MATCH START AND REMATCH
+
+- A match starts frozen at tick 0. `MatchArming` waits for every human seat to send `client_ready` after the battlefield has painted, then tick 1 is the only go signal. Never start a simulation from a client timer or an earlier server tick, and never let a command land while frozen. A seat that drops must report ready again on resume. The deadline aborts with no result rather than starting a match a player cannot see.
+- Exactly one room owns the battle panel. Disown before leaving on reset or rematch, because the old room's close arrives after the next session starts. Late close, frame, end or reward messages from a replaced room must be ignored.
+- Unranked human, unranked AI-fallback and practice results each expose their own fresh-session action. A rematch creates a new room or queue ticket; it never resumes the finished room.
+- Destroying the Phaser game must also lose its WebGL context. Browsers cap live contexts, so a rematch loop otherwise keeps one per match.
+- Card portraits are DOM-only. Keep `card_art_derivative` entries out of the Phaser texture plan while the lobby prewarm still fetches them for the HUD.
+
 ## BATTLEFIELD PRESENTATION
 
 - Every battle viewport except short landscape phones (max-height 520px) is one full-bleed world: portrait, tablet landscape and desktop share the same overlays (opponent name top-left, timer top-right, crowns just right of the field at the river, hand bottom-centre). The Phaser canvas covers the screen and `boardLayout` in `src/lib/battle-camera.ts` fits the 500x800 board above the measured hand tray. `WORLD_QUERY` in BattleHud and the world media query in battle-hud.css must stay identical. Never reintroduce a page header band, desktop dashboard columns, an opaque tray panel, CSS terrain filler or a boxed inner canvas. Pointer mapping and crown origins read the `[data-board-rect]` marker, never the full canvas rect.
 - The world surround (`v003/layers/world-surround.webp`, built by `build_world.py WX0=-180 WX1=280` beside the v003 arena scripts) is camera-space, replaces base-terrain at runtime and must keep projected anchors exact (px = 900 + 5x, py = 300 + 5(160 - y)). Desktop landscape loads `world-surround-soft.webp`, a static depth-of-field variant whose arena region is pixel-identical. Never blur the board at runtime. Scenery outside the board is decoration only and must never imply playable lanes or extra towers.
 - Unit sheets for troops, commanders and the spawned unit pack at `down: 1.5` from the 2x masters (`ChogRoyale-Assets/chog-units-v001/masters-s41` and `final-assets/masters`). The texture budget in unit-anim.test.ts (6 MB per sheet, 30 MB troops, 56 MB total) is deliberate; raise density only with owner sign-off. `decoy_totem` no longer repacks byte-identically from those masters, so never repack it.
 - A presentation harness must pass a referentially stable `start` to BattleHud. A new object each render re-primes CrownCelebration and silently suppresses every crown flight.
-
 
 - B2.8g.1 environment polish stays outside the authoritative board. Non-interactive CSS atmosphere may frame the canvas, and Phaser mount shadows may ground existing structures, but the 100x160 transform, pointer mapper, deployment bounds and V002 layer geometry remain unchanged.
 - Visual Core padding may lower only the authored mount assembly and its presentation labels. Keep the authoritative ground point, health model and weapon anchors fixed. Team accents must derive from `owner === seat` for both perspectives, with decorative pennants and halos kept inside the noninteractive canvas presentation.

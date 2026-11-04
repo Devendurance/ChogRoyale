@@ -31,6 +31,8 @@ export interface PracticeOpponent {
   source?: "practice" | "unranked-fallback";
 }
 export const BATTLE_PROTOCOL_VERSION = "b3.1" as const;
+/** Sent by a client once it has painted the battlefield. Carries no payload. */
+export const CLIENT_READY_MESSAGE = "client_ready";
 
 /** Structural copy of a Colyseus seat reservation (client-safe). */
 export interface SeatReservation {
@@ -200,6 +202,15 @@ export interface StartMessage {
   resumed: boolean;
   /** How long a dropped seat stays reservable, in ms. */
   reconnectGraceMs: number;
+  /** Present while the simulation is frozen at tick 0, waiting for every human
+   * seat to paint the battlefield. Tick 1 is the authoritative go signal.
+   * Absent on older servers and on a resume after the match began. */
+  arming?: { timeoutMs: number };
+}
+
+/** Sent while arming when a seat's readiness changes. Human opponents only. */
+export interface ArmingMessage {
+  opponentReady: boolean;
 }
 
 /** Sent to the connected player when the opponent's socket state changes. */

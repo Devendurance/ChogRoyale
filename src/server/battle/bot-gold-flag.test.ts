@@ -70,6 +70,7 @@ beforeAll(async () => {
   server = await startBattleServer(
     PORT,
     {
+      armingMs: 0,
       verifier: async (t) => {
         if (!t.startsWith("tok-")) throw new Error("bad token");
         return { appId, userId: `did:privy:${t.slice(4)}`, sessionId: "s", issuer: "privy.io", issuedAt: 0, expiration: 0 };

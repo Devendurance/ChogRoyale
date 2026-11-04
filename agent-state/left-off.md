@@ -1,4 +1,16 @@
-# Current task: Game feel, battlefield scale and game UI overhaul
+# Current task: V1 Final Performance, Match Reliability & Stability Pass
+
+## V1 stabilization, 2026-11-04 (review PR pending)
+
+- Branch `fix/v1-match-reliability` from main `56a5691`. One review PR, no merge or deploy.
+- Done: server-armed tick 0 (`MatchArming`), client `client_ready` after the battlefield paints, 60 s no-result abort, per-seat readiness cleared on drop and required again on resume, commands refused while frozen.
+- Done: one owned room per panel, so a finished room's late close cannot close the next session; human unranked, AI-fallback and practice rematches each build a fresh session; close timers are wall-clock and cleared on dispose.
+- Done: Phaser loses its WebGL context on destroy; DOM-only card portraits stay out of the Phaser texture plan; the shared prewarm/asset plan from the interrupted session is retained.
+- Verified: 75 focused tests, TypeScript, scoped ESLint, production build. Production-build browser evidence: slow start visible at 52.2 s at tick 0 (pre-fix 32.1 s lost, 1 crown, 3710 HP); two-browser PvP both at tick 0 with seats `[1,0]` and a fresh second queue cycle; 5 practice and 5 unranked-fallback rematches; delayed, reload-hold, reload-live, stall, chunk and leave cases; 8-match run keeps one open WebGL context and flat heap/nodes/listeners. Texture memory 123.5 -> 116.9 MB.
+- Limits: headless Chromium on integrated graphics, no physical device, no real Privy/NFT match, no dense (>9 troop) bucket.
+- PR #25 open: https://github.com/Devendurance/ChogRoyale/pull/25. Next: owner review. Do not merge, deploy or flip flags.
+
+# Previous task: Game feel, battlefield scale and game UI overhaul
 
 ## PR #24 landscape and desktop world, 2026-11-04
 

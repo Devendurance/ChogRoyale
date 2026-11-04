@@ -143,7 +143,7 @@ export default function BattleResult({ start, end, abort, settlement, botGold, g
   const cardXpHasAmount = cardXpReward?.state === "confirmed" || cardXpReward?.state === "duplicate";
   const noRewardCopy = reward?.state === "no-message" ? reward.text : reward ? null : view.noRewards;
   const goBack = () => { onExit?.(); if (!onExit) router.push("/app/play"); };
-  const hasAgainAction = view.origin === "practice" || (view.origin === "unranked-fallback" && Boolean(onAgain));
+  const hasAgainAction = view.origin === "practice" || (view.againLabel !== null && Boolean(onAgain));
   const goAgain = () => {
     if (onAgain) {
       onAgain();

@@ -482,3 +482,10 @@ Last updated: 2026-10-24
 - Refresh recovery now tries autoplay once, then uses temporary capture listeners for the first real pointer or keyboard gesture. The listeners stop on success, provider cleanup, mute, or silent volume.
 - `unlock({ fromGesture: true })` can replace a stale autoplay resume, but repeated handlers during the same gesture reuse the in-flight gesture promise. The floating provider-level Enable Sound control was removed. Settings remains the intentional fallback.
 - Focused audio tests cover listener lifecycle, mute behavior, unresolved autoplay, and duplicate gesture handlers. Full suite has inherited public-site copy failures unrelated to this fix.
+
+## V1 stabilization (2026-11-04)
+
+- Match start is server-armed: both rooms freeze at tick 0 until every human seat sends `client_ready` after a painted battlefield. Tick 1 is the only go signal; the 60 s deadline aborts with no result. Readiness is per seat and cleared on drop.
+- The battle panel owns exactly one room. A reset or rematch releases ownership before leaving, so a finished room's late close cannot close the next session.
+- `battleAssetPlan` excludes `card_art_derivative` entries from Phaser while prewarm still fetches them for the DOM HUD. Destroying the game also loses the WebGL context.
+- Evidence and the performance table live in `docs/v1-stabilization.md`; the external harness is `ChogRoyale-Assets/final-assets/live/v1`.

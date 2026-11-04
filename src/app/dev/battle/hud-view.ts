@@ -1,7 +1,13 @@
 // Pure view-model helpers for the B2.8f.1 scoreboard, timer and ability
 // control. No Phaser or React imports so every rule stays unit-testable.
 
-import type { AbilityView, BattleFrame, EndMessage } from "@/lib/battle-protocol";
+import type { AbilityView, BattleFrame, EndMessage, StartMessage } from "@/lib/battle-protocol";
+
+/** True while the server holds the match at tick 0. Tick 1 is the only go
+ * signal, so no local flag can start or shorten the wait. */
+export function matchArming(start: Pick<StartMessage, "arming"> | null, frame: Pick<BattleFrame, "tick"> | null, end: EndMessage | null, abort: string | null): boolean {
+  return !!start?.arming && !end && !abort && (frame?.tick ?? 0) === 0;
+}
 
 export interface ScoreView {
   mine: number;

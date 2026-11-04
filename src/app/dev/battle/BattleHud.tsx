@@ -23,7 +23,7 @@ import type { RankedAwardView } from "@/lib/ranked";
 import type { BoardMapper, CanvasFeed } from "./BattleCanvas";
 
 // Phaser must stay client-only, same as page.tsx's original dynamic import.
-const BattleCanvas = dynamic(() => import("./BattleCanvas"), { ssr: false });
+const BattleCanvas = dynamic(() => import("./BattleCanvas").catch(() => BattleCanvasUnavailable), { ssr: false });
 import { Portrait } from "./portrait";
 import { useSpriteManifest } from "./use-sprite-manifest";
 import { portraitCandidatesForCard, portraitForCommanderClass, type SpriteManifest } from "./sprite-registry";
@@ -59,6 +59,13 @@ export interface BattleHudProps {
   onGiveUp?: () => void;
   onExit?: () => void;
   onBattleAgain?: () => void;
+  /** The server is holding tick 0 for this match. */
+  arming?: boolean;
+  /** This client has painted the battlefield. */
+  painted?: boolean;
+  /** Server-reported readiness of a human opponent. */
+  opponentReady?: boolean;
+  onPainted?: () => void;
   start: StartMessage;
   frame: BattleFrame | null;
   me: number;
@@ -303,6 +310,28 @@ function DevPanel({ end, acks, start, frame, me }: { end: EndMessage | null; ack
   );
 }
 
+/** Stands in when the renderer chunk itself cannot be fetched. */
+function BattleCanvasUnavailable({ onLoadFailed }: { onLoadFailed?: () => void }) {
+  useEffect(() => onLoadFailed?.(), [onLoadFailed]);
+  return null;
+}
+
+/** Holds the screen while the server holds tick 0. Copy follows real state
+ * only: this client's own load, then the server's word on the opponent. */
+function ArmingOverlay({ painted, failed, progress, waitingForOpponent, onLeave }: { painted: boolean; failed: boolean; progress: number; waitingForOpponent: boolean; onLeave?: () => void }) {
+  const title = failed ? "The battlefield couldn't load" : !painted ? "Loading battlefield" : waitingForOpponent ? "Waiting for opponent" : "Get ready";
+  return (
+    <div className="chud-arming" data-painted={painted} data-testid="battle-arming">
+      <div className="chud-arming-plate" role="status" aria-live="polite">
+        <b>{title}</b>
+        <span className="chud-arming-note">{failed ? "Leave this match and try again. No result is recorded." : "The match starts when every player can see the arena."}</span>
+        {!failed && !painted && <span className="chud-arming-bar" aria-hidden="true"><span style={{ width: `${Math.round(progress * 100)}%` }} /></span>}
+        {onLeave && (failed || !painted) && <button type="button" className="chud-arming-leave" onClick={onLeave}>Leave match</button>}
+      </div>
+    </div>
+  );
+}
+
 // Every orientation except short landscape phones renders the battle as one
 // full-bleed world with the controls laid over it. The tray's measured height
 // becomes the camera's bottom inset, so the whole board sits above the hand.
@@ -348,6 +377,9 @@ export default function BattleHud(props: BattleHudProps) {
   const manifest = useSpriteManifest();
   const [devOpen, setDevOpen] = useState(false);
   const [volumeOpen, setVolumeOpen] = useState(false);
+  const [loadProgress, setLoadProgress] = useState(0);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const onLoadFailed = useCallback(() => setLoadFailed(true), []);
   const audioRef = useRef<HTMLDivElement>(null);
   const [banner, setBanner] = useState<number | null>(null);
   const prevMult = useRef(0);
@@ -582,7 +614,7 @@ export default function BattleHud(props: BattleHudProps) {
         {props.showDevDiagnostics !== false && devOpen && <div className="chud-dev-inline">{dev}</div>}
         <div className="chud-arena" ref={boardElementRef}>
           <div className="chud-board">
-            <BattleCanvas seat={me === 1 ? 1 : 0} feed={feed} mapRef={mapRef} onBoardTap={onBoardTap} onBoardHover={onBoardHover} insets={world.insets} onBoardLayout={onBoardLayout} hostStyle={{ width: "var(--chud-host-w, var(--chud-board-w, min(100cqw, 62.5cqh)))", height: "var(--chud-host-h, auto)", aspectRatio: "var(--chud-host-ar, 100 / 160)", maxWidth: "none", margin: "auto" }} />
+            <BattleCanvas seat={me === 1 ? 1 : 0} feed={feed} mapRef={mapRef} onBoardTap={onBoardTap} onBoardHover={onBoardHover} insets={world.insets} onBoardLayout={onBoardLayout} onLoadProgress={setLoadProgress} onPainted={props.onPainted} onLoadFailed={onLoadFailed} hostStyle={{ width: "var(--chud-host-w, var(--chud-board-w, min(100cqw, 62.5cqh)))", height: "var(--chud-host-h, auto)", aspectRatio: "var(--chud-host-ar, 100 / 160)", maxWidth: "none", margin: "auto" }} />
           </div>
           <div className="chud-chaos-stack">{chaosChips}</div>
           {banner !== null && (
@@ -631,9 +663,11 @@ export default function BattleHud(props: BattleHudProps) {
         <div className="chud-side-block chud-side-ability"><div className="chud-side-title">Your commander</div>{commanderIdentity}<div className="chud-abilities">{abilityControls}</div></div>
       </aside>
       <CrownCelebration frame={frame} start={start} me={me} boardRef={boardElementRef} mineRef={mineScoreRef} theirsRef={theirsScoreRef} onAudioCue={props.onAudioCue} />
-      {/* Server start already happened. The reveal is pointer-transparent and
-          clears in under two seconds so the live clock is never blocked. */}
-      {!start.resumed && !end && !abort && <div className="chud-start" aria-hidden="true">
+      {props.arming && <ArmingOverlay painted={props.painted === true} failed={loadFailed} progress={loadProgress} waitingForOpponent={start.opponentKind !== "bot" && props.opponentReady !== true} onLeave={props.onExit} />}
+      {/* The server's first tick already happened. The reveal is pointer-
+          transparent and clears in under two seconds so the live clock is
+          never blocked. */}
+      {!start.resumed && !end && !abort && !props.arming && <div className="chud-start" aria-hidden="true">
         <div className="chud-start-band chud-start-band--foe">
           <span className="chud-start-emblem"><GameIcon kind="crown" size={46} /></span>
           <span className="chud-start-who"><small>{opponentBadge ?? "Opponent"}</small><b>{opponentName}</b></span>
