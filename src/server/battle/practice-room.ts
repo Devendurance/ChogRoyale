@@ -375,18 +375,27 @@ export class PracticeRoom extends Room {
     const result = await (PracticeRoom.deps.tutorial ?? productionTutorialDeps).complete(client.auth.playerId, 1);
     if (result.status === "completed" || result.status === "already-complete") {
       this.tutorialCompletedStages = Math.max(this.tutorialCompletedStages, result.completedStages);
-      client.send("tutorial", {
-        stage: 1,
-        objective: "first_troop_deploy",
-        completed: true,
-        replay: this.tutorialReplay || result.status === "already-complete",
-        completedStages: this.tutorialCompletedStages,
-        graduated: result.graduated,
-      });
+      try {
+        client.send("tutorial", {
+          stage: 1,
+          objective: "first_troop_deploy",
+          completed: true,
+          replay: this.tutorialReplay || result.status === "already-complete",
+          completedStages: this.tutorialCompletedStages,
+          graduated: result.graduated,
+        });
+      } catch {
+        // Progress is durable. The camp read is the recovery path if the
+        // socket closed between the accepted deployment and this message.
+      }
       return;
     }
     if (result.status === "unavailable") this.tutorialCompleted = false;
-    client.send("error", { reason: "Training progress could not be saved. Your battle can continue." });
+    try {
+      client.send("error", { reason: "Training progress could not be saved. Your battle can continue." });
+    } catch {
+      /* the close handler owns recovery */
+    }
   }
 
   /** First simulated tick. The bot cannot act before this point. */
