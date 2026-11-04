@@ -431,12 +431,13 @@
   ],
   "world": {
     "path": "layers/world-surround.webp",
+    "softPath": "layers/world-surround-soft.webp",
     "size": [
-      1400,
+      2300,
       1400
     ],
     "boardOffset": [
-      450,
+      900,
       300
     ],
     "replaces": "base-terrain"

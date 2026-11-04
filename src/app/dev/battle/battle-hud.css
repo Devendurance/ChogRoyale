@@ -283,11 +283,13 @@
   .chud-card[data-selected="true"] { transform: translateY(-6px); }
 }
 
-/* Portrait phones and tablets: one full-bleed battle world. The Phaser canvas
-   covers the whole screen and its camera fits the 100x160 board above the
-   hand (BattleHud measures the tray as the camera's bottom inset). Timer,
-   names, crowns and the hand are overlays on that world, never page bands. */
-@media (max-width: 1199px) and (orientation: portrait) {
+/* Full-bleed battle world for portrait, tablet landscape and desktop (every
+   viewport except short landscape phones; keep in sync with WORLD_QUERY in
+   BattleHud). The Phaser canvas covers the whole screen and its camera fits
+   the 100x160 board above the hand (BattleHud measures the tray as the
+   camera's bottom inset). Timer, names, crowns and the hand are overlays on
+   that world, never page bands or dashboard columns. */
+@media (orientation: portrait), (min-height: 521px), (min-width: 1200px) {
   .chud {
     position: fixed;
     inset: 0;
@@ -304,6 +306,14 @@
     background: #1d3b22;
   }
   .chud-col { position: static; display: block; width: 100%; max-width: none; height: 100%; }
+  /* The old desktop dashboard (patron, guide, status, chaos and commander
+     columns) is gone; the same overlays carry what matters. */
+  .chud-side { display: none; }
+  .chud-top .chud-patron { display: inline-block; }
+  .chud-chaos-stack { display: flex; }
+  .chud-tray::before { content: none; }
+  .chud-tray { grid-column: auto; grid-row: auto; justify-self: auto; align-self: auto; max-width: none; }
+  .chud-abilities-tray { display: flex; }
 
   /* The world. The canvas host fills the screen; the camera places the board. */
   .chud-arena {
@@ -458,4 +468,48 @@
   .chud-next { width: 46px; height: 64px; }
   .chud-energy { max-width: 620px; }
   .chud-energy-cells { height: 19px; }
+}
+/* Landscape tablet and desktop: the same world and overlays, with a compact
+   hand. Card height follows the viewport height, so the hand costs about
+   15-17% of the screen instead of a fifth, and the board tucks under the
+   tray's transparent top fade. Crowns sit just right of the field at the
+   river, exactly as in portrait where the field spans the screen width. */
+@media (orientation: landscape) and (min-height: 521px), (orientation: landscape) and (min-width: 1200px) {
+  .chud { --chud-card-h: clamp(82px, 11dvh, 128px); }
+  .chud-tray {
+    display: grid;
+    grid-template-columns: auto auto;
+    justify-content: center;
+    align-items: end;
+    column-gap: 12px;
+    row-gap: 5px;
+    padding: 18px calc(env(safe-area-inset-right) + 12px) calc(env(safe-area-inset-bottom) + 6px) calc(env(safe-area-inset-left) + 12px);
+    background: linear-gradient(180deg, transparent 0, #120b4540 18px, #120b4599 55%, #120b45c7);
+  }
+  .chud-cards {
+    grid-column: 1;
+    grid-row: 1;
+    width: auto;
+    max-width: none;
+    margin: 0;
+    gap: 8px;
+    grid-template-columns: calc(var(--chud-card-h) * .5) repeat(4, calc(var(--chud-card-h) * .75));
+  }
+  .chud-card { min-height: 0; }
+  .chud-next { width: calc(var(--chud-card-h) * .46); height: calc(var(--chud-card-h) * .64); }
+  .chud-energy { grid-column: 1; grid-row: 2; width: 100%; max-width: none; margin: 0; }
+  .chud-energy-cells { height: 14px; }
+  .chud-abilities-tray { grid-column: 2; grid-row: 1 / span 2; align-self: center; flex-direction: column; }
+  .chud-abilities-tray .chud-ability { width: clamp(180px, 18vw, 240px); }
+  .chud-hint { left: 50%; right: auto; translate: -50% 0; width: max-content; max-width: min(92vw, 520px); }
+
+  .chud-side-tag[data-side="foe"] .chud-crown-num,
+  .chud-side-tag[data-side="you"] .chud-crown-num { right: auto; left: min(calc(var(--chud-field-left, 0px) + var(--chud-field-w, 100vw) + 12px), calc(100vw - 60px)); }
+  .chud-side-tag[data-side="foe"] .chud-crown-num { top: calc(var(--chud-field-top, 0px) + var(--chud-field-h, 100dvh) / 2 - 62px); }
+  .chud-side-tag[data-side="you"] .chud-crown-num { top: calc(var(--chud-field-top, 0px) + var(--chud-field-h, 100dvh) / 2 + 8px); }
+  .chud-crown-num { width: 50px; min-width: 50px; height: 62px; font-size: 25px; }
+  .chud-crown-num .game-icon { width: 30px; }
+  .chud-clock2 { min-width: 100px; font-size: 30px; }
+  .chud-side-tag[data-side="foe"] .chud-player { font-size: 24px; max-width: 38vw; }
+  .chud-phase-banner { top: calc(var(--chud-field-top, 0px) + var(--chud-field-h, 100dvh) / 2); }
 }

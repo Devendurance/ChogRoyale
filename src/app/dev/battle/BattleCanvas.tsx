@@ -117,6 +117,8 @@ const loadArena = async (): Promise<{ arena: ArenaManifest; base: string } | nul
 };
 
 const S = 5; // pixels per arena unit
+/** Viewports that load the depth-of-field world variant. */
+const WORLD_SOFT_QUERY = "(min-width: 1200px) and (orientation: landscape)";
 // Allegiance follows the v3 orientation lock: the viewer is blue, the
 // opponent red, derived from owner === seat for both perspectives.
 const OWN = TEAM_COLORS.friendly;
@@ -161,6 +163,9 @@ interface Props {
   /** Full-bleed world mode: stage areas covered by overlaid HUD controls. The
    * world renders under them and the board is fitted into the rest. */
   insets?: WorldInsets;
+  /** Reports the board rect (stage CSS px) whenever the layout changes, so
+   * DOM overlays can sit relative to the playable field. */
+  onBoardLayout?: (board: BoardLayout) => void;
 }
 
 interface StageLayout {
@@ -188,7 +193,7 @@ const hashPhase = (id: string) => {
   return h / 1000;
 };
 
-export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, hostStyle, insets, seat = 0 }: Props) {
+export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, hostStyle, insets, onBoardLayout, seat = 0 }: Props) {
   const host = useRef<HTMLDivElement>(null);
   const boardBox = useRef<HTMLDivElement>(null);
   const press = useRef<{ id: number; x: number; y: number } | null>(null);
@@ -227,6 +232,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
     stage.current = { stageW, stageH, board };
     const box = boardBox.current;
     if (box) Object.assign(box.style, { left: `${board.left}px`, top: `${board.top}px`, width: `${board.width}px`, height: `${board.height}px` });
+    onBoardLayout?.(board);
     relayout.current?.();
   };
   const measureRef = useRef(measure);
@@ -436,7 +442,13 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
             else this.load.image(vfxKey(key), `${VFX_URL}/${t.path}`);
           }
           if (arena) {
-            if (arena.world) this.load.image("arena:world", `${arenaBase}/${arena.world.path}`);
+            // Desktop landscape shows far more surround, so it gets the variant
+            // whose scenery softens with distance from the arena (static
+            // depth of field, no runtime blur). The board region is identical.
+            if (arena.world) {
+              const soft = arena.world.softPath && typeof matchMedia === "function" && matchMedia(WORLD_SOFT_QUERY).matches;
+              this.load.image("arena:world", `${arenaBase}/${soft ? arena.world.softPath : arena.world.path}`);
+            }
             for (const l of arena.layers) this.load.image(`arena:layer:${l.id}`, `${arenaBase}/${l.path}`);
             for (const [role, r] of Object.entries(arena.mounts)) {
               for (const p of Object.values(r.parts)) if (p) this.load.image(`${role}:${p.split("/").pop()!.replace(".png", "")}`, `${arenaBase}/${p}`);

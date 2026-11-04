@@ -95,7 +95,7 @@ export interface ArenaManifest {
    * scene continued well past the arena canvas (same camera contract), so a
    * full-screen camera never shows page chrome. `boardOffset` is where board
    * pixel (0,0) lands in the image. It replaces the listed base layer. */
-  world?: { path: string; size: [number, number]; boardOffset: [number, number]; replaces: string };
+  world?: { path: string; softPath?: string; size: [number, number]; boardOffset: [number, number]; replaces: string };
 }
 
 /** Board-px position of the world surround's top-left corner. */

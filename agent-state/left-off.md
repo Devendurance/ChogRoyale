@@ -1,5 +1,13 @@
 # Current task: Game feel, battlefield scale and game UI overhaul
 
+## PR #24 landscape and desktop world, 2026-11-04
+
+- Portrait baseline `1394982` approved by the owner. This pass extends the same world to tablet landscape and desktop.
+- Done: world mode for every viewport except short landscape phones, desktop dashboard columns hidden, compact landscape hand (card height `clamp(82px, 11dvh, 128px)`), crowns beside the field at the river, wider world render (`WX0=-180 WX1=280`, 2300x1400) plus a static depth-of-field variant for desktop.
+- Done: troop, commander and spawned sheets repacked at `down: 1.5` from the 2x masters (drawn sizes unchanged). Texture budget raised to 30/56 MB, which needs owner review.
+- Evidence: `ChogRoyale-Assets/battle-immersive-20261103/landscape`. Real-device testing is unverified.
+- Next: owner review of PR #24. Do not merge or deploy. Delete the temporary `src/app/dev/battle/qa-world` after captures.
+
 ## PR #24 full-screen world correction, 2026-11-04
 
 - Owner rejected the boxed 100:160 board, purple header and opaque tray. References studied: `.local-references/battle-immersive-reference` (local only, never commit).

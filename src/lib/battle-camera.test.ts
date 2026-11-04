@@ -20,6 +20,16 @@ describe("battle camera layout", () => {
     expect(l.width / l.height).toBeCloseTo(100 / 160, 9);
   });
 
+  it("centres a height-filling board in landscape and leaves world on both sides", () => {
+    for (const [w, h, bottom] of [[1024, 768, 120], [1366, 768, 120], [1920, 1080, 155], [1180, 820, 125]] as const) {
+      const l = boardLayout(w, h, { top: 4, bottom });
+      expect(l.height).toBeCloseTo(h - 4 - bottom, 6);
+      expect(l.width / l.height).toBeCloseTo(100 / 160, 9);
+      expect(l.left).toBeCloseTo((w - l.width) / 2, 6);
+      expect(l.left).toBeGreaterThan(100);
+    }
+  });
+
   it("matches the old host fill exactly when the host is already 100:160", () => {
     const l = boardLayout(378, 604.8);
     expect(l.left).toBeCloseTo(0, 9);
@@ -62,6 +72,7 @@ describe("battle camera layout", () => {
   it("keeps device resolution within the fill budget", () => {
     expect(canvasResolution(390, 844, 3)).toBe(2);
     expect(canvasResolution(390, 844, 1)).toBe(1);
-    expect(canvasResolution(1024, 1366, 2) ** 2 * 1024 * 1366).toBeLessThanOrEqual(4_200_001);
+    expect(canvasResolution(1024, 1366, 2) ** 2 * 1024 * 1366).toBeLessThanOrEqual(2_100_001);
+    expect(canvasResolution(1024, 768, 2) ** 2 * 1024 * 768).toBeLessThanOrEqual(2_100_001);
   });
 });

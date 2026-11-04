@@ -68,9 +68,11 @@ export function cameraFor(layout: BoardLayout, stageW: number, stageH: number, r
   };
 }
 
-/** Canvas backing resolution: device pixels, capped so a large tablet canvas
- * stays within a sane fill budget. */
-export function canvasResolution(stageW: number, stageH: number, dpr: number, maxPixels = 4_200_000): number {
+/** Canvas backing resolution: device pixels, capped so a large tablet or
+ * desktop canvas stays within the fill budget. Measured on Intel Iris Xe in
+ * dense combat: a 3.1M px backing fell to 30 fps while 1.8M px held the
+ * same ~43 fps ceiling as 1x, so the budget is about 2.1M px. */
+export function canvasResolution(stageW: number, stageH: number, dpr: number, maxPixels = 2_100_000): number {
   const area = Math.max(1, stageW * stageH);
   return Math.max(1, Math.min(dpr || 1, 2, Math.sqrt(maxPixels / area)));
 }

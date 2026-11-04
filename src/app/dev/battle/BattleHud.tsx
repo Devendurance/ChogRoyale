@@ -4,7 +4,7 @@
 // state, networking and gestures; every intent still flows through the same
 // send/deploy path and the same card pointer handlers.
 import dynamic from "next/dynamic";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type {
   AbilityView,
   AckMessage,
@@ -303,10 +303,11 @@ function DevPanel({ end, acks, start, frame, me }: { end: EndMessage | null; ack
   );
 }
 
-// Portrait phones and tablets render the battle as one full-bleed world with
-// the controls laid over it. The tray's measured height becomes the camera's
-// bottom inset, so the whole board always sits above the hand.
-const WORLD_QUERY = "(max-width: 1199px) and (orientation: portrait)";
+// Every orientation except short landscape phones renders the battle as one
+// full-bleed world with the controls laid over it. The tray's measured height
+// becomes the camera's bottom inset, so the whole board sits above the hand.
+// Keep in sync with the world media queries in battle-hud.css.
+const WORLD_QUERY = "(orientation: portrait), (min-height: 521px), (min-width: 1200px)";
 function useWorldInsets(hudRef: React.RefObject<HTMLDivElement | null>, trayRef: React.RefObject<HTMLDivElement | null>) {
   const [state, setState] = useState<{ top: number; bottom: number } | null>(null);
   useEffect(() => {
@@ -319,7 +320,11 @@ function useWorldInsets(hudRef: React.RefObject<HTMLDivElement | null>, trayRef:
       const t = tray.getBoundingClientRect();
       // Portrait CSS pads the HUD by the top safe area only, so this reads it in px.
       const safeTop = parseFloat(getComputedStyle(hud).paddingTop) || 0;
-      const next = { top: Math.round(safeTop + 6), bottom: Math.max(0, Math.round(h.bottom - t.top)) };
+      // In landscape the tray's top padding is a transparent fade, so the
+      // board may tuck under it. Portrait keeps its approved full clearance.
+      const landscape = h.width > h.height;
+      const fade = landscape ? parseFloat(getComputedStyle(tray).paddingTop) || 0 : 0;
+      const next = { top: Math.round(safeTop + (landscape ? 4 : 6)), bottom: Math.max(0, Math.round(h.bottom - t.top - fade)) };
       setState((prev) => (prev && prev.top === next.top && prev.bottom === next.bottom ? prev : next));
     };
     const ro = new ResizeObserver(read);
@@ -354,6 +359,13 @@ export default function BattleHud(props: BattleHudProps) {
   const trayRef = useRef<HTMLDivElement>(null);
   const hudRef = useRef<HTMLDivElement>(null);
   const world = useWorldInsets(hudRef, trayRef);
+  const [boardBox, setBoardBox] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
+  const onBoardLayout = useCallback((b: { left: number; top: number; width: number; height: number }) => {
+    setBoardBox((prev) => (prev && Math.abs(prev.left - b.left) < 0.5 && Math.abs(prev.top - b.top) < 0.5 && Math.abs(prev.width - b.width) < 0.5 && Math.abs(prev.height - b.height) < 0.5 ? prev : { left: b.left, top: b.top, width: b.width, height: b.height }));
+  }, []);
+  const hudStyle = world.style && boardBox
+    ? ({ ...world.style, "--chud-field-left": `${boardBox.left}px`, "--chud-field-top": `${boardBox.top}px`, "--chud-field-w": `${boardBox.width}px`, "--chud-field-h": `${boardBox.height}px` } as React.CSSProperties)
+    : world.style;
 
   // 2s non-blocking banner when the energy phase steps up.
   useEffect(() => {
@@ -467,7 +479,7 @@ export default function BattleHud(props: BattleHudProps) {
   );
 
   return (
-    <div ref={hudRef} className={`chud ${satoshi.variable} ${georama.variable} ${lilitaOne.variable}`} data-testid="battle-hud" data-world={world.insets ? "full" : undefined} style={world.style}>
+    <div ref={hudRef} className={`chud ${satoshi.variable} ${georama.variable} ${lilitaOne.variable}`} data-testid="battle-hud" data-world={world.insets ? "full" : undefined} style={hudStyle}>
       <aside className="chud-side chud-side-left">
         <div className="chud-brand">CHOG <span>ROYALE</span><small>CHAOS CROSSING</small></div>
         <div className="chud-side-block">
@@ -570,7 +582,7 @@ export default function BattleHud(props: BattleHudProps) {
         {props.showDevDiagnostics !== false && devOpen && <div className="chud-dev-inline">{dev}</div>}
         <div className="chud-arena" ref={boardElementRef}>
           <div className="chud-board">
-            <BattleCanvas seat={me === 1 ? 1 : 0} feed={feed} mapRef={mapRef} onBoardTap={onBoardTap} onBoardHover={onBoardHover} insets={world.insets} hostStyle={{ width: "var(--chud-host-w, var(--chud-board-w, min(100cqw, 62.5cqh)))", height: "var(--chud-host-h, auto)", aspectRatio: "var(--chud-host-ar, 100 / 160)", maxWidth: "none", margin: "auto" }} />
+            <BattleCanvas seat={me === 1 ? 1 : 0} feed={feed} mapRef={mapRef} onBoardTap={onBoardTap} onBoardHover={onBoardHover} insets={world.insets} onBoardLayout={onBoardLayout} hostStyle={{ width: "var(--chud-host-w, var(--chud-board-w, min(100cqw, 62.5cqh)))", height: "var(--chud-host-h, auto)", aspectRatio: "var(--chud-host-ar, 100 / 160)", maxWidth: "none", margin: "auto" }} />
           </div>
           <div className="chud-chaos-stack">{chaosChips}</div>
           {banner !== null && (
