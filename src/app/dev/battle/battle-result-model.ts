@@ -90,7 +90,7 @@ export function finaleView(
   const origin = finaleOriginFor(end, mode, opponentSource);
   const practice = origin !== "human";
   const noRewards = origin === "practice" ? PRACTICE_NO_REWARDS : origin === "unranked-fallback" ? UNRANKED_FALLBACK_NO_REWARDS : null;
-  const againLabel = origin === "practice" ? "Battle Again" : origin === "unranked-fallback" ? "Find Opponent Again" : null;
+  const againLabel = origin === "practice" ? "Battle Again" : origin === "unranked-fallback" || mode === "matchmaking" ? "Find Opponent Again" : null;
   if (!end) {
     return {
       result: "abort",

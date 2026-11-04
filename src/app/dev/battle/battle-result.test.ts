@@ -119,7 +119,10 @@ describe("finale view model", () => {
       practice: false,
       settlement: { state: "recorded", text: "Result recorded" },
       noRewards: null,
+      againLabel: "Find Opponent Again",
     });
+    expect(finaleView(end(), null, 0, null, 10, "private").againLabel).toBeNull();
+    expect(finaleView(end(), null, 0, null, 10, "ranked").againLabel).toBeNull();
   });
   it("formats only server-supported practice difficulties", () => {
     expect(practiceDifficultyLabel("medium")).toBe("Medium");

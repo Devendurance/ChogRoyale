@@ -24,11 +24,9 @@ import {
   effectForRequirement,
   resolveCommanderAsset,
   resolveEntityAsset,
-  type SpriteManifest,
   type SpriteRecord,
 } from "./sprite-registry";
 import {
-  ARENA_URLS,
   TEAM_COLORS,
   defenderCue,
   defenderPose,
@@ -49,12 +47,10 @@ import {
   structureArtScale,
   weaponScreen,
   worldImageOrigin,
-  type ArenaManifest,
   type DefenderState,
 } from "./arena-registry";
+import { battleAssetPlan, loadBattleManifests, usesSoftWorld } from "./battle-preload";
 import {
-  UNITS_MANIFEST_URL,
-  UNITS_URL,
   anchorOffset,
   clipsFor,
   defeatAlpha,
@@ -70,7 +66,6 @@ import {
   type Foe,
   type SentryFighter,
   type SentryTrack,
-  type UnitAnimManifest,
   type UnitAnimRecord,
   type UnitAnimState,
   type UnitView,
@@ -78,9 +73,7 @@ import {
 import {
   TEX_RADIUS,
   VFX_COLORS,
-  VFX_MANIFEST_URL,
   VFX_S,
-  VFX_URL,
   abilityVfx,
   burstAt,
   commanderEntityFor,
@@ -90,10 +83,8 @@ import {
   spellCastVfx,
   spellImpactVfx,
   statusesFromEvent,
-  vfxKey,
   type ProjectileStyle,
   type StatusUnit,
-  type VfxManifest,
   type VfxSprite,
   type VfxStatus,
 } from "./battle-vfx";
@@ -103,28 +94,12 @@ import { classWeight, hasFootsteps, hpBarWidth, isSmallClass, sizeClassOf, unitD
 /** Commander class sheets live in the units manifest as `commander_<class>`. */
 const commanderAnimId = (cls: string) => `commander_${cls}`;
 
-// First arena manifest that loads wins: v003 pre-rendered 2.5D art, else v002.
-const loadArena = async (): Promise<{ arena: ArenaManifest; base: string } | null> => {
-  for (const base of ARENA_URLS) {
-    try {
-      const r = await fetch(`${base}/manifests/arena.runtime.json`);
-      if (r.ok) return { arena: (await r.json()) as ArenaManifest, base };
-    } catch {
-      // Try the next manifest.
-    }
-  }
-  return null;
-};
-
 const S = 5; // pixels per arena unit
-/** Viewports that load the depth-of-field world variant. */
-const WORLD_SOFT_QUERY = "(min-width: 1200px) and (orientation: landscape)";
 // Allegiance follows the v3 orientation lock: the viewer is blue, the
 // opponent red, derived from owner === seat for both perspectives.
 const OWN = TEAM_COLORS.friendly;
 const BAR_OUTLINE = 0x120b45;
 const FOE = TEAM_COLORS.opponent;
-const KIT_URL = "/assets/chog-kit/v001";
 
 export interface CanvasFeed {
   start: StartMessage;
@@ -166,6 +141,12 @@ interface Props {
   /** Reports the board rect (stage CSS px) whenever the layout changes, so
    * DOM overlays can sit relative to the playable field. */
   onBoardLayout?: (board: BoardLayout) => void;
+  /** Asset load fraction, 0 to 1. */
+  onLoadProgress?: (fraction: number) => void;
+  /** The battlefield for the current frame has reached the screen. */
+  onPainted?: () => void;
+  /** The renderer could not start, so this client can never become ready. */
+  onLoadFailed?: () => void;
 }
 
 interface StageLayout {
@@ -193,7 +174,17 @@ const hashPhase = (id: string) => {
   return h / 1000;
 };
 
-export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, hostStyle, insets, onBoardLayout, seat = 0 }: Props) {
+/** Phaser deletes its GL objects on destroy but leaves the context to the GC,
+ * and browsers cap live contexts. Release it now so a run of rematches never
+ * stacks one context per match. Safe on the canvas renderer (no `gl`). */
+function destroyRenderer(game: import("phaser").Game | null) {
+  if (!game) return;
+  const gl = (game.renderer as unknown as { gl?: WebGLRenderingContext | WebGL2RenderingContext } | null)?.gl;
+  game.destroy(true);
+  (gl?.getExtension("WEBGL_lose_context") as { loseContext(): void } | null | undefined)?.loseContext();
+}
+
+export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, hostStyle, insets, onBoardLayout, onLoadProgress, onPainted, onLoadFailed, seat = 0 }: Props) {
   const host = useRef<HTMLDivElement>(null);
   const boardBox = useRef<HTMLDivElement>(null);
   const press = useRef<{ id: number; x: number; y: number } | null>(null);
@@ -236,8 +227,10 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
     relayout.current?.();
   };
   const measureRef = useRef(measure);
+  const loadEvents = useRef({ onLoadProgress, onPainted, onLoadFailed });
   useEffect(() => {
     measureRef.current = measure;
+    loadEvents.current = { onLoadProgress, onPainted, onLoadFailed };
   });
   useEffect(() => {
     insetsRef.current = insets;
@@ -255,22 +248,11 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
   useEffect(() => {
     let game: import("phaser").Game | null = null;
     let cancelled = false;
-    void Promise.all([
-      import("phaser"),
-      fetch(`${KIT_URL}/manifests/phaser-assets.runtime.json`)
-        .then((r) => (r.ok ? (r.json() as Promise<SpriteManifest>) : null))
-        .catch(() => null),
-      loadArena(),
-      fetch(UNITS_MANIFEST_URL)
-        .then((r) => (r.ok ? (r.json() as Promise<UnitAnimManifest>) : null))
-        .catch(() => null),
-      fetch(VFX_MANIFEST_URL)
-        .then((r) => (r.ok ? (r.json() as Promise<VfxManifest>) : null))
-        .catch(() => null),
-    ]).then(([Phaser, manifest, arenaLoad, unitManifest, vfxManifest]) => {
+    void Promise.all([import("phaser"), loadBattleManifests()]).then(([Phaser, manifests]) => {
       if (cancelled || !host.current) return;
-      const arena = arenaLoad?.arena ?? null;
-      const arenaBase = arenaLoad?.base ?? "";
+      performance.mark("battle:renderer-loaded");
+      const { kit: manifest, units: unitManifest, vfx: vfxManifest } = manifests;
+      const arena = manifests.arena?.arena ?? null;
       if (!manifest) console.warn("battle sprites: kit manifest unavailable; vector placeholders only");
       const reduced = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
       const W = 100 * S;
@@ -426,6 +408,7 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
         animationTick = -1;
       };
 
+      let paintReported = false;
       class Arena extends Phaser.Scene {
         g!: import("phaser").GameObjects.Graphics;
         og!: import("phaser").GameObjects.Graphics;
@@ -433,30 +416,14 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
         plateG!: import("phaser").GameObjects.Graphics;
         preload() {
           this.load.on("loaderror", (file: { key: string }) => missing.add(file.key));
-          if (manifest) for (const a of manifest.assets) this.load.image(a.stableAssetId, `${KIT_URL}/${a.path}`);
-          for (const u of Object.values(unitManifest?.units ?? {})) {
-            this.load.spritesheet(unitTextureKey(u.entityId), `${UNITS_URL}/${u.sheet}`, { frameWidth: u.frameWidth, frameHeight: u.frameHeight });
-          }
-          for (const [key, t] of Object.entries(vfxManifest?.textures ?? {})) {
-            if (t.kind === "sheet") this.load.spritesheet(vfxKey(key), `${VFX_URL}/${t.path}`, { frameWidth: t.frameWidth!, frameHeight: t.frameHeight! });
-            else this.load.image(vfxKey(key), `${VFX_URL}/${t.path}`);
-          }
-          if (arena) {
-            // Desktop landscape shows far more surround, so it gets the variant
-            // whose scenery softens with distance from the arena (static
-            // depth of field, no runtime blur). The board region is identical.
-            if (arena.world) {
-              const soft = arena.world.softPath && typeof matchMedia === "function" && matchMedia(WORLD_SOFT_QUERY).matches;
-              this.load.image("arena:world", `${arenaBase}/${soft ? arena.world.softPath : arena.world.path}`);
-            }
-            for (const l of arena.layers) this.load.image(`arena:layer:${l.id}`, `${arenaBase}/${l.path}`);
-            for (const [role, r] of Object.entries(arena.mounts)) {
-              for (const p of Object.values(r.parts)) if (p) this.load.image(`${role}:${p.split("/").pop()!.replace(".png", "")}`, `${arenaBase}/${p}`);
-              for (const [pose, p] of Object.entries(r.poses)) this.load.image(`${role}:defender-${pose}`, `${arenaBase}/${p.path}`);
-            }
+          this.load.on("progress", (fraction: number) => loadEvents.current.onLoadProgress?.(fraction));
+          for (const a of battleAssetPlan(manifests, usesSoftWorld(), { cardArt: false })) {
+            if (a.kind === "image") this.load.image(a.key, a.url);
+            else this.load.spritesheet(a.key, a.url, { frameWidth: a.frameWidth, frameHeight: a.frameHeight });
           }
         }
         create() {
+          performance.mark("battle:assets-loaded");
           // Two Graphics layers: board art under everything, HUD overlays
           // (bars, telegraphs, ghost) above every sprite and effect image.
           // v002 arena art sits below both as a textured underlay.
@@ -497,6 +464,16 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
           const now = performance.now();
           if (!f || !f.frame) return;
           const { start, frame, prev } = f;
+          if (!paintReported) {
+            // This update's output is on screen by the next animation frame,
+            // which a hidden tab never reaches. That is the honest answer.
+            paintReported = true;
+            requestAnimationFrame(() => {
+              if (cancelled) return;
+              performance.mark("battle:first-paint");
+              loadEvents.current.onPainted?.();
+            });
+          }
           if (eventStart !== start) {
             clearPresentationPools();
             eventStart = start;
@@ -2086,18 +2063,23 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
         return { cw, ch, res, w: Math.max(1, Math.round(cw * res)), h: Math.max(1, Math.round(ch * res)) };
       };
       const first = sizeNow();
-      game = new Phaser.Game({
-        type: Phaser.AUTO,
-        parent: host.current,
-        width: first.w,
-        height: first.h,
-        backgroundColor: "#1d3b22",
-        scene: Arena,
-        // Input is handled by DOM pointer events on the host. Phaser's touch
-        // capture would otherwise preventDefault and fight those handlers.
-        input: { keyboard: false, mouse: false, touch: false, gamepad: false },
-        scale: { mode: Phaser.Scale.NONE },
-      });
+      try {
+        game = new Phaser.Game({
+          type: Phaser.AUTO,
+          parent: host.current,
+          width: first.w,
+          height: first.h,
+          backgroundColor: "#1d3b22",
+          scene: Arena,
+          // Input is handled by DOM pointer events on the host. Phaser's touch
+          // capture would otherwise preventDefault and fight those handlers.
+          input: { keyboard: false, mouse: false, touch: false, gamepad: false },
+          scale: { mode: Phaser.Scale.NONE },
+        });
+      } catch {
+        loadEvents.current.onLoadFailed?.();
+        return;
+      }
       const applyLayout = () => {
         const g = game;
         const st = stage.current;
@@ -2130,11 +2112,14 @@ export default function BattleCanvas({ feed, mapRef, onBoardTap, onBoardHover, h
         (window as unknown as { __battleGame?: import("phaser").Game }).__battleGame = game;
         (window as unknown as { __towerFx?: unknown[] }).__towerFx = towerFx;
       }
+    }).catch(() => {
+      if (!cancelled) loadEvents.current.onLoadFailed?.();
     });
     return () => {
       cancelled = true;
       relayout.current = null;
-      game?.destroy(true);
+      destroyRenderer(game);
+      game = null;
     };
   }, [feed, seat]);
 

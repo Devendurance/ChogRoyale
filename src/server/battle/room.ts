@@ -22,8 +22,9 @@ import { requireOnboardedPlayer, type PlayerLoader } from "@/lib/auth";
 import { AppError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 import type { PrivyTokenVerifier } from "@/lib/privy-server";
-import { readySchema, type CommanderChoice } from "@/lib/battle-protocol";
+import { CLIENT_READY_MESSAGE, readySchema, type ArmingMessage, type CommanderChoice } from "@/lib/battle-protocol";
 import { BattleSession, type SeatPlayer, type SessionRandom, type TrustedLoadout } from "@/server/battle/session";
+import { MATCH_ARMING_MS, MatchArming } from "@/server/battle/arming";
 import { productionEntitlementDeps, resolveCommander, type EntitlementDeps } from "@/server/battle/entitlement";
 import { productionPatronSource, type PatronSource } from "@/server/battle/patron-source";
 import type { MatchCoordinator, MatchCoordinatorFallbackDeps, PendingMatch } from "@/server/battle/matchmaking";
@@ -65,6 +66,10 @@ export interface BattleRoomDeps {
   accountXp?: { enabled: boolean };
   /** How long a dropped seat stays reservable during an active match. */
   reconnectGraceMs?: number;
+  /** How long a started match may wait for every human seat to paint the
+   * battlefield before it aborts with no result. Zero skips the wait, which
+   * only protocol tests with headless clients do. */
+  armingMs?: number;
   /** Durable settlement service; absent or null disables DB writes. */
   settlement?: SettlementService | null;
   /** Arena Patron source; defaults to the indexed Genesis pool. */
@@ -164,6 +169,9 @@ export class BattleRoom extends Room {
   private readonly resumeTokens: [string, string] = ["", ""];
   /** Join slot -> drop state while inside the reconnect grace window. */
   private readonly dropped = new Map<number, { deadlineAt: number; timer: { clear(): void } }>();
+  /** Non-null while the simulation is frozen at tick 0 for presentation. */
+  private arming: MatchArming | null = null;
+  private closeTimer: ReturnType<typeof setTimeout> | null = null;
 
   static async onAuth(token: string | undefined): Promise<SeatPlayer> {
     return authenticateSeat(token, BattleRoom.deps);
@@ -203,8 +211,18 @@ export class BattleRoom extends Room {
       }
     });
     this.onMessage("cmd", (client: BattleClient, msg: unknown) => {
+      if (this.arming) {
+        const cid = typeof (msg as { cid?: unknown })?.cid === "string" ? String((msg as { cid: string }).cid).slice(0, 40) : "";
+        client.send("ack", { cid, ok: false, reason: "The match has not started", tick: 0 });
+        return;
+      }
       const ack = this.session.submit(client.auth.playerId, msg);
       if (ack) client.send("ack", ack);
+    });
+    this.onMessage(CLIENT_READY_MESSAGE, (client: BattleClient) => {
+      const slot = this.session.slotOf(client.auth.playerId);
+      if (slot < 0 || !this.arming?.markReady(slot)) return;
+      if (this.arming) this.clientFor(1 - slot)?.send("arming", { opponentReady: true } satisfies ArmingMessage);
     });
   }
 
@@ -283,8 +301,10 @@ export class BattleRoom extends Room {
     msg.resumeToken = this.resumeTokens[slot]!;
     msg.resumed = true;
     msg.reconnectGraceMs = BattleRoom.deps.reconnectGraceMs ?? RECONNECT_GRACE_MS;
+    if (this.arming) msg.arming = { timeoutMs: this.arming.remainingMs };
     client.send("start", msg);
     client.send("frame", this.session.frame(seat, []));
+    if (this.arming) client.send("arming", { opponentReady: this.arming.isReady(1 - slot) } satisfies ArmingMessage);
     this.clientFor(1 - slot)?.send("presence", { opponentConnected: true, reconnectDeadlineAt: null });
   }
 
@@ -300,6 +320,10 @@ export class BattleRoom extends Room {
       this.dropped.set(slot, { deadlineAt, timer });
       this.autoDispose = false;
       this.unlock();
+      if (this.arming) {
+        this.arming.clear(slot);
+        this.clientFor(1 - slot)?.send("arming", { opponentReady: false } satisfies ArmingMessage);
+      }
       this.clientFor(1 - slot)?.send("presence", { opponentConnected: false, reconnectDeadlineAt: deadlineAt });
       return;
     }
@@ -313,6 +337,7 @@ export class BattleRoom extends Room {
       }
     }
     if (wasActive && this.session.phase === "aborted") {
+      this.disarm();
       this.setSimulationInterval();
       this.broadcast("aborted", { reason: this.session.abortReason });
       this.releaseMatch();
@@ -332,6 +357,7 @@ export class BattleRoom extends Room {
     if (this.session.phase !== "active") return;
     const name = this.session.slots[slot]?.username ?? "Opponent";
     this.session.abort(`${name} did not reconnect in time. No result recorded.`);
+    this.disarm();
     this.setSimulationInterval();
     this.broadcast("aborted", { reason: this.session.abortReason });
     this.releaseMatch();
@@ -453,16 +479,52 @@ export class BattleRoom extends Room {
   private begin() {
     this.lock();
     this.matchId = randomUUID();
-    this.startedAt = new Date();
+    const armingMs = BattleRoom.deps.armingMs ?? MATCH_ARMING_MS;
+    if (armingMs > 0) {
+      this.arming = new MatchArming([0, 1], armingMs, this.clock, {
+        onGo: () => this.go(),
+        onExpired: (waiting) => this.armingExpired(waiting),
+      });
+    }
     const grace = BattleRoom.deps.reconnectGraceMs ?? RECONNECT_GRACE_MS;
     this.session.slots.forEach((_, slot) => {
       this.resumeTokens[slot] = randomBytes(16).toString("hex");
       const msg = this.session.startMessage(slot);
       msg.resumeToken = this.resumeTokens[slot]!;
       msg.reconnectGraceMs = grace;
-      this.clientFor(slot)?.send("start", msg);
+      if (this.arming) msg.arming = { timeoutMs: this.arming.remainingMs };
+      const client = this.clientFor(slot);
+      client?.send("start", msg);
+      // The tick 0 snapshot lets each client paint towers and its hand while frozen.
+      if (this.arming) client?.send("frame", this.session.frame(this.session.seatOfSlot[slot]!, []));
     });
+    if (!this.arming) this.go();
+  }
+
+  /** First simulated tick. Every human seat has a painted battlefield. */
+  private go() {
+    this.arming = null;
+    this.startedAt = new Date();
     this.setSimulationInterval(() => this.step(), BattleRoom.deps.tickMs ?? 100);
+  }
+
+  /** A seat never painted the battlefield in time. Nothing was simulated. */
+  private armingExpired(waiting: number[]) {
+    this.arming = null;
+    if (this.session.phase !== "active") return;
+    logger.info("match aborted before first tick", { roomId: this.roomId, waiting: waiting.length });
+    const who = waiting.length === 1 ? this.session.slots[waiting[0]!]?.username : null;
+    this.session.abort(`${who ?? "The battle"} could not load in time. No result recorded.`);
+    for (const timer of this.dropped.values()) timer.timer.clear();
+    this.dropped.clear();
+    this.broadcast("aborted", { reason: this.session.abortReason });
+    this.releaseMatch();
+    this.closeSoon();
+  }
+
+  private disarm() {
+    this.arming?.cancel();
+    this.arming = null;
   }
 
   private step() {
@@ -548,11 +610,15 @@ export class BattleRoom extends Room {
     logger.info("battle finished", { roomId: this.roomId, winner: r.winner, endReason: r.endReason, ticks: r.ticks, commands: r.commands.length, replayIdentical: r.replayIdentical });
   }
 
+  /** A plain timer, cleared on dispose. Close timing is wall-clock, not game
+   * time, so it survives a stopped simulation and a locked room. */
   private closeSoon() {
-    this.clock.setTimeout(() => void this.disconnect(), BattleRoom.deps.closeAfterMs ?? 30_000);
+    if (this.closeTimer) return;
+    this.closeTimer = setTimeout(() => void this.disconnect(), BattleRoom.deps.closeAfterMs ?? 30_000);
   }
 
   onDispose() {
+    if (this.closeTimer) clearTimeout(this.closeTimer);
     this.releaseMatch();
   }
 }

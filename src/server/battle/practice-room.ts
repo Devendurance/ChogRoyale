@@ -8,7 +8,7 @@
 import { randomBytes, randomUUID, timingSafeEqual } from "crypto";
 import { CloseCode, Room, ServerError, type Client } from "@colyseus/core";
 import { logger } from "@/lib/logger";
-import { readySchema, type CommanderChoice, type PracticeDifficulty, type PracticeOpponent } from "@/lib/battle-protocol";
+import { CLIENT_READY_MESSAGE, readySchema, type CommanderChoice, type PracticeDifficulty, type PracticeOpponent } from "@/lib/battle-protocol";
 import {
   PRACTICE_BOT_DISPLAY_NAME,
   botSeatFor,
@@ -20,6 +20,7 @@ import {
   resolvePracticeDifficulty,
 } from "@/server/battle/practice";
 import { BattleSession, deckFor, type SeatPlayer, type SessionRandom, type TrustedLoadout } from "@/server/battle/session";
+import { MATCH_ARMING_MS, MatchArming } from "@/server/battle/arming";
 import { authenticateSeat, type BattleRoomDeps } from "@/server/battle/room";
 import { freeStarterSlot } from "@/lib/combat";
 import { commanderCardId, isAbilityCommand, validateDeck } from "@/lib/combat";
@@ -116,6 +117,9 @@ export class PracticeRoom extends Room {
   private resumeToken = "";
   private drop: { deadlineAt: number; timer: { clear(): void } } | null = null;
   private botCid = 0;
+  /** Non-null while the bot and the clock wait for the human's first paint. */
+  private arming: MatchArming | null = null;
+  private readonly closeTimers = new Set<ReturnType<typeof setTimeout>>();
 
   static async onAuth(token: string | undefined): Promise<SeatPlayer> {
     return authenticateSeat(token, PracticeRoom.deps);
@@ -159,8 +163,16 @@ export class PracticeRoom extends Room {
       }
     });
     this.onMessage("cmd", (client: PracticeClient, msg: unknown) => {
+      if (this.arming) {
+        const cid = typeof (msg as { cid?: unknown })?.cid === "string" ? String((msg as { cid: string }).cid).slice(0, 40) : "";
+        client.send("ack", { cid, ok: false, reason: "The match has not started", tick: 0 });
+        return;
+      }
       const ack = this.session.submit(client.auth.playerId, msg);
       if (ack) client.send("ack", ack);
+    });
+    this.onMessage(CLIENT_READY_MESSAGE, (client: PracticeClient) => {
+      if (this.session.slotOf(client.auth.playerId) === 0) this.arming?.markReady(0);
     });
     this.clock.setTimeout(() => this.lobbyTimeout(), MATCH_LOBBY_MS);
   }
@@ -268,7 +280,13 @@ export class PracticeRoom extends Room {
   private begin(client: PracticeClient) {
     this.lock();
     this.matchId = randomUUID();
-    this.startedAt = new Date();
+    const armingMs = PracticeRoom.deps.armingMs ?? MATCH_ARMING_MS;
+    if (armingMs > 0) {
+      this.arming = new MatchArming([0], armingMs, this.clock, {
+        onGo: () => this.go(),
+        onExpired: () => this.armingExpired(),
+      });
+    }
     const grace = PracticeRoom.deps.reconnectGraceMs ?? RECONNECT_GRACE_MS;
     this.resumeToken = randomBytes(16).toString("hex");
     const msg = this.session.startMessage(0);
@@ -277,8 +295,35 @@ export class PracticeRoom extends Room {
     msg.opponentKind = "bot";
     msg.practiceOpponent = this.opponent;
     msg.opponent = this.opponent.displayName;
+    if (this.arming) msg.arming = { timeoutMs: this.arming.remainingMs };
     client.send("start", msg);
+    // The tick 0 snapshot lets the client paint towers and its hand while frozen.
+    if (this.arming) client.send("frame", this.session.frame(this.session.seatOfSlot[0]!, []));
+    else this.go();
+  }
+
+  /** First simulated tick. The bot cannot act before this point. */
+  private go() {
+    this.arming = null;
+    this.startedAt = new Date();
     this.setSimulationInterval(() => this.step(), PracticeRoom.deps.tickMs ?? 100);
+  }
+
+  /** The human never painted the battlefield. Nothing was simulated. */
+  private armingExpired() {
+    this.arming = null;
+    if (this.session.phase !== "active") return;
+    this.drop?.timer.clear();
+    this.drop = null;
+    this.session.abort("The battle could not load in time. No result recorded.");
+    this.broadcast("aborted", { reason: this.session.abortReason });
+    this.releaseHuman();
+    this.closeAfter(PracticeRoom.deps.closeAfterMs ?? 5_000);
+  }
+
+  private disarm() {
+    this.arming?.cancel();
+    this.arming = null;
   }
 
   private step() {
@@ -467,16 +512,26 @@ export class PracticeRoom extends Room {
   private closeAfterEnd(awardDelivered: Promise<void> | null) {
     const minDelay = PracticeRoom.deps.closeAfterMs ?? 5_000;
     if (!awardDelivered) {
-      this.clock.setTimeout(() => void this.disconnect(), minDelay);
+      this.closeAfter(minDelay);
       return;
     }
-    const cap = this.clock.setTimeout(() => void this.disconnect(), Math.max(minDelay, 15_000));
+    const cap = this.closeAfter(Math.max(minDelay, 15_000));
     void awardDelivered.finally(() => {
-      this.clock.setTimeout(() => {
-        cap.clear();
-        void this.disconnect();
-      }, minDelay);
+      clearTimeout(cap);
+      this.closeTimers.delete(cap);
+      this.closeAfter(minDelay);
     });
+  }
+
+  /** A plain timer, cleared on dispose. Close timing is wall-clock, not game
+   * time, so it survives a stopped simulation and a locked room. */
+  private closeAfter(ms: number) {
+    const timer = setTimeout(() => {
+      this.closeTimers.delete(timer);
+      void this.disconnect();
+    }, ms);
+    this.closeTimers.add(timer);
+    return timer;
   }
 
   private resume(client: PracticeClient, token: unknown) {
@@ -502,6 +557,7 @@ export class PracticeRoom extends Room {
     msg.opponentKind = "bot";
     msg.practiceOpponent = this.opponent;
     msg.opponent = this.opponent.displayName;
+    if (this.arming) msg.arming = { timeoutMs: this.arming.remainingMs };
     client.send("start", msg);
     client.send("frame", this.session.frame(seat, []));
     client.send("presence", { opponentConnected: true, reconnectDeadlineAt: null });
@@ -524,14 +580,16 @@ export class PracticeRoom extends Room {
       // Keep the room open and joinable so joinById can deliver a resume.
       this.autoDispose = false;
       this.unlock();
+      this.arming?.clear(0);
       return;
     }
     if (this.session.phase === "active" && slot === 0) {
       this.session.abort("Practice ended. No rewards.");
+      this.disarm();
       this.setSimulationInterval();
       this.broadcast("aborted", { reason: this.session.abortReason });
       this.releaseHuman();
-      this.clock.setTimeout(() => void this.disconnect(), PracticeRoom.deps.closeAfterMs ?? 5_000);
+      this.closeAfter(PracticeRoom.deps.closeAfterMs ?? 5_000);
     }
   }
 
@@ -547,10 +605,11 @@ export class PracticeRoom extends Room {
     this.drop = null;
     if (this.session.phase !== "active") return;
     this.session.abort("AI Opponent held the arena. Reconnect window expired. No rewards.");
+    this.disarm();
     this.setSimulationInterval();
     this.broadcast("aborted", { reason: this.session.abortReason });
     this.releaseHuman();
-    this.clock.setTimeout(() => void this.disconnect(), PracticeRoom.deps.closeAfterMs ?? 5_000);
+    this.closeAfter(PracticeRoom.deps.closeAfterMs ?? 5_000);
   }
 
   private releaseHuman() {
@@ -558,6 +617,8 @@ export class PracticeRoom extends Room {
   }
 
   onDispose() {
+    for (const timer of this.closeTimers) clearTimeout(timer);
+    this.closeTimers.clear();
     if (this.origin === "unranked-fallback") PracticeRoom.coordinator?.releaseFallbackRoom(this.roomId);
     this.releaseHuman();
   }

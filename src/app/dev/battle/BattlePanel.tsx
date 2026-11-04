@@ -10,12 +10,14 @@ import { usePrivy, useLogin } from "@privy-io/react-auth";
 import { Client, type Room } from "@colyseus/sdk";
 import {
   BATTLE_PRACTICE_ROOM,
+  CLIENT_READY_MESSAGE,
   BATTLE_QUEUE_ROOM,
   BATTLE_RANKED_QUEUE_ROOM,
   BATTLE_ROOM,
   PRACTICE_DIFFICULTIES,
   type AckMessage,
   type AccountXpMessage,
+  type ArmingMessage,
   type BattleFrame,
   type BotCardXpMessage,
   type BotGoldMessage,
@@ -38,6 +40,9 @@ import BattleLobby from "./BattleLobby";
 import BattleEntry from "@/components/app/BattleEntry";
 import BattleHud from "./BattleHud";
 import { battleIdentity } from "./battle-identity";
+import { attachOwnedRoom, createRoomOwner, leaveRoom } from "./battle-connection";
+import { prewarmBattle } from "./battle-preload";
+import { matchArming } from "./hud-view";
 import { useAppAudio } from "@/components/audio/AppAudioProvider";
 import type { BattlePhase } from "@/lib/audio/audio-core";
 import {
@@ -306,6 +311,9 @@ export function BattlePanel({
   const [selected, setSelected] = useState<string | null>(null);
   const [dragging, setDragging] = useState<string | null>(null);
   const [hint, setHint] = useState<string | null>(null);
+  const [roomOwner] = useState(() => createRoomOwner<Room>());
+  const [painted, setPainted] = useState(false);
+  const [opponentReady, setOpponentReady] = useState(false);
   const [selectedPracticeDifficulty, setSelectedPracticeDifficulty] = useState<PracticeDifficulty>("medium");
   const selectedPracticeDifficultyRef = useRef<PracticeDifficulty>("medium");
   const feed = useRef<CanvasFeed | null>(null);
@@ -655,6 +663,8 @@ export function BattlePanel({
   // recovery, and the built-in retry would delay onLeave past the grace window.
   const attachRoom = useCallback((r: Room, origin: ResumeOrigin = resumeOriginForEntryMode(initialMode)) => {
     r.reconnection.enabled = false;
+    // Late traffic from a replaced room must never reach the current session.
+    const { on, onClose } = attachOwnedRoom(r, roomOwner);
     let originRejected = false;
     let lobbyHydrated = false;
     let hydrationStale = false;
@@ -686,7 +696,7 @@ export function BattlePanel({
       setStage("failed");
       void r.leave().catch(() => {});
     };
-    r.onMessage("lobby", (m: LobbyMessage) => {
+    on("lobby", (m: LobbyMessage) => {
       markLobbyHydrated();
       const serverSource = m.practice?.opponent.source;
       if (origin === "unranked-fallback" && serverSource !== "unranked-fallback") {
@@ -706,7 +716,7 @@ export function BattlePanel({
       setAudioPhase("lobby");
       setStage((s) => (s === "connecting" || s === "searching" ? "lobby" : s));
     });
-    r.onMessage("start", (m: StartMessage) => {
+    on("start", (m: StartMessage) => {
       clearLobbyHydration();
       const serverSource = m.practiceOpponent?.source;
       const authoritativeOrigin = resumeOriginForStart(m, origin);
@@ -734,7 +744,10 @@ export function BattlePanel({
       audioSeen.current.clear();
       audioResultSeen.current = null;
       audioPriming.current = m.resumed;
-      if (!m.resumed) audio.play("start");
+      if (!m.resumed && !m.arming) audio.play("start");
+      performance.mark("battle:start");
+      if (!m.resumed) setPainted(false);
+      setOpponentReady(false);
       setAudioPhase("active");
       setSelected(null);
       setDragging(null);
@@ -748,10 +761,14 @@ export function BattlePanel({
       setStart(m);
       setStage("active");
     });
-    r.onMessage("frame", (f: BattleFrame) => {
+    on("frame", (f: BattleFrame) => {
       const cur = feed.current;
       if (!cur || (cur.frame && f.tick <= cur.frame.tick)) return; // never apply older snapshots
       const previous = cur.frame;
+      if (cur.start.arming && !cur.start.resumed && f.tick > 0 && (previous?.tick ?? 0) === 0) {
+        performance.mark("battle:go");
+        audio.play("start");
+      }
       feed.current = { ...cur, prev: cur.frame, frame: f, receivedAt: performance.now() };
       const cues = cuesForBattleFrame(f, previous);
       if (audioPriming.current) {
@@ -762,7 +779,8 @@ export function BattlePanel({
       }
       setFrame(f);
     });
-    r.onMessage("ack", (a: AckMessage) => {
+    on("arming", (m: ArmingMessage) => setOpponentReady(m.opponentReady === true));
+    on("ack", (a: AckMessage) => {
       const label = sentLabels.current.get(a.cid) ?? a.cid;
       sentLabels.current.delete(a.cid);
       const cue = cueForAck(a, label);
@@ -812,7 +830,7 @@ export function BattlePanel({
       context.receipt = merged.receipt;
       publishBotCardXp(context);
     };
-    r.onMessage("end", (e: EndMessage) => {
+    on("end", (e: EndMessage) => {
       const context = botGoldContext.current;
       if (context?.roomId === r.roomId) {
         context.end = e;
@@ -843,19 +861,19 @@ export function BattlePanel({
       setAudioPhase("result");
       setStage("ended");
     });
-    r.onMessage("bot_gold", (raw: unknown) => {
+    on("bot_gold", (raw: unknown) => {
       const parsed = validateBotGoldMessage(raw);
       if (parsed.ok) applyBotGold(parsed.message);
     });
-    r.onMessage("bot_card_xp", (raw: unknown) => {
+    on("bot_card_xp", (raw: unknown) => {
       const parsed = validateBotCardXpMessage(raw);
       if (parsed.ok) applyBotCardXp(parsed.message);
     });
-    r.onMessage("account_xp", (raw: unknown) => {
+    on("account_xp", (raw: unknown) => {
       void handleAccountXpReceipt(raw, r.roomId);
     });
-    r.onMessage("settlement", (m: SettlementMessage) => setSettlement(m));
-    r.onMessage("aborted", (a: { reason: string }) => {
+    on("settlement", (m: SettlementMessage) => setSettlement(m));
+    on("aborted", (a: { reason: string }) => {
       clearLobbyHydration();
       clearBotGoldState();
       clearBotCardXpState();
@@ -867,8 +885,8 @@ export function BattlePanel({
       setAudioPhase("lobby");
       setStage("aborted");
     });
-    r.onMessage("presence", (m: PresenceMessage) => setPresence(m));
-    r.onMessage("error", (e: { reason: string }) => setError(e.reason));
+    on("presence", (m: PresenceMessage) => setPresence(m));
+    on("error", (e: { reason: string }) => setError(e.reason));
     // The first lobby can arrive while the SDK is completing create/join,
     // before this listener set is attached. A bounded series of idempotent
     // sync requests lets the authenticated seat hydrate without changing room
@@ -881,8 +899,7 @@ export function BattlePanel({
     hydrationTimers.push(setTimeout(() => {
       if (!lobbyHydrated && !hydrationStale) setLobbyHydrationFailed(true);
     }, 5_000));
-    r.onLeave((code: number) => {
-      clearLobbyHydration();
+    onClose((code: number) => {
       setStage((s) => {
         if (originRejected) return "failed";
         // Unconsented drop during a live match: try to resume the seat.
@@ -898,9 +915,9 @@ export function BattlePanel({
         setAudioPhase(s === "ended" ? "result" : "lobby");
         return s === "ended" || s === "aborted" ? s : "closed";
       });
-    });
+    }, clearLobbyHydration);
     setRoom(r);
-  }, [adoptPracticeDifficulty, audio, clearAccountXpState, clearBotCardXpState, clearBotGoldState, handleAccountXpReceipt, initialMode, recoverAccountXp, refreshCardXp, refreshGoldBalance, setAudioPhase]);
+  }, [adoptPracticeDifficulty, audio, clearAccountXpState, clearBotCardXpState, clearBotGoldState, handleAccountXpReceipt, initialMode, recoverAccountXp, refreshCardXp, refreshGoldBalance, roomOwner, setAudioPhase]);
 
   // Ranked awards are read back only after the server confirms settlement.
   // This bounded read never infers a trophy delta from the battle result.
@@ -963,6 +980,8 @@ export function BattlePanel({
       }
       if (connecting.current) return;
       connecting.current = true;
+      performance.clearMarks();
+      performance.mark("battle:action");
       setError(null);
       clearBotGoldState();
       clearBotCardXpState();
@@ -1018,8 +1037,14 @@ export function BattlePanel({
   /** Join one queue. The room name is the server-side mode authority: the
    * ranked room only ever pairs ranked tickets, and the client label below
    * never decides settlement. Ranked stays hub-gated until trophies land. */
+  const queueJoining = useRef(false);
   const findMatch = useCallback(async (queue: "unranked" | "ranked" = "unranked") => {
+    // One join at a time: a second ticket for this player is refused outright.
+    if (queueJoining.current) return;
+    queueJoining.current = true;
     const gen = ++queueGen.current;
+    performance.clearMarks();
+    performance.mark("battle:action");
     clearBotGoldState();
     clearBotCardXpState();
     clearAccountXpState();
@@ -1105,6 +1130,8 @@ export function BattlePanel({
       if (gen !== queueGen.current) return;
       setError(e instanceof Error ? e.message : String(e));
       setStage("idle");
+    } finally {
+      queueJoining.current = false;
     }
   }, [getAccessToken, attachRoom, appAudioController, clearAccountXpState, clearBotCardXpState, clearBotGoldState]);
 
@@ -1116,7 +1143,7 @@ export function BattlePanel({
     setQueueStatus(null);
     setQueueRoom(null);
     setStage("idle");
-    void queueRoom?.leave().catch(() => {});
+    leaveRoom(queueRoom);
   }, [clearAccountXpState, clearBotCardXpState, clearBotGoldState, queueRoom]);
 
   const reset = useCallback(() => {
@@ -1128,8 +1155,10 @@ export function BattlePanel({
     const resumeOrigin = resumeInfo.current?.origin ?? resumeOriginForEntryMode(initialMode);
     resumeInfo.current = null;
     clearResume(resumeOrigin);
-    void room?.leave().catch(() => {});
-    void queueRoom?.leave().catch(() => {});
+    // Disown first: the old room's close arrives after the next session began.
+    roomOwner.release();
+    leaveRoom(room);
+    leaveRoom(queueRoom);
     setRoom(null);
     setQueueRoom(null);
     setLobby(null);
@@ -1142,6 +1171,8 @@ export function BattlePanel({
     setPresence(null);
     setNotice(null);
     setQueueStatus(null);
+    setPainted(false);
+    setOpponentReady(false);
     feed.current = null;
     audio.dispose();
     setAudioPhase("lobby");
@@ -1149,34 +1180,52 @@ export function BattlePanel({
     audioResultSeen.current = null;
     audioPriming.current = false;
     setStage("idle");
-  }, [audio, clearAccountXpState, clearBotCardXpState, clearBotGoldState, initialMode, room, queueRoom, setAudioPhase]);
+  }, [audio, clearAccountXpState, clearBotCardXpState, clearBotGoldState, initialMode, room, queueRoom, roomOwner, setAudioPhase]);
 
-  const battleAgainPending = useRef(false);
+  // Both rematches replace the finished session in one step, so the entry
+  // screen never flashes and a second press finds connecting already claimed.
   const battleAgain = useCallback(() => {
-    if (initialMode !== "practice" || connecting.current || battleAgainPending.current) return;
-    battleAgainPending.current = true;
+    if (initialMode !== "practice" || connecting.current) return;
     reset();
-    setTimeout(() => {
-      battleAgainPending.current = false;
-      void connect("practice");
-    }, 0);
+    void connect("practice");
   }, [connect, initialMode, reset]);
+  const canFindAgain = initialMode === "unranked" && (start?.mode === "matchmaking" || start?.practiceOpponent?.source === "unranked-fallback");
   const findOpponentAgain = useCallback(() => {
-    if (initialMode !== "unranked" || start?.practiceOpponent?.source !== "unranked-fallback" || connecting.current || battleAgainPending.current) return;
-    battleAgainPending.current = true;
+    if (!canFindAgain || queueJoining.current) return;
     reset();
-    setTimeout(() => {
-      battleAgainPending.current = false;
-      void findMatch("unranked");
-    }, 0);
-  }, [findMatch, initialMode, reset, start?.practiceOpponent?.source]);
+    void findMatch("unranked");
+  }, [canFindAgain, findMatch, reset]);
   const exitBattle = useCallback(() => {
     reset();
     if (publicMode && (initialMode === "practice" || start?.practiceOpponent?.source === "unranked-fallback")) router.push("/app/play");
   }, [initialMode, publicMode, reset, router, start?.practiceOpponent?.source]);
 
-  useEffect(() => () => void room?.leave(), [room]);
-  useEffect(() => () => void queueRoom?.leave(), [queueRoom]);
+  useEffect(() => () => {
+    if (room) roomOwner.release(room);
+    leaveRoom(room);
+  }, [room, roomOwner]);
+  useEffect(() => () => leaveRoom(queueRoom), [queueRoom]);
+
+  // Fetch the renderer and battle art ahead of the match. Data Saver waits
+  // until a battle is really about to happen.
+  const battleImminent = stage !== "idle";
+  useEffect(() => {
+    if (!authenticated) return;
+    if (!battleImminent && (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData) return;
+    const timer = setTimeout(() => void prewarmBattle(), 0);
+    return () => clearTimeout(timer);
+  }, [authenticated, battleImminent]);
+
+  // Report a painted battlefield once per start message. A resume is a new
+  // start, because the server cleared this seat's readiness when it dropped.
+  const armed = matchArming(start, frame, end, abort);
+  const readySentFor = useRef<StartMessage | null>(null);
+  useEffect(() => {
+    if (!armed || !painted || !room || !start || readySentFor.current === start) return;
+    readySentFor.current = start;
+    performance.mark("battle:client-ready");
+    try { room.send(CLIENT_READY_MESSAGE); } catch { /* the close handler owns recovery */ }
+  }, [armed, painted, room, start]);
 
   // Reconnect loop: retry joinById with the resume token until the grace
   // deadline or a definitive rejection.
@@ -1264,12 +1313,12 @@ export function BattlePanel({
 
   const send = useCallback(
     (cmd: Record<string, unknown>, label: string) => {
-      if (!room) return;
+      if (!room || armed) return;
       const cid = `c${Date.now().toString(36)}${cidN.current++}`;
       sentLabels.current.set(cid, label);
       room.send("cmd", { ...cmd, cid });
     },
-    [room]
+    [armed, room]
   );
   // Every deploy, tap or drag, goes through this one call. The server decides.
   const deploy = useCallback(
@@ -1312,6 +1361,7 @@ export function BattlePanel({
     if (el) el.style.transform = `translate(${clientX}px, ${clientY}px) translate(-50%, -50%)`;
   };
   const lastAim = useRef({ x: 0, y: 0 });
+  const onPainted = useCallback(() => setPainted(true), []);
 
   const onCardPointerDown = (id: string) => (e: React.PointerEvent<HTMLButtonElement>) => {
     if (e.button !== 0 || stage !== "active") return;
@@ -1463,7 +1513,10 @@ export function BattlePanel({
       {stage === "lobby" && lobby && (
         <BattleLobby lobby={lobby} roomCode={room?.roomId} now={now}
           getAccessToken={getAccessToken}
-          onConfirm={(cards, commander: CommanderChoice) => room?.send("ready", { cards, commander })}
+          onConfirm={(cards, commander: CommanderChoice) => {
+            performance.mark("battle:ready");
+            room?.send("ready", { cards, commander });
+          }}
           onEdit={() => room?.send("unready")} />
       )}
 
@@ -1475,7 +1528,11 @@ export function BattlePanel({
           notice={notice}
           onGiveUp={stage === "reconnecting" ? reset : undefined}
           onExit={publicMode && (initialMode === "practice" || start?.practiceOpponent?.source === "unranked-fallback") ? exitBattle : reset}
-          onBattleAgain={initialMode === "practice" ? battleAgain : start?.practiceOpponent?.source === "unranked-fallback" ? findOpponentAgain : undefined}
+          onBattleAgain={initialMode === "practice" ? battleAgain : canFindAgain ? findOpponentAgain : undefined}
+          arming={armed}
+          painted={painted}
+          opponentReady={opponentReady}
+          onPainted={onPainted}
           start={start}
           playerName={identity?.self ?? undefined}
           frame={frame}
