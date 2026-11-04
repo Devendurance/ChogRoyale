@@ -2,7 +2,7 @@
 
 Started 2026-11-04 on `feat/next-player-experience` from `origin/main` `9e93407`
 (PR #25 merged). One Fast Build slice per invocation. No merge, deploy,
-production migration or live flag change.
+production migration or live flag change. Draft PR #26 holds the milestone.
 
 ## Outcome
 
