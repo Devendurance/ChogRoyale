@@ -125,6 +125,7 @@ describe("finale view model", () => {
     expect(finaleView(end(), null, 0, null, 10, "ranked").againLabel).toBeNull();
   });
   it("formats only server-supported practice difficulties", () => {
+    expect(practiceDifficultyLabel("easy")).toBe("Easy");
     expect(practiceDifficultyLabel("medium")).toBe("Medium");
     expect(practiceDifficultyLabel("hard")).toBe("Hard");
     expect(practiceDifficultyLabel("ultimate")).toBe("Ultimate");

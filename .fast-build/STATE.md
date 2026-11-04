@@ -274,3 +274,8 @@
 - Perf/stability: DOM-only card portraits excluded from Phaser (-6.6 MB GPU textures, 123.5 -> 116.9 MB), WebGL context lost on game destroy (8 rematches keep 1 open context), prewarm retained. Phone 56.2 / tablet 56.7 / desktop 53.3 avg FPS at p95 16.8 ms on Intel Iris Xe.
 - Checks: 75 focused tests, typecheck, scoped lint, production build. Evidence: `docs/v1-stabilization.md`, `ChogRoyale-Assets/final-assets/live/v1`.
 - PR #25 open: https://github.com/Devendurance/ChogRoyale/pull/25. Owner review; no merge, deploy or flag changes.
+
+## Next Player Experience: Easy Practice (2026-11-04)
+- Added server-validated Easy Practice (`practice-easy-v1`) with a simpler first-legal-card policy, banked energy, plain defensive bodies, no abilities and no counter targeting. Same deck, costs, placement checks and rules.
+- Evidence: 12 identical-deck Easy vs Medium games -> Easy 0 / Medium 12, all replay-identical; a simple novice policy beat Easy 8/8 and Medium 0/8. Real client: entry/lobby/result show Easy and Battle Again keeps `difficulty: "easy"`. 78 focused tests, typecheck, scoped lint and build pass.
+- Next: Slice 3 tutorial progress and gated battles. See `.fast-build/NEXT-PASS-STATE.md`.

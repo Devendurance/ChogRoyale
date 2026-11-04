@@ -147,28 +147,35 @@ describe("V2.1c practice rooms", () => {
     await r.leave();
   });
 
-  it("creates Hard and Ultimate rooms with distinct identities simultaneously", async () => {
+  it("creates Easy, Hard and Ultimate rooms with distinct identities simultaneously", async () => {
     const rh = await client("tok-alice").create(BATTLE_PRACTICE_ROOM, { difficulty: "hard" satisfies PracticeDifficulty });
     const sh = watch(rh);
     const ru = await client("tok-bob").create(BATTLE_PRACTICE_ROOM, { difficulty: "ultimate" satisfies PracticeDifficulty });
     const su = watch(ru);
-    await until(() => !!sh.lobby && !!su.lobby);
+    const re = await client("tok-carol").create(BATTLE_PRACTICE_ROOM, { difficulty: "easy" satisfies PracticeDifficulty });
+    const se = watch(re);
+    await until(() => !!sh.lobby && !!su.lobby && !!se.lobby);
     expect(sh.lobby!.practice?.opponent.botId).toBe("practice-hard-v1");
     expect(su.lobby!.practice?.opponent.botId).toBe("practice-ultimate-v1");
+    expect(se.lobby!.practice?.opponent.botId).toBe("practice-easy-v1");
     expect(sh.lobby!.practice?.opponent.difficulty).toBe("hard");
     expect(su.lobby!.practice?.opponent.difficulty).toBe("ultimate");
+    expect(se.lobby!.practice?.opponent.difficulty).toBe("easy");
     rh.send("ready", ready());
     ru.send("ready", ready("control"));
-    await until(() => !!sh.start && !!su.start);
+    re.send("ready", ready("swarm"));
+    await until(() => !!sh.start && !!su.start && !!se.start);
     expect(sh.start!.practiceOpponent?.botId).toBe("practice-hard-v1");
     expect(su.start!.practiceOpponent?.botId).toBe("practice-ultimate-v1");
-    await until(() => sh.frames.length > 3 && su.frames.length > 3);
+    expect(se.start!.practiceOpponent?.botId).toBe("practice-easy-v1");
+    await until(() => sh.frames.length > 3 && su.frames.length > 3 && se.frames.length > 3);
     await rh.leave();
     await ru.leave();
+    await re.leave();
   });
 
   it("rejects unsupported difficulties server-side", async () => {
-    await expect(client("tok-carol").create(BATTLE_PRACTICE_ROOM, { difficulty: "easy" })).rejects.toThrow(/Unsupported practice difficulty/);
+    await expect(client("tok-carol").create(BATTLE_PRACTICE_ROOM, { difficulty: "beginner" })).rejects.toThrow(/Unsupported practice difficulty/);
     await expect(client("tok-carol").create(BATTLE_PRACTICE_ROOM, { difficulty: "HARD" })).rejects.toThrow(/Unsupported practice difficulty/);
   });
 

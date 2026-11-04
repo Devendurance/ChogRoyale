@@ -1,13 +1,14 @@
-// V2.1c three-difficulty Practice verification.
-// Medium stays the V2.1a baseline; Hard/Ultimate are real deterministic
-// policies over authoritative state with identical legal rules.
-// No DB writes, no settlement, no network auth (room-level coverage lives
-// in practice-room-difficulties.test.ts with injected deps).
+// V2.1c four-difficulty Practice verification.
+// Easy is the forgiving first-match opponent; Medium stays the V2.1a baseline;
+// Hard/Ultimate are real deterministic policies over authoritative state with
+// identical legal rules. No DB writes, no settlement, no network auth
+// (room-level coverage lives in practice-room-difficulties.test.ts with
+// injected deps).
 
 import { describe, expect, it } from "vitest";
 import { BATTLE_PRACTICE_ROOM, BATTLE_ROOM, PRACTICE_DIFFICULTIES, type PracticeDifficulty } from "@/lib/battle-protocol";
 import { initMatch, stepMatch, type CombatCommand, type PlayerIndex } from "@/lib/combat";
-import { scenarioConfig, deckWith, riftSchedule } from "@/lib/arena-scenarios";
+import { scenarioConfig, deckWith, riftSchedule, botMove } from "@/lib/arena-scenarios";
 import { mirrorCommand, mirrorSchedule, runMatchup } from "@/lib/building-matchup";
 import { smartMove } from "@/lib/smart-bot";
 import { BattleSession, type TrustedLoadout } from "@/server/battle/session";
@@ -17,6 +18,7 @@ import {
   PRACTICE_BOT_IDS,
   PRACTICE_OPPONENT,
   botSeatFor,
+  easyPolicy,
   hardPolicy,
   mediumPolicy,
   policyFor,
@@ -100,14 +102,15 @@ describe("V2.1c practice difficulties", () => {
   it("defaults to Medium and validates server-side", () => {
     expect(resolvePracticeDifficulty(undefined)).toBe("medium");
     expect(resolvePracticeDifficulty(null)).toBe("medium");
+    expect(resolvePracticeDifficulty("easy")).toBe("easy");
     expect(resolvePracticeDifficulty("medium")).toBe("medium");
     expect(resolvePracticeDifficulty("hard")).toBe("hard");
     expect(resolvePracticeDifficulty("ultimate")).toBe("ultimate");
-    for (const bad of ["easy", "HARD", "MEDIUM", "", 123, {}, []]) {
+    for (const bad of ["beginner", "HARD", "MEDIUM", "", 123, {}, []]) {
       expect(() => resolvePracticeDifficulty(bad)).toThrow("Unsupported practice difficulty");
     }
-    expect(() => policyFor("easy" as PracticeDifficulty)).toThrow("Unknown practice difficulty");
-    expect(PRACTICE_DIFFICULTIES).toEqual(["medium", "hard", "ultimate"]);
+    expect(() => policyFor("beginner" as PracticeDifficulty)).toThrow("Unknown practice difficulty");
+    expect(PRACTICE_DIFFICULTIES).toEqual(["medium", "hard", "ultimate", "easy"]);
   });
 
   it("keeps Medium as the V2.1a compatibility baseline", () => {
@@ -119,7 +122,7 @@ describe("V2.1c practice difficulties", () => {
   });
 
   it("exposes stable distinct identities per difficulty, never a human", () => {
-    expect(PRACTICE_BOT_IDS).toEqual({ medium: "practice-medium-v1", hard: "practice-hard-v1", ultimate: "practice-ultimate-v1" });
+    expect(PRACTICE_BOT_IDS).toEqual({ easy: "practice-easy-v1", medium: "practice-medium-v1", hard: "practice-hard-v1", ultimate: "practice-ultimate-v1" });
     for (const d of PRACTICE_DIFFICULTIES) {
       const opp = practiceOpponentFor(d);
       expect(opp.kind).toBe("bot");
@@ -128,7 +131,7 @@ describe("V2.1c practice difficulties", () => {
       expect(practiceBotPlayerId(d)).toBe(`bot:${PRACTICE_BOT_IDS[d]}`);
       expect(practiceBotPlayerId(d).startsWith("bot:")).toBe(true);
     }
-    expect(new Set(PRACTICE_DIFFICULTIES.map(practiceBotPlayerId)).size).toBe(3);
+    expect(new Set(PRACTICE_DIFFICULTIES.map(practiceBotPlayerId)).size).toBe(4);
   });
 
   it("human PvP room constants are unchanged", () => {
@@ -138,6 +141,19 @@ describe("V2.1c practice difficulties", () => {
 
   it("Hard makes legal accepted commands with no free energy or hidden cards", () => {
     const { s, ticks, rejected, botCards, deck } = playGame(hardPolicy, "21", "hard-lawful");
+    expect(s.phase).toBe("finished");
+    expect(ticks).toBeGreaterThan(10);
+    for (const c of botCards) expect(deck.has(c)).toBe(true);
+    const bad = rejected.filter((e) => {
+      const r = (e as { reason?: string }).reason ?? "";
+      return r === "Insufficient energy" || r === "Unknown card";
+    });
+    expect(bad).toHaveLength(0);
+    expect(s.replay?.replayIdentical).toBe(true);
+  });
+
+  it("Easy makes legal accepted commands with the same deck and rules", () => {
+    const { s, ticks, rejected, botCards, deck } = playGame(easyPolicy, "23", "easy-lawful");
     expect(s.phase).toBe("finished");
     expect(ticks).toBeGreaterThan(10);
     for (const c of botCards) expect(deck.has(c)).toBe(true);
@@ -162,12 +178,13 @@ describe("V2.1c practice difficulties", () => {
     expect(s.replay?.replayIdentical).toBe(true);
   });
 
-  it("Hard and Ultimate differ meaningfully from Medium on identical states", () => {
+  it("Easy, Hard and Ultimate differ meaningfully from Medium on identical states", () => {
     const decks: Array<[string[], string[]]> = [
       [deckWith("choglings", "rift_sprites", "rift_snare", "rift_runner", "chaos_archer", "chog_guardian", "sparkcaster"), practiceBotDeck()],
       [practiceBotDeck(), deckWith("rift_sentry", "gale_netter", "sparkcaster", "rift_snare", "chaos_comet", "chog_guardian", "hexwing")],
     ];
     let samples = 0;
+    let easyDiff = 0;
     let hardDiff = 0;
     let ultDiff = 0;
     const chaosFor = (round: number) => (round % 2 === 0 ? null : riftSchedule(`v21c-chaos-${round}`));
@@ -189,9 +206,11 @@ describe("V2.1c practice difficulties", () => {
           if (state.tick % 40 !== 0 || state.tick < 120) continue;
           for (const p of [0, 1] as PlayerIndex[]) {
             const m = mediumPolicy.choose(state, p, state.tick);
+            const e = easyPolicy.choose(state, p, state.tick);
             const h = hardPolicy.choose(state, p, state.tick);
             const u = ultimatePolicy.choose(state, p, state.tick);
             samples += 1;
+            if (JSON.stringify(e) !== JSON.stringify(m)) easyDiff += 1;
             if (JSON.stringify(h) !== JSON.stringify(m)) hardDiff += 1;
             if (JSON.stringify(u) !== JSON.stringify(h)) ultDiff += 1;
           }
@@ -199,6 +218,7 @@ describe("V2.1c practice difficulties", () => {
       }
     }
     expect(samples).toBeGreaterThan(20);
+    expect(easyDiff).toBeGreaterThan(0);
     expect(hardDiff).toBeGreaterThan(0);
     expect(ultDiff).toBeGreaterThan(0);
   });
@@ -233,6 +253,43 @@ describe("V2.1c practice difficulties", () => {
     }
   });
 
+  it("evaluation: Easy loses more often than Medium in identical-deck duels", { timeout: 240_000 }, () => {
+    const deck = { practice: practiceBotDeck() };
+    const seeds = ["e1", "e2", "e3", "e4", "e5", "e6"];
+    const easyAsP0 = runMatchup(deck, seeds, "none", [easyPolicy.choose, mediumPolicy.choose]);
+    const easyAsP1 = runMatchup(deck, seeds, "none", [mediumPolicy.choose, easyPolicy.choose]);
+    const rows = [...easyAsP0, ...easyAsP1];
+    const easyWins = easyAsP0.filter((r) => r.winner === 0).length + easyAsP1.filter((r) => r.winner === 1).length;
+    const mediumWins = easyAsP0.filter((r) => r.winner === 1).length + easyAsP1.filter((r) => r.winner === 0).length;
+    const draws = rows.filter((r) => r.winner === null).length;
+    console.log(`Practice Easy vs Medium duel: ${JSON.stringify({ games: rows.length, easyWins, mediumWins, draws })}`);
+    expect(rows).toHaveLength(12);
+    for (const r of rows) {
+      expect(r.replayIdentical).toBe(true);
+      expect(r.ticks).toBeGreaterThan(100);
+    }
+    expect(mediumWins).toBeGreaterThanOrEqual(10);
+    expect(easyWins).toBeLessThanOrEqual(2);
+  });
+
+  it("evaluation: a simple novice policy wins more against Easy than Medium", { timeout: 240_000 }, () => {
+    const deck = { practice: practiceBotDeck() };
+    const seeds = ["n1", "n2", "n3", "n4"];
+    const noviceEasyP0 = runMatchup(deck, seeds, "none", [botMove, easyPolicy.choose]);
+    const easyP0Novice = runMatchup(deck, seeds, "none", [easyPolicy.choose, botMove]);
+    const noviceMediumP0 = runMatchup(deck, seeds, "none", [botMove, mediumPolicy.choose]);
+    const mediumP0Novice = runMatchup(deck, seeds, "none", [mediumPolicy.choose, botMove]);
+    const noviceWinsVsEasy = noviceEasyP0.filter((r) => r.winner === 0).length + easyP0Novice.filter((r) => r.winner === 1).length;
+    const noviceWinsVsMedium = noviceMediumP0.filter((r) => r.winner === 0).length + mediumP0Novice.filter((r) => r.winner === 1).length;
+    console.log(`Practice novice vs bots: ${JSON.stringify({ gamesPerBot: 8, noviceWinsVsEasy, noviceWinsVsMedium })}`);
+    for (const r of [...noviceEasyP0, ...easyP0Novice, ...noviceMediumP0, ...mediumP0Novice]) {
+      expect(r.replayIdentical).toBe(true);
+      expect(r.ticks).toBeGreaterThan(100);
+    }
+    expect(noviceWinsVsEasy).toBeGreaterThanOrEqual(6);
+    expect(noviceWinsVsEasy).toBeGreaterThan(noviceWinsVsMedium);
+  });
+
   it("evaluation: Medium vs Hard completes legally with observed results", { timeout: 240_000 }, () => {
     const decks = { turret: DECKS_V13.turret!, control: DECKS_V13.control! };
     const mh = runMatchup(decks, ["e1", "e2"], "none", [mediumPolicy.choose, hardPolicy.choose]);
@@ -261,6 +318,7 @@ describe("V2.1c practice difficulties", () => {
     }
     const ids = results.map((g) => g.s.replay?.players.map((p) => p.playerId).sort().join("+") ?? g.s.slots.map((p) => p?.playerId).sort().join("+"));
     expect(new Set(ids).size).toBe(4);
+    expect(policyFor("easy")).toBe(easyPolicy);
     expect(policyFor("hard")).toBe(hardPolicy);
     expect(policyFor("ultimate")).toBe(ultimatePolicy);
   });
@@ -273,6 +331,6 @@ describe("V2.1c practice difficulties", () => {
       expect(s.cardLevelsByPlayer).toEqual({});
       seen.push(d);
     }
-    expect(seen).toEqual(["medium", "hard", "ultimate"]);
+    expect(seen).toEqual(["medium", "hard", "ultimate", "easy"]);
   });
 });

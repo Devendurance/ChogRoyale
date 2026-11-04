@@ -3534,7 +3534,7 @@
 .app-play-practice-entry .app-play-battle-state { display: grid; gap: 4px; text-align: left; }
 .app-play-difficulty { display: grid; gap: 10px; width: 100%; margin: 0; padding: 0; border: 0; }
 .app-play-difficulty legend { padding: 0; color: #fff1c8; font: 400 22px/1 var(--font-game); letter-spacing: .01em; }
-.app-play-difficulty__options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.app-play-difficulty__options { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
 .app-play-difficulty__choice { position: relative; display: block; min-width: 0; cursor: pointer; }
 .app-play-difficulty__input { position: absolute; width: 1px; height: 1px; margin: -1px; opacity: 0; }
 .app-play-difficulty__card { display: grid; align-content: start; gap: 8px; min-height: 126px; padding: 14px 12px; border: 2px solid #735db9; border-radius: 14px; background: linear-gradient(160deg, #38258b, #211451); box-shadow: inset 0 2px #ffffff1e, 0 4px 0 #120b45aa; transition: border-color 120ms var(--app-ease-out), background-color 120ms var(--app-ease-out), transform 120ms var(--app-ease-out), box-shadow 120ms var(--app-ease-out); }
@@ -3557,6 +3557,7 @@
 @media (max-width: 800px) {
   .app-play-modes { grid-template-columns: 1fr; }
   .app-play-card { min-height: 0; }
+  .app-play-difficulty__options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 520px) {
@@ -3569,9 +3570,9 @@
   .app-play-battle-actions { align-items: flex-start; }
   .app-play-code { min-width: 0; }
   .app-play-code input { width: 100%; }
-  .app-play-difficulty__options { grid-template-columns: 1fr; }
-  .app-play-difficulty__card { min-height: 0; grid-template-columns: 1fr auto; align-items: center; }
-  .app-play-difficulty__description { grid-column: 1 / -1; }
+  .app-play-difficulty__options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .app-play-difficulty__card { min-height: 0; }
+  .app-play-difficulty__description { grid-column: auto; }
 }
 
 @media (prefers-reduced-motion: reduce) {

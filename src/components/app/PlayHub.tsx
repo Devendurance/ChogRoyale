@@ -112,7 +112,7 @@ export function PlayHubView({ player, onSignOut }: { player: LobbyPlayer | null;
                 <p className="app-play-card__eyebrow">TRAIN AGAINST AI</p>
                 <h2>{PRACTICE_ENTRY.label}</h2>
                 <p>Train your strategy against a real AI-controlled Chog opponent. Build your deck, deploy troops, and sharpen your skills without affecting competitive progression.</p>
-                <span className="app-play-card__detail">AI Opponent · Medium difficulty · Solo battle · No rewards</span>
+                <span className="app-play-card__detail">AI Opponent · Easy to Ultimate · Solo battle · No rewards</span>
                 <Link href={PLAYER_BATTLE_HREFS.practice} className="app-btn app-btn--battle">{PRACTICE_ENTRY.action}</Link>
               </div>
               <span className="app-play-card__status app-play-card__status--live">Available</span>

@@ -45,6 +45,8 @@ describe("battle entry mode boundaries", () => {
     expect(html).toContain('name="practice-difficulty"');
     expect(html).toMatch(/<input[^>]*checked=""[^>]*value="medium"/);
     expect(html).toContain("Choose AI difficulty");
+    expect(html).toContain('value="easy"');
+    expect(html).toContain("Learn at your pace");
     for (const option of PRACTICE_DIFFICULTY_OPTIONS) {
       expect(html).toContain(`value="${option.value}"`);
       expect(html).toContain(option.label);
@@ -56,6 +58,15 @@ describe("battle entry mode boundaries", () => {
     expect(html).not.toContain("Create Private Room");
     expect(html).not.toContain("Join with Code");
     expect(html).not.toContain("Ranked queue");
+  });
+
+  it("keeps Easy selected when the caller supplies it", () => {
+    const html = renderToStaticMarkup(React.createElement(BattleEntry, { mode: "practice", code: "", error: null,
+      practiceDifficulty: "easy", onCodeChange: () => {}, onFind: () => {}, onCreate: () => {}, onJoin: () => {}, onStartPractice: () => {} }));
+    expect(html).toMatch(/<input[^>]*checked=""[^>]*value="easy"/);
+    expect(html).toContain('data-difficulty="easy" data-selected="true"');
+    expect(html).toContain("Easy difficulty");
+    expect(html).not.toMatch(/<input[^>]*checked=""[^>]*value="medium"/);
   });
 
   it("renders a supplied practice difficulty as the selected card", () => {

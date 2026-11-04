@@ -335,7 +335,7 @@ export class PracticeRoom extends Room {
         const humanSeat = this.session.seatOfSlot[0]!;
         const botSeat = botSeatFor(humanSeat);
         const policy = policyFor(this.difficulty);
-        // Ultimate also times commander abilities; Medium/Hard hold them.
+        // Ultimate also times commander abilities; Easy, Medium and Hard hold them.
         const abilityId = policy.ability?.(state, botSeat);
         if (abilityId) {
           this.botCid += 1;
