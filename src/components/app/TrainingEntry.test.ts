@@ -53,6 +53,19 @@ describe("Training Camp presentation", () => {
     expect(html).toContain("1/3");
     expect(html).toContain("Progress saved");
     expect(html).toContain("Back to Training Camp");
+    expect(html).toContain("Well fought, Chog!");
+  });
+
+  it("holds the Captain's story line until the server confirms the stage", () => {
+    const pending = renderToStaticMarkup(createElement(TrainingCoach, { tutorial: { ...inProgress, stage: 2, completedStages: 1, towerLanes: ["left"] }, onExit: () => undefined }));
+    expect(pending).not.toContain("taken enemy territory");
+    const confirmed = renderToStaticMarkup(createElement(TrainingCoach, { tutorial: { ...inProgress, stage: 2, completed: true, completedStages: 2 }, onExit: () => undefined }));
+    expect(confirmed).toContain("taken enemy territory");
+    const graduated = renderToStaticMarkup(createElement(TrainingCoach, { tutorial: { ...inProgress, stage: 3, completed: true, completedStages: 3, graduated: true }, onExit: () => undefined }));
+    expect(graduated).toContain("Your kingdom awaits!");
+    const replay = renderToStaticMarkup(createElement(TrainingCoach, { tutorial: { ...inProgress, completed: true, replay: true, completedStages: 3, graduated: true }, onExit: () => undefined }));
+    expect(replay).not.toContain("Well fought");
+    expect(replay).not.toContain("Your kingdom awaits");
   });
 
   it("switches Battle 2 from tower attack to the new-ground instruction", () => {

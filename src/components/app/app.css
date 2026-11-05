@@ -7802,6 +7802,14 @@
   background: linear-gradient(135deg, rgba(255, 200, 61, 0.14), rgba(18, 11, 69, 0.36));
 }
 
+.app-training-stage--current {
+  box-shadow: 0 0 0 2px rgba(255, 200, 61, 0.28), 0 0 24px rgba(255, 163, 24, 0.24);
+}
+
+.app-training-stage[data-stage-action="locked"] {
+  opacity: 0.68;
+}
+
 .app-training-stage--complete {
   border-color: rgba(61, 217, 255, 0.5);
 }

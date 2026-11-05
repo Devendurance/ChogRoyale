@@ -3,9 +3,12 @@
 import { battleInvitePath, validRoomCode } from "@/lib/battle-invite";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { BattlePanel } from "@/app/dev/battle/BattlePanel";
+import { BattlePanel, readResume } from "@/app/dev/battle/BattlePanel";
 import { RANKED_PUBLIC_MATCHMAKING_ENABLED } from "@/lib/ranked";
 import { useMyOnboardingState, useOnboardingRedirect } from "@/components/app/use-onboarding-redirect";
+import { useTutorialAccess } from "@/components/app/use-tutorial-access";
+import { TUTORIAL_CAMP_PATH, tutorialProgressLabel } from "@/lib/tutorial-camp";
+import { tutorialLocksBattleModes } from "./play-hub-model";
 import { resolvePlayerBattleMode } from "./player-battle-route-model";
 
 export { resolvePlayerBattleMode } from "./player-battle-route-model";
@@ -16,6 +19,7 @@ export default function PlayerBattleRoute() {
   const onboarding = useMyOnboardingState();
   const room = params.get("mode") === "private" ? validRoomCode(params.get("room")) : null;
   useOnboardingRedirect(onboarding, room ? battleInvitePath(room) : null);
+  const { read: tutorialRead } = useTutorialAccess(onboarding === "complete");
   const raw = params.get("mode");
   // The player route never mounts the battle session for ranked. This keeps a
   // hand-written URL from turning the existing ranked queue contract into a
@@ -43,5 +47,14 @@ export default function PlayerBattleRoute() {
     </section></div></main>;
   }
   const initialMode = resolvePlayerBattleMode(raw);
-  return <BattlePanel key={`${initialMode}:${params.get("room") ?? ""}`} publicMode initialMode={initialMode} initialRoom={room} invalidInvite={params.has("room") && !room} setupReady={onboarding === "complete"} />;
+  // The server refuses a gated join either way. This keeps the invitation from
+  // firing a doomed join, and a saved seat can still reconnect.
+  if (tutorialRead.state === "ready" && tutorialLocksBattleModes(tutorialRead.tutorial) && !readResume(initialMode)) {
+    return <main className="app-stage app-stage--gate"><div className="app-column app-column--gate"><section className="app-panel app-gate" data-testid="battle-training-required">
+      <h1 className="app-gate__title">Finish Training Camp first</h1>
+      <p className="app-gate__lead">{room ? "Graduate from Training Camp, then open this invitation again." : "Normal battles unlock when you graduate from Training Camp."} You&apos;re at {tutorialProgressLabel(tutorialRead.tutorial.completedStages)}.</p>
+      <Link href={TUTORIAL_CAMP_PATH} className="app-btn app-btn--battle">Continue Training</Link>
+    </section></div></main>;
+  }
+  return <BattlePanel key={`${initialMode}:${params.get("room") ?? ""}`} publicMode initialMode={initialMode} initialRoom={room} invalidInvite={params.has("room") && !room} setupReady={onboarding === "complete" && tutorialRead.state !== "loading"} />;
 }

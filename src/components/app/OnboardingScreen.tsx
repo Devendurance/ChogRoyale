@@ -18,6 +18,8 @@ import Icon from "./icons";
 import type { LobbyPlayer } from "./lobby-types";
 import { resolvePlayer, type ProfilePayload } from "./lobby-model";
 import { deriveStep, onboardErrorMessage, usernameHint, type OnboardingStep } from "./onboarding-model";
+import { useTutorialAccess } from "./use-tutorial-access";
+import { tutorialLandingPath } from "@/lib/tutorial-camp";
 
 interface AvatarChoice {
   id: string;
@@ -163,7 +165,7 @@ export default function OnboardingScreen() {
         setBusy(null);
       }
     },
-    [getAccessToken, readProfile]
+    [getAccessToken, readProfile, setNotice]
   );
 
   const syncWallets = useCallback(async () => {
@@ -196,13 +198,18 @@ export default function OnboardingScreen() {
     } finally {
       setBusy(null);
     }
-  }, [getAccessToken, readProfile]);
+  }, [getAccessToken, readProfile, setNotice]);
 
   const complete = profile?.onboarding.complete === true;
 
+  // The landing route comes from the server-owned tutorial read, never a guess.
+  const setupDone = phase === "ready" && complete;
+  const { read: tutorialRead, retry: retryTutorial } = useTutorialAccess(setupDone);
+  const landing = setupDone && tutorialRead.state === "ready" ? tutorialLandingPath(tutorialRead.tutorial, inviteReturn ?? "/app") : null;
+
   useEffect(() => {
-    if (phase === "ready" && complete) router.replace(inviteReturn ?? "/app");
-  }, [phase, complete, router, inviteReturn]);
+    if (landing) router.replace(landing);
+  }, [landing, router]);
 
   const player: LobbyPlayer | null = profile ? resolvePlayer(profile) : null;
   const verifiedWallets = Array.isArray(profile?.wallets) ? profile!.wallets.filter((w) => w.verifiedAt !== null) : [];
@@ -212,7 +219,24 @@ export default function OnboardingScreen() {
   const stepIndex = step === "username" ? 1 : step === "avatar" ? 2 : 3;
   const nameError = usernameHint(draftName);
 
-  if (!ready || phase === "booting" || phase === "working" || (phase === "ready" && complete)) {
+  if (ready && setupDone && (tutorialRead.state === "unavailable" || tutorialRead.state === "locked" || tutorialRead.state === "session")) {
+    return (
+      <main className="app-stage app-stage--gate">
+        <div className="app-column app-column--gate">
+          <div className="app-panel app-gate" data-testid="landing-recovery">
+            <h1 className="app-gate__title">Your profile is ready</h1>
+            <p className="app-gate__lead" role="alert">
+              {tutorialRead.state === "session" ? "Your session expired. Try again or sign back in." : "We couldn't check your Training Camp progress just now, so we're holding here instead of guessing."}
+            </p>
+            <button type="button" className="app-btn app-btn--battle" onClick={retryTutorial}>Try again</button>
+            <button type="button" className="app-btn app-btn--ghost" onClick={() => void logout()}>Sign out</button>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (!ready || phase === "booting" || phase === "working" || setupDone) {
     return (
       <main className="app-stage app-stage--gate">
         <div className="app-column app-column--gate">

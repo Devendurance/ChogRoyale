@@ -147,6 +147,24 @@ Private become non-navigable "Training required" actions and their cards say
 Locked. Gate-off, no-release, schema-unavailable, graduated and grandfathered
 states never lock a mode the server permits. Ranked stays independently closed.
 
+## First-player routing
+
+Only the authenticated tutorial read chooses a landing route, after setup is
+confirmed. Training-required at 0/3 opens the Battle 1 briefing, 1/3 and 2/3
+open the camp, and every other access keeps the normal destination, including a
+valid invite. `/app` applies the same rule, so a returning gated player resumes
+training. A failed read shows a retry and never guesses progress.
+
+During mandatory training the camp offers one lesson. Completed lessons are not
+actionable, later lessons stay locked and a direct stage URL returns to the camp
+without opening a room. Replays return at graduation. The Captain's camp and
+completion lines read server-confirmed progress only.
+
+`useOnboardingRedirect` allows one redirect per incomplete reading. Cache
+Components keeps left routes mounted, so a revealed route still holds its old
+snapshot, and redirecting on it loops with setup until the browser rejects the
+history calls.
+
 ## Release gates
 
 Enforcement is default-OFF through `TUTORIAL_ENFORCEMENT_ENABLED=0`. All three
