@@ -18,8 +18,12 @@ Three guided battles run on the real battle stack:
   reconnect path and WebGL cleanup. There is no second simulation.
 - The server owns the teaching deck and free Bulwark commander. The client's
   ready payload is ignored for cards, so a forged deck cannot change a lesson.
-- Replaying a completed stage is allowed, idempotent and never grants Gold,
-  Card XP, Account XP, trophies or a competitive result.
+- Replaying a completed stage is allowed by the room, idempotent and never
+  grants Gold, Card XP, Account XP, trophies or a competitive result. Blocking
+  replays until graduation is currently a frontend UX restriction. The tutorial
+  room doesn't enforce it, so a hand-crafted join can still replay a lesson.
+- Server-side stage order is authoritative. No client state can open a later
+  stage.
 - Each battle opens only after the previous one is verified. A direct room join
   before that is refused.
 
@@ -164,6 +168,12 @@ completion lines read server-confirmed progress only.
 Components keeps left routes mounted, so a revealed route still holds its old
 snapshot, and redirecting on it loops with setup until the browser rejects the
 history calls.
+
+Battle routes open a new session only on a successful read that allows it. A
+failed read shows a retry and an expired session shows a sign-in, because the
+server's admission check fails open during a tutorial outage. A saved seat can
+still reconnect through the room's resume check. That panel is resume-only, so
+it can't start a new room, queue or invitation join.
 
 ## Release gates
 
