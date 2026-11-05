@@ -55,9 +55,10 @@ existing Chaos Crossing art.
 
 ## Current slice
 
-All five product slices are implemented. The milestone now moves to a
-coordinated full-feature review, real-player acceptance and owner-approved
-release planning. Production activation remains owner-gated.
+All five product slices are implemented and the release-hardening blockers from
+the review are fixed. The milestone remains NO-GO until real-player acceptance,
+physical-device testing and owner visual approval are complete. Production
+activation remains owner-gated.
 
 ## Completed
 
@@ -267,8 +268,42 @@ release planning. Production activation remains owner-gated.
     acceptance and a physical phone remain owner-gated. No gameplay, reward,
     settlement, economy, tutorial, migration or flag path changed.
 
+- 2026-11-05, release hardening:
+  - `getTutorialAdmission` now catches an unavailable tutorial snapshot read,
+    logs the reason without secrets, and returns the existing permitted
+    `schema-unavailable` state. Normal `training-required`, graduated and
+    grandfathered decisions are unchanged. Gate-off still avoids the read.
+  - Active tutorial reconnects no longer require a fresh progress read. The
+    room reuses its authoritative tutorial state and verifies the rotated
+    resume token before assigning the live client. New tutorial joins still
+    read progress and enforce stage order. Rejected joins cannot replace the
+    active client.
+  - `settlement-room.test.ts` now keeps the test room open for 10s after end.
+    The previous 50ms close could drop end and settlement messages under load.
+    Ten seconds is still bounded below the production 30s BattleRoom close.
+  - `docs/training-camp.md` now documents the safe order: backup, migration
+    with the flag off, VPS deploy with the flag off, Vercel deploy with the
+    flag off, real-account smoke, boundary, coordinated flag flip, verification
+    and rollback.
+  - Files: `src/server/tutorial.ts`,
+    `src/server/tutorial-admission.test.ts`,
+    `src/server/battle/practice-room.ts`,
+    `src/server/battle/tutorial-room.test.ts`,
+    `src/server/battle/settlement-room.test.ts`,
+    `docs/training-camp.md`.
+  - Verification: admission 4/4, tutorial room 12/12, TEST DB 5/5,
+    settlement room 5/5, and a focused policy, practice, reconnect, arming and
+    settlement group 43/43. Match-start 13/13, typecheck, scoped ESLint and
+    production build pass.
+
 ## Verification
 
+- Hardening: `npx vitest run src/server/tutorial-admission.test.ts
+  src/server/battle/tutorial-room.test.ts` 16/16. The policy, admission,
+  practice room, reconnect, arming and settlement group passed 43/43. TEST DB
+  tutorial 5/5. `settlement-room.test.ts` 5/5 with the committed 10s test
+  close. `match-start.test.ts` 13/13 alone. Typecheck, scoped ESLint and
+  production build pass.
 - Slice 1: `npx vitest run src/components/app/DecksView.test.ts` 5/5,
   `npm run typecheck`, scoped ESLint, `npm run build`.
 - Slice 2: 78 focused tests across practice difficulty, room lifecycle,
@@ -307,18 +342,24 @@ release planning. Production activation remains owner-gated.
 
 ## Blockers
 
-- Production activation is owner-gated: apply migration 0029, insert the
-  release boundary, then enable `TUTORIAL_ENFORCEMENT_ENABLED` on the VPS
-  battle runtime and the Vercel environment in one window, per
-  `docs/training-camp.md`. Nothing here was applied or flipped.
+- Release remains NO-GO until authenticated real-player acceptance,
+  physical-device testing and owner visual approval are complete.
+- Production activation is owner-gated: follow the corrected sequence in
+  `docs/training-camp.md` and apply migration 0029, deploy both runtimes with
+  the flag off, insert the release boundary, then enable
+  `TUTORIAL_ENFORCEMENT_ENABLED` on both runtimes in one window. Nothing here
+  was applied or flipped.
+- The known `card-xp` draw-heal failure on the shared TEST branch is pre-existing
+  residue and not introduced by this milestone. It still needs an owner-approved
+  TEST cleanup before a fully green TEST database run.
 - Easy Practice rewards remain the existing no-reward policy. Any bounded
   starter reward is a separate product decision.
 
 ## Next action
 
-All five product slices are implemented and recorded. The next step is a
-coordinated full-feature review, real-player acceptance and owner-approved
-release planning. Production migration 0029, the release boundary,
+Run the owner real-player journey, physical-device checks and scenic-lobby
+visual approval. Then plan the owner-approved release using the corrected
+runbook. Production migration 0029, the release boundary,
 `TUTORIAL_ENFORCEMENT_ENABLED`, merge and deployment remain owner-gated.
 
 ## References

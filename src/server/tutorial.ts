@@ -120,8 +120,27 @@ export interface TutorialAdmission {
 /** Admission check for new battle joins. Old matches are handled before this. */
 export async function getTutorialAdmission(playerId: string): Promise<TutorialAdmission> {
   if (!enforcementEnabled()) return { allowed: true, access: "gate-off" };
-  const snapshot = await getTutorialSnapshot(playerId);
-  return { allowed: snapshot.access === "graduated" || snapshot.access === "grandfathered" || snapshot.access === "gate-off" || snapshot.access === "no-release" || snapshot.access === "schema-unavailable", access: snapshot.access };
+  try {
+    const snapshot = await getTutorialSnapshot(playerId);
+    return {
+      allowed:
+        snapshot.access === "graduated" ||
+        snapshot.access === "grandfathered" ||
+        snapshot.access === "gate-off" ||
+        snapshot.access === "no-release" ||
+        snapshot.access === "schema-unavailable",
+      access: snapshot.access,
+    };
+  } catch (err) {
+    // A transient tutorial DB failure must not turn every new battle join into
+    // an outage. This is the same fail-open state used for a missing schema,
+    // and it applies only when the authoritative read itself is unavailable.
+    logger.error("tutorial admission read failed open", {
+      playerId,
+      reason: err instanceof Error ? err.message : String(err),
+    });
+    return { allowed: true, access: "schema-unavailable" };
+  }
 }
 
 export interface TutorialCompletionView {

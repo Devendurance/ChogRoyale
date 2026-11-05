@@ -40,11 +40,14 @@ const progressByPlayer = new Map<string, number>([
   ["tutorial-stage3", 2],
   ["tutorial-stage3-reconnect", 2],
   ["tutorial-stage3-abandon", 2],
+  ["tutorial-reconnect-db", 1],
 ]);
 let allowAdmission = true;
+let failProgress = false;
 const tutorial: TutorialDeps = {
   admission: async () => ({ allowed: allowAdmission, access: allowAdmission ? "gate-off" : "training-required" }),
   progress: async (playerId) => {
+    if (failProgress) throw new Error("tutorial progress unavailable");
     const stage = progressByPlayer.get(playerId) ?? 0;
     return { stage, completedStages: stage, graduated: stage >= 3, grandfathered: false, nextStage: stage < 3 ? ((stage + 1) as 1 | 2 | 3) : null, enforcement: false, access: "gate-off" };
   },
@@ -431,6 +434,86 @@ describe("Training Camp battle 1", () => {
     await until(() => seen.tutorial.some((message) => message.completed), 10_000);
     expect(completed.filter((entry) => entry.playerId === "tutorial-stage3-reconnect")).toEqual([{ playerId: "tutorial-stage3-reconnect", stage: 3 }]);
     await room.leave();
+  });
+
+  it("resumes an active tutorial room without a fresh progress read", { timeout: 60_000 }, async () => {
+    const room = await client("tutorial-reconnect-db").create(BATTLE_TUTORIAL_ROOM, { stage: 2 });
+    const seen = watch(room);
+    room.send("ready", TUTORIAL_READY);
+    await until(() => seen.starts.length > 0 && seen.frames.length > 0);
+    const roomId = room.roomId;
+    const resumeToken = seen.starts[0]!.resumeToken;
+    expect(seen.starts[0]!.tutorial).toMatchObject({ stage: 2, completedStages: 1 });
+
+    await room.leave(false);
+    await until(() => seen.closed);
+    failProgress = true;
+    try {
+      let back: Seen | null = null;
+      for (let attempt = 0; attempt < 100 && !back; attempt++) {
+        try {
+          back = watch(await client("tutorial-reconnect-db").joinById(roomId, { resume: resumeToken }));
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          if (!/locked|full|seat/i.test(message)) throw error;
+          await sleep(50);
+        }
+      }
+      if (!back) throw new Error("tutorial room stayed locked");
+      await until(() => back!.starts.length > 0);
+      expect(back.starts[0]!.resumed).toBe(true);
+      expect(back.starts[0]!.tutorial).toMatchObject({ stage: 2, completedStages: 1, towerLanes: [] });
+      await back.room.leave();
+    } finally {
+      failProgress = false;
+    }
+  });
+
+  it("rejects an invalid resume token without replacing the active tutorial client", { timeout: 60_000 }, async () => {
+    const room = await client("tutorial-invalid-resume").create(BATTLE_TUTORIAL_ROOM, { stage: 1 });
+    const seen = watch(room);
+    room.send("ready", TUTORIAL_READY);
+    await until(() => seen.starts.length > 0 && seen.frames.length > 0);
+    const roomId = room.roomId;
+    const resumeToken = seen.starts[0]!.resumeToken;
+
+    await room.leave(false);
+    await until(() => seen.closed);
+    failProgress = true;
+    try {
+      let rejected: Error | null = null;
+      for (let attempt = 0; attempt < 20 && !rejected; attempt++) {
+        try {
+          await client("tutorial-invalid-resume").joinById(roomId, { resume: "forged-token" });
+          throw new Error("forged resume was accepted");
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          if (/locked|full|seat/i.test(message)) {
+            await sleep(25);
+            continue;
+          }
+          rejected = error instanceof Error ? error : new Error(message);
+        }
+      }
+      expect(rejected?.message).toMatch(/Resume not authorized/);
+
+      let back: Seen | null = null;
+      for (let attempt = 0; attempt < 100 && !back; attempt++) {
+        try {
+          back = watch(await client("tutorial-invalid-resume").joinById(roomId, { resume: resumeToken }));
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          if (!/locked|full|seat/i.test(message)) throw error;
+          await sleep(50);
+        }
+      }
+      if (!back) throw new Error("tutorial room stayed locked");
+      await until(() => back!.starts.length > 0);
+      expect(back.starts[0]!.resumed).toBe(true);
+      await back.room.leave();
+    } finally {
+      failProgress = false;
+    }
   });
 
   it("never graduates a player who leaves before the ability", { timeout: 60_000 }, async () => {

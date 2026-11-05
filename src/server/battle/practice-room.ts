@@ -245,9 +245,23 @@ export class PracticeRoom extends Room {
       throw new ServerError(403, "Not the reserved player for this match");
     }
     const tutorial = PracticeRoom.deps.tutorial ?? productionTutorialDeps;
-    if (this.tutorialStage) {
+    const seated = this.session.slotOf(playerId) >= 0;
+    if (this.session.phase === "finished" || this.session.phase === "aborted") {
+      throw new ServerError(409, "Practice is over");
+    }
+    if (this.session.phase === "active") {
+      // A reconnect resumes only the already-seated human. The rotated resume
+      // token is verified before this client can become the room's live client.
+      if (!seated) throw new ServerError(409, "Practice already started");
+      this.resume(client, options?.resume);
+      this.humanClient = client;
+      return;
+    }
+    if (this.tutorialStage && !seated) {
       // Reading progress here is display data and the replay flag. Completion
       // is decided later from an accepted deployment, never from this read.
+      // A seated reconnect already holds the room's authoritative tutorial
+      // state, so it must not depend on a fresh database read.
       const snapshot = await tutorial.progress(playerId);
       this.tutorialCompletedStages = snapshot.completedStages;
       // Each battle opens only after the previous one is verified. A direct
@@ -256,20 +270,12 @@ export class PracticeRoom extends Room {
         throw new ServerError(403, `Complete Training Camp Battle ${this.tutorialStage - 1} first`);
       }
       this.tutorialReplay = snapshot.completedStages >= this.tutorialStage;
-    } else if (this.session.slotOf(playerId) < 0) {
+    } else if (!this.tutorialStage && !seated) {
       const admission = await tutorial.admission(playerId);
       if (!admission.allowed) throw new ServerError(403, "Finish Training Camp to unlock Practice");
     }
-    this.humanClient = client;
-    if (this.session.phase === "finished" || this.session.phase === "aborted") {
-      throw new ServerError(409, "Practice is over");
-    }
-    if (this.session.phase === "active") {
-      this.resume(client, options?.resume);
-      return;
-    }
     if (!this.tutorialStage) PracticeRoom.coordinator?.claimRoom(playerId, this.roomId);
-    if (this.session.slotOf(playerId) < 0) {
+    if (!seated) {
       try {
         this.session.join(client.auth);
       } catch (e) {
@@ -277,6 +283,7 @@ export class PracticeRoom extends Room {
         throw new ServerError(409, e instanceof Error ? e.message : "Cannot join");
       }
     }
+    this.humanClient = client;
     this.sendLobby(client);
   }
 

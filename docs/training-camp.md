@@ -156,46 +156,79 @@ readiness is not activation.
 
 Owner-only activation, after explicit approval and a coordinated window:
 
-1. Confirm the deployed web build contains this Training Camp code. The web
-   app and battle server are separate runtimes: Vercel serves `/app`, while the
-   Colyseus battle server runs on the VPS. A flag on one side does not change
-   the other.
-2. Apply migration 0029 to production. It is additive and safe to run before
-   the boundary exists.
-3. Insert the singleton `tutorial_release` boundary at the intended activation
-   instant with `grandfather_before` set to that instant, using the owner
-   helper. Every account created before the boundary becomes exempt.
-4. Set `TUTORIAL_ENFORCEMENT_ENABLED=1` on the VPS battle runtime and restart
-   it, because admission for `BattleRoom`, `QueueRoom` and `PracticeRoom` runs
-   there. Vercel reads the same flag only to render Play Hub locks, so deploy
-   that environment change in the same window.
-5. Verify in order: a pre-boundary account reads `grandfathered` and can enter
-   a normal mode; a brand-new account reads `training-required` and is denied
-   normal room admission; that new account can finish 1, 2 and 3 and then enter
-   a normal mode; a reconnect to an already-authorized match still succeeds.
-6. Keep Ranked closed on its own release flag regardless of training state.
+1. Obtain owner approval and prepare the rollback target. Record the current
+   Vercel production deployment, the current VPS release symlink, both health
+   endpoints, the live battle gates and the current git SHA.
+2. Create a production database backup or a Neon safety branch. Confirm the
+   current migration journal and that `tutorial_release` has no row.
+3. Apply additive migration 0029 to production while
+   `TUTORIAL_ENFORCEMENT_ENABLED=0`. Use `npm run db:migrate`, never
+   `drizzle-kit push`. Verify both tables, the constraints, the journal entry
+   and the still-empty release table.
+4. Stage and deploy the new VPS battle runtime with
+   `TUTORIAL_ENFORCEMENT_ENABLED=0` in that release's own `battle.env` and
+   `.env`. Keep the previous release directory and symlink. Restart the
+   systemd user unit and verify `/healthz` locally and publicly, room
+   registrations, the tunnel, the preserved battle gates and an unregistered
+   room rejection.
+5. Deploy the Vercel frontend from the same commit with
+   `TUTORIAL_ENFORCEMENT_ENABLED=0`. Verify `/app`, `/app/play`,
+   `/app/play/training` and `/app/profile`, the scenic asset and the absence of
+   training locks. The VPS and Vercel flags must both be present and off.
+6. With the new code on both runtimes and the flag off, test real account
+   progression and battle admission. Confirm Training Camp 0/3 loads, Battle 1
+   starts, completion saves, and Practice, Unranked and Private remain open.
+   Confirm the tutorial API reports the expected gate-off or preview state.
+7. Insert the singleton `tutorial_release` boundary at the intended activation
+   instant with `grandfather_before` equal to that instant, using the owner
+   helper. Verify exactly one row and the constraint. Do not insert it before
+   the migration or before the new code is deployed.
+8. Set `TUTORIAL_ENFORCEMENT_ENABLED=1` on the VPS battle runtime and in Vercel
+   Production in one coordinated window. Restart the VPS unit because
+   admission for `BattleRoom`, `QueueRoom`, `PracticeRoom` and
+   `battle_tutorial` runs there. Vercel reads the same flag to render Play Hub
+   locks, so the two sides must match.
+9. Verify grandfathered access, new-player locks, direct-route and direct-room
+   denial, tutorial stage order, graduation, reconnect to an authorized match,
+   Ranked closure and reward and settlement integrity. Use a pre-boundary
+   account and a genuinely new account.
+10. Monitor admission errors, tutorial API errors, VPS health, room joins and
+   reward ledgers. Keep the rollback target and the migration tables in place.
 
-Do not backfill completions, do not write a boundary before the migration
-exists, and do not leave the flag on with the boundary missing. The policy
-fails open for a missing schema or missing release on purpose, so a partial
-rollout cannot lock every player.
+Do not deploy the new frontend before migration 0029. The Training Camp would
+offer a lesson that cannot persist progress. Do not enable the flag before the
+VPS code is deployed. The frontend would lock modes while the old battle server
+still allows them. Do not backfill completions, do not write a boundary before
+the migration exists, and do not leave the flag on with the boundary missing.
+The policy fails open for a missing schema, a missing release or an unavailable
+tutorial read so a partial rollout cannot lock every player.
 
-Rollback: unset `TUTORIAL_ENFORCEMENT_ENABLED` on both runtimes and restart the
-battle server. Existing progress rows are untouched, and the release boundary
-can stay in place for a later retry.
+Rollback: set `TUTORIAL_ENFORCEMENT_ENABLED=0` on both runtimes and restart the
+battle server user unit. Keep the tutorial tables and the release boundary in
+place. Existing progress is untouched and a later retry can flip the flag back
+on. If the frontend is faulty, promote the previous Vercel deployment. If the
+VPS release is faulty, repoint `~/apps/chog-royale` to the previous release and
+restart the user unit. Verify health, the preserved gates and existing match
+and settlement flows after either rollback.
 
 ## Verification
 
 - `src/server/tutorial.test.ts`: gate-off, missing schema, missing release,
   graduated, explicit grandfather, boundary grandfather and denial.
+- `src/server/tutorial-admission.test.ts`: enforcement still denies a new
+  account, graduated and grandfathered accounts are allowed, gate-off does not
+  read the database, and an unavailable tutorial read fails open with
+  `schema-unavailable`.
 - `src/db/tutorial.test.ts`: stage order, idempotent duplicates, preserved
   timestamps, concurrent graduation without a double write, account isolation,
   graduation, release idempotency and grandfathering against the TEST branch.
 - `src/server/battle/tutorial-room.test.ts`: real sockets for Battle 1,
   Battle 2 and Battle 3, including a real tower destruction, an outside-pocket
   negative, an accepted pocket deploy, a rejected single-deploy skip, a real
-  commander deployment, a real active ability, stage-3 reconnect, an abandoned
-  attempt that never graduates, duplicate suppression and admission denial.
+  commander deployment, a real active ability, stage-3 reconnect, an active
+  reconnect with a failing progress dependency, invalid resume-token rejection,
+  an abandoned attempt that never graduates, duplicate suppression and
+  admission denial.
 - `src/server/battle/tutorial-pockets.test.ts`: both seat perspectives and
   the exact pocket geometry.
 - `src/components/app/TrainingEntry.test.ts`: stage-specific briefing, the
@@ -213,7 +246,9 @@ can stay in place for a later retry.
 ## Remaining
 
 - Real-device and real-Privy acceptance.
+- Owner visual approval for the scenic lobby before release.
 - Production activation of migration 0029, the release boundary and
   `TUTORIAL_ENFORCEMENT_ENABLED`, which stays owner-gated.
+- Release remains NO-GO until those acceptance gates are complete.
 - Any reward for Training Camp completion is a separate product decision and is
   deliberately absent.
