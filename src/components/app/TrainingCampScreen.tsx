@@ -4,12 +4,16 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import Icon from "@/components/app/icons";
+import { readTutorialProgress } from "@/components/app/use-tutorial-access";
 import {
   TUTORIAL_COACH_NAME,
   TUTORIAL_STAGES,
   TUTORIAL_TOTAL_STAGES,
   tutorialBattlePath,
+  tutorialCaptainCopy,
+  tutorialIsMandatory,
   tutorialProgressLabel,
+  tutorialStageAction,
   type TutorialProgressView,
 } from "@/lib/tutorial-camp";
 
@@ -21,7 +25,13 @@ type LoadState =
   | { state: "ready"; tutorial: TutorialProgressView };
 
 export default function TrainingCampScreen() {
-  const { ready, authenticated, getAccessToken } = usePrivy();
+  const { user } = usePrivy();
+  // Keyed by account, so one player's progress can't show under the next sign-in.
+  return <TrainingCamp key={user?.id ?? "signed-out"} />;
+}
+
+function TrainingCamp() {
+  const { ready, authenticated, getAccessToken, logout } = usePrivy();
   const [load, setLoad] = useState<LoadState>({ state: "loading" });
 
   const refresh = useCallback(async () => {
@@ -32,26 +42,7 @@ export default function TrainingCampScreen() {
         setLoad({ state: "session" });
         return;
       }
-      const response = await fetch("/api/players/me/tutorial", {
-        headers: { authorization: `Bearer ${token}` },
-        cache: "no-store",
-      });
-      const body = (await response.json().catch(() => null)) as
-        | { success?: boolean; data?: { tutorial?: TutorialProgressView }; error?: { message?: string } }
-        | null;
-      if (response.status === 401) {
-        setLoad({ state: "session" });
-        return;
-      }
-      if (response.status === 403) {
-        setLoad({ state: "locked", message: "Finish your player profile setup to open Training Camp." });
-        return;
-      }
-      if (!response.ok || !body?.success || !body.data?.tutorial) {
-        setLoad({ state: "unavailable", message: body?.error?.message ?? "Training Camp progress could not be loaded." });
-        return;
-      }
-      setLoad({ state: "ready", tutorial: body.data.tutorial });
+      setLoad(await readTutorialProgress(token));
     } catch {
       setLoad({ state: "unavailable", message: "Training Camp progress could not be loaded. Check your connection and try again." });
     }
@@ -105,28 +96,25 @@ export default function TrainingCampScreen() {
   const tutorial = load.tutorial;
   const percent = Math.round((Math.min(TUTORIAL_TOTAL_STAGES, tutorial.completedStages) / TUTORIAL_TOTAL_STAGES) * 100);
   const graduated = tutorial.completedStages >= TUTORIAL_TOTAL_STAGES;
-  const coachCopy = graduated
-    ? "Training Camp complete. You can replay any lesson, and the battle hall is open whenever the arena allows it."
-    : tutorial.access === "training-required"
-      ? tutorial.completedStages >= 2
-        ? "Battle 2 is complete. Battle 3 is ready now, and the other battle modes unlock after your graduation."
-        : tutorial.completedStages >= 1
-          ? "Battle 1 is complete. Battle 2 is ready now; finish all three lessons to unlock the other battle modes."
-          : "Complete Training Camp to unlock the other battle modes. Battle 1 is ready now."
-      : tutorial.access === "grandfathered"
-        ? "Your account already has full battle access. You can replay the lessons any time."
-        : tutorial.completedStages >= 2
-          ? "Battle 2 is complete. Battle 3 is ready now and closes out your training."
-          : tutorial.completedStages >= 1
-            ? "Battle 1 is complete. Battle 2 is ready now, then one final strategy lesson."
-            : "Three short battles teach the real controls. Battle 1 is ready now, and every lesson is checked by the server.";
+  const mandatory = tutorialIsMandatory(tutorial);
 
   return (
     <main className="app-stage">
       <div className="app-column app-training-camp">
         <div className="app-training-camp__back">
-          <Link href="/app/play" className="app-btn app-btn--ghost">Back to Battle Hall</Link>
-          <Link href="/app" className="app-btn app-btn--ghost">Back to Lobby</Link>
+          {mandatory ? (
+            <>
+              <Link href="/app/profile" className="app-btn app-btn--ghost">Profile</Link>
+              <Link href="/app/guide" className="app-btn app-btn--ghost">Play guide</Link>
+              <Link href="/app/settings" className="app-btn app-btn--ghost">Settings</Link>
+              <button type="button" className="app-btn app-btn--ghost" onClick={() => void logout()}>Sign out</button>
+            </>
+          ) : (
+            <>
+              <Link href="/app/play" className="app-btn app-btn--ghost">Back to Battle Hall</Link>
+              <Link href="/app" className="app-btn app-btn--ghost">Back to Lobby</Link>
+            </>
+          )}
         </div>
 
         <section className="app-panel app-training-camp__hero">
@@ -143,7 +131,7 @@ export default function TrainingCampScreen() {
         <section className="app-training-camp__coach" aria-live="polite">
           <div>
             <b>{TUTORIAL_COACH_NAME}</b>
-            <p>{coachCopy}</p>
+            <p data-testid="training-captain-line">{tutorialCaptainCopy(tutorial)}</p>
           </div>
         </section>
 
@@ -170,34 +158,30 @@ export default function TrainingCampScreen() {
 
         <ol className="app-training-camp__stages">
           {TUTORIAL_STAGES.map((stage) => {
-            const complete = tutorial.completedStages >= stage.stage;
-            const unlocked = stage.stage === 1 || tutorial.completedStages >= stage.stage - 1;
-            const current = tutorial.nextStage === stage.stage && stage.playable && unlocked;
-            const canPlay = stage.playable && unlocked;
+            const action = tutorialStageAction(tutorial, stage.stage);
+            const complete = action === "completed" || action === "replay";
+            const current = action === "play" && tutorial.nextStage === stage.stage;
             return (
-              <li key={stage.stage} className={`app-training-stage${complete ? " app-training-stage--complete" : current ? " app-training-stage--current" : ""}`}>
+              <li key={stage.stage} data-stage-action={action} aria-current={current ? "step" : undefined} className={`app-training-stage${complete ? " app-training-stage--complete" : current ? " app-training-stage--current" : ""}`}>
                 <span className="app-training-stage__num" aria-hidden="true">{complete ? "✓" : stage.stage}</span>
                 <div className="app-training-stage__body">
                   <h2>{stage.title}</h2>
                   <p>{stage.summary}</p>
                 </div>
                 <div className="app-training-stage__status">
-                  {canPlay ? (
-                    <>
-                      <span>{complete ? "Complete" : current ? "Ready" : "Available"}</span>
-                      <Link className="app-btn app-btn--battle" href={tutorialBattlePath(stage.stage)}>
-                        {complete ? `Replay Battle ${stage.stage}` : `Start Battle ${stage.stage}`}
-                      </Link>
-                    </>
-                  ) : stage.playable ? (
+                  {action === "completed" ? (
+                    <span>Completed</span>
+                  ) : action === "locked" ? (
                     <>
                       <span>Locked</span>
                       <span>Complete Battle {stage.stage - 1} first</span>
                     </>
                   ) : (
                     <>
-                      <span>Coming next</span>
-                      <span>Training update</span>
+                      <span>{complete ? "Complete" : current ? "Ready" : "Available"}</span>
+                      <Link className="app-btn app-btn--battle" href={tutorialBattlePath(stage.stage)}>
+                        {complete ? `Replay Battle ${stage.stage}` : `Start Battle ${stage.stage}`}
+                      </Link>
                     </>
                   )}
                 </div>
@@ -210,7 +194,7 @@ export default function TrainingCampScreen() {
           {tutorial.access === "grandfathered"
             ? "Your account keeps full battle access. You can replay the lessons any time."
             : tutorial.enforcement && tutorial.access === "training-required"
-              ? "Training Camp is in enforced rollout. All three lessons are available. Normal modes stay locked until you graduate, and each lesson is checked by the server."
+              ? "Lessons open one at a time. Replays and normal battle modes unlock when you graduate, and each lesson is checked by the server."
               : "All three lessons are available. Normal modes stay open while the camp is in preview. Tutorial battles never grant Gold, XP, trophies or a competitive result."}
         </p>
       </div>

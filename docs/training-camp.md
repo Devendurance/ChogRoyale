@@ -18,8 +18,12 @@ Three guided battles run on the real battle stack:
   reconnect path and WebGL cleanup. There is no second simulation.
 - The server owns the teaching deck and free Bulwark commander. The client's
   ready payload is ignored for cards, so a forged deck cannot change a lesson.
-- Replaying a completed stage is allowed, idempotent and never grants Gold,
-  Card XP, Account XP, trophies or a competitive result.
+- Replaying a completed stage is allowed by the room, idempotent and never
+  grants Gold, Card XP, Account XP, trophies or a competitive result. Blocking
+  replays until graduation is currently a frontend UX restriction. The tutorial
+  room doesn't enforce it, so a hand-crafted join can still replay a lesson.
+- Server-side stage order is authoritative. No client state can open a later
+  stage.
 - Each battle opens only after the previous one is verified. A direct room join
   before that is refused.
 
@@ -146,6 +150,30 @@ current progress gate and "Continue Training" action. Practice, Unranked and
 Private become non-navigable "Training required" actions and their cards say
 Locked. Gate-off, no-release, schema-unavailable, graduated and grandfathered
 states never lock a mode the server permits. Ranked stays independently closed.
+
+## First-player routing
+
+Only the authenticated tutorial read chooses a landing route, after setup is
+confirmed. Training-required at 0/3 opens the Battle 1 briefing, 1/3 and 2/3
+open the camp, and every other access keeps the normal destination, including a
+valid invite. `/app` applies the same rule, so a returning gated player resumes
+training. A failed read shows a retry and never guesses progress.
+
+During mandatory training the camp offers one lesson. Completed lessons are not
+actionable, later lessons stay locked and a direct stage URL returns to the camp
+without opening a room. Replays return at graduation. The Captain's camp and
+completion lines read server-confirmed progress only.
+
+`useOnboardingRedirect` allows one redirect per incomplete reading. Cache
+Components keeps left routes mounted, so a revealed route still holds its old
+snapshot, and redirecting on it loops with setup until the browser rejects the
+history calls.
+
+Battle routes open a new session only on a successful read that allows it. A
+failed read shows a retry and an expired session shows a sign-in, because the
+server's admission check fails open during a tutorial outage. A saved seat can
+still reconnect through the room's resume check. That panel is resume-only, so
+it can't start a new room, queue or invitation join.
 
 ## Release gates
 

@@ -4,7 +4,7 @@
 // Phaser view. Gated to development unless explicitly enabled.
 
 import { hasMatchingInviteResume, roomJoinError, validRoomCode } from "@/lib/battle-invite";
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { usePrivy, useLogin } from "@privy-io/react-auth";
 import { Client, type Room } from "@colyseus/sdk";
@@ -276,6 +276,7 @@ export function BattlePanel({
   invalidInvite = false,
   setupReady = true,
   tutorialStage,
+  resumeOnlyFallback,
 }: {
   /** Public app routes reuse this panel without the development diagnostics. */
   publicMode?: boolean;
@@ -287,7 +288,11 @@ export function BattlePanel({
   /** Present only on the Training Camp battle route. The server still owns
    * stage validation, progress and completion. */
   tutorialStage?: TutorialStage;
+  /** Set when the route can only reconnect a saved seat. It replaces the idle
+   * entry, and no new room, queue or invitation join can start. */
+  resumeOnlyFallback?: ReactNode;
 }) {
+  const resumeOnly = resumeOnlyFallback !== undefined;
   const router = useRouter();
   const { ready, authenticated, getAccessToken, logout } = usePrivy();
   const { login } = useLogin();
@@ -1007,6 +1012,7 @@ export function BattlePanel({
   const connecting = useRef(false);
   const connect = useCallback(
     async (mode: "create" | "join" | "practice", inviteCode?: string, requestedPracticeDifficulty?: PracticeDifficulty) => {
+      if (resumeOnly) return;
       const joinCode = inviteCode ?? code;
       if (mode === "join" && !validRoomCode(joinCode)) {
         setError("Enter the complete 9-character room code. Codes are case-sensitive.");
@@ -1054,12 +1060,12 @@ export function BattlePanel({
         connecting.current = false;
       }
     },
-    [appAudioController, attachRoom, clearAccountXpState, clearBotCardXpState, clearBotGoldState, code, getAccessToken, tutorialStage]
+    [appAudioController, attachRoom, clearAccountXpState, clearBotCardXpState, clearBotGoldState, code, getAccessToken, resumeOnly, tutorialStage]
   );
 
   const inviteTried = useRef(false);
   useEffect(() => {
-    if (!publicMode || !initialRoom || !setupReady || !ready || !authenticated || stage !== "idle" || inviteTried.current) return;
+    if (!publicMode || resumeOnly || !initialRoom || !setupReady || !ready || !authenticated || stage !== "idle" || inviteTried.current) return;
     const stored = readResume(initialMode);
     if (stored && hasMatchingInviteResume(initialRoom, stored)) return;
     // Mark inside the task so Strict Mode's cancelled first effect doesn't consume it.
@@ -1069,13 +1075,14 @@ export function BattlePanel({
       void connect("join", initialRoom);
     }, 0);
     return () => clearTimeout(timer);
-  }, [publicMode, initialMode, initialRoom, setupReady, ready, authenticated, stage, connect]);
+  }, [publicMode, resumeOnly, initialMode, initialRoom, setupReady, ready, authenticated, stage, connect]);
 
   /** Join one queue. The room name is the server-side mode authority: the
    * ranked room only ever pairs ranked tickets, and the client label below
    * never decides settlement. Ranked stays hub-gated until trophies land. */
   const queueJoining = useRef(false);
   const findMatch = useCallback(async (queue: "unranked" | "ranked" = "unranked") => {
+    if (resumeOnly) return;
     // One join at a time: a second ticket for this player is refused outright.
     if (queueJoining.current) return;
     queueJoining.current = true;
@@ -1170,7 +1177,7 @@ export function BattlePanel({
     } finally {
       queueJoining.current = false;
     }
-  }, [getAccessToken, attachRoom, appAudioController, clearAccountXpState, clearBotCardXpState, clearBotGoldState]);
+  }, [resumeOnly, getAccessToken, attachRoom, appAudioController, clearAccountXpState, clearBotCardXpState, clearBotGoldState]);
 
   const cancelSearch = useCallback(() => {
     queueGen.current += 1;
@@ -1492,7 +1499,7 @@ export function BattlePanel({
       </div>}
 
       {publicMode && stage === "idle" && (
-        tutorialStage ? (
+        resumeOnly ? resumeOnlyFallback : tutorialStage ? (
           <TrainingEntry stage={tutorialStage} error={error} setupReady={setupReady}
             onStart={() => { unlockAudio(); void connect("practice"); }} />
         ) : (

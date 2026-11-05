@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  TUTORIAL_CAPTAIN_LINES,
   TUTORIAL_COACH_NAME,
   TUTORIAL_OBJECTIVE_LABELS,
   tutorialProgressLabel,
@@ -61,13 +62,10 @@ export default function TrainingCoach({
                     : "Lesson complete"}
           </h2>
           <p id="chud-training-done-copy">
-            {graduated
-              ? "Deployment, tower pressure, commander timing and Chaos awareness. The Captain has nothing left to teach, so the battle hall is yours. Practice, Unranked and Private rooms are open the moment the arena allows them."
-              : tutorial.stage === 1
-                ? "Your first troop reached the field. You have completed the first Training Camp battle."
-                : tutorial.stage === 2
-                  ? "Your troops destroyed an enemy tower and you deployed into the new pocket. Battle 2 of 3 is complete."
-                  : "The Training Captain confirmed your lesson with a real battle event."}
+            {tutorial.replay
+              ? "The Training Captain confirmed your lesson with a real battle event."
+              : <><b>{TUTORIAL_COACH_NAME}:</b> {TUTORIAL_CAPTAIN_LINES[tutorial.stage]}</>}
+            {graduated && !tutorial.replay && " Practice, Unranked and Private rooms are open the moment the arena allows them."}
           </p>
           <div className="chud-training-done__progress">
             <span>{tutorialProgressLabel(tutorial.completedStages)}</span>

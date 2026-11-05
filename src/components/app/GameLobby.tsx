@@ -9,11 +9,13 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePrivy, useLogin } from "@privy-io/react-auth";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import LobbyView from "./LobbyView";
 import { sessionNotice } from "./feedback-model";
 import { isPublicBattleAvailable } from "./battle-availability";
 import { useOnboardingRedirect } from "./use-onboarding-redirect";
+import { useTutorialAccess } from "./use-tutorial-access";
+import { tutorialLandingPath } from "@/lib/tutorial-camp";
 import { useLobbyCatalog } from "./catalog-context";
 import { accountXpLevelView, resolveAccountXp } from "./account-xp-model";
 import {
@@ -149,6 +151,7 @@ interface HomeSummaryReads {
 
 function LobbyShell() {
   const pathname = usePathname();
+  const router = useRouter();
   const catalog = useLobbyCatalog();
   const { ready, authenticated, getAccessToken, logout, user } = usePrivy();
   const { login } = useLogin();
@@ -166,6 +169,10 @@ function LobbyShell() {
    *  stale profile never leaks into a new sign-in. */
   const sessionKey = user?.id ?? null;
   const [loadedFor, setLoadedFor] = useState<string | null>(null);
+  /** The session whose reads finished during this visit to the lobby. The route
+   *  stays mounted while hidden, so an unfinished profile from before setup has
+   *  to be read again before the lobby may act on it. */
+  const [freshFor, setFreshFor] = useState<string | null>(null);
   /** Any newer refresh, account switch, or sign-out invalidates older reads. */
   const readGeneration = useRef(0);
   /** The bootstrap call is idempotent, but it still runs at most once a session. */
@@ -277,6 +284,7 @@ function LobbyShell() {
       if (isCurrent()) {
         setBusy(false);
         setLoadedFor(requestedSession);
+        setFreshFor(requestedSession);
       }
     }
   }, [getAccessToken, readAll, readHomeSummary, apply, sessionKey]);
@@ -292,7 +300,10 @@ function LobbyShell() {
     // The reads start on the next tick, so the effect body itself never sets
     // state and the first render of a new session stays on the loading gate.
     const timer = setTimeout(() => void load(), 0);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      setFreshFor(null);
+    };
   }, [ready, authenticated, pathname, load]);
 
   const player: LobbyPlayer | null = useMemo(() => (profile ? resolvePlayer(profile) : null), [profile]);
@@ -340,6 +351,23 @@ function LobbyShell() {
     };
   }, [currentHomeSummaryReads]);
 
+  const loaded =
+    authenticated &&
+    sessionKey !== null &&
+    loadedFor === sessionKey &&
+    (freshFor === sessionKey || profile?.onboarding.complete === true);
+  const setupComplete = loaded && profile?.onboarding.complete === true;
+
+  // Mandatory training replaces the lobby until graduation. A failed read keeps
+  // the lobby open with a retry, because it can't prove the player is gated.
+  const { read: tutorialRead, retry: retryTutorial } = useTutorialAccess(setupComplete);
+  const tutorialLanding = setupComplete && tutorialRead.state === "ready" ? tutorialLandingPath(tutorialRead.tutorial, "/app") : "/app";
+  const tutorialHold = setupComplete && (tutorialRead.state === "loading" || tutorialLanding !== "/app");
+
+  useEffect(() => {
+    if (pathname === "/app" && tutorialLanding !== "/app") router.replace(tutorialLanding);
+  }, [pathname, router, tutorialLanding]);
+
   const notices = useMemo(() => {
     const list: LobbyNotice[] = [];
     if (profileError) list.push(profileNotice(profileError));
@@ -357,6 +385,13 @@ function LobbyShell() {
     if (commandersError) {
       list.push({ tone: "warn", text: `Commander eligibility could not be read. ${commandersError.message}` });
     }
+    if (setupComplete && (tutorialRead.state === "unavailable" || tutorialRead.state === "locked")) {
+      list.push({
+        tone: "warn",
+        text: "Your Training Camp progress could not be checked right now.",
+        action: { label: "Try again", kind: "retry" },
+      });
+    }
     if (profile && !profile.onboarding.complete) {
       list.push({
         tone: "info",
@@ -365,9 +400,7 @@ function LobbyShell() {
       });
     }
     return list;
-  }, [profileError, loadoutError, loadout, deckResult.notice, commandersError, profile]);
-
-  const loaded = authenticated && sessionKey !== null && loadedFor === sessionKey;
+  }, [profileError, loadoutError, loadout, deckResult.notice, commandersError, profile, setupComplete, tutorialRead.state]);
 
   useOnboardingRedirect(!loaded ? "loading" : profile?.onboarding.complete === true ? "complete" : "incomplete");
 
@@ -403,7 +436,7 @@ function LobbyShell() {
     ? "booting"
     : !authenticated
       ? "login"
-      : !loaded
+      : !loaded || tutorialHold
         ? "booting"
         : profileError || !profile
           ? "profile"
@@ -442,6 +475,7 @@ function LobbyShell() {
     setCommanders(null);
     setCommandersError(null);
     setLoadedFor(null);
+    setFreshFor(null);
     setBusy(false);
     void logout();
   }, [logout]);
@@ -461,7 +495,10 @@ function LobbyShell() {
       status={status}
       onSignIn={onSignIn}
       onSignOut={onSignOut}
-      onRefresh={() => void load()}
+      onRefresh={() => {
+        retryTutorial();
+        void load();
+      }}
     />
   );
 }

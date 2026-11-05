@@ -140,6 +140,58 @@ export function tutorialNextStage(completedStages: number): TutorialStage | null
   return null;
 }
 
+/** True only while the server says this account must still graduate. */
+export function tutorialIsMandatory(tutorial: Pick<TutorialProgressView, "access" | "completedStages">): boolean {
+  return tutorial.access === "training-required" && tutorial.completedStages < TUTORIAL_TOTAL_STAGES;
+}
+
+/**
+ * Where an authenticated, fully set up player lands. Only the server-owned
+ * access decides: 0/3 goes straight to the Battle 1 briefing, 1/3 and 2/3 resume
+ * at the camp, and every other access keeps the caller's normal destination.
+ */
+export function tutorialLandingPath(tutorial: Pick<TutorialProgressView, "access" | "completedStages">, normalPath: string): string {
+  if (!tutorialIsMandatory(tutorial)) return normalPath;
+  return tutorial.completedStages < 1 ? tutorialBattlePath(1) : TUTORIAL_CAMP_PATH;
+}
+
+export type TutorialStageAction = "play" | "replay" | "completed" | "locked";
+
+/** What one camp row offers. Mandatory training has exactly one live lesson. */
+export function tutorialStageAction(tutorial: Pick<TutorialProgressView, "access" | "completedStages">, stage: TutorialStage): TutorialStageAction {
+  const complete = tutorial.completedStages >= stage;
+  if (tutorialIsMandatory(tutorial)) {
+    if (complete) return "completed";
+    return tutorial.completedStages === stage - 1 ? "play" : "locked";
+  }
+  if (complete) return "replay";
+  return tutorial.completedStages >= stage - 1 ? "play" : "locked";
+}
+
+/** A direct stage URL may only open what the camp row would offer. */
+export function tutorialStageRouteAllowed(tutorial: Pick<TutorialProgressView, "access" | "completedStages">, stage: TutorialStage): boolean {
+  const action = tutorialStageAction(tutorial, stage);
+  return action === "play" || action === "replay";
+}
+
+/** Captain dialogue. Callers pass only server-confirmed progress. */
+export const TUTORIAL_CAPTAIN_LINES: Record<TutorialStage, string> = {
+  1: "Well fought, Chog! You've learned how to deploy your troops. Now let's see what happens when you break through enemy defenses.",
+  2: "You've taken enemy territory! One final lesson remains. Time to lead your troops like a true commander.",
+  3: "Congratulations, Chog! You've mastered the basics of battle. Your kingdom awaits!",
+};
+
+/** The camp's Captain line. It reads only the server's confirmed stage count. */
+export function tutorialCaptainCopy(tutorial: Pick<TutorialProgressView, "access" | "completedStages">): string {
+  const completed = Math.min(TUTORIAL_TOTAL_STAGES, tutorial.completedStages);
+  if (isTutorialStage(completed) && (completed === TUTORIAL_TOTAL_STAGES || tutorial.access !== "grandfathered")) {
+    return TUTORIAL_CAPTAIN_LINES[completed];
+  }
+  if (tutorial.access === "grandfathered") return "Your account already has full battle access. You can replay the lessons any time.";
+  if (tutorial.access === "training-required") return "Complete Training Camp to unlock the other battle modes. Battle 1 is ready now.";
+  return "Three short battles teach the real controls. Battle 1 is ready now, and every lesson is checked by the server.";
+}
+
 export function tutorialProgressLabel(completedStages: number): string {
   return `${Math.max(0, Math.min(TUTORIAL_TOTAL_STAGES, completedStages))}/${TUTORIAL_TOTAL_STAGES}`;
 }
