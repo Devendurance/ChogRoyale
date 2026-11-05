@@ -300,3 +300,12 @@
 - Release activation for migration 0029 and `TUTORIAL_ENFORCEMENT_ENABLED` is documented but not applied; the flag stays OFF.
 - Evidence: tutorial sockets 10/10, DB 5/5 (including concurrent graduation), Training UI 9/9, Play Hub 3/3, battle-result 45/45, pocket 2/2, typecheck, scoped lint, build. Browser: `ChogRoyale-Assets/next-pass-20261104/visual/training-camp-3`.
 - Next: Slice 4, the post-tutorial navigation coach.
+
+## Next Player Experience: Meet Your Kingdom tour (2026-11-05)
+- Added the post-training tour in the shared /app layout. It covers the real Lobby, Battle Hall, Decks, Collection card, card progression, Commanders, Progress and Profile surfaces.
+- Server-gated to a 3/3 tutorial read. The invitation appears once on the lobby or Battle Hall, grandfathered accounts can start from Profile, and failed reads hide both actions. Progress is re-read after a battle, not on every tab change.
+- Next and Back push only the step route. Manual navigation pauses instead of pulling the player back. Skip dismisses, Finish completes, Escape pauses, and a saved step resumes once.
+- The card sheet drops its focus trap and aria-modal promise while the tour explains it through a shared external store. The upgrade lesson reads the real purchased level, earned XP, XP target, Gold and eligibility, and says tower upgrades do not exist.
+- Coach placement measures real targets, ignores hidden Cache Components routes, clamps for safe areas and the fixed nav, keeps 44px controls and honors reduced motion.
+- Evidence: 39 focused tests, typecheck, scoped ESLint, production build. Browser: ChogRoyale-Assets/next-pass-20261104/visual/navigation-coach. Live Privy acceptance remains owner-gated.
+- Next: Slice 5, scenic /app lobby atmosphere.

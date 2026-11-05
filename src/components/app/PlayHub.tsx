@@ -161,7 +161,7 @@ export function PlayHubView({ player, onSignOut, tutorial = null }: { player: Lo
               </div>
               <span className="app-play-card__status app-play-card__status--live">Guided</span>
             </article>
-            <article className="app-play-card app-play-card--practice">
+            <article className="app-play-card app-play-card--practice" data-tour="play-practice">
               <div className="app-play-card__icon app-play-card__icon--practice" aria-hidden="true"><Icon name="guide" size={28} /></div>
               <div className="app-play-card__body">
                 <p className="app-play-card__eyebrow">TRAIN AGAINST AI</p>

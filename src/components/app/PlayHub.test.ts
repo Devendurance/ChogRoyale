@@ -1,4 +1,7 @@
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { PlayHubView } from "./PlayHub";
 import { PLAYER_BATTLE_HREFS, PRACTICE_ENTRY, tutorialLocksBattleModes } from "./play-hub-model";
 import type { TutorialAccess, TutorialProgressView } from "@/lib/tutorial-camp";
 
@@ -31,5 +34,17 @@ describe("player battle hub practice entry", () => {
       expect(tutorialLocksBattleModes(tutorial(access))).toBe(false);
     }
     expect(tutorialLocksBattleModes(null)).toBe(false);
+  });
+
+  it("exposes the real Practice card as the tour target for a graduate", () => {
+    const html = renderToStaticMarkup(
+      createElement(PlayHubView, { player: null, onSignOut: () => undefined, tutorial: tutorial("graduated") }),
+    );
+    expect(html).toContain('data-tour="play-practice"');
+    expect(html).toContain("Practice Arena");
+    expect(html).toContain("Unranked");
+    expect(html).toContain("Ranked");
+    expect(html).toContain("Coming later");
+    expect(html).not.toContain("Training required");
   });
 });

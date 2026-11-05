@@ -47,15 +47,14 @@ existing Chaos Crossing art.
     lock states.
   - [x] 3C: Battle 3 (push, commander, active ability, real Chaos), graduation
     and release-ready eligibility. Production activation stays owner-gated.
-- [ ] Slice 4: Post-tutorial navigation coach using the real routes and
+- [x] Slice 4: Post-tutorial navigation coach using the real routes and
   features. Reopenable, skippable, mobile-safe.
 - [ ] Slice 5: Scenic `/app` lobby atmosphere from existing world art.
   Readable, responsive, reduced-motion and low-end safe.
 
 ## Current slice
 
-Slice 3C complete. Slice 3 is code-complete with release gates held. Slice 4 is
-next.
+Slice 4 complete. Slice 5 is next.
 
 ## Completed
 
@@ -186,6 +185,45 @@ next.
     fixture for progress. Live Privy acceptance and production activation
     remain owner-gated.
 
+- 2026-11-05, Slice 4:
+  - Added the "Meet Your Kingdom" tour in the shared `/app` layout. It covers
+    the Lobby, Battle Hall, Decks, Collection card, real card progression,
+    Commanders, Progress and Profile tabs through the real routes and controls.
+  - The automatic invitation is server-gated to a 3/3 account, appears once on
+    the lobby or Battle Hall after the branded opening, and is persisted per
+    account. Grandfathered accounts can start it from Profile but are never
+    auto-invited. Failed reads hide both the invitation and the replay action.
+  - The tour re-reads tutorial progress after a battle, so graduating in the
+    same session is noticed without a reload. Ordinary tab changes do not poll.
+  - Next and Back push only the step's real route. A manual tab change pauses
+    the tour instead of pulling the player back. Skip dismisses, Finish
+    completes, Escape pauses, and a resumed tab returns to its saved step once.
+  - The card detail step switches the real Decks screen to Collection, opens
+    the real card sheet and drops its focus trap and `aria-modal` promise while
+    the coach is explaining it. The shared tour-active store replaces the old
+    non-reactive DOM attribute read.
+  - The upgrade lesson reads the sheet's real server values (purchased level,
+    earned XP, XP target, Gold, eligibility status) and states that tower
+    upgrades do not exist yet. No fake tower control, price or level appears.
+  - Coach placement measures the real target, clamps inside the viewport and
+    above the fixed nav, respects safe-area insets, caps its width, scrolls
+    internally on short screens, keeps 44px controls and honors reduced
+    motion. Target lookups ignore hidden Cache Components routes.
+  - Files: `src/components/app/KingdomTour.tsx`,
+    `src/components/app/kingdom-tour-panels.tsx`,
+    `src/components/app/kingdom-tour-active.ts`, `src/lib/kingdom-tour.ts`,
+    `src/components/app/AppNav.tsx`, `src/components/app/AppOpening.tsx`,
+    `src/components/app/DecksView.tsx`, `src/components/app/ProfileView.tsx`,
+    `src/components/app/PlayHub.tsx`, `src/components/app/app.css`,
+    `src/app/app/layout.tsx`, focused tests and `docs/navigation-coach.md`.
+  - Verification: 39 focused tour, deck, hub, nav and Training Camp tests,
+    typecheck, scoped ESLint and production build. Browser evidence:
+    `ChogRoyale-Assets/next-pass-20261104/visual/navigation-coach`.
+  - Limits: the browser evidence is a presentation fixture over the real
+    panels and CSS, not a live Privy account. Live authenticated acceptance
+    and a real phone remain owner-gated. Tutorial enforcement, migration 0029
+    and every live flag are unchanged.
+
 ## Verification
 
 - Slice 1: `npx vitest run src/components/app/DecksView.test.ts` 5/5,
@@ -212,6 +250,11 @@ next.
   Browser evidence at `.../visual/training-camp-3` with 2/3 camp, Battle 3
   briefing, push coach, commander highlight, live Chaos with a ready ability,
   graduation, Battle Hall and the 3/3 camp.
+- Slice 4: 39 focused tests across the tour contract, shared store, panels,
+  AppNav targets, deck targets, Play Hub and Training Camp; typecheck; scoped
+  ESLint; production build. Browser evidence at
+  `.../visual/navigation-coach` across 320x568, 375x667, 390x844, 430x932,
+  768x1024 and 1366x768, including reduced motion.
 - Browser visual evidence is dev/production-equivalent fixture or injected-auth
   QA, not a live owner account. Live account acceptance remains owner-gated.
 
@@ -226,9 +269,9 @@ next.
 
 ## Next action
 
-Slice 4: the post-tutorial navigation coach on the real routes. Show it once
-after graduation, keep it reopenable and skippable, make it mobile-safe and
-respect reduced motion. Do not add rewards or change tutorial enforcement.
+Slice 5: the scenic `/app` lobby atmosphere from the existing Chaos Crossing
+world art. Keep it readable, responsive, reduced-motion and low-end safe. Do
+not add rewards, change tutorial enforcement or touch the battle world.
 
 ## References
 

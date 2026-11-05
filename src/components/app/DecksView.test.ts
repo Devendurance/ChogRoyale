@@ -133,3 +133,32 @@ describe("DecksView upgrade feedback", () => {
     expect(html).toContain('aria-modal="true"');
   });
 });
+
+describe("DecksView post-training tour targets", () => {
+  it("marks only the first visible collection card as the real card target", () => {
+    const deckTab = render({ tab: "deck" });
+    expect(deckTab).not.toContain('data-tour="collection-card"');
+
+    const collection = render({ tab: "collection" });
+    expect((collection.match(/data-tour="collection-card"/g) ?? []).length).toBe(1);
+  });
+
+  it("exposes the real progression values the tour sentence reads", () => {
+    const html = render({ selectedCardId: "chogling" });
+    expect(html).toContain('data-tour="card-progress"');
+    expect(html).toContain('data-state="ready"');
+    expect(html).toContain('data-level="3"');
+    expect(html).toContain('data-xp="450"');
+    expect(html).toContain('data-xp-target="400"');
+    expect(html).toContain('data-gold="150"');
+    expect(html).toContain("data-tour=\"card-detail-close\"");
+  });
+
+  it("never exposes a level or a Gold price while the server read is unavailable", () => {
+    const html = render({ selectedCardId: "chogling", progressionPhase: "unavailable", progression: {} });
+    expect(html).toContain('data-tour="card-progress"');
+    expect(html).toContain('data-state="unavailable"');
+    expect(html).toMatch(/data-level=""/);
+    expect(html).toMatch(/data-gold=""/);
+  });
+});

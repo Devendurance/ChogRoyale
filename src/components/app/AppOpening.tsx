@@ -65,6 +65,7 @@ export default function AppOpening() {
     <dialog
       ref={dialogRef}
       aria-label="Opening Chog Royale"
+      data-app-opening="true"
       onKeyDown={(event) => {
         if (event.key === "Tab") {
           event.preventDefault();

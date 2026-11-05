@@ -18,6 +18,7 @@ import AppNav from "./AppNav";
 import AppNotice from "./AppNotice";
 import Icon from "./icons";
 import { dedupeNotices } from "./feedback-model";
+import { useKingdomTourActive } from "./kingdom-tour-active";
 import { DECK_CARD_COUNT, progressionDisplayState, progressionPercent, progressionStatusText } from "./decks-model";
 import type { DeckCardProgression, DecksCatalogCard, DecksCommanderOption, DecksViewProps, ProgressionPhase, UpgradeCelebration, UpgradeStatus } from "./decks-types";
 import type { LobbyArt } from "./lobby-types";
@@ -178,6 +179,7 @@ function CollectionTile({
   progression,
   goldBalance,
   progressionPhase,
+  tour,
   onSelect,
 }: {
   card: DecksCatalogCard;
@@ -186,6 +188,8 @@ function CollectionTile({
   progression: DeckCardProgression | null;
   goldBalance: number | null;
   progressionPhase: ProgressionPhase;
+  /** The first visible card is the tour's real "open a card" target. */
+  tour: boolean;
   onSelect: (id: string) => void;
 }) {
   return (
@@ -194,6 +198,7 @@ function CollectionTile({
         type="button"
         className={`app-tile${selected ? " app-tile--selected" : ""}${inDeck ? " app-tile--indeck" : ""}${upgradeReady(progression, goldBalance, progressionPhase) ? " app-tile--ready" : ""}`}
         onClick={() => onSelect(card.id)}
+        data-tour={tour ? "collection-card" : undefined}
         data-audio-skip="true"
         aria-pressed={selected}
       >
@@ -290,6 +295,10 @@ function DetailSheet({
 }) {
   const panel = useRef<HTMLElement>(null);
   const backdropPress = useRef(false);
+  // While the kingdom tour is explaining this sheet, keep it non-modal: the
+  // tour controls live outside it and must stay reachable. The shared store
+  // makes the change reactive, unlike a document attribute read during render.
+  const tourActive = useKingdomTourActive();
 
   useEffect(() => {
     const node = panel.current;
@@ -324,8 +333,11 @@ function DetailSheet({
         first.focus();
       }
     };
-    document.addEventListener("keydown", onKey, true);
-    const frame = requestAnimationFrame(() => (focusable()[0] ?? node).focus());
+    // The focus trap belongs to a fully modal sheet. While the tour is
+    // explaining it, the coach buttons sit outside the sheet, so the trap is
+    // dropped and the tour owns the next focus move.
+    if (!tourActive) document.addEventListener("keydown", onKey, true);
+    const frame = tourActive ? 0 : requestAnimationFrame(() => (focusable()[0] ?? node).focus());
 
     // The backdrop blocks the pointer, and the document lock stops the deck
     // from scrolling under a touch drag.
@@ -345,9 +357,9 @@ function DetailSheet({
       html.style.overflow = previousHtmlOverflow;
       body.style.overflow = previousBodyOverflow;
       body.style.paddingRight = previousPadding;
-      if (previous?.isConnected) previous.focus({ preventScroll: true });
+      if (!tourActive && previous?.isConnected) previous.focus({ preventScroll: true });
     };
-  }, [onClose]);
+  }, [onClose, tourActive]);
 
   const displayState = progressionDisplayState(progression, goldBalance, progressionPhase === "ready" ? "ready" : "unavailable");
   const percent = progressionPercent(progression);
@@ -360,6 +372,10 @@ function DetailSheet({
         backdropPress.current = event.target === event.currentTarget && event.button === 0;
       }}
       onClick={(event) => {
+        if (tourActive) {
+          backdropPress.current = false;
+          return;
+        }
         if (event.target === event.currentTarget && backdropPress.current) onClose();
         backdropPress.current = false;
       }}
@@ -367,13 +383,13 @@ function DetailSheet({
       <section
         className="app-sheet app-cardmodal__panel"
         role="dialog"
-        aria-modal="true"
+        aria-modal={tourActive ? undefined : "true"}
         aria-labelledby="app-sheet-title"
         aria-describedby="app-sheet-desc"
         ref={panel}
         tabIndex={-1}
       >
-        <button type="button" className="app-sheet__close" onClick={onClose} aria-label="Close the card details">
+        <button type="button" className="app-sheet__close" onClick={onClose} aria-label="Close the card details" data-tour="card-detail-close">
           <Icon name="close" size={18} />
         </button>
         <header className="app-cardmodal__head">
@@ -413,7 +429,17 @@ function DetailSheet({
               </div>
             ))}
           </dl>
-          <section className="app-progression" aria-labelledby="app-progression-title">
+          <section
+            className="app-progression"
+            aria-labelledby="app-progression-title"
+            data-tour="card-progress"
+            data-state={progressionPhase === "ready" && progression ? displayState : "unavailable"}
+            data-level={progressionPhase === "ready" && progression ? progression.purchasedLevel : ""}
+            data-xp={progressionPhase === "ready" && progression ? progression.xp : ""}
+            data-xp-target={progressionPhase === "ready" && progression && progression.xpTarget !== null ? progression.xpTarget : ""}
+            data-gold={progressionPhase === "ready" && progression && progression.goldCost !== null ? progression.goldCost : ""}
+            data-status={progressionPhase === "ready" && progression ? progressionStatusText(displayState, progression) : ""}
+          >
             <div className="app-progression__head">
               <div>
                 <p className="app-progression__eyebrow" id="app-progression-title">Card progression</p>
@@ -1038,7 +1064,7 @@ export default function DecksView(props: DecksViewProps) {
                 </div>
               ) : (
                 <ul className="app-collection__grid">
-                  {visibleCards.map((card) => (
+                  {visibleCards.map((card, index) => (
                     <CollectionTile
                       key={card.id}
                       card={card}
@@ -1047,6 +1073,7 @@ export default function DecksView(props: DecksViewProps) {
                       progression={progression[card.id] ?? null}
                       goldBalance={goldBalance}
                       progressionPhase={progressionPhase}
+                      tour={index === 0}
                       onSelect={onSelectCard}
                     />
                   ))}
