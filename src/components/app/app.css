@@ -2496,6 +2496,133 @@
   flex: 1 1 auto;
 }
 
+/* ---------------------------------------------------- card detail modal */
+
+.app-cardmodal {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: calc(env(safe-area-inset-top) + 8px) 8px calc(env(safe-area-inset-bottom) + 8px);
+  background:
+    radial-gradient(ellipse at 50% 34%, rgba(90, 68, 217, 0.32), transparent 62%),
+    rgba(10, 6, 40, 0.78);
+  animation: app-cardmodal-dim 180ms ease-out both;
+}
+
+.app-cardmodal .app-sheet {
+  position: relative;
+  inset: auto;
+  left: auto;
+  right: auto;
+  top: auto;
+  bottom: auto;
+  width: min(460px, 100%);
+  max-height: min(86dvh, 760px);
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: none;
+  animation: app-cardmodal-in 240ms var(--app-ease-out) both;
+}
+
+.app-cardmodal .app-sheet__close {
+  top: 12px;
+  right: 12px;
+  width: 44px;
+  height: 44px;
+}
+
+.app-cardmodal__head {
+  flex: none;
+  padding: 16px 58px 12px 14px;
+  border-bottom: 1px solid rgba(185, 162, 255, 0.16);
+  background: linear-gradient(180deg, rgba(90, 68, 217, 0.22), transparent);
+}
+
+.app-cardmodal .app-sheet__head {
+  padding-right: 0;
+}
+
+.app-cardmodal .app-sheet__art {
+  flex-basis: clamp(80px, 24vw, 104px);
+  aspect-ratio: 1;
+}
+
+.app-cardmodal .app-sheet__title {
+  font-size: clamp(21px, 6vw, 24px);
+  line-height: 1.08;
+}
+
+.app-cardmodal__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 14px 14px;
+  scrollbar-width: thin;
+}
+
+.app-cardmodal__foot {
+  flex: none;
+  padding: 10px 14px 12px;
+  border-top: 1px solid rgba(185, 162, 255, 0.16);
+  background: linear-gradient(180deg, rgba(18, 11, 69, 0.12), rgba(18, 11, 69, 0.55));
+}
+
+.app-cardmodal__foot .app-sheet__actions {
+  margin-top: 0;
+}
+
+@media (max-height: 560px) {
+  .app-cardmodal .app-sheet__art {
+    flex-basis: 56px;
+  }
+
+  .app-cardmodal__head {
+    padding-top: 10px;
+    padding-bottom: 8px;
+  }
+
+  .app-cardmodal .app-sheet__chips {
+    display: none;
+  }
+}
+
+@media (min-width: 700px) {
+  .app-cardmodal {
+    align-items: center;
+    padding: 24px;
+  }
+
+  .app-cardmodal .app-sheet {
+    max-height: min(82vh, 760px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-cardmodal,
+  .app-cardmodal .app-sheet {
+    animation: none;
+  }
+}
+
+@keyframes app-cardmodal-dim {
+  from { opacity: 0; }
+}
+
+@keyframes app-cardmodal-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+}
+
 /* ------------------------------------------------------- progression */
 
 .app-gold {
@@ -3407,7 +3534,7 @@
 .app-play-practice-entry .app-play-battle-state { display: grid; gap: 4px; text-align: left; }
 .app-play-difficulty { display: grid; gap: 10px; width: 100%; margin: 0; padding: 0; border: 0; }
 .app-play-difficulty legend { padding: 0; color: #fff1c8; font: 400 22px/1 var(--font-game); letter-spacing: .01em; }
-.app-play-difficulty__options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.app-play-difficulty__options { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
 .app-play-difficulty__choice { position: relative; display: block; min-width: 0; cursor: pointer; }
 .app-play-difficulty__input { position: absolute; width: 1px; height: 1px; margin: -1px; opacity: 0; }
 .app-play-difficulty__card { display: grid; align-content: start; gap: 8px; min-height: 126px; padding: 14px 12px; border: 2px solid #735db9; border-radius: 14px; background: linear-gradient(160deg, #38258b, #211451); box-shadow: inset 0 2px #ffffff1e, 0 4px 0 #120b45aa; transition: border-color 120ms var(--app-ease-out), background-color 120ms var(--app-ease-out), transform 120ms var(--app-ease-out), box-shadow 120ms var(--app-ease-out); }
@@ -3430,6 +3557,7 @@
 @media (max-width: 800px) {
   .app-play-modes { grid-template-columns: 1fr; }
   .app-play-card { min-height: 0; }
+  .app-play-difficulty__options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 520px) {
@@ -3442,9 +3570,9 @@
   .app-play-battle-actions { align-items: flex-start; }
   .app-play-code { min-width: 0; }
   .app-play-code input { width: 100%; }
-  .app-play-difficulty__options { grid-template-columns: 1fr; }
-  .app-play-difficulty__card { min-height: 0; grid-template-columns: 1fr auto; align-items: center; }
-  .app-play-difficulty__description { grid-column: 1 / -1; }
+  .app-play-difficulty__options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .app-play-difficulty__card { min-height: 0; }
+  .app-play-difficulty__description { grid-column: auto; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -7496,5 +7624,861 @@
   .app-levelup,
   .app-levelup * {
     animation: none !important;
+  }
+}
+
+/* ---------------------------------------------------- Training Camp */
+
+.app-training-entry,
+.app-training-camp {
+  display: grid;
+  gap: 16px;
+}
+
+.app-training-entry {
+  width: min(720px, 100%);
+  margin: 0 auto;
+  padding: 22px;
+}
+
+.app-training-entry__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.app-training-entry__head > div {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.app-training-entry__head .app-btn {
+  margin-left: auto;
+}
+
+.app-training-entry__mark {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  flex: none;
+  border: 2px solid var(--outline);
+  border-radius: 14px;
+  background: linear-gradient(180deg, var(--battle-orange-light), var(--battle-orange-base));
+  color: #fff8df;
+  box-shadow: inset 0 2px #ffffff4d, 0 4px 0 #120b45aa;
+}
+
+.app-training-entry h1,
+.app-training-camp h1 {
+  margin: 2px 0 0;
+  font: 400 clamp(28px, 5vw, 38px)/1 var(--font-game);
+  color: #fff;
+  -webkit-text-stroke: 3px var(--outline);
+  paint-order: stroke fill;
+}
+
+.app-training-entry__lead,
+.app-training-camp__lead {
+  margin: 0;
+  color: var(--app-ink-85);
+  font: 500 15px/1.55 var(--font-site);
+}
+
+.app-training-entry__steps {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 14px 16px 14px 38px;
+  border: 2px solid rgba(185, 162, 255, 0.28);
+  border-radius: 14px;
+  background: rgba(18, 11, 69, 0.32);
+  color: var(--app-ink-85);
+  font: 500 14px/1.45 var(--font-site);
+}
+
+.app-training-entry__steps li::marker {
+  color: var(--battle-orange-light);
+  font-weight: 800;
+}
+
+.app-training-entry__note {
+  margin: 0;
+  color: var(--app-ink-65);
+  font: 500 12px/1.5 var(--font-data);
+}
+
+.app-training-entry__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.app-training-camp {
+  width: min(900px, 100%);
+  margin: 0 auto;
+}
+
+.app-training-camp__hero {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 22px;
+}
+
+.app-training-camp__coach {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border: 2px solid rgba(255, 200, 61, 0.42);
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(255, 200, 61, 0.12), rgba(18, 11, 69, 0.32));
+}
+
+.app-training-camp__coach b {
+  color: #fff1c8;
+  font: 400 20px/1.1 var(--font-game);
+}
+
+.app-training-camp__coach p {
+  margin: 5px 0 0;
+  color: var(--app-ink-85);
+  font: 500 13px/1.5 var(--font-site);
+}
+
+.app-training-camp__progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.app-training-camp__progress strong {
+  font: 400 28px/1 var(--font-game);
+  color: #fff1c8;
+}
+
+.app-training-camp__meter {
+  flex: 1;
+  height: 14px;
+  overflow: hidden;
+  border: 2px solid var(--outline);
+  border-radius: 999px;
+  background: #120b45;
+}
+
+.app-training-camp__meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #3dd9ff, #ffc83d);
+  transition: width 240ms var(--app-ease-out);
+}
+
+.app-training-camp__stages {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.app-training-stage {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 16px;
+  border: 2px solid rgba(185, 162, 255, 0.22);
+  border-radius: 14px;
+  background: rgba(18, 11, 69, 0.3);
+}
+
+.app-training-stage--current {
+  border-color: var(--battle-orange-light);
+  background: linear-gradient(135deg, rgba(255, 200, 61, 0.14), rgba(18, 11, 69, 0.36));
+}
+
+.app-training-stage--complete {
+  border-color: rgba(61, 217, 255, 0.5);
+}
+
+.app-training-stage__num {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 2px solid var(--outline);
+  border-radius: 50%;
+  background: var(--plate-mid);
+  color: #fff1c8;
+  font: 400 20px/1 var(--font-game);
+}
+
+.app-training-stage__body {
+  min-width: 0;
+}
+
+.app-training-stage__body h2 {
+  margin: 0;
+  color: #fff;
+  font: 400 20px/1.1 var(--font-game);
+}
+
+.app-training-stage__body p {
+  margin: 4px 0 0;
+  color: var(--app-ink-65);
+  font: 500 12px/1.45 var(--font-site);
+}
+
+.app-training-stage__status {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+  text-align: right;
+}
+
+.app-training-stage__status span {
+  color: var(--app-ink-65);
+  font: 700 10px/1.2 var(--font-data);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.app-training-camp__notice {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(185, 162, 255, 0.24);
+  background: rgba(18, 11, 69, 0.34);
+  color: var(--app-ink-85);
+  font: 500 12px/1.5 var(--font-data);
+}
+
+.app-training-camp__back {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+@media (max-width: 560px) {
+  .app-training-entry,
+  .app-training-camp__hero {
+    padding: 16px;
+  }
+
+  .app-training-entry__head .app-btn {
+    margin-left: 0;
+  }
+
+  .app-training-stage {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .app-training-stage__status {
+    grid-column: 1 / -1;
+    justify-items: start;
+    text-align: left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-training-camp__meter span {
+    transition: none;
+  }
+}
+
+.app-btn--disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.app-play-tutorial-gate {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px 18px;
+  align-items: center;
+  padding: 16px 18px;
+  border: 2px solid var(--battle-orange-light);
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(255, 200, 61, 0.16), rgba(18, 11, 69, 0.42));
+  box-shadow: inset 0 2px #ffffff1f, 0 4px 0 #120b45aa;
+}
+
+.app-play-tutorial-gate h2 {
+  margin: 2px 0 4px;
+  color: #fff;
+  font: 400 24px/1.1 var(--font-game);
+}
+
+.app-play-tutorial-gate p {
+  margin: 0;
+  max-width: 62ch;
+  color: var(--app-ink-85);
+  font: 500 13px/1.5 var(--font-site);
+}
+
+.app-play-tutorial-gate .app-btn {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+}
+
+.app-play-tutorial-gate__progress {
+  grid-column: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.app-play-tutorial-gate__progress strong {
+  color: #fff1c8;
+  font: 400 24px/1 var(--font-game);
+}
+
+.app-play-tutorial-gate__progress > span {
+  display: block;
+  flex: 1;
+  height: 12px;
+  overflow: hidden;
+  border: 2px solid #120b45;
+  border-radius: 999px;
+  background: #120b45;
+}
+
+.app-play-tutorial-gate__progress i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #3dd9ff, #ffc83d);
+}
+
+@media (max-width: 700px) {
+  .app-play-tutorial-gate {
+    grid-template-columns: 1fr;
+  }
+
+  .app-play-tutorial-gate .app-btn {
+    grid-row: auto;
+    grid-column: auto;
+  }
+}
+
+/* Slice 3C: Training Camp graduation. */
+.app-training-camp__graduation {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 14px 16px;
+  align-items: center;
+  border-color: #ffc83d;
+  background: linear-gradient(135deg, rgba(255, 200, 61, 0.2), rgba(29, 20, 88, 0.86) 55%);
+  box-shadow: inset 0 2px #ffffff2b, 0 5px 0 #120b45;
+}
+
+.app-training-camp__graduation-mark {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border: 2px solid #120b45;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 30%, #ffe9a8, #ffc83d 70%);
+  color: #3b2400;
+}
+
+.app-training-camp__graduation h2 {
+  margin: 2px 0 5px;
+  color: #fff;
+  font: 400 26px/1.05 var(--font-game);
+}
+
+.app-training-camp__graduation p {
+  margin: 0;
+  max-width: 62ch;
+  color: #efe8ff;
+  font: 500 13px/1.5 var(--font-site);
+}
+
+.app-training-camp__graduation .app-btn {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+@media (max-width: 760px) {
+  .app-training-camp__graduation {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .app-training-camp__graduation .app-btn {
+    grid-column: 1 / -1;
+    grid-row: auto;
+    justify-self: stretch;
+    text-align: center;
+  }
+}
+
+/* Slice 4: "Meet Your Kingdom" post-graduation tour. Non-modal by design so
+   the highlighted control stays usable, and every exit leaves the player in
+   control. */
+.app-root [data-tour-start] {
+  display: none;
+}
+
+html[data-kingdom-tour="ready"] .app-root [data-tour-start] {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.app-profile-id__tour {
+  margin-top: 10px;
+  min-height: 44px;
+  font-size: 12px;
+}
+
+.app-tour-invite {
+  position: fixed;
+  left: max(12px, env(safe-area-inset-left, 0px));
+  right: max(12px, env(safe-area-inset-right, 0px));
+  bottom: calc(var(--app-nav-h) + env(safe-area-inset-bottom, 0px) + 12px);
+  z-index: 45;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px 12px;
+  max-width: 620px;
+  max-height: min(60dvh, 380px);
+  margin: 0 auto;
+  padding: 14px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 2px solid #ffc83d;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #32229a, #1d1458 75%);
+  box-shadow: inset 0 2px #ffffff2e, 0 6px 0 #120b45cc, 0 12px 30px #120b4599;
+  animation: app-tour-rise 260ms ease-out both;
+}
+
+.app-tour-invite__mark {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 2px solid #120b45;
+  border-radius: 12px;
+  background: #ffc83d;
+  color: #3b2400;
+}
+
+.app-tour-invite__copy b {
+  display: block;
+  color: #ffc83d;
+  font: 700 10px/1.2 var(--font-data);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.app-tour-invite__copy p {
+  margin: 4px 0 0;
+  color: #fff;
+  font: 600 14px/1.4 var(--font-site);
+}
+
+.app-tour-invite__actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.app-tour {
+  position: fixed;
+  inset: 0;
+  z-index: 58;
+  pointer-events: none;
+}
+
+.app-tour__shade {
+  position: fixed;
+  pointer-events: none;
+  border: 2px solid #ffc83d;
+  border-radius: 14px;
+  box-shadow: 0 0 0 9999px rgba(8, 5, 32, 0.7);
+  transition: left 180ms ease, top 180ms ease, width 180ms ease, height 180ms ease;
+}
+
+.app-tour__shade[data-spotlight="false"] {
+  border-color: transparent;
+}
+
+.app-tour__coach {
+  position: fixed;
+  left: 12px;
+  top: 12px;
+  box-sizing: border-box;
+  max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px));
+  padding: 14px 14px 12px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  pointer-events: auto;
+  border: 3px solid #ffc83d;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #32229a, #1d1458 78%);
+  box-shadow: inset 0 2px #ffffff2e, 0 6px 0 #120b45, 0 16px 40px #00000066;
+  color: #fff;
+}
+
+.app-tour__coach:focus-visible {
+  outline: 3px solid #7ef0ff;
+  outline-offset: 3px;
+}
+
+.app-tour__head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: start;
+}
+
+.app-tour__captain {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 2px solid #120b45;
+  border-radius: 9px;
+  background: #ffc83d;
+  color: #3b2400;
+}
+
+.app-tour__eyebrow {
+  margin: 0;
+  color: #ffc83d;
+  font: 700 10px/1.2 var(--font-data);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.app-tour__head h2 {
+  margin: 2px 0 0;
+  color: #fff;
+  font: 400 22px/1.05 var(--font-game);
+}
+
+.app-tour__close {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 2px solid #120b45;
+  border-radius: 10px;
+  background: #241667;
+  color: #fff;
+  cursor: pointer;
+}
+
+.app-tour__body {
+  margin: 8px 0 0;
+  color: #ece7ff;
+  font: 600 13px/1.45 var(--font-site);
+}
+
+.app-tour__facts {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 200, 61, 0.5);
+  border-radius: 9px;
+  background: rgba(255, 200, 61, 0.1);
+  color: #ffe8b0;
+  font: 600 11px/1.45 var(--font-data);
+}
+
+.app-tour__dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 10px 0 0;
+}
+
+.app-tour__dots span {
+  width: 14px;
+  height: 5px;
+  border-radius: 999px;
+  background: #4a3c94;
+}
+
+.app-tour__dots span[data-done="true"] {
+  background: #8a7ad8;
+}
+
+.app-tour__dots span[data-current="true"] {
+  width: 22px;
+  background: #ffc83d;
+}
+
+.app-tour__controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.app-tour__nav {
+  display: flex;
+  gap: 8px;
+}
+
+.app-tour__controls .app-btn {
+  min-height: 44px;
+  padding: 0 14px;
+  font-size: 12px;
+}
+
+@keyframes app-tour-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 420px) {
+  .app-tour__head h2 { font-size: 19px; }
+  .app-tour__body { font-size: 12px; }
+  .app-tour-invite__actions .app-btn,
+  .app-tour__controls .app-btn { flex: 1 1 auto; }
+}
+
+@media (max-width: 360px) {
+  .app-tour__controls .app-btn {
+    padding: 0 10px;
+    font-size: 11px;
+  }
+}
+
+@media (max-height: 520px) {
+  .app-tour__coach {
+    padding: 10px 12px;
+  }
+
+  .app-tour__head h2 { font-size: 18px; }
+  .app-tour__body { font-size: 12px; }
+  .app-tour__dots { margin-top: 6px; }
+  .app-tour__controls { margin-top: 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-tour-invite { animation: none; }
+  .app-tour__shade { transition: none; }
+}
+
+/* ===========================================================================
+   Slice 5: scenic Chaos Crossing kingdom lobby.
+   Only the ready /app home mounts .app-home-scene. Gates, the battle HUD and
+   every other authenticated route keep the existing shell background.
+   One optimized world image plus CSS atmosphere. No second renderer and no
+   full-viewport runtime blur.
+   ========================================================================== */
+
+.app-home {
+  --home-scene-ink: #061a1d;
+  --home-scene-deep: #071f26;
+}
+
+.app-home-scene {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 80% at 50% 0%, #2f6b4e 0%, #17453c 48%, #071f26 100%);
+  isolation: isolate;
+}
+
+.app-home-scene__image {
+  object-fit: cover;
+  object-position: 50% 52%;
+  opacity: 0.96;
+}
+
+.app-home-scene::before,
+.app-home-scene::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Warm light from above, a soft vignette and a deeper forest floor. */
+.app-home-scene::before {
+  z-index: 1;
+  background:
+    radial-gradient(76% 55% at 50% 0%, rgba(255, 224, 140, 0.26), transparent 64%),
+    linear-gradient(180deg, rgba(5, 22, 26, 0.26) 0%, rgba(6, 26, 28, 0.02) 42%, rgba(4, 18, 22, 0.58) 100%),
+    radial-gradient(130% 92% at 50% 48%, transparent 34%, rgba(3, 15, 20, 0.52) 100%);
+}
+
+/* Keep the fixed HUD shelf and the bottom nav readable against the world. */
+.app-home-scene::after {
+  z-index: 2;
+  background:
+    linear-gradient(180deg, rgba(4, 16, 22, 0.62) 0%, rgba(4, 16, 22, 0.12) 17%, transparent 32%),
+    linear-gradient(0deg, rgba(4, 16, 18, 0.78) 0%, rgba(4, 16, 18, 0.18) 18%, transparent 36%);
+}
+
+.app-home-scene__glow {
+  position: absolute;
+  z-index: 1;
+  top: 2%;
+  left: 50%;
+  width: min(1080px, 130vw);
+  aspect-ratio: 1.9;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(255, 230, 164, 0.3), rgba(255, 206, 92, 0.1) 42%, transparent 72%);
+  opacity: 0.72;
+  animation: app-home-glow 16s ease-in-out infinite alternate;
+}
+
+.app-home-scene__mist {
+  position: absolute;
+  z-index: 1;
+  right: -12%;
+  bottom: 2%;
+  left: -12%;
+  height: 38%;
+  background:
+    radial-gradient(ellipse 48% 58% at 28% 62%, rgba(164, 235, 206, 0.18), transparent 72%),
+    radial-gradient(ellipse 44% 52% at 72% 42%, rgba(112, 210, 198, 0.14), transparent 72%);
+  opacity: 0.62;
+  animation: app-home-mist 26s ease-in-out infinite alternate;
+}
+
+@keyframes app-home-glow {
+  from { opacity: 0.5; transform: translateX(-50%) scale(0.97); }
+  to { opacity: 0.8; transform: translateX(-50%) scale(1.04); }
+}
+
+@keyframes app-home-mist {
+  from { opacity: 0.38; transform: translate3d(-1.2%, 0, 0); }
+  to { opacity: 0.62; transform: translate3d(1.2%, -2%, 0); }
+}
+
+.app-home > .app-column {
+  position: relative;
+  z-index: 2;
+}
+
+/* Dark forest glass instead of solid violet plates. The scenery stays visible
+   through the edges, while every panel body keeps a strong dark backing. */
+.app-home .app-deck,
+.app-home .app-battle,
+.app-home .app-commander {
+  border-color: rgba(5, 24, 27, 0.96);
+  background:
+    radial-gradient(ellipse 78% 58% at 50% 0%, rgba(255, 204, 92, 0.08), transparent 62%),
+    linear-gradient(180deg, rgba(25, 61, 61, 0.92) 0%, rgba(8, 29, 35, 0.96) 76%);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.16),
+    inset 0 0 0 1px rgba(126, 214, 180, 0.1),
+    0 5px 0 rgba(4, 18, 21, 0.78),
+    0 18px 34px rgba(2, 12, 15, 0.5);
+}
+
+.app-home .app-deck {
+  background:
+    radial-gradient(ellipse 62% 80% at 20% 0%, rgba(126, 214, 180, 0.08), transparent 70%),
+    linear-gradient(180deg, rgba(24, 58, 58, 0.92) 0%, rgba(7, 27, 33, 0.96) 78%);
+}
+
+.app-home .app-deck__label {
+  color: #f7f3e4;
+}
+
+/* The commander keeps its real treeline but loses the violet wash. */
+.app-home .app-commander__scene::after {
+  background: linear-gradient(180deg, rgba(9, 37, 34, 0.52) 0%, rgba(9, 37, 34, 0) 24%);
+}
+
+.app-home .app-commander__env--back {
+  opacity: 0.56;
+  filter: saturate(1.22) brightness(1.02);
+}
+
+.app-home .app-commander__meta {
+  background: linear-gradient(180deg, rgba(5, 24, 27, 0) 0%, rgba(5, 24, 27, 0.78) 42%);
+}
+
+.app-home .app-commander__disc {
+  border-color: rgba(126, 230, 208, 0.55);
+  box-shadow:
+    0 0 34px rgba(88, 214, 180, 0.36),
+    0 0 14px rgba(61, 217, 255, 0.28),
+    inset 0 0 26px rgba(61, 217, 255, 0.24);
+}
+
+/* The Battle plate stays warm under its orange action. */
+.app-home .app-battle {
+  background:
+    radial-gradient(ellipse 72% 92% at 50% 0%, rgba(255, 202, 80, 0.2), transparent 64%),
+    linear-gradient(180deg, rgba(36, 72, 60, 0.94) 0%, rgba(8, 28, 31, 0.97) 74%);
+}
+
+.app-home .app-battle::before {
+  background:
+    radial-gradient(circle at 10px 10px, #ffe08a 0 2px, #5d4a16 2.5px, transparent 3.2px),
+    radial-gradient(circle at calc(100% - 10px) 10px, #ffe08a 0 2px, #5d4a16 2.5px, transparent 3.2px),
+    radial-gradient(circle at 10px calc(100% - 10px), #ffe08a 0 2px, #5d4a16 2.5px, transparent 3.2px),
+    radial-gradient(circle at calc(100% - 10px) calc(100% - 10px), #ffe08a 0 2px, #5d4a16 2.5px, transparent 3.2px);
+}
+
+/* The nav becomes a dark forest shelf. The active tab keeps its violet plate. */
+.app-home .app-nav {
+  background: linear-gradient(180deg, rgba(11, 37, 39, 0.94), rgba(4, 18, 23, 0.99));
+  border-color: rgba(4, 20, 23, 0.96);
+}
+
+/* Mobile keeps the upward shadow because the bar is fixed at the bottom. */
+@media (max-width: 1023px) {
+  .app-home .app-nav {
+    box-shadow: 0 -8px 22px rgba(2, 12, 15, 0.6);
+  }
+}
+
+.app-home .app-deck__edit {
+  background: linear-gradient(180deg, #4b3cae, #2b216f);
+}
+
+/* The HUD is shared, so only the home instance takes the forest frame. */
+.app-hud--home {
+  background: linear-gradient(180deg, rgba(15, 44, 45, 0.95), rgba(5, 22, 28, 0.88));
+  border-bottom-color: rgba(4, 20, 23, 0.95);
+  box-shadow:
+    0 4px 0 rgba(4, 18, 21, 0.62),
+    0 12px 24px rgba(2, 12, 15, 0.45);
+}
+
+@media (max-width: 640px) {
+  .app-home-scene__image {
+    object-position: 50% 56%;
+  }
+
+  .app-home-scene__glow {
+    width: 150vw;
+  }
+}
+
+.app-calm .app-home-scene__glow,
+.app-calm .app-home-scene__mist {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-home-scene__glow,
+  .app-home-scene__mist {
+    animation: none;
   }
 }

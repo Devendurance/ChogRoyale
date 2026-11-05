@@ -8,7 +8,9 @@
 import { randomBytes, randomUUID, timingSafeEqual } from "crypto";
 import { CloseCode, Room, ServerError, type Client } from "@colyseus/core";
 import { logger } from "@/lib/logger";
-import { CLIENT_READY_MESSAGE, readySchema, type CommanderChoice, type PracticeDifficulty, type PracticeOpponent } from "@/lib/battle-protocol";
+import { BATTLE_TUTORIAL_ROOM, CLIENT_READY_MESSAGE, readySchema, type BattleFrame, type CommanderChoice, type PracticeDifficulty, type PracticeOpponent } from "@/lib/battle-protocol";
+import { TUTORIAL_READY, isTutorialStage, type TutorialLane, type TutorialMessage, type TutorialObjective, type TutorialStage } from "@/lib/tutorial-camp";
+import { productionTutorialDeps } from "@/server/tutorial";
 import {
   PRACTICE_BOT_DISPLAY_NAME,
   botSeatFor,
@@ -18,11 +20,12 @@ import {
   practiceBotPlayerId,
   practiceOpponentFor,
   resolvePracticeDifficulty,
+  tutorialPolicy,
 } from "@/server/battle/practice";
 import { BattleSession, deckFor, type SeatPlayer, type SessionRandom, type TrustedLoadout } from "@/server/battle/session";
 import { MATCH_ARMING_MS, MatchArming } from "@/server/battle/arming";
 import { authenticateSeat, type BattleRoomDeps } from "@/server/battle/room";
-import { freeStarterSlot } from "@/lib/combat";
+import { ARENA_V2, buildingSolids, freeStarterSlot, TROOP_CARDS_V1, troopDeployCheck } from "@/lib/combat";
 import { commanderCardId, isAbilityCommand, validateDeck } from "@/lib/combat";
 import { BOT_GOLD_POLICY_VERSION } from "@/lib/bot-gold";
 import { BotGoldService } from "@/server/battle/bot-gold";
@@ -103,6 +106,23 @@ export class PracticeRoom extends Room {
   private session!: BattleSession;
   /** Immutable difficulty profile, resolved once at room creation. */
   private difficulty: PracticeDifficulty = "medium";
+  /** Non-null only in the server-owned Training Camp room. */
+  private tutorialStage: TutorialStage | null = null;
+  private tutorialReplay = false;
+  private tutorialCompleted = false;
+  private tutorialCompletedStages = 0;
+  /** Cids of queued troop deploys awaiting the step-loop ack. */
+  private readonly tutorialDeployCids = new Set<string>();
+  /** Enemy lanes whose tower has fallen in this tutorial battle. */
+  private readonly tutorialTowerLanes = new Set<TutorialLane>();
+  /** Pocket deploy cids awaiting the authoritative step-loop ack. */
+  private readonly tutorialPocketCids = new Map<string, TutorialLane>();
+  /** Stage 3: accepted ordinary troop deploys in this battle. */
+  private tutorialTroopDeploys = 0;
+  /** Stage 3: the server saw this seat's own commander deploy. */
+  private tutorialCommanderDown = false;
+  /** Stage 3: the server saw this seat fire an active commander ability. */
+  private tutorialAbilityUsed = false;
   /** Solo practice vs server-assigned Unranked fallback. Never client-chosen. */
   private origin: "practice" | "unranked-fallback" = "practice";
   /** The lone human a fallback room is reserved for. Null for solo practice. */
@@ -125,8 +145,18 @@ export class PracticeRoom extends Room {
     return authenticateSeat(token, PracticeRoom.deps);
   }
 
-  onCreate(options?: { difficulty?: unknown; fallbackKey?: unknown }) {
-    if (typeof options?.fallbackKey === "string" && options.fallbackKey.length > 0) {
+  onCreate(options?: { difficulty?: unknown; fallbackKey?: unknown; stage?: unknown }) {
+    if (this.roomName === BATTLE_TUTORIAL_ROOM) {
+      // Training Camp is a separate server-owned room name. The three guided
+      // battles are playable; progress gates decide whether a stage is open.
+      if (!isTutorialStage(options?.stage)) {
+        throw new ServerError(403, "That Training Camp battle is not available yet");
+      }
+      this.tutorialStage = options.stage;
+      this.difficulty = "easy";
+      this.opponent = { ...practiceOpponentFor("easy"), source: "practice" };
+      this.botPlayerId = practiceBotPlayerId("easy");
+    } else if (typeof options?.fallbackKey === "string" && options.fallbackKey.length > 0) {
       // Server-assigned Unranked fallback: the key is a single-use coordinator
       // mint. A forged, consumed, or missing key fails creation. Client
       // difficulty options are ignored on this path.
@@ -170,6 +200,37 @@ export class PracticeRoom extends Room {
       }
       const ack = this.session.submit(client.auth.playerId, msg);
       if (ack) client.send("ack", ack);
+      if (this.tutorialStage === 1 || this.tutorialStage === 3) {
+        const command = msg as { type?: unknown; cardId?: unknown; cid?: unknown };
+        const cid = typeof command.cid === "string" ? command.cid : "";
+        if (command.type === "deploy" && typeof command.cardId === "string" && TROOP_CARDS_V1[command.cardId] && cid) {
+          if (ack?.ok) this.acceptTutorialTroop(client);
+          // A queued legal command returns no immediate ack. Its server-
+          // generated ack arrives in the next step, so remember the cid and
+          // wait for that authoritative acceptance.
+          else if (!ack) this.tutorialDeployCids.add(cid);
+        }
+      } else if (this.tutorialStage === 2) {
+        const command = msg as { type?: unknown; cardId?: unknown; cid?: unknown; x?: unknown; y?: unknown };
+        const cid = typeof command.cid === "string" ? command.cid : "";
+        const x = Number(command.x);
+        const y = Number(command.y);
+        const state = this.session.state;
+        const seat = this.session.seatOfSlot[0];
+        if (command.type === "deploy" && typeof command.cardId === "string" && TROOP_CARDS_V1[command.cardId] && cid && state && seat !== undefined && Number.isFinite(x) && Number.isFinite(y)) {
+          // The engine's own placement rule tells us whether this is the
+          // forward pocket. The server still submits the command below, so
+          // only its accepted ack can complete the lesson.
+          const check = troopDeployCheck(state.structures, seat, x, y, buildingSolids(state.buildings));
+          if (check.ok && (check.zone === "pocket-left" || check.zone === "pocket-right")) {
+            const lane: TutorialLane = check.zone === "pocket-left" ? "left" : "right";
+            if (this.tutorialTowerLanes.has(lane)) {
+              if (ack?.ok) void this.completeTutorialFromPocket(client);
+              else if (!ack) this.tutorialPocketCids.set(cid, lane);
+            }
+          }
+        }
+      }
     });
     this.onMessage(CLIENT_READY_MESSAGE, (client: PracticeClient) => {
       if (this.session.slotOf(client.auth.playerId) === 0) this.arming?.markReady(0);
@@ -177,29 +238,52 @@ export class PracticeRoom extends Room {
     this.clock.setTimeout(() => this.lobbyTimeout(), MATCH_LOBBY_MS);
   }
 
-  onJoin(client: PracticeClient, options?: { resume?: unknown }) {
+  async onJoin(client: PracticeClient, options?: { resume?: unknown }) {
     const playerId = client.auth.playerId;
     if (playerId.startsWith("bot:")) throw new ServerError(403, "Bot seats are server-owned");
     if (this.origin === "unranked-fallback" && playerId !== this.fallbackPlayerId) {
       throw new ServerError(403, "Not the reserved player for this match");
     }
-    this.humanClient = client;
+    const tutorial = PracticeRoom.deps.tutorial ?? productionTutorialDeps;
+    const seated = this.session.slotOf(playerId) >= 0;
     if (this.session.phase === "finished" || this.session.phase === "aborted") {
       throw new ServerError(409, "Practice is over");
     }
     if (this.session.phase === "active") {
+      // A reconnect resumes only the already-seated human. The rotated resume
+      // token is verified before this client can become the room's live client.
+      if (!seated) throw new ServerError(409, "Practice already started");
       this.resume(client, options?.resume);
+      this.humanClient = client;
       return;
     }
-    PracticeRoom.coordinator?.claimRoom(playerId, this.roomId);
-    if (this.session.slotOf(playerId) < 0) {
+    if (this.tutorialStage && !seated) {
+      // Reading progress here is display data and the replay flag. Completion
+      // is decided later from an accepted deployment, never from this read.
+      // A seated reconnect already holds the room's authoritative tutorial
+      // state, so it must not depend on a fresh database read.
+      const snapshot = await tutorial.progress(playerId);
+      this.tutorialCompletedStages = snapshot.completedStages;
+      // Each battle opens only after the previous one is verified. A direct
+      // room join cannot skip from 0/3 or 1/3 into a later lesson.
+      if (snapshot.completedStages < this.tutorialStage - 1) {
+        throw new ServerError(403, `Complete Training Camp Battle ${this.tutorialStage - 1} first`);
+      }
+      this.tutorialReplay = snapshot.completedStages >= this.tutorialStage;
+    } else if (!this.tutorialStage && !seated) {
+      const admission = await tutorial.admission(playerId);
+      if (!admission.allowed) throw new ServerError(403, "Finish Training Camp to unlock Practice");
+    }
+    if (!this.tutorialStage) PracticeRoom.coordinator?.claimRoom(playerId, this.roomId);
+    if (!seated) {
       try {
         this.session.join(client.auth);
       } catch (e) {
-        PracticeRoom.coordinator?.releaseRoom(playerId, this.roomId);
+        if (!this.tutorialStage) PracticeRoom.coordinator?.releaseRoom(playerId, this.roomId);
         throw new ServerError(409, e instanceof Error ? e.message : "Cannot join");
       }
     }
+    this.humanClient = client;
     this.sendLobby(client);
   }
 
@@ -222,6 +306,17 @@ export class PracticeRoom extends Room {
     if (this.checking) return client.send("error", { reason: "Loadout check in progress" });
     this.checking = true;
     try {
+      if (this.tutorialStage) {
+        // The room owns the teaching loadout. Any client payload that passed
+        // the shape check is ignored, so a forged deck cannot alter the lesson.
+        if (this.session.slotOf(client.auth.playerId) < 0) return;
+        const grant = await resolveCommander(client.auth.playerId, { ...TUTORIAL_READY.commander }, entitlement());
+        this.session.setReady(client.auth.playerId, { cards: [...TUTORIAL_READY.cards], grant });
+        this.choice = { ...TUTORIAL_READY.commander };
+        this.sendLobby(client);
+        await this.lockAndStart(client);
+        return;
+      }
       const grant = await resolveCommander(client.auth.playerId, parsed.data.commander, entitlement());
       if (this.session.slotOf(client.auth.playerId) < 0) return;
       this.session.setReady(client.auth.playerId, { cards: parsed.data.cards, grant });
@@ -296,10 +391,185 @@ export class PracticeRoom extends Room {
     msg.practiceOpponent = this.opponent;
     msg.opponent = this.opponent.displayName;
     if (this.arming) msg.arming = { timeoutMs: this.arming.remainingMs };
+    if (this.tutorialStage) {
+      msg.tutorial = { stage: this.tutorialStage, replay: this.tutorialReplay, completedStages: this.tutorialCompletedStages, towerLanes: [...this.tutorialTowerLanes], objectives: this.tutorialObjectives() };
+    }
     client.send("start", msg);
+    if (this.tutorialStage) client.send("tutorial", this.tutorialMessage(false));
     // The tick 0 snapshot lets the client paint towers and its hand while frozen.
     if (this.arming) client.send("frame", this.session.frame(this.session.seatOfSlot[0]!, []));
     else this.go();
+  }
+
+  /** Server-verified steps for the current stage. The client never sets one. */
+  private tutorialObjectives(): TutorialObjective[] {
+    if (this.tutorialStage === 1) return [{ id: "first_troop_deploy", done: this.tutorialCompleted }];
+    if (this.tutorialStage === 2) {
+      return [
+        { id: "destroy_enemy_tower", done: this.tutorialTowerLanes.size > 0 },
+        { id: "deploy_in_pocket", done: this.tutorialCompleted },
+      ];
+    }
+    if (this.tutorialStage === 3) {
+      return [
+        { id: "build_push", done: this.tutorialTroopDeploys >= 2 },
+        { id: "deploy_commander", done: this.tutorialCommanderDown },
+        { id: "use_ability", done: this.tutorialAbilityUsed },
+      ];
+    }
+    return [];
+  }
+
+  /** A complete tutorial-state message from the room's current facts. */
+  private tutorialMessage(completed: boolean): TutorialMessage {
+    const stage = this.tutorialStage!;
+    const objectives = this.tutorialObjectives();
+    return {
+      stage,
+      objective: objectives.find((entry) => !entry.done)?.id ?? "complete",
+      completed,
+      replay: this.tutorialReplay,
+      completedStages: this.tutorialCompletedStages,
+      graduated: this.tutorialCompletedStages >= 3,
+      towerLanes: [...this.tutorialTowerLanes],
+      objectives,
+    };
+  }
+
+  /** Push fresh lesson state to the seated human. Progress stays durable. */
+  private publishTutorial() {
+    if (!this.humanClient || !this.tutorialStage) return;
+    try {
+      this.humanClient.send("tutorial", this.tutorialMessage(false));
+    } catch {
+      /* the camp read is the recovery path */
+    }
+  }
+
+  /** Follow authoritative tower-destruction events; announce the new pocket. */
+  private trackTutorialTower(frame: BattleFrame, humanSeat: number) {
+    if (this.tutorialStage !== 2) return;
+    let changed = false;
+    for (const event of frame.events) {
+      if (event.type !== "structure_destroyed" || event.structure !== "tower" || event.owner === humanSeat) continue;
+      const entityId = typeof event.entityId === "string" ? event.entityId : "";
+      const structure = frame.structures.find((entry) => entry.id === entityId);
+      if (!structure) continue;
+      const lane: TutorialLane = structure.x < ARENA_V2.laneSplitX ? "left" : "right";
+      if (!this.tutorialTowerLanes.has(lane)) {
+        this.tutorialTowerLanes.add(lane);
+        changed = true;
+      }
+    }
+    if (changed) this.publishTutorial();
+  }
+
+  /** Stage 3 reads only this seat's own commander and active ability events. */
+  private trackTutorialStrategy(frame: BattleFrame, humanSeat: number) {
+    if (this.tutorialStage !== 3) return;
+    let changed = false;
+    for (const event of frame.events) {
+      if (event.type === "commander_deployed" && event.player === humanSeat && !this.tutorialCommanderDown) {
+        this.tutorialCommanderDown = true;
+        changed = true;
+      } else if (event.type === "ability_fired" && event.player === humanSeat && event.trigger === "active" && !this.tutorialAbilityUsed) {
+        this.tutorialAbilityUsed = true;
+        changed = true;
+      }
+    }
+    if (changed) {
+      this.publishTutorial();
+      if (this.humanClient) this.checkTutorialStrategy(this.humanClient);
+    }
+  }
+
+  /** An accepted ordinary troop deploy advances stage 1 or the stage 3 push. */
+  private acceptTutorialTroop(client: PracticeClient) {
+    if (this.tutorialStage === 1) {
+      void this.completeTutorialFromDeploy(client);
+      return;
+    }
+    if (this.tutorialStage !== 3 || this.tutorialCompleted) return;
+    this.tutorialTroopDeploys += 1;
+    this.publishTutorial();
+    this.checkTutorialStrategy(client);
+  }
+
+  /** Stage 3 completes only when all three authoritative facts are present. */
+  private checkTutorialStrategy(client: PracticeClient) {
+    if (this.tutorialStage !== 3 || this.tutorialCompleted) return;
+    if (this.tutorialTroopDeploys < 2 || !this.tutorialCommanderDown || !this.tutorialAbilityUsed) return;
+    void this.completeTutorialFromStrategy(client);
+  }
+
+  /** A real accepted pocket deployment proves stage 2. */
+  private async completeTutorialFromPocket(client: PracticeClient) {
+    if (this.tutorialCompleted || this.tutorialStage !== 2) return;
+    this.tutorialCompleted = true;
+    const result = await (PracticeRoom.deps.tutorial ?? productionTutorialDeps).complete(client.auth.playerId, 2);
+    if (result.status === "completed" || result.status === "already-complete") {
+      this.tutorialCompletedStages = Math.max(this.tutorialCompletedStages, result.completedStages);
+      if (result.status === "already-complete") this.tutorialReplay = true;
+      try {
+        client.send("tutorial", this.tutorialMessage(true));
+      } catch {
+        /* progress is durable */
+      }
+      return;
+    }
+    if (result.status === "unavailable") this.tutorialCompleted = false;
+    try {
+      client.send("error", { reason: "Training progress could not be saved. Your battle can continue." });
+    } catch {
+      /* the close handler owns recovery */
+    }
+  }
+
+  /** A real push, commander and active ability prove stage 3 and graduate. */
+  private async completeTutorialFromStrategy(client: PracticeClient) {
+    if (this.tutorialCompleted || this.tutorialStage !== 3) return;
+    this.tutorialCompleted = true;
+    const result = await (PracticeRoom.deps.tutorial ?? productionTutorialDeps).complete(client.auth.playerId, 3);
+    if (result.status === "completed" || result.status === "already-complete") {
+      this.tutorialCompletedStages = Math.max(this.tutorialCompletedStages, result.completedStages);
+      if (result.status === "already-complete") this.tutorialReplay = true;
+      try {
+        client.send("tutorial", this.tutorialMessage(true));
+      } catch {
+        /* progress is durable */
+      }
+      return;
+    }
+    if (result.status === "unavailable") this.tutorialCompleted = false;
+    try {
+      client.send("error", { reason: "Training progress could not be saved. Your battle can continue." });
+    } catch {
+      /* the close handler owns recovery */
+    }
+  }
+
+  /** A real accepted troop deployment proves stage 1. A client claim cannot. */
+  private async completeTutorialFromDeploy(client: PracticeClient) {
+    if (this.tutorialCompleted || this.tutorialStage !== 1) return;
+    this.tutorialCompleted = true;
+    const result = await (PracticeRoom.deps.tutorial ?? productionTutorialDeps).complete(client.auth.playerId, 1);
+    if (result.status === "completed" || result.status === "already-complete") {
+      this.tutorialCompletedStages = Math.max(this.tutorialCompletedStages, result.completedStages);
+      if (result.status === "already-complete") this.tutorialReplay = true;
+      try {
+        client.send("tutorial", this.tutorialMessage(true));
+      } catch {
+        // Progress is durable. The camp read is the recovery path if the
+        // socket closed between the accepted deployment and this message.
+      }
+      return;
+    }
+    if (result.status === "unavailable") this.tutorialCompleted = false;
+    try {
+      client.send("error", { reason: "Training progress could not be saved. Your battle can continue." });
+    } catch {
+      /* the close handler owns recovery */
+    }
   }
 
   /** First simulated tick. The bot cannot act before this point. */
@@ -334,8 +604,8 @@ export class PracticeRoom extends Room {
       try {
         const humanSeat = this.session.seatOfSlot[0]!;
         const botSeat = botSeatFor(humanSeat);
-        const policy = policyFor(this.difficulty);
-        // Ultimate also times commander abilities; Medium/Hard hold them.
+        const policy = this.tutorialStage === 2 || this.tutorialStage === 3 ? tutorialPolicy : policyFor(this.difficulty);
+        // Ultimate also times commander abilities; Easy, Medium and Hard hold them.
         const abilityId = policy.ability?.(state, botSeat);
         if (abilityId) {
           this.botCid += 1;
@@ -361,7 +631,19 @@ export class PracticeRoom extends Room {
     const out = this.session.tick();
     if (!out) return;
     const humanSeat = this.session.seatOfSlot[0]!;
-    for (const ack of out.acks[humanSeat]) client.send("ack", ack);
+    if (this.tutorialStage === 2) this.trackTutorialTower(out.frames[humanSeat], humanSeat);
+    if (this.tutorialStage === 3) this.trackTutorialStrategy(out.frames[humanSeat], humanSeat);
+    for (const ack of out.acks[humanSeat]) {
+      client.send("ack", ack);
+      if (this.tutorialDeployCids.delete(ack.cid) && ack.ok) {
+        this.acceptTutorialTroop(client);
+      }
+      const pocketLane = this.tutorialPocketCids.get(ack.cid);
+      if (pocketLane) {
+        this.tutorialPocketCids.delete(ack.cid);
+        if (ack.ok) void this.completeTutorialFromPocket(client);
+      }
+    }
     client.send("frame", out.frames[humanSeat]);
     if (out.end) {
       const end = { ...out.end[humanSeat], matchId: this.matchId, practice: { opponentKind: "bot" as const, noReward: true as const, source: this.origin } };
@@ -558,6 +840,9 @@ export class PracticeRoom extends Room {
     msg.practiceOpponent = this.opponent;
     msg.opponent = this.opponent.displayName;
     if (this.arming) msg.arming = { timeoutMs: this.arming.remainingMs };
+    if (this.tutorialStage) {
+      msg.tutorial = { stage: this.tutorialStage, replay: this.tutorialReplay, completedStages: this.tutorialCompletedStages, towerLanes: [...this.tutorialTowerLanes], objectives: this.tutorialObjectives() };
+    }
     client.send("start", msg);
     client.send("frame", this.session.frame(seat, []));
     client.send("presence", { opponentConnected: true, reconnectDeadlineAt: null });

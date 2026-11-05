@@ -15,11 +15,14 @@ export default function AppHud({
   player,
   onSignOut,
   extra,
+  className,
 }: {
   player: LobbyPlayer | null;
   onSignOut: () => void;
   /** Extra controls rendered before the sign-out button. */
   extra?: ReactNode;
+  /** Optional screen-specific frame, e.g. the scenic home lobby. */
+  className?: string;
 }) {
   const identityName = player?.displayName ?? player?.username ?? "";
   const mobileActions = useRef<HTMLDetailsElement>(null);
@@ -63,7 +66,7 @@ export default function AppHud({
   };
 
   return (
-    <header className="app-hud">
+    <header className={`app-hud${className ? ` ${className}` : ""}`}>
       <div className="app-identity">
         {player?.avatarUrl ? (
           <Image

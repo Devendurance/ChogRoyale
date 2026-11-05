@@ -1,5 +1,19 @@
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { PLAYER_BATTLE_HREFS, PRACTICE_ENTRY } from "./play-hub-model";
+import { PlayHubView } from "./PlayHub";
+import { PLAYER_BATTLE_HREFS, PRACTICE_ENTRY, tutorialLocksBattleModes } from "./play-hub-model";
+import type { TutorialAccess, TutorialProgressView } from "@/lib/tutorial-camp";
+
+const tutorial = (access: TutorialAccess): TutorialProgressView => ({
+  stage: access === "training-required" ? 1 : 3,
+  completedStages: access === "training-required" ? 1 : 3,
+  graduated: access === "graduated",
+  grandfathered: access === "grandfathered",
+  nextStage: access === "training-required" ? 2 : null,
+  enforcement: access !== "gate-off",
+  access,
+});
 
 describe("player battle hub practice entry", () => {
   it("offers Practice with an AI opponent and the no-reward copy", () => {
@@ -12,5 +26,25 @@ describe("player battle hub practice entry", () => {
     expect(PLAYER_BATTLE_HREFS.unranked).toBe("/app/play/battle?mode=unranked");
     expect(PLAYER_BATTLE_HREFS.private).toBe("/app/play/battle?mode=private");
     expect(PLAYER_BATTLE_HREFS).not.toHaveProperty("ranked");
+  });
+
+  it("locks UI modes only for an actual training-required server decision", () => {
+    expect(tutorialLocksBattleModes(tutorial("training-required"))).toBe(true);
+    for (const access of ["gate-off", "no-release", "schema-unavailable", "graduated", "grandfathered"] as const) {
+      expect(tutorialLocksBattleModes(tutorial(access))).toBe(false);
+    }
+    expect(tutorialLocksBattleModes(null)).toBe(false);
+  });
+
+  it("exposes the real Practice card as the tour target for a graduate", () => {
+    const html = renderToStaticMarkup(
+      createElement(PlayHubView, { player: null, onSignOut: () => undefined, tutorial: tutorial("graduated") }),
+    );
+    expect(html).toContain('data-tour="play-practice"');
+    expect(html).toContain("Practice Arena");
+    expect(html).toContain("Unranked");
+    expect(html).toContain("Ranked");
+    expect(html).toContain("Coming later");
+    expect(html).not.toContain("Training required");
   });
 });

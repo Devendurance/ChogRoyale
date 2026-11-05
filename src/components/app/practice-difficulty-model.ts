@@ -3,6 +3,12 @@ import { PRACTICE_DIFFICULTIES, type PracticeDifficulty } from "@/lib/battle-pro
 /** Player-facing copy for the server-owned Practice difficulty choices. */
 export const PRACTICE_DIFFICULTY_OPTIONS = [
   {
+    value: "easy",
+    label: "Easy",
+    tagline: "Learn at your pace",
+    description: "A forgiving AI that gives you room to try cards, deploy troops and find your footing.",
+  },
+  {
     value: "medium",
     label: "Medium",
     tagline: "Learn the arena",

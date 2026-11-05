@@ -10,6 +10,7 @@ import { usePrivy, useLogin } from "@privy-io/react-auth";
 import { Client, type Room } from "@colyseus/sdk";
 import {
   BATTLE_PRACTICE_ROOM,
+  BATTLE_TUTORIAL_ROOM,
   CLIENT_READY_MESSAGE,
   BATTLE_QUEUE_ROOM,
   BATTLE_RANKED_QUEUE_ROOM,
@@ -38,6 +39,8 @@ import type { RankedAwardView, MyRankedResponse } from "@/lib/ranked";
 import type { BoardMapper, CanvasFeed } from "./BattleCanvas";
 import BattleLobby from "./BattleLobby";
 import BattleEntry from "@/components/app/BattleEntry";
+import TrainingEntry from "@/components/app/TrainingEntry";
+import { TUTORIAL_BATTLE_HALL_PATH, TUTORIAL_CAMP_PATH, TUTORIAL_READY, type TutorialMessage, type TutorialStage } from "@/lib/tutorial-camp";
 import BattleHud from "./BattleHud";
 import { battleIdentity } from "./battle-identity";
 import { attachOwnedRoom, createRoomOwner, leaveRoom } from "./battle-connection";
@@ -272,6 +275,7 @@ export function BattlePanel({
   initialRoom = null,
   invalidInvite = false,
   setupReady = true,
+  tutorialStage,
 }: {
   /** Public app routes reuse this panel without the development diagnostics. */
   publicMode?: boolean;
@@ -280,6 +284,9 @@ export function BattlePanel({
   setupReady?: boolean;
   /** The hub can send the player here with an intended queue or room flow. */
   initialMode?: BattleEntryMode;
+  /** Present only on the Training Camp battle route. The server still owns
+   * stage validation, progress and completion. */
+  tutorialStage?: TutorialStage;
 }) {
   const router = useRouter();
   const { ready, authenticated, getAccessToken, logout } = usePrivy();
@@ -314,6 +321,7 @@ export function BattlePanel({
   const [roomOwner] = useState(() => createRoomOwner<Room>());
   const [painted, setPainted] = useState(false);
   const [opponentReady, setOpponentReady] = useState(false);
+  const [tutorial, setTutorial] = useState<TutorialMessage | null>(null);
   const [selectedPracticeDifficulty, setSelectedPracticeDifficulty] = useState<PracticeDifficulty>("medium");
   const selectedPracticeDifficultyRef = useRef<PracticeDifficulty>("medium");
   const feed = useRef<CanvasFeed | null>(null);
@@ -714,7 +722,9 @@ export function BattlePanel({
       if (m.practice) adoptPracticeDifficulty(m.practice.opponent.difficulty);
       setLobby(m);
       setAudioPhase("lobby");
-      setStage((s) => (s === "connecting" || s === "searching" ? "lobby" : s));
+      // Training starts automatically after the room's fixed loadout is sent;
+      // the deck lobby is not part of the guided flow.
+      setStage((s) => (tutorialStage ? s : s === "connecting" || s === "searching" ? "lobby" : s));
     });
     on("start", (m: StartMessage) => {
       clearLobbyHydration();
@@ -758,9 +768,24 @@ export function BattlePanel({
       setPresence(null);
       setRankedAward(null);
       setRankedAwardStatus("idle");
+      if (m.tutorial) {
+        setTutorial({
+          stage: m.tutorial.stage,
+          objective: m.tutorial.objectives?.find((entry) => !entry.done)?.id ?? "complete",
+          completed: false,
+          replay: m.tutorial.replay,
+          completedStages: m.tutorial.completedStages,
+          graduated: m.tutorial.completedStages >= 3,
+          towerLanes: m.tutorial.towerLanes ?? [],
+          objectives: m.tutorial.objectives ?? [],
+        });
+      } else if (!tutorialStage) {
+        setTutorial(null);
+      }
       setStart(m);
       setStage("active");
     });
+    on("tutorial", (m: TutorialMessage) => setTutorial(m));
     on("frame", (f: BattleFrame) => {
       const cur = feed.current;
       if (!cur || (cur.frame && f.tick <= cur.frame.tick)) return; // never apply older snapshots
@@ -917,7 +942,16 @@ export function BattlePanel({
       });
     }, clearLobbyHydration);
     setRoom(r);
-  }, [adoptPracticeDifficulty, audio, clearAccountXpState, clearBotCardXpState, clearBotGoldState, handleAccountXpReceipt, initialMode, recoverAccountXp, refreshCardXp, refreshGoldBalance, roomOwner, setAudioPhase]);
+    if (tutorialStage) {
+      // Handlers are attached. Send the fixed teaching loadout now; the
+      // server ignores the payload's cards and starts from its own copy.
+      try {
+        r.send("ready", TUTORIAL_READY);
+      } catch {
+        /* the close handler owns recovery */
+      }
+    }
+  }, [adoptPracticeDifficulty, audio, clearAccountXpState, clearBotCardXpState, clearBotGoldState, handleAccountXpReceipt, initialMode, recoverAccountXp, refreshCardXp, refreshGoldBalance, roomOwner, setAudioPhase, tutorialStage]);
 
   // Ranked awards are read back only after the server confirms settlement.
   // This bounded read never infers a trophy delta from the battle result.
@@ -986,6 +1020,7 @@ export function BattlePanel({
       clearBotGoldState();
       clearBotCardXpState();
       clearAccountXpState();
+      setTutorial(null);
       setStage("connecting");
       try {
         if (mode === "practice" && requestedPracticeDifficulty && PRACTICE_DIFFICULTIES.includes(requestedPracticeDifficulty)) {
@@ -999,25 +1034,27 @@ export function BattlePanel({
         const r = mode === "join"
           ? await client.joinById(joinCode.trim())
           : mode === "practice"
-            ? await client.create(BATTLE_PRACTICE_ROOM, { difficulty: requestedPracticeDifficulty ?? selectedPracticeDifficultyRef.current })
+            ? await client.create(tutorialStage ? BATTLE_TUTORIAL_ROOM : BATTLE_PRACTICE_ROOM, tutorialStage ? { stage: tutorialStage } : { difficulty: requestedPracticeDifficulty ?? selectedPracticeDifficultyRef.current })
             : await client.create(BATTLE_ROOM);
         const origin: ResumeOrigin = mode === "practice" ? "practice" : "pvp";
         attachRoom(r, origin);
         if (mode === "create") appAudioController?.playUi("invite");
         if (mode === "practice") appAudioController?.playUi("ready");
-        setStage((current) => current === "connecting" ? "lobby" : current);
+        setStage((current) => current === "connecting" && !tutorialStage ? "lobby" : current);
       } catch (e) {
         setError(mode === "join"
           ? roomJoinError(e)
           : mode === "practice"
-            ? "Couldn't start practice. Check your connection and try again."
+            ? tutorialStage && e instanceof Error
+              ? e.message
+              : "Couldn't start practice. Check your connection and try again."
             : "Couldn't create a room. Check your connection and try again.");
         setStage("idle");
       } finally {
         connecting.current = false;
       }
     },
-    [appAudioController, attachRoom, clearAccountXpState, clearBotCardXpState, clearBotGoldState, code, getAccessToken]
+    [appAudioController, attachRoom, clearAccountXpState, clearBotCardXpState, clearBotGoldState, code, getAccessToken, tutorialStage]
   );
 
   const inviteTried = useRef(false);
@@ -1173,6 +1210,7 @@ export function BattlePanel({
     setQueueStatus(null);
     setPainted(false);
     setOpponentReady(false);
+    setTutorial(null);
     feed.current = null;
     audio.dispose();
     setAudioPhase("lobby");
@@ -1185,10 +1223,10 @@ export function BattlePanel({
   // Both rematches replace the finished session in one step, so the entry
   // screen never flashes and a second press finds connecting already claimed.
   const battleAgain = useCallback(() => {
-    if (initialMode !== "practice" || connecting.current) return;
+    if (tutorialStage || initialMode !== "practice" || connecting.current) return;
     reset();
     void connect("practice");
-  }, [connect, initialMode, reset]);
+  }, [connect, initialMode, reset, tutorialStage]);
   const canFindAgain = initialMode === "unranked" && (start?.mode === "matchmaking" || start?.practiceOpponent?.source === "unranked-fallback");
   const findOpponentAgain = useCallback(() => {
     if (!canFindAgain || queueJoining.current) return;
@@ -1199,6 +1237,16 @@ export function BattlePanel({
     reset();
     if (publicMode && (initialMode === "practice" || start?.practiceOpponent?.source === "unranked-fallback")) router.push("/app/play");
   }, [initialMode, publicMode, reset, router, start?.practiceOpponent?.source]);
+  const exitTraining = useCallback(() => {
+    reset();
+    router.push(TUTORIAL_CAMP_PATH);
+  }, [reset, router]);
+
+  /** Graduation hands the player to the real battle hall, not back to camp. */
+  const enterBattleHall = useCallback(() => {
+    reset();
+    router.push(TUTORIAL_BATTLE_HALL_PATH);
+  }, [reset, router]);
 
   useEffect(() => () => {
     if (room) roomOwner.release(room);
@@ -1444,15 +1492,20 @@ export function BattlePanel({
       </div>}
 
       {publicMode && stage === "idle" && (
-        <BattleEntry mode={initialMode} code={code} error={error} setupReady={setupReady} practiceDifficulty={selectedPracticeDifficulty} onCodeChange={setCode}
-          onFind={() => { unlockAudio(); void findMatch(initialMode === "ranked" ? "ranked" : "unranked"); }}
-          onStartPractice={(difficulty) => { unlockAudio(); void connect("practice", undefined, difficulty); }}
-          onCreate={() => { unlockAudio(); void connect("create"); }} onJoin={() => { unlockAudio(); void connect("join"); }} />
+        tutorialStage ? (
+          <TrainingEntry stage={tutorialStage} error={error} setupReady={setupReady}
+            onStart={() => { unlockAudio(); void connect("practice"); }} />
+        ) : (
+          <BattleEntry mode={initialMode} code={code} error={error} setupReady={setupReady} practiceDifficulty={selectedPracticeDifficulty} onCodeChange={setCode}
+            onFind={() => { unlockAudio(); void findMatch(initialMode === "ranked" ? "ranked" : "unranked"); }}
+            onStartPractice={(difficulty) => { unlockAudio(); void connect("practice", undefined, difficulty); }}
+            onCreate={() => { unlockAudio(); void connect("create"); }} onJoin={() => { unlockAudio(); void connect("join"); }} />
+        )
       )}
 
       {stage === "connecting" && (
         <section className={publicMode ? "app-play-battle-controls" : undefined} style={publicMode ? undefined : { display: "grid", gap: 6 }}>
-          <div role="status">{initialMode === "practice" ? "Starting practice against AI Opponent…" : "Connecting to the battle server…"}</div>
+          <div role="status">{tutorialStage ? "Preparing your Training Camp battle…" : initialMode === "practice" ? "Starting practice against AI Opponent…" : "Connecting to the battle server…"}</div>
         </section>
       )}
 
@@ -1527,8 +1580,12 @@ export function BattlePanel({
           error={error}
           notice={notice}
           onGiveUp={stage === "reconnecting" ? reset : undefined}
-          onExit={publicMode && (initialMode === "practice" || start?.practiceOpponent?.source === "unranked-fallback") ? exitBattle : reset}
-          onBattleAgain={initialMode === "practice" ? battleAgain : canFindAgain ? findOpponentAgain : undefined}
+          onExit={tutorialStage ? exitTraining : publicMode && (initialMode === "practice" || start?.practiceOpponent?.source === "unranked-fallback") ? exitBattle : reset}
+          onBattleAgain={tutorialStage ? undefined : initialMode === "practice" ? battleAgain : canFindAgain ? findOpponentAgain : undefined}
+          tutorial={tutorial}
+          tutorialStage={tutorialStage}
+          onTutorialExit={tutorialStage ? exitTraining : undefined}
+          onTutorialGraduated={tutorialStage ? enterBattleHall : undefined}
           arming={armed}
           painted={painted}
           opponentReady={opponentReady}

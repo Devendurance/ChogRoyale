@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import AppSession from "@/components/app/AppSession";
 import AppOpening from "@/components/app/AppOpening";
+import KingdomTour from "@/components/app/KingdomTour";
 import AppAudioProvider from "@/components/audio/AppAudioProvider";
 import { CatalogProvider } from "@/components/app/catalog-context";
 import { georama, lilitaOne, satoshi } from "@/components/site/fonts";
@@ -23,7 +24,10 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       <AppOpening />
       <AppSession>
         <AppAudioProvider>
-          <CatalogProvider catalog={catalog}>{children}</CatalogProvider>
+          <CatalogProvider catalog={catalog}>
+            {children}
+            <KingdomTour />
+          </CatalogProvider>
         </AppAudioProvider>
       </AppSession>
     </div>

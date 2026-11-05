@@ -1,8 +1,10 @@
-// V2.1c Practice bots: three server-owned human-vs-AI difficulties.
+// V2.1c Practice bots: four server-owned human-vs-AI difficulties.
 // One human (Privy-verified, real saved deck/commander) plus one internal
 // bot seat. The bot is never a DB player, never a Privy identity, never a
 // players row, and never routed through PvP settlement.
 //
+// EASY adds a forgiving first-match opponent: slower reactions, banked energy,
+// first-legal-card choices and no counter targeting.
 // MEDIUM is the V2.1a compatibility baseline (smartMove adapter, unchanged).
 // HARD adds tactical defense, counter selection and push coordination.
 // ULTIMATE adds two-lane pressure scoring, support targeting, commander
@@ -32,11 +34,12 @@ import {
   type CombatState,
   type PlayerIndex,
 } from "@/lib/combat";
-import { buildingSolids } from "@/lib/combat";
+import { buildingDeployCheck, buildingSolids } from "@/lib/combat";
 import type { PracticeDifficulty, PracticeOpponent } from "@/lib/battle-protocol";
 
 /** Stable per-difficulty bot identities. */
 export const PRACTICE_BOT_IDS = {
+  easy: "practice-easy-v1",
   medium: "practice-medium-v1",
   hard: "practice-hard-v1",
   ultimate: "practice-ultimate-v1",
@@ -48,6 +51,7 @@ export const PRACTICE_BOT_DISPLAY_NAME = "AI Opponent" as const;
 
 /** Server-owned opponent descriptors. The UX shows displayName plus difficulty. */
 export const PRACTICE_OPPONENTS: Record<PracticeDifficulty, PracticeOpponent> = {
+  easy: { kind: "bot", botId: PRACTICE_BOT_IDS.easy, difficulty: "easy", displayName: PRACTICE_BOT_DISPLAY_NAME },
   medium: { kind: "bot", botId: PRACTICE_BOT_IDS.medium, difficulty: "medium", displayName: PRACTICE_BOT_DISPLAY_NAME },
   hard: { kind: "bot", botId: PRACTICE_BOT_IDS.hard, difficulty: "hard", displayName: PRACTICE_BOT_DISPLAY_NAME },
   ultimate: { kind: "bot", botId: PRACTICE_BOT_IDS.ultimate, difficulty: "ultimate", displayName: PRACTICE_BOT_DISPLAY_NAME },
@@ -72,7 +76,7 @@ export function practiceBotPlayerId(difficulty: PracticeDifficulty): string {
  */
 export function resolvePracticeDifficulty(raw: unknown): PracticeDifficulty {
   if (raw === undefined || raw === null) return "medium";
-  if (raw === "medium" || raw === "hard" || raw === "ultimate") return raw;
+  if (raw === "easy" || raw === "medium" || raw === "hard" || raw === "ultimate") return raw;
   throw new Error(`Unsupported practice difficulty: ${String(raw)}`);
 }
 
@@ -105,7 +109,7 @@ export interface PracticePolicy {
   difficulty: PracticeDifficulty;
   /** Pure deploy/spell/commander choice from authoritative state. Null = hold. */
   choose(state: CombatState, seat: PlayerIndex, laneSeed: number): PracticeMove;
-  /** Commander ability timing. Null = hold. Medium/Hard never fire. */
+  /** Commander ability timing. Null = hold. Easy, Medium and Hard never fire. */
   ability?(state: CombatState, seat: PlayerIndex): string | null;
 }
 
@@ -115,6 +119,183 @@ export const mediumPolicy: PracticePolicy = {
   choose: (state, seat, laneSeed) => {
     const m = smartMove(state, seat, laneSeed);
     return m ? { cardId: m.cardId, x: Math.round(m.x), y: Math.round(m.y) } : null;
+  },
+  ability: () => null,
+};
+
+/**
+ * EASY: a first-match opponent. It reads its own hand and the real board, but
+ * banks energy to a small floor, takes the first legal card instead of the
+ * best counter, places everything near its own bridge, defends with a plain
+ * body, and never times commander abilities. It uses the same deck, costs,
+ * placement checks and rules as every other difficulty.
+ */
+const EASY_ENERGY_FLOOR = 2;
+const EASY_TROOP_DEPTHS = [48, 44, 52, 40];
+const EASY_BUILDING_DEPTHS = [14, 18, 22, 10];
+
+function easyCost(state: CombatState, seat: PlayerIndex, card: string): number {
+  if (isCommanderCard(card)) {
+    const snap = state.commanderSnapshots[seat];
+    return snap ? COMMANDER_COMBAT_PROFILE_V1[snap.class].cost : 99;
+  }
+  return CARDS_V1[card]?.cost ?? 99;
+}
+
+function easyY(seat: PlayerIndex, depth: number): number {
+  return seat === 0 ? depth : ARENA_V2.maxY - depth;
+}
+
+function easyTroopSpot(state: CombatState, seat: PlayerIndex, commander: boolean): { x: number; y: number } | null {
+  const lane = Math.floor(state.tick / 4) % 2 === 0 ? 30 : 70;
+  const depths = commander ? [22, 18, 26] : EASY_TROOP_DEPTHS;
+  const lanes = commander ? [50, lane] : [lane, 50];
+  const solids = buildingSolids(state.buildings);
+  for (const depth of depths) {
+    for (const baseX of lanes) {
+      for (const dx of [0, 4, -4, 8, -8]) {
+        const x = baseX + dx;
+        const y = easyY(seat, depth);
+        if (troopDeployCheck(state.structures, seat, x, y, solids).ok) return { x, y };
+      }
+    }
+  }
+  return null;
+}
+
+function easyBuildingSpot(state: CombatState, seat: PlayerIndex, def: (typeof BUILDING_CARDS_V1)[string]): { x: number; y: number } | null {
+  const lane = Math.floor(state.tick / 4) % 2 === 0 ? 30 : 70;
+  for (const depth of EASY_BUILDING_DEPTHS) {
+    for (const x of [lane, 50, 30, 70]) {
+      const y = easyY(seat, depth);
+      if (buildingDeployCheck(state, seat, x, y, def).ok) return { x, y };
+    }
+  }
+  return null;
+}
+
+/** A body near the threatened lane, not a counter. */
+function easyDefenseSpot(state: CombatState, seat: PlayerIndex, x: number): { x: number; y: number } | null {
+  const solids = buildingSolids(state.buildings);
+  for (const depth of [24, 20, 28, 32]) {
+    for (const dx of [0, 4, -4, 8, -8]) {
+      const y = easyY(seat, depth);
+      if (troopDeployCheck(state.structures, seat, x + dx, y, solids).ok) return { x: x + dx, y };
+    }
+  }
+  return null;
+}
+
+function easySpellSpot(state: CombatState, seat: PlayerIndex, card: string): { x: number; y: number } | null {
+  const homeY = seat === 0 ? 0 : ARENA_V2.maxY;
+  const distance = (unit: { x: number; y: number }) => Math.abs(unit.y - homeY) + Math.abs(unit.x - 50) * 0.01;
+  const byId = (a: { id: string }, b: { id: string }) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+  if (card === "rally_horn") {
+    const own = state.troops
+      .filter((unit) => unit.owner === seat && unit.hp > 0)
+      .sort((a, b) => distance(b) - distance(a) || byId(a, b));
+    return own[0] ? { x: own[0].x, y: own[0].y } : null;
+  }
+  if (card === "chaos_bolt") {
+    const foes = state.troops
+      .filter((unit) => unit.owner !== seat && unit.hp > 0)
+      .sort((a, b) => distance(a) - distance(b) || byId(a, b));
+    return foes[0] ? { x: foes[0].x, y: foes[0].y } : null;
+  }
+  if (card === "rift_snare") {
+    const foes = [...state.troops, ...state.commanders]
+      .filter((unit) => unit.owner !== seat && unit.hp > 0 && unit.moveType === "ground")
+      .sort((a, b) => distance(a) - distance(b) || byId(a, b));
+    return foes[0] ? { x: foes[0].x, y: foes[0].y } : null;
+  }
+  if (card === "chaos_comet") {
+    const building = state.buildings
+      .filter((entry) => entry.owner !== seat && entry.alive)
+      .sort((a, b) => a.hp - b.hp || (a.id < b.id ? -1 : 1))[0];
+    if (building) return { x: building.x, y: building.y };
+    const tower = state.structures
+      .filter((entry) => entry.owner !== seat && entry.alive && entry.structure === "tower")
+      .sort((a, b) => a.hp - b.hp || (a.x - b.x))[0];
+    if (tower) return { x: tower.x, y: tower.y };
+    const foe = [...state.troops, ...state.commanders]
+      .filter((unit) => unit.owner !== seat && unit.hp > 0)
+      .sort((a, b) => distance(a) - distance(b) || byId(a, b))[0];
+    return foe ? { x: foe.x, y: foe.y } : null;
+  }
+  return null;
+}
+
+function easyChoose(state: CombatState, seat: PlayerIndex): PracticeMove {
+  if (state.energy[seat] < Math.min(EASY_ENERGY_FLOOR, ENERGY_V1.max)) return null;
+  const snap = state.commanderSnapshots[seat];
+  const commanderAlive = state.commanders.some((c) => c.owner === seat && c.hp > 0);
+  const depthOf = (y: number) => (seat === 0 ? y : ARENA_V2.maxY - y);
+  const invaders = [...state.troops, ...state.commanders].filter((unit) => unit.owner !== seat && unit.hp > 0 && depthOf(unit.y) < 60);
+  if (invaders.length > 0) {
+    const laneX = Math.round(invaders.reduce((sum, unit) => sum + unit.x, 0) / invaders.length);
+    for (const card of state.hands[seat]) {
+      if (isCommanderCard(card) || BUILDING_CARDS_V1[card]) continue;
+      if (card === "rally_horn" || card === "chaos_bolt" || card === "rift_snare" || card === "chaos_comet") continue;
+      if (easyCost(state, seat, card) > state.energy[seat]) continue;
+      const at = easyDefenseSpot(state, seat, laneX);
+      if (at) return { cardId: card, ...at };
+    }
+  }
+  for (const card of state.hands[seat]) {
+    if (easyCost(state, seat, card) > state.energy[seat]) continue;
+    if (isCommanderCard(card) && (commanderAlive || !snap)) continue;
+    if (card === "rally_horn" || card === "chaos_bolt" || card === "rift_snare" || card === "chaos_comet") {
+      const at = easySpellSpot(state, seat, card);
+      if (at) return { cardId: card, ...at };
+      continue;
+    }
+    const building = BUILDING_CARDS_V1[card];
+    if (building) {
+      const at = easyBuildingSpot(state, seat, building);
+      if (at) return { cardId: card, ...at };
+      continue;
+    }
+    const at = easyTroopSpot(state, seat, isCommanderCard(card));
+    if (at) return { cardId: card, ...at };
+  }
+  return null;
+}
+
+/** EASY: deliberately simpler decisions. No ability timing. */
+export const easyPolicy: PracticePolicy = {
+  difficulty: "easy",
+  choose: (state, seat) => {
+    const m = easyChoose(state, seat);
+    return m ? { cardId: m.cardId, x: Math.round(m.x), y: Math.round(m.y) } : null;
+  },
+  ability: () => null,
+};
+
+/**
+ * TUTORIAL stage 2: a deliberately passive training opponent. It waits for a
+ * high energy buffer, only plays ordinary troops and places them at the back
+ * of its own side. It never counters, uses spells, builds or abilities. The
+ * player still fights a real battle and must actually destroy a tower.
+ */
+export const tutorialPolicy: PracticePolicy = {
+  difficulty: "easy",
+  choose: (state, seat) => {
+    if (state.energy[seat] < 8) return null;
+    const troop = state.hands[seat].find((card) => !isCommanderCard(card) && TROOP_CARDS_V1[card]);
+    if (!troop) return null;
+    const cost = CARDS_V1[troop]?.cost ?? 99;
+    if (cost > state.energy[seat]) return null;
+    const lane = Math.floor(state.tick / 8) % 2 === 0 ? 30 : 70;
+    for (const depth of [18, 22, 14, 26]) {
+      for (const dx of [0, 4, -4]) {
+        const x = lane + dx;
+        const y = seat === 0 ? depth : ARENA_V2.maxY - depth;
+        if (troopDeployCheck(state.structures, seat, x, y, buildingSolids(state.buildings)).ok) {
+          return { cardId: troop, x, y };
+        }
+      }
+    }
+    return null;
   },
   ability: () => null,
 };
@@ -458,6 +639,8 @@ export const ultimatePolicy: PracticePolicy = {
 
 export function policyFor(difficulty: PracticeDifficulty): PracticePolicy {
   switch (difficulty) {
+    case "easy":
+      return easyPolicy;
     case "medium":
       return mediumPolicy;
     case "hard":

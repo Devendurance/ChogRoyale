@@ -56,6 +56,7 @@ export default function AppNav({ activeId = "lobby" }: { activeId?: string }) {
             href={tab.href}
             className={`app-nav__item${isActive ? " app-nav__item--active" : ""}`}
             aria-current={isActive ? "page" : undefined}
+            data-tour={`nav-${tab.id}`}
           >
             {isActive && (
               <span className="app-nav__chev app-nav__chev--left" aria-hidden="true">

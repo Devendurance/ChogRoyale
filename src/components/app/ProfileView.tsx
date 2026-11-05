@@ -176,6 +176,9 @@ export default function ProfileView({
                     <span className="app-badge">{accountStatusLabel(player?.accountStatus)}</span>
                     <span className={`app-badge${verifiedWallets > 0 ? "" : " app-badge--muted"}`}>{walletText}</span>
                   </div>
+                  <button type="button" className="app-btn app-btn--ghost app-profile-id__tour" data-tour-start data-audio-skip="true">
+                    <Icon name="guide" size={15} /> Tour the kingdom
+                  </button>
                 </div>
               </section>
 

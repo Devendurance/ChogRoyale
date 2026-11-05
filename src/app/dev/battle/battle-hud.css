@@ -522,3 +522,291 @@
   .chud-side-tag[data-side="foe"] .chud-player { font-size: 24px; max-width: 38vw; }
   .chud-phase-banner { top: calc(var(--chud-field-top, 0px) + var(--chud-field-h, 100dvh) / 2); }
 }
+
+/* Training Camp coach and completion. The in-battle coach never blocks the
+   board or hand; only the completion panel is a true modal. */
+.chud-training-coach {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 66px);
+  left: 50%;
+  z-index: 65;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: min(430px, calc(100vw - 20px));
+  padding: 10px 12px;
+  transform: translateX(-50%);
+  border: 2px solid #bf986e;
+  border-radius: 14px;
+  background: #1d1458f2;
+  box-shadow: inset 0 2px #ffffff2e, 0 4px 0 #120b45;
+  color: #fff;
+  pointer-events: none;
+}
+
+.chud-training-coach__badge {
+  flex: none;
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  height: 30px;
+  padding: 0 7px;
+  border: 2px solid #120b45;
+  border-radius: 9px;
+  background: #32229a;
+  color: #3dd9ff;
+  font: 400 15px/1 var(--font-lilita), sans-serif;
+}
+
+.chud-training-coach__copy {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.chud-training-coach__copy b {
+  display: block;
+  color: #fff1c8;
+  font: 400 16px/1.1 var(--font-lilita), sans-serif;
+}
+
+.chud-training-coach__copy p {
+  margin: 3px 0 0;
+  color: #dfceef;
+  font: 500 12px/1.35 var(--font-georama), sans-serif;
+}
+
+.chud-training-coach__exit {
+  flex: none;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 2px solid #120b45;
+  border-radius: 8px;
+  background: #32229a;
+  color: #fff;
+  font: 400 13px/1 var(--font-lilita), sans-serif;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.chud-training-done {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: radial-gradient(ellipse at 50% 38%, rgba(90, 68, 217, 0.5), rgba(10, 6, 40, 0.92) 72%);
+}
+
+.chud-training-done__panel {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  width: min(380px, 100%);
+  padding: 24px 20px 20px;
+  border: 3px solid #120b45;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #32229a, #1d1458 72%);
+  box-shadow: inset 0 2px #ffffff2e, 0 6px 0 #120b45;
+  text-align: center;
+}
+
+.chud-training-done__eyebrow {
+  margin: 0;
+  color: #ffc83d;
+  font: 700 10px/1.2 var(--font-georama), sans-serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.chud-training-done__panel h2 {
+  margin: 0;
+  color: #fff;
+  font: 400 30px/1.05 var(--font-lilita), sans-serif;
+  -webkit-text-stroke: 3px #120b45;
+  paint-order: stroke fill;
+}
+
+.chud-training-done__panel p {
+  margin: 0;
+  color: #dfceef;
+  font: 500 14px/1.5 var(--font-georama), sans-serif;
+}
+
+.chud-training-done__progress {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  color: #3dd9ff;
+  font: 400 18px/1 var(--font-lilita), sans-serif;
+}
+
+.chud-training-done__progress span + span {
+  color: #dfceef;
+  font: 500 11px/1.2 var(--font-georama), sans-serif;
+}
+
+.chud-training-done__action {
+  min-height: 48px;
+  width: 100%;
+  margin-top: 4px;
+  padding: 0 18px;
+  border: 2px solid #120b45;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #ffc83d, #ffa318);
+  color: #2b1450;
+  font: 400 20px/1 var(--font-lilita), sans-serif;
+  cursor: pointer;
+  box-shadow: inset 0 2px #fff8c9, 0 4px 0 #120b45;
+}
+
+@media (max-height: 560px) {
+  .chud-training-coach {
+    top: calc(env(safe-area-inset-top, 0px) + 8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chud-training-done,
+  .chud-training-coach {
+    animation: none;
+  }
+}
+
+.chud-training-pocket {
+  position: fixed;
+  z-index: 34;
+  display: grid;
+  place-items: start center;
+  padding-top: 5px;
+  border: 2px dashed #3dd9ff;
+  border-radius: 10px;
+  background: rgba(61, 217, 255, 0.13);
+  box-shadow: inset 0 0 0 1px rgba(61, 217, 255, 0.24), 0 0 18px rgba(61, 217, 255, 0.3);
+  pointer-events: none;
+  animation: chud-training-pocket-pulse 1.8s ease-in-out infinite;
+}
+
+.chud-training-pocket span {
+  padding: 2px 7px;
+  border: 1px solid #120b45;
+  border-radius: 999px;
+  background: #120b45e6;
+  color: #bff6ff;
+  font: 700 9px/1.2 var(--font-georama), sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+@keyframes chud-training-pocket-pulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chud-training-pocket { animation: none; opacity: 1; }
+}
+
+.chud-finale-training-note {
+  max-width: 32ch;
+  margin: 8px auto 0;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 200, 61, 0.45);
+  border-radius: 10px;
+  background: rgba(255, 200, 61, 0.1);
+  color: #ffe8b0;
+  font: 600 12px/1.45 var(--font-georama), sans-serif;
+  text-align: center;
+}
+
+/* Slice 3C: stage 3 checklist, live Chaos coaching and graduation. */
+.chud-training-coach__steps {
+  display: grid;
+  gap: 3px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chud-training-coach__steps li {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  color: #d8d2ff;
+  font: 600 10px/1.35 var(--font-georama), sans-serif;
+}
+
+.chud-training-coach__steps li[data-done="true"] {
+  color: #8ef0b8;
+}
+
+.chud-training-coach__steps li span[aria-hidden="true"] {
+  width: 10px;
+  flex: none;
+  text-align: center;
+}
+
+.chud-training-coach__chaos {
+  margin: 6px 0 0;
+  padding: 5px 8px;
+  border: 1px solid rgba(255, 200, 61, 0.5);
+  border-radius: 8px;
+  background: rgba(255, 200, 61, 0.12);
+  color: #ffe8b0;
+  font: 600 10px/1.4 var(--font-georama), sans-serif;
+}
+
+.chud-training-coach__chaos[data-chaos="active"] {
+  border-color: rgba(255, 120, 90, 0.6);
+  background: rgba(255, 120, 90, 0.14);
+  color: #ffd2c4;
+}
+
+.chud-training-done[data-graduated="true"] {
+  background: radial-gradient(ellipse at 50% 34%, rgba(255, 200, 61, 0.3), rgba(10, 6, 40, 0.94) 70%);
+}
+
+.chud-training-done[data-graduated="true"] .chud-training-done__panel {
+  border-color: #ffc83d;
+  background: linear-gradient(180deg, #4a32b8, #1d1458 68%);
+  box-shadow: inset 0 2px #ffffff2e, 0 6px 0 #120b45, 0 0 34px rgba(255, 200, 61, 0.35);
+}
+
+.chud-training-done__crown {
+  width: 54px;
+  height: 50px;
+  background: url("/assets/brand/v1/chog-royale-crown.webp") center / contain no-repeat;
+  filter: drop-shadow(0 3px 0 #120b45);
+}
+
+.chud-training-done__actions {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+}
+
+.chud-training-done__secondary {
+  min-height: 44px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #cfc8ff;
+  font: 600 12px/1 var(--font-georama), sans-serif;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.chud-card[data-coach-focus="true"] {
+  box-shadow: 0 0 0 3px #ffc83d, 0 0 16px rgba(255, 200, 61, 0.65);
+}
+
+.chud-ability[data-coach-focus="true"] {
+  box-shadow: 0 0 0 3px #ffc83d, 0 0 16px rgba(255, 200, 61, 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chud-training-done__crown { filter: none; }
+}

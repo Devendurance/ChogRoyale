@@ -102,6 +102,16 @@ describe("DecksView card level plates", () => {
 });
 
 describe("DecksView upgrade feedback", () => {
+  it("opens the card detail as a modal with a reachable close and deck action", () => {
+    const html = render({ selectedCardId: "chogling" });
+    expect(html).toContain('class="app-cardmodal"');
+    expect(html).toMatch(/role="dialog" aria-modal="true"/);
+    expect(html).toContain('aria-label="Close the card details"');
+    expect(html).toContain("app-cardmodal__body");
+    expect(html).toContain("app-cardmodal__foot");
+    expect(html).toContain("Remove from deck");
+  });
+
   it("uses the green upgrade action in the card detail and keeps it disabled while locked", () => {
     const readyHtml = render({ selectedCardId: "chogling" });
     expect(readyHtml).toMatch(/class="app-btn app-btn--upgrade"[^>]*>.*Upgrade card/);
@@ -121,5 +131,34 @@ describe("DecksView upgrade feedback", () => {
     expect(html).toContain('<span class="app-levelup__plate">Level 3</span>');
     expect(html).toContain('<span class="app-levelup__plate app-levelup__plate--after">Level 4</span>');
     expect(html).toContain('aria-modal="true"');
+  });
+});
+
+describe("DecksView post-training tour targets", () => {
+  it("marks only the first visible collection card as the real card target", () => {
+    const deckTab = render({ tab: "deck" });
+    expect(deckTab).not.toContain('data-tour="collection-card"');
+
+    const collection = render({ tab: "collection" });
+    expect((collection.match(/data-tour="collection-card"/g) ?? []).length).toBe(1);
+  });
+
+  it("exposes the real progression values the tour sentence reads", () => {
+    const html = render({ selectedCardId: "chogling" });
+    expect(html).toContain('data-tour="card-progress"');
+    expect(html).toContain('data-state="ready"');
+    expect(html).toContain('data-level="3"');
+    expect(html).toContain('data-xp="450"');
+    expect(html).toContain('data-xp-target="400"');
+    expect(html).toContain('data-gold="150"');
+    expect(html).toContain("data-tour=\"card-detail-close\"");
+  });
+
+  it("never exposes a level or a Gold price while the server read is unavailable", () => {
+    const html = render({ selectedCardId: "chogling", progressionPhase: "unavailable", progression: {} });
+    expect(html).toContain('data-tour="card-progress"');
+    expect(html).toContain('data-state="unavailable"');
+    expect(html).toMatch(/data-level=""/);
+    expect(html).toMatch(/data-gold=""/);
   });
 });

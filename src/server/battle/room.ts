@@ -25,6 +25,7 @@ import type { PrivyTokenVerifier } from "@/lib/privy-server";
 import { CLIENT_READY_MESSAGE, readySchema, type ArmingMessage, type CommanderChoice } from "@/lib/battle-protocol";
 import { BattleSession, type SeatPlayer, type SessionRandom, type TrustedLoadout } from "@/server/battle/session";
 import { MATCH_ARMING_MS, MatchArming } from "@/server/battle/arming";
+import { productionTutorialDeps, type TutorialDeps } from "@/server/tutorial";
 import { productionEntitlementDeps, resolveCommander, type EntitlementDeps } from "@/server/battle/entitlement";
 import { productionPatronSource, type PatronSource } from "@/server/battle/patron-source";
 import type { MatchCoordinator, MatchCoordinatorFallbackDeps, PendingMatch } from "@/server/battle/matchmaking";
@@ -70,6 +71,8 @@ export interface BattleRoomDeps {
    * battlefield before it aborts with no result. Zero skips the wait, which
    * only protocol tests with headless clients do. */
   armingMs?: number;
+  /** Training Camp progress and admission. Absent uses the production DB. */
+  tutorial?: TutorialDeps;
   /** Durable settlement service; absent or null disables DB writes. */
   settlement?: SettlementService | null;
   /** Arena Patron source; defaults to the indexed Genesis pool. */
@@ -249,7 +252,7 @@ export class BattleRoom extends Room {
     }
   }
 
-  onJoin(client: BattleClient, options?: { resume?: unknown }) {
+  async onJoin(client: BattleClient, options?: { resume?: unknown }) {
     const playerId = client.auth.playerId;
     if (this.matched && !this.matched.playerIds.has(playerId)) {
       throw new ServerError(409, "Not a player in this match");
@@ -261,11 +264,15 @@ export class BattleRoom extends Room {
       this.resume(client, options?.resume);
       return;
     }
+    const wasSeated = this.session.slotOf(playerId) >= 0;
+    if (!wasSeated) {
+      const admission = await (BattleRoom.deps.tutorial ?? productionTutorialDeps).admission(playerId);
+      if (!admission.allowed) throw new ServerError(403, "Finish Training Camp to unlock battles");
+    }
     // Waiting phase: claim the activity pin before seating so a player can
     // only ever be inside one queue/room at a time.
     const coordinator = BattleRoom.coordinator;
     coordinator?.claimRoom(playerId, this.roomId);
-    const wasSeated = this.session.slotOf(playerId) >= 0;
     try {
       this.session.join(client.auth);
     } catch (e) {

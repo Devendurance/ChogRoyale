@@ -33,6 +33,7 @@ export const UNRANKED_FALLBACK_NO_REWARDS = "No rewards earned in this AI battle
 export const PRACTICE_OPPONENT = "AI Opponent";
 
 const PRACTICE_DIFFICULTY_NAMES: Record<PracticeDifficulty, string> = {
+  easy: "Easy",
   medium: "Medium",
   hard: "Hard",
   ultimate: "Ultimate",

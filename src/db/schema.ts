@@ -1315,3 +1315,49 @@ export const accountXpAwardClaims = pgTable(
 );
 
 export type AccountXpAwardClaimRow = typeof accountXpAwardClaims.$inferSelect;
+
+// Training Camp. Additive and default-OFF: the app never writes the release
+// row; an owner-gated activation step inserts the singleton after migration.
+// Progress is per player and only the next stage can advance. Grandfathering
+// is recorded explicitly so an old account never needs a fake completion.
+export const playerTutorialProgress = pgTable(
+  "player_tutorial_progress",
+  {
+    playerId: uuid("player_id")
+      .primaryKey()
+      .references(() => players.id, { onDelete: "restrict" }),
+    stage: smallint("stage").notNull().default(0),
+    stage1CompletedAt: timestamp("stage1_completed_at", { withTimezone: true }),
+    stage2CompletedAt: timestamp("stage2_completed_at", { withTimezone: true }),
+    stage3CompletedAt: timestamp("stage3_completed_at", { withTimezone: true }),
+    grandfatheredAt: timestamp("grandfathered_at", { withTimezone: true }),
+    graduatedAt: timestamp("graduated_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check("player_tutorial_progress_stage_check", sql`${t.stage} between 0 and 3`),
+    check("player_tutorial_progress_stage1_check", sql`(${t.stage1CompletedAt} is null) = (${t.stage} < 1)`),
+    check("player_tutorial_progress_stage2_check", sql`(${t.stage2CompletedAt} is null) = (${t.stage} < 2)`),
+    check("player_tutorial_progress_stage3_check", sql`(${t.stage3CompletedAt} is null) = (${t.stage} < 3)`),
+    check("player_tutorial_progress_graduation_check", sql`(${t.graduatedAt} is null) = (${t.stage} < 3)`),
+  ]
+);
+
+export type PlayerTutorialProgressRow = typeof playerTutorialProgress.$inferSelect;
+
+export const tutorialRelease = pgTable(
+  "tutorial_release",
+  {
+    id: smallint("id").primaryKey(),
+    enforcedAt: timestamp("enforced_at", { withTimezone: true }).notNull().defaultNow(),
+    grandfatherBefore: timestamp("grandfather_before", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check("tutorial_release_singleton_check", sql`${t.id} = 1`),
+    check("tutorial_release_window_check", sql`${t.grandfatherBefore} <= ${t.enforcedAt}`),
+  ]
+);
+
+export type TutorialReleaseRow = typeof tutorialRelease.$inferSelect;

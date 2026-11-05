@@ -13,6 +13,7 @@ import { BATTLE_PRACTICE_ROOM, BATTLE_QUEUE_ROOM, BATTLE_RANKED_QUEUE_ROOM, BATT
 import { logger } from "@/lib/logger";
 import type { SeatPlayer } from "@/server/battle/session";
 import { authenticateSeat, type BattleRoomDeps } from "@/server/battle/room";
+import { productionTutorialDeps } from "@/server/tutorial";
 
 export interface FallbackRoomHandle {
   roomId: string;
@@ -453,7 +454,7 @@ type QueueClient = Client & { auth: SeatPlayer };
  * mode comes from the concrete subclass, never from a client option.
  */
 export class QueueRoom extends Room {
-  static deps: Pick<BattleRoomDeps, "verifier" | "loader"> = {};
+  static deps: Pick<BattleRoomDeps, "verifier" | "loader" | "tutorial"> = {};
   static coordinator: MatchCoordinator | null = null;
   /** Overridden by RankedQueueRoom. Base class is the casual queue. */
   static queueMode: QueueMode = "unranked";
@@ -465,9 +466,11 @@ export class QueueRoom extends Room {
     return authenticateSeat(token, QueueRoom.deps);
   }
 
-  onJoin(client: QueueClient) {
+  async onJoin(client: QueueClient) {
     const coordinator = (this.constructor as typeof QueueRoom).coordinator;
     if (!coordinator) throw new ServerError(503, "Matchmaking unavailable");
+    const admission = await (QueueRoom.deps.tutorial ?? productionTutorialDeps).admission(client.auth.playerId);
+    if (!admission.allowed) throw new ServerError(403, "Finish Training Camp to unlock battles");
     const mode = (this.constructor as typeof QueueRoom).queueMode;
     const ticket = coordinator.enqueue(
       client.auth,

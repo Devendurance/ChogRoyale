@@ -1,5 +1,9 @@
 # Fast Build State
 
+> Active milestone, 2026-11-04: Next Player Experience. Read
+> `.fast-build/NEXT-PASS-STATE.md` first. The sections below are the historical
+> build log and do not describe current status.
+
 ## Product
 - Name: Chog Royale (chog-royale, private repo)
 - Outcome: Real-time 1v1 NFT-powered strategy game on Monad
@@ -270,3 +274,46 @@
 - Perf/stability: DOM-only card portraits excluded from Phaser (-6.6 MB GPU textures, 123.5 -> 116.9 MB), WebGL context lost on game destroy (8 rematches keep 1 open context), prewarm retained. Phone 56.2 / tablet 56.7 / desktop 53.3 avg FPS at p95 16.8 ms on Intel Iris Xe.
 - Checks: 75 focused tests, typecheck, scoped lint, production build. Evidence: `docs/v1-stabilization.md`, `ChogRoyale-Assets/final-assets/live/v1`.
 - PR #25 open: https://github.com/Devendurance/ChogRoyale/pull/25. Owner review; no merge, deploy or flag changes.
+
+## Next Player Experience: Easy Practice (2026-11-04)
+- Added server-validated Easy Practice (`practice-easy-v1`) with a simpler first-legal-card policy, banked energy, plain defensive bodies, no abilities and no counter targeting. Same deck, costs, placement checks and rules.
+- Evidence: 12 identical-deck Easy vs Medium games -> Easy 0 / Medium 12, all replay-identical; a simple novice policy beat Easy 8/8 and Medium 0/8. Real client: entry/lobby/result show Easy and Battle Again keeps `difficulty: "easy"`. 78 focused tests, typecheck, scoped lint and build pass.
+- Next: Slice 3 tutorial progress and gated battles. See `.fast-build/NEXT-PASS-STATE.md`.
+
+## Next Player Experience: Training Camp 3A (2026-11-04)
+- Additive migration 0029 adds per-player Training Camp progress and the owner-only release boundary. Applied to TEST only; production untouched, enforcement flag default OFF.
+- Added `battle_tutorial` (reuses PracticeRoom/BattleSession/readiness/reconnect), a server-owned teaching deck, and authoritative stage-1 completion from an accepted troop deploy ack. Added the Training Camp hub at `/app/play/training`, Battle 1 at `/app/play/training/battle?stage=1`, and the Training Captain coach.
+- Admission gate hooks cover new BattleRoom, QueueRoom and PracticeRoom joins; reconnects and the tutorial room stay allowed. Grandfathering uses an explicit release boundary. Battles 2/3 and Play Hub lock states remain.
+- Evidence: docs/training-camp.md, `ChogRoyale-Assets/next-pass-20261104/visual/training-camp`; DB 4/4, policy 6/6, room 5/5, focused 75, typecheck, scoped lint, build.
+- Next: 3B towers/territory + Play Hub locks; keep enforcement OFF.
+
+## Next Player Experience: Training Camp 3B (2026-11-04)
+- Battle 2 (Towers & Territory) is playable after Battle 1. The server completes it only on a real `structure_destroyed` enemy tower event plus a later accepted troop deploy in the engine's pocket-left/pocket-right zone. Own-side, other-lane, spell, building and client-claim paths do not complete it.
+- Added the real-pocket highlight, tower-fall coach, stage-specific briefing, result "what remains" note, stage-2 reconnect, a passive tutorial bot, and Play Hub training-required locks with progress and Continue Training.
+- Evidence: real-socket tutorial 6/6 including tower and reconnect; both-seat pocket 2/2; DB 4/4; policy 6/6; UI/Play Hub/battle-result suites; typecheck, scoped lint, build. Browser: `ChogRoyale-Assets/next-pass-20261104/visual/training-camp-2`.
+- Next: 3C Battle 3 and graduation. Keep enforcement OFF; no production migration or flag change.
+
+## Next Player Experience: Training Camp 3C and graduation (2026-11-04)
+- Battle 3 (Your First Strategy) is playable at `/app/play/training/battle?stage=3` at 2/3 or better. The room completes it only on three authoritative facts: two accepted ordinary troop deploys, a human `commander_deployed` event and a human `ability_fired` event with `trigger: "active"`.
+- The coach walks push, commander and ability, highlights the real commander card and the real Aegis Wall control, explains energy/cooldown, and recovers if the commander falls. Chaos copy comes only from authoritative `frame.chaos`; graduation never depends on a pulse.
+- Graduation writes 3/3 and `graduated_at` once, preserves earlier timestamps, survives replay, and offers Enter Battle Hall. The camp shows 3/3 with three replay links.
+- Release activation for migration 0029 and `TUTORIAL_ENFORCEMENT_ENABLED` is documented but not applied; the flag stays OFF.
+- Evidence: tutorial sockets 10/10, DB 5/5 (including concurrent graduation), Training UI 9/9, Play Hub 3/3, battle-result 45/45, pocket 2/2, typecheck, scoped lint, build. Browser: `ChogRoyale-Assets/next-pass-20261104/visual/training-camp-3`.
+- Next: Slice 4, the post-tutorial navigation coach.
+
+## Next Player Experience: Meet Your Kingdom tour (2026-11-05)
+- Added the post-training tour in the shared /app layout. It covers the real Lobby, Battle Hall, Decks, Collection card, card progression, Commanders, Progress and Profile surfaces.
+- Server-gated to a 3/3 tutorial read. The invitation appears once on the lobby or Battle Hall, grandfathered accounts can start from Profile, and failed reads hide both actions. Progress is re-read after a battle, not on every tab change.
+- Next and Back push only the step route. Manual navigation pauses instead of pulling the player back. Skip dismisses, Finish completes, Escape pauses, and a saved step resumes once.
+- The card sheet drops its focus trap and aria-modal promise while the tour explains it through a shared external store. The upgrade lesson reads the real purchased level, earned XP, XP target, Gold and eligibility, and says tower upgrades do not exist.
+- Coach placement measures real targets, ignores hidden Cache Components routes, clamps for safe areas and the fixed nav, keeps 44px controls and honors reduced motion.
+- Evidence: 39 focused tests, typecheck, scoped ESLint, production build. Browser: ChogRoyale-Assets/next-pass-20261104/visual/navigation-coach. Live Privy acceptance remains owner-gated.
+- Next: Slice 5, scenic /app lobby atmosphere.
+
+## Next Player Experience: Scenic Chaos Crossing lobby (2026-11-05)
+- Added the scenic layer only to the ready authenticated /app lobby. The approved optimized world-surround-soft.webp (2300x1400, 400,918 bytes) sits behind the home content with a green fallback, warm light bloom, vignette and two transform/opacity atmosphere layers.
+- Dark forest glass panels replace the solid violet slabs. Purple stays as the accent on active tabs, commander badges, deck cards and secondary actions. The HUD and nav become forest shelves. The Battle action remains orange and prominent.
+- HomeSummary moves to the same forest glass while keeping gold, cyan and violet accents. Reduced motion and calm remove both ambient animations. The fixed scene has no layout shift and no full-viewport runtime blur.
+- Scope: LobbyView ready state only. Gates, battle, Training Camp, card modal, navigation coach and every other authenticated route keep their own backgrounds.
+- Evidence: 6 focused lobby and summary tests, typecheck, scoped ESLint, production build. Before/after, motion, calm and tour-over-scene captures at ChogRoyale-Assets/next-pass-20261104/visual/lobby. Green-dominant pixels 0% -> 18.5-63.6%, no horizontal overflow, Battle and nav clickable, coach above the scene.
+- Next: all five product slices implemented. Coordinated full-feature review, real-player acceptance and owner-approved release planning.

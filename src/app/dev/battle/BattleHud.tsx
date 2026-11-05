@@ -20,6 +20,7 @@ import type {
 } from "@/lib/battle-protocol";
 import type { ArenaPoint } from "@/lib/battle-input";
 import type { RankedAwardView } from "@/lib/ranked";
+import type { TutorialMessage, TutorialStage } from "@/lib/tutorial-camp";
 import type { BoardMapper, CanvasFeed } from "./BattleCanvas";
 
 // Phaser must stay client-only, same as page.tsx's original dynamic import.
@@ -32,6 +33,8 @@ import { satoshi, georama, lilitaOne } from "@/components/site/fonts";
 import type { BattleCue } from "./battle-audio";
 import { GameIcon } from "@/components/game/GameIcon";
 import BattleResult from "./BattleResult";
+import TrainingCoach from "./TrainingCoach";
+import TrainingPocketHighlight from "./TrainingPocketHighlight";
 import CrownCelebration from "./CrownCelebration";
 import { PRACTICE_OPPONENT, practiceDifficultyLabel } from "./battle-result-model";
 import "./battle-hud.css";
@@ -59,6 +62,12 @@ export interface BattleHudProps {
   onGiveUp?: () => void;
   onExit?: () => void;
   onBattleAgain?: () => void;
+  /** Training Camp lesson state and exit. Absent outside the guided room. */
+  tutorial?: TutorialMessage | null;
+  tutorialStage?: TutorialStage;
+  onTutorialExit?: () => void;
+  /** Hand a graduated player to the real battle hall. */
+  onTutorialGraduated?: () => void;
   /** The server is holding tick 0 for this match. */
   arming?: boolean;
   /** This client has painted the battlefield. */
@@ -126,6 +135,7 @@ function CardButton({
   energyProgress,
   selected,
   dragging,
+  coachFocus = false,
   handlers,
   onSelect,
 }: {
@@ -137,6 +147,7 @@ function CardButton({
   energyProgress: number;
   selected: boolean;
   dragging: boolean;
+  coachFocus?: boolean;
   handlers: {
     onPointerDown: (e: React.PointerEvent<HTMLButtonElement>) => void;
     onPointerMove: (e: React.PointerEvent<HTMLButtonElement>) => void;
@@ -160,6 +171,7 @@ function CardButton({
       className="chud-card"
       data-selected={selected}
       data-afford={afford}
+      data-coach-focus={coachFocus ? "true" : undefined}
       aria-label={`${card?.name ?? id}, ${cost} energy${!afford ? ", not enough energy" : ""}${isCommanderCard(id) ? ", commander class art" : ""}`}
       style={{ opacity: dragging ? 0.3 : 1 }}
     >
@@ -223,6 +235,7 @@ function AbilityButton({
   acks,
   send,
   onAudioUnlock,
+  coachFocus = false,
 }: {
   a: AbilityView;
   frame: BattleFrame;
@@ -231,6 +244,7 @@ function AbilityButton({
   acks: Array<AckMessage & { label: string }>;
   send: BattleHudProps["send"];
   onAudioUnlock: BattleHudProps["onAudioUnlock"];
+  coachFocus?: boolean;
 }) {
   const [flash, setFlash] = useState(false);
   const seen = useRef<string | null>(null);
@@ -251,6 +265,7 @@ function AbilityButton({
       className="chud-ability"
       data-ability={a.abilityId}
       data-state={v.label}
+      data-coach-focus={coachFocus ? "true" : undefined}
       disabled={v.disabled}
       title={`${abilityLabel(a.abilityId, start.commander.class)} · ${a.cost}e · Commander class art${a.blockedBy ? ` · ${a.blockedBy}` : ""}`}
       onClick={() => {
@@ -501,11 +516,20 @@ export default function BattleHud(props: BattleHudProps) {
   const opponentSource = isUnrankedFallback ? "unranked-fallback" : isAiOpponent ? "practice" : undefined;
   const opponentBadgeClass = isUnrankedFallback ? "chud-pill chud-bot-badge chud-bot-badge--fallback" : "chud-pill chud-practice-badge";
 
+  // Stage 3 guides the commander card, then the real ability control. Both
+  // highlights are presentation only; the server decides what counts.
+  const stageThree = props.tutorial?.stage === 3 && !props.tutorial.completed;
+  const commanderDone = props.tutorial?.objectives.find((entry) => entry.id === "deploy_commander")?.done ?? false;
+  const abilityDone = props.tutorial?.objectives.find((entry) => entry.id === "use_ability")?.done ?? false;
+  const coachCommanderCard = stageThree && !commanderDone && frame?.hand.includes(start.commander.cardId) ? start.commander.cardId : null;
+  const coachAbility = stageThree && commanderDone && !abilityDone;
+  const chaos = frame?.chaos.find((entry) => entry.state === "active") ?? frame?.chaos.find((entry) => entry.state === "warning") ?? null;
+
   const abilityControls = frame && (
     <>
       {frame.abilities.length === 0 && <span className="chud-ability-empty">Deploy your commander to use its ability.</span>}
       {frame.abilities.map((a) => (
-        <AbilityButton key={a.abilityId} a={a} frame={frame} start={start} manifest={manifest} acks={acks} send={send} onAudioUnlock={props.onAudioUnlock} />
+        <AbilityButton key={a.abilityId} a={a} frame={frame} start={start} manifest={manifest} acks={acks} send={send} onAudioUnlock={props.onAudioUnlock} coachFocus={coachAbility && a.ready} />
       ))}
     </>
   );
@@ -643,6 +667,7 @@ export default function BattleHud(props: BattleHudProps) {
                     energyProgress={frame.energyProgress}
                     selected={selected === id}
                     dragging={dragging === id}
+                    coachFocus={coachCommanderCard === id}
                     handlers={handlersFor(id)}
                     onSelect={select}
                   />
@@ -667,7 +692,7 @@ export default function BattleHud(props: BattleHudProps) {
       {/* The server's first tick already happened. The reveal is pointer-
           transparent and clears in under two seconds so the live clock is
           never blocked. */}
-      {!start.resumed && !end && !abort && !props.arming && <div className="chud-start" aria-hidden="true">
+      {!start.resumed && !end && !abort && !props.arming && !props.tutorial && <div className="chud-start" aria-hidden="true">
         <div className="chud-start-band chud-start-band--foe">
           <span className="chud-start-emblem"><GameIcon kind="crown" size={46} /></span>
           <span className="chud-start-who"><small>{opponentBadge ?? "Opponent"}</small><b>{opponentName}</b></span>
@@ -683,7 +708,13 @@ export default function BattleHud(props: BattleHudProps) {
         <span className="chud-start-go">Battle!</span>
         <span className="chud-start-patron">Arena Patron · {start.patron.name ?? `CHOG #${start.patron.tokenId}`}</span>
       </div>}
-      {(end || abort) && <BattleResult start={start} end={end} abort={abort} settlement={settlement} botGold={props.botGold} goldBalance={props.goldBalance} goldBalanceStatus={props.goldBalanceStatus} botCardXp={props.botCardXp} cardXpReadbackStatus={props.cardXpReadbackStatus} accountXp={props.accountXp} accountXpStatus={props.accountXpStatus} accountXpReadbackStatus={props.accountXpReadbackStatus} spriteManifest={manifest} me={me} playerName={props.playerName} onExit={props.onExit} onAgain={props.onBattleAgain} onAudioCue={props.onAudioCue} rankedAward={props.rankedAward} rankedAwardStatus={props.rankedAwardStatus} />}
+      {props.tutorial?.stage === 2 && props.tutorial.towerLanes.length > 0 && !props.tutorial.completed && frame && (
+        <TrainingPocketHighlight start={start} frame={frame} towerLanes={props.tutorial.towerLanes} boardRef={boardElementRef} />
+      )}
+      {props.tutorial && (props.tutorial.completed || (!end && !abort)) && (
+        <TrainingCoach tutorial={props.tutorial} chaos={chaos} commanderAlive={Boolean(frame?.commanders.some((entry) => entry.owner === me))} onExit={props.onTutorialExit ?? props.onExit ?? (() => undefined)} onGraduated={props.onTutorialGraduated} />
+      )}
+      {(end || abort) && <BattleResult start={start} end={end} abort={abort} settlement={settlement} botGold={props.botGold} goldBalance={props.goldBalance} goldBalanceStatus={props.goldBalanceStatus} botCardXp={props.botCardXp} cardXpReadbackStatus={props.cardXpReadbackStatus} accountXp={props.accountXp} accountXpStatus={props.accountXpStatus} accountXpReadbackStatus={props.accountXpReadbackStatus} spriteManifest={manifest} me={me} playerName={props.playerName} onExit={props.onExit} onAgain={props.onBattleAgain} onAudioCue={props.onAudioCue} rankedAward={props.rankedAward} rankedAwardStatus={props.rankedAwardStatus} tutorial={Boolean(props.tutorialStage)} tutorialNote={props.tutorial && !props.tutorial.completed ? props.tutorial.stage === 2 ? "Training objective remaining: destroy an enemy tower, then deploy a troop in the new ground." : props.tutorial.stage === 3 ? "Training objective remaining: build a two-troop push, deploy your commander and fire its active ability." : "Training objective remaining: deploy a troop on your side of the arena." : null} />}
       {dragging && (
         <div
           ref={(el) => {

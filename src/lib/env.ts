@@ -10,6 +10,8 @@ const envSchema = z.object({
   NEON_AUTH_BASE_URL: z.string().url().optional(),
   MONAD_RPC_URL: z.string().url().default("https://rpc.monad.xyz"),
   MONAD_CHAIN_ID: z.coerce.number().default(143),
+  /** Default-OFF Training Camp admission gate. The migration alone never locks modes. */
+  TUTORIAL_ENFORCEMENT_ENABLED: z.enum(["0", "1"]).default("0"),
 });
 
 export type AppEnv = z.infer<typeof envSchema>;

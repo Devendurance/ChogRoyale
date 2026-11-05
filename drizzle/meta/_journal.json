@@ -204,6 +204,13 @@
       "when": 1793304368513,
       "tag": "0028_true_owl",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1793813808721,
+      "tag": "0029_dazzling_mole_man",
+      "breakpoints": true
     }
   ]
 }

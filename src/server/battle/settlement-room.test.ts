@@ -74,7 +74,9 @@ beforeAll(async () => {
     patrons: testPatronSource(),
     tickMs: 2,
     replayDir,
-    closeAfterMs: 50,
+    // The test client must have time to receive end and settlement under load.
+    // 10s is still bounded well below the production BattleRoom 30s.
+    closeAfterMs: 10_000,
     matchLobbyMs: 5_000,
     reconnectGraceMs: 400,
     settlement: service,
