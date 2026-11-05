@@ -26,10 +26,11 @@ existing Chaos Crossing art.
   playable, persist server-side and graduate to 3/3. The Play Hub lock states
   exist. Enforcement and the production migration remain default-OFF and
   owner-gated.
-- Post-tutorial navigation coach: no coachmark or tour code. Status: missing.
-- Scenic `/app` lobby: `.app-root` uses a purple gradient. Existing
-  Chaos Crossing world art is in `public/assets/arena/chaos-crossing/v003`.
-  Status: missing.
+- Post-tutorial navigation coach: `KingdomTour`, the shared tour-active store
+  and the real-route steps. Status: working, owner acceptance pending.
+- Scenic `/app` lobby: the ready lobby mounts the approved Chaos Crossing
+  `world-surround-soft.webp` behind forest-glass panels. Status: implemented,
+  owner visual acceptance pending.
 - Battle readiness, rematch lifecycle and WebGL cleanup are shipped in PR #25
   and must stay intact.
 
@@ -40,7 +41,7 @@ existing Chaos Crossing art.
   progression data.
 - [x] Slice 2: Easy Practice. Server-validated fourth difficulty, forgiving
   policy, difficulty copy, rematch retention. No reward change.
-- [ ] Slice 3: Tutorial battles 1-3 with authoritative staged completion,
+- [x] Slice 3: Tutorial battles 1-3 with authoritative staged completion,
   persistence, resume, retries and gated modes. Safe rollout/backfill.
   - [x] 3A: persistent progress contract + playable Battle 1.
   - [x] 3B: Battle 2 (towers, territory, real expanded pocket) and Play Hub
@@ -49,12 +50,14 @@ existing Chaos Crossing art.
     and release-ready eligibility. Production activation stays owner-gated.
 - [x] Slice 4: Post-tutorial navigation coach using the real routes and
   features. Reopenable, skippable, mobile-safe.
-- [ ] Slice 5: Scenic `/app` lobby atmosphere from existing world art.
+- [x] Slice 5: Scenic `/app` lobby atmosphere from existing world art.
   Readable, responsive, reduced-motion and low-end safe.
 
 ## Current slice
 
-Slice 4 complete. Slice 5 is next.
+All five product slices are implemented. The milestone now moves to a
+coordinated full-feature review, real-player acceptance and owner-approved
+release planning. Production activation remains owner-gated.
 
 ## Completed
 
@@ -224,6 +227,46 @@ Slice 4 complete. Slice 5 is next.
     and a real phone remain owner-gated. Tutorial enforcement, migration 0029
     and every live flag are unchanged.
 
+- 2026-11-05, Slice 5:
+  - Added a scenic Chaos Crossing layer to the ready authenticated `/app`
+    lobby only. The layer mounts from `LobbyView`, not the shared layout, so
+    gates, battle, Training Camp and every other route keep their own
+    backgrounds.
+  - Selected the existing optimized `world-surround-soft.webp` (2300x1400,
+    400,918 bytes) because its arena region is pixel-identical to the sharp
+    world and its outer scenery is already softened. No new environment art,
+    no runtime full-viewport blur and no second renderer.
+  - Composition: one cover-positioned world image, a green fallback, a warm
+    light bloom, a vignette, a darker forest floor, and two transform/opacity
+    only atmosphere layers. Phones position the image lower so the central
+    clearing stays visible.
+  - Interface: dark forest glass panels replace the solid violet slabs while
+    purple remains the accent on active tabs, commander badges, deck cards,
+    secondary deck actions and focus rings. The HUD and nav become forest
+    shelves. The Battle action keeps its orange plate and prominence.
+  - `HomeSummary.module.css` moves the resource summary, metrics and account
+    level to dark forest glass while keeping the gold, cyan and violet brand
+    accents.
+  - Reduced motion and `calm` remove both ambient animations. The scene is
+    fixed with a gradient fallback, so image loading cannot shift layout.
+  - Files: `src/components/app/LobbyScene.tsx`,
+    `src/components/app/LobbyView.tsx`, `src/components/app/AppHud.tsx`,
+    `src/components/app/HomeSummary.module.css`,
+    `src/components/app/app.css`, `src/components/app/LobbyView.test.ts` and
+    `docs/scenic-lobby.md`.
+  - Verification: focused lobby and summary tests, typecheck, scoped ESLint,
+    production build. Browser before/after at
+    `ChogRoyale-Assets/next-pass-20261104/visual/lobby`: scene loaded at every
+    viewport, green-dominant pixels rose from 0% to 18.5-63.6%, average RGB
+    moved from purple to green/teal, luminance rose, no horizontal overflow,
+    Battle and navigation stayed clickable, normal motion ran, calm and
+    reduced motion removed it, and the real coach stayed above the scene with
+    its real nav spotlight.
+  - Limits: browser evidence is a presentation fixture over the real lobby
+    component and real CSS, not a live Privy account. Live authenticated
+    acceptance and a physical phone remain owner-gated. No gameplay, reward,
+    settlement, economy, tutorial, migration or flag path changed.
+
 ## Verification
 
 - Slice 1: `npx vitest run src/components/app/DecksView.test.ts` 5/5,
@@ -255,6 +298,10 @@ Slice 4 complete. Slice 5 is next.
   ESLint; production build. Browser evidence at
   `.../visual/navigation-coach` across 320x568, 375x667, 390x844, 430x932,
   768x1024 and 1366x768, including reduced motion.
+- Slice 5: 6 focused lobby and summary tests; typecheck; scoped ESLint;
+  production build. Browser before/after at `.../visual/lobby` across
+  320x568, 375x667, 390x844, 430x932, 768x1024, 1366x768 and 1920x1080, plus
+  motion, calm and tour-over-scene checks.
 - Browser visual evidence is dev/production-equivalent fixture or injected-auth
   QA, not a live owner account. Live account acceptance remains owner-gated.
 
@@ -269,9 +316,10 @@ Slice 4 complete. Slice 5 is next.
 
 ## Next action
 
-Slice 5: the scenic `/app` lobby atmosphere from the existing Chaos Crossing
-world art. Keep it readable, responsive, reduced-motion and low-end safe. Do
-not add rewards, change tutorial enforcement or touch the battle world.
+All five product slices are implemented and recorded. The next step is a
+coordinated full-feature review, real-player acceptance and owner-approved
+release planning. Production migration 0029, the release boundary,
+`TUTORIAL_ENFORCEMENT_ENABLED`, merge and deployment remain owner-gated.
 
 ## References
 

@@ -54,3 +54,20 @@ describe("LobbyView deck cards", () => {
     );
   });
 });
+
+describe("LobbyView scenic world", () => {
+  it("mounts the soft Chaos Crossing world only on the ready lobby", () => {
+    const ready = renderToStaticMarkup(createElement(LobbyView, props));
+    expect(ready).toContain('<div class="app-home-scene" aria-hidden="true">');
+    expect(ready).toContain("world-surround-soft.webp");
+    expect(ready).toContain("app-home-scene__glow");
+    expect(ready).toContain("app-home-scene__mist");
+    expect(ready).toContain('class="app-hud app-hud--home"');
+
+    const login = renderToStaticMarkup(
+      createElement(LobbyView, { ...props, phase: "login", player: null }),
+    );
+    expect(login).not.toContain("app-home-scene");
+    expect(login).not.toContain("world-surround-soft.webp");
+  });
+});

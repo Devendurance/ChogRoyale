@@ -13,6 +13,7 @@ import { dedupeNotices } from "./feedback-model";
 import CommanderStage from "./CommanderStage";
 import HomeSummary from "./HomeSummary";
 import Icon from "./icons";
+import LobbyScene from "./LobbyScene";
 import type { LobbyArt, LobbyViewProps } from "./lobby-types";
 
 /** Approved art rendered at its own intrinsic size. */
@@ -142,9 +143,10 @@ export default function LobbyView({
 
   return (
     <>
-      <AppHud player={player} onSignOut={onSignOut} />
+      <AppHud player={player} onSignOut={onSignOut} className="app-hud--home" />
 
       <main className={`app-stage app-home${calm ? " app-calm" : ""}`}>
+        <LobbyScene />
         <div className="app-column">
           {noticeList.length > 0 && <div className="app-column__notices">{noticeList}</div>}
 

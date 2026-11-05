@@ -8273,3 +8273,212 @@ html[data-kingdom-tour="ready"] .app-root [data-tour-start] {
   .app-tour-invite { animation: none; }
   .app-tour__shade { transition: none; }
 }
+
+/* ===========================================================================
+   Slice 5: scenic Chaos Crossing kingdom lobby.
+   Only the ready /app home mounts .app-home-scene. Gates, the battle HUD and
+   every other authenticated route keep the existing shell background.
+   One optimized world image plus CSS atmosphere. No second renderer and no
+   full-viewport runtime blur.
+   ========================================================================== */
+
+.app-home {
+  --home-scene-ink: #061a1d;
+  --home-scene-deep: #071f26;
+}
+
+.app-home-scene {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 80% at 50% 0%, #2f6b4e 0%, #17453c 48%, #071f26 100%);
+  isolation: isolate;
+}
+
+.app-home-scene__image {
+  object-fit: cover;
+  object-position: 50% 52%;
+  opacity: 0.96;
+}
+
+.app-home-scene::before,
+.app-home-scene::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Warm light from above, a soft vignette and a deeper forest floor. */
+.app-home-scene::before {
+  z-index: 1;
+  background:
+    radial-gradient(76% 55% at 50% 0%, rgba(255, 224, 140, 0.26), transparent 64%),
+    linear-gradient(180deg, rgba(5, 22, 26, 0.26) 0%, rgba(6, 26, 28, 0.02) 42%, rgba(4, 18, 22, 0.58) 100%),
+    radial-gradient(130% 92% at 50% 48%, transparent 34%, rgba(3, 15, 20, 0.52) 100%);
+}
+
+/* Keep the fixed HUD shelf and the bottom nav readable against the world. */
+.app-home-scene::after {
+  z-index: 2;
+  background:
+    linear-gradient(180deg, rgba(4, 16, 22, 0.62) 0%, rgba(4, 16, 22, 0.12) 17%, transparent 32%),
+    linear-gradient(0deg, rgba(4, 16, 18, 0.78) 0%, rgba(4, 16, 18, 0.18) 18%, transparent 36%);
+}
+
+.app-home-scene__glow {
+  position: absolute;
+  z-index: 1;
+  top: 2%;
+  left: 50%;
+  width: min(1080px, 130vw);
+  aspect-ratio: 1.9;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(255, 230, 164, 0.3), rgba(255, 206, 92, 0.1) 42%, transparent 72%);
+  opacity: 0.72;
+  animation: app-home-glow 16s ease-in-out infinite alternate;
+}
+
+.app-home-scene__mist {
+  position: absolute;
+  z-index: 1;
+  right: -12%;
+  bottom: 2%;
+  left: -12%;
+  height: 38%;
+  background:
+    radial-gradient(ellipse 48% 58% at 28% 62%, rgba(164, 235, 206, 0.18), transparent 72%),
+    radial-gradient(ellipse 44% 52% at 72% 42%, rgba(112, 210, 198, 0.14), transparent 72%);
+  opacity: 0.62;
+  animation: app-home-mist 26s ease-in-out infinite alternate;
+}
+
+@keyframes app-home-glow {
+  from { opacity: 0.5; transform: translateX(-50%) scale(0.97); }
+  to { opacity: 0.8; transform: translateX(-50%) scale(1.04); }
+}
+
+@keyframes app-home-mist {
+  from { opacity: 0.38; transform: translate3d(-1.2%, 0, 0); }
+  to { opacity: 0.62; transform: translate3d(1.2%, -2%, 0); }
+}
+
+.app-home > .app-column {
+  position: relative;
+  z-index: 2;
+}
+
+/* Dark forest glass instead of solid violet plates. The scenery stays visible
+   through the edges, while every panel body keeps a strong dark backing. */
+.app-home .app-deck,
+.app-home .app-battle,
+.app-home .app-commander {
+  border-color: rgba(5, 24, 27, 0.96);
+  background:
+    radial-gradient(ellipse 78% 58% at 50% 0%, rgba(255, 204, 92, 0.08), transparent 62%),
+    linear-gradient(180deg, rgba(25, 61, 61, 0.92) 0%, rgba(8, 29, 35, 0.96) 76%);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.16),
+    inset 0 0 0 1px rgba(126, 214, 180, 0.1),
+    0 5px 0 rgba(4, 18, 21, 0.78),
+    0 18px 34px rgba(2, 12, 15, 0.5);
+}
+
+.app-home .app-deck {
+  background:
+    radial-gradient(ellipse 62% 80% at 20% 0%, rgba(126, 214, 180, 0.08), transparent 70%),
+    linear-gradient(180deg, rgba(24, 58, 58, 0.92) 0%, rgba(7, 27, 33, 0.96) 78%);
+}
+
+.app-home .app-deck__label {
+  color: #f7f3e4;
+}
+
+/* The commander keeps its real treeline but loses the violet wash. */
+.app-home .app-commander__scene::after {
+  background: linear-gradient(180deg, rgba(9, 37, 34, 0.52) 0%, rgba(9, 37, 34, 0) 24%);
+}
+
+.app-home .app-commander__env--back {
+  opacity: 0.56;
+  filter: saturate(1.22) brightness(1.02);
+}
+
+.app-home .app-commander__meta {
+  background: linear-gradient(180deg, rgba(5, 24, 27, 0) 0%, rgba(5, 24, 27, 0.78) 42%);
+}
+
+.app-home .app-commander__disc {
+  border-color: rgba(126, 230, 208, 0.55);
+  box-shadow:
+    0 0 34px rgba(88, 214, 180, 0.36),
+    0 0 14px rgba(61, 217, 255, 0.28),
+    inset 0 0 26px rgba(61, 217, 255, 0.24);
+}
+
+/* The Battle plate stays warm under its orange action. */
+.app-home .app-battle {
+  background:
+    radial-gradient(ellipse 72% 92% at 50% 0%, rgba(255, 202, 80, 0.2), transparent 64%),
+    linear-gradient(180deg, rgba(36, 72, 60, 0.94) 0%, rgba(8, 28, 31, 0.97) 74%);
+}
+
+.app-home .app-battle::before {
+  background:
+    radial-gradient(circle at 10px 10px, #ffe08a 0 2px, #5d4a16 2.5px, transparent 3.2px),
+    radial-gradient(circle at calc(100% - 10px) 10px, #ffe08a 0 2px, #5d4a16 2.5px, transparent 3.2px),
+    radial-gradient(circle at 10px calc(100% - 10px), #ffe08a 0 2px, #5d4a16 2.5px, transparent 3.2px),
+    radial-gradient(circle at calc(100% - 10px) calc(100% - 10px), #ffe08a 0 2px, #5d4a16 2.5px, transparent 3.2px);
+}
+
+/* The nav becomes a dark forest shelf. The active tab keeps its violet plate. */
+.app-home .app-nav {
+  background: linear-gradient(180deg, rgba(11, 37, 39, 0.94), rgba(4, 18, 23, 0.99));
+  border-color: rgba(4, 20, 23, 0.96);
+}
+
+/* Mobile keeps the upward shadow because the bar is fixed at the bottom. */
+@media (max-width: 1023px) {
+  .app-home .app-nav {
+    box-shadow: 0 -8px 22px rgba(2, 12, 15, 0.6);
+  }
+}
+
+.app-home .app-deck__edit {
+  background: linear-gradient(180deg, #4b3cae, #2b216f);
+}
+
+/* The HUD is shared, so only the home instance takes the forest frame. */
+.app-hud--home {
+  background: linear-gradient(180deg, rgba(15, 44, 45, 0.95), rgba(5, 22, 28, 0.88));
+  border-bottom-color: rgba(4, 20, 23, 0.95);
+  box-shadow:
+    0 4px 0 rgba(4, 18, 21, 0.62),
+    0 12px 24px rgba(2, 12, 15, 0.45);
+}
+
+@media (max-width: 640px) {
+  .app-home-scene__image {
+    object-position: 50% 56%;
+  }
+
+  .app-home-scene__glow {
+    width: 150vw;
+  }
+}
+
+.app-calm .app-home-scene__glow,
+.app-calm .app-home-scene__mist {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-home-scene__glow,
+  .app-home-scene__mist {
+    animation: none;
+  }
+}

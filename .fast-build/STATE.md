@@ -309,3 +309,11 @@
 - Coach placement measures real targets, ignores hidden Cache Components routes, clamps for safe areas and the fixed nav, keeps 44px controls and honors reduced motion.
 - Evidence: 39 focused tests, typecheck, scoped ESLint, production build. Browser: ChogRoyale-Assets/next-pass-20261104/visual/navigation-coach. Live Privy acceptance remains owner-gated.
 - Next: Slice 5, scenic /app lobby atmosphere.
+
+## Next Player Experience: Scenic Chaos Crossing lobby (2026-11-05)
+- Added the scenic layer only to the ready authenticated /app lobby. The approved optimized world-surround-soft.webp (2300x1400, 400,918 bytes) sits behind the home content with a green fallback, warm light bloom, vignette and two transform/opacity atmosphere layers.
+- Dark forest glass panels replace the solid violet slabs. Purple stays as the accent on active tabs, commander badges, deck cards and secondary actions. The HUD and nav become forest shelves. The Battle action remains orange and prominent.
+- HomeSummary moves to the same forest glass while keeping gold, cyan and violet accents. Reduced motion and calm remove both ambient animations. The fixed scene has no layout shift and no full-viewport runtime blur.
+- Scope: LobbyView ready state only. Gates, battle, Training Camp, card modal, navigation coach and every other authenticated route keep their own backgrounds.
+- Evidence: 6 focused lobby and summary tests, typecheck, scoped ESLint, production build. Before/after, motion, calm and tour-over-scene captures at ChogRoyale-Assets/next-pass-20261104/visual/lobby. Green-dominant pixels 0% -> 18.5-63.6%, no horizontal overflow, Battle and nav clickable, coach above the scene.
+- Next: all five product slices implemented. Coordinated full-feature review, real-player acceptance and owner-approved release planning.
